@@ -8,8 +8,8 @@ window.SysSwitch = {
         const path = window.location.pathname;
         
         // 2. Якщо ми на index.html або в корені папки — меню НЕ малюємо і виходимо
-        if (path.includes('index.html') || path.endsWith('/')) {
-            return; 
+  if (path.includes('index.html') || path.endsWith('/')) {
+       return;
         }
 
         // 3. Перевірка на дублікат (якщо раптом скрипт підключили двічі)
@@ -66,4 +66,5 @@ window.SysSwitch = {
 };
 
 // Запуск
+
 window.SysSwitch.init();
