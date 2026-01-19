@@ -129,4 +129,33 @@ body {
 }
 .sys-card:active { background: #222; border-color: #555; transform: scale(0.96); }
 .sys-icon { font-size: 1.5rem; }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  .sys-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sys-panel {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .sys-grid {
+    grid-template-columns: 1fr;
+  }
+  #sys-fab {
+    bottom: 20px;
+    right: 10px;
+    width: 45px;
+    height: 45px;
+  }
+  .sys-card span {
+    font-size: 0.55rem;
+  }
+}
+
 .sys-card span { font-size: 0.6rem; color: #aaa; font-family: monospace; font-weight: 700; }
