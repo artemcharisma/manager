@@ -785,14 +785,23 @@
         },
 
         saveFood() {
-            const n = document.getElementById('inpName').value;
+            let n = document.getElementById('inpName').value.trim(); // Прибираємо зайві пробіли
             const w = parseFloat(document.getElementById('inpWeight').value);
             if(!n || isNaN(w)) return;
             
-            if(!this.data.bank[n]) {
-                if(confirm(`"${n}" немає в базі. Створити?`)) {
-                    this.data.bank[n] = {p:0,f:0,c:0,k:0,unit:false};
-                } else return;
+            // 1. Шукаємо, чи є такий продукт (ігноруючи регістр)
+            // Наприклад, якщо в базі "Рис", а ввели "рис" -> знайдемо "Рис"
+            const existingKey = Object.keys(this.data.bank).find(k => k.toLowerCase() === n.toLowerCase());
+            
+            if (existingKey) {
+                n = existingKey; // Використовуємо правильну назву з бази
+            } else {
+                // Якщо не знайшли - пропонуємо створити
+                if(!this.data.bank[n]) {
+                    if(confirm(`"${n}" немає в базі. Створити?`)) {
+                        this.data.bank[n] = {p:0,f:0,c:0,k:0,unit:false};
+                    } else return;
+                }
             }
 
             const meal = this.getCurrentDay().meals.find(m=>m.id===this.state.mid);
@@ -942,4 +951,5 @@
     window.onload = () => App.init();
 </script>
 </body>
+
 </html>
