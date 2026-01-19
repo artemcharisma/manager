@@ -372,7 +372,7 @@
     const DefaultData = {
         startDate: new Date().toISOString().split('T')[0],
         privacyEnabled: false,
-        privacyPassword: '2255',
+        privacyPassword: (() => { const saved = localStorage.getItem('privacy_pwd'); if (saved) return saved; const pwd = prompt('Встанови пароль (мін 4 символи):', '2255'); if (pwd && pwd.length >= 4) { localStorage.setItem('privacy_pwd', pwd); return pwd; } return '2255'; })(),
         phases: [
             { id: 1, title: "Start", weeks: [1,2] },
             { id: 2, title: "Mass", weeks: [3,4,5,6,7,8,9,10] },
@@ -1148,8 +1148,9 @@
         }
     };
 
-    window.onload = () => App.init();
+    window.addEventListener('beforeunload',()=>{if(!App.data.privacyEnabled){App.data.privacyEnabled=true;App.save();}});window.addEventListener('load',async()=>{await PhotoDB.init();App.load();if(App.data.privacyEnabled){document.body.classList.add('privacy-locked','privacy-mode');document.getElementById('privacyModal').style.display='flex';document.getElementById('privacyPassword').value='';setTimeout(()=>document.getElementById('privacyPassword').focus(),100);}else{App.renderNav();App.renderView();}});
 </script>
 
 </body>
+
 </html>
