@@ -51,7 +51,13 @@ body {
     color: var(--text-main);
     font-family: var(--font-ui);
     margin: 0;
-    padding: 20px;
+    
+    /* Оновлені відступи з урахуванням Safe Area */
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-left: calc(20px + env(safe-area-inset-left));
+    padding-right: calc(20px + env(safe-area-inset-right));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    
     min-height: 100vh;
 }
 
@@ -129,4 +135,5 @@ body {
 }
 .sys-card:active { background: #222; border-color: #555; transform: scale(0.96); }
 .sys-icon { font-size: 1.5rem; }
+
 .sys-card span { font-size: 0.6rem; color: #aaa; font-family: monospace; font-weight: 700; }
