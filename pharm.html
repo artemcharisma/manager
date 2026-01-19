@@ -1033,12 +1033,7 @@
             for(let w = maxW; w > lastWeek; w--) { 
                 this.data.schedule[w+1] = this.data.schedule[w];
                 this.data.notes[w+1] = this.data.notes[w]; 
-                for(let d=0; d<7; d++) { 
-                    if(this.data.vitals[`${w}-${d}`]) {
-                        this.data.vitals[`${w+1}-${d}`] = this.data.vitals[`${w}-${d}`];
-                        delete this.data.vitals[`${w}-${d}`];
-                    }
-                } 
+                const sortedWeeks=Object.keys(this.data.schedule).map(Number).sort((a,b)=>b-a);for(let w of sortedWeeks){if(w>lastWeek&&w<maxW){for(let d=0;d<7;d++){if(this.data.vitals[`${w+1}-${d}`]){this.data.vitals[`${w}-${d}`]=this.data.vitals[`${w+1}-${d}`];delete this.data.vitals[`${w+1}-${d}`];}}this.data.schedule[w]=this.data.schedule[w+1];this.data.notes[w]=this.data.notes[w+1];delete this.data.schedule[w+1];}}}
             } 
             
             this.data.schedule[lastWeek + 1] = copyOfLastWeek;
@@ -1154,3 +1149,4 @@
 </body>
 
 </html>
+
