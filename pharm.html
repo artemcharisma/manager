@@ -72,7 +72,23 @@
             background: var(--bg-panel); color: var(--text-muted);
             display: flex; align-items: center; justify-content: center;
             font-size: 1.1rem; cursor: pointer; transition: 0.2s; padding: 0; border: none;
+            
         }
+                /* Знайди цей блок і додай overflow: hidden */
+        .phase-btn { 
+            background: var(--bg-panel); 
+            border: 1px solid var(--border); 
+            min-width: 140px; 
+            padding: 15px; 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            
+            overflow: hidden; /* <--- ДОДАЙ ЦЕЙ РЯДОК (Це обріже все зайве по формі кнопки) */
+        }
+
         .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: #fff; }
         .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
@@ -113,7 +129,10 @@
         body.privacy-mode .phase-btn span, body.privacy-mode .phase-btn small,
         body.privacy-mode .day-header span,
         body.privacy-mode .category-header, body.privacy-mode .med-title,
-        body.privacy-mode .note-input {
+        body.privacy-mode .note-input,
+        body.privacy-mode .modal-title,
+        body.privacy-mode .modal-content p {
+            color: transparent !important;
             color: transparent !important;
             background-color: transparent;
             border-radius: 4px;
@@ -390,9 +409,7 @@
             </div>
             <div class="controls">
                 <button class="btn-icon btn-panic" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
-                <button class="btn-icon" onclick="App.smartSave()" title="Save">💾</button>
-                <button class="btn-icon" onclick="document.getElementById('fileInput').click()" title="Load">📂</button>
-                <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
+                <button class="btn-icon" onclick="App.safeSave()" title="Save">💾</button> <button class="btn-icon" onclick="App.safeLoad()" title="Load">📂</button> <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
                 <button class="edit-toggle" id="editBtn" onclick="App.toggleEdit()" title="Edit">✎</button>
             </div>
         </div>
@@ -657,6 +674,21 @@
         state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null },
         chartInstance: null,
         dayBuffer: null,
+        safeSave() {
+            if(document.body.classList.contains('privacy-mode')) {
+                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                return;
+            }
+            this.smartSave();
+        },
+
+        safeLoad() {
+            if(document.body.classList.contains('privacy-mode')) {
+                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                return;
+            }
+            document.getElementById('fileInput').click();
+        },
 
         async init() {
             await PhotoDB.init();
@@ -715,53 +747,88 @@
             }
         },
         
-                unlockPrivacy() {
-            const pwd = document.getElementById('privacyPassword').value;
+                        unlockPrivacy() {
+            const pwdInput = document.getElementById('privacyPassword');
+            const pwd = pwdInput.value;
             const truePass = this.data.privacyPassword || '2255';
             
             const container = document.getElementById('pwdContainer');
             const icon = document.getElementById('privIcon');
             const btn = document.getElementById('unlockBtn');
+            const title = container.querySelector('h2'); // Заголовок
+            const sub = container.querySelector('p');    // Підпис
 
             if(pwd === truePass) {
-                // 1. Анімація ключика (поворот і зміна)
-                icon.style.transform = 'rotateY(360deg) scale(1.2)';
-                setTimeout(() => icon.innerText = '🔓', 200); // Міняємо іконку в середині повороту
-                
-                // 2. Стиль успіху
+                // --- УСПІХ ---
+                // 1. Зміна кольорів
                 container.classList.add('success');
+                pwdInput.style.borderColor = 'var(--green)';
+                pwdInput.style.color = 'var(--green)';
+                
+                // 2. Зміна тексту
+                title.innerText = "IDENTITY VERIFIED";
+                title.style.color = "var(--green)";
+                sub.innerText = "DECRYPTING DATA...";
+                sub.style.color = "var(--green)";
+                
+                // 3. Анімація ключика
+                icon.style.transform = 'rotateY(360deg) scale(1.2)';
+                setTimeout(() => icon.innerText = '🔓', 200);
+                
                 btn.innerText = 'ACCESS GRANTED';
                 
-                // 3. Плавний вихід
+                // 4. Вихід
                 setTimeout(() => {
                     document.getElementById('privacyModal').classList.add('fade-out');
-                    
-                    // Знімаємо класи блокування (CSS transition зробить це плавно за 0.8с)
                     document.body.classList.remove('privacy-locked', 'privacy-mode'); 
                     
-                    // 4. Повний ресет
+                    // Повний ресет (повертаємо все як було)
                     setTimeout(() => {
                         document.getElementById('privacyModal').style.display = 'none';
                         document.getElementById('privacyModal').classList.remove('fade-out');
                         container.classList.remove('success');
+                        
                         icon.innerText = '🔒';
                         icon.style.transform = 'none';
+                        
+                        title.innerText = "ACCESS LOCKED";
+                        title.style.color = "#fff";
+                        sub.innerText = "ENTER PASSCODE";
+                        sub.style.color = "#666";
+                        
                         btn.innerText = 'UNLOCK';
-                        document.getElementById('privacyPassword').value = '';
-                    }, 800); // Чекаємо завершення анімації CSS
-                }, 600);
+                        pwdInput.value = '';
+                        pwdInput.style.borderColor = '';
+                        pwdInput.style.color = '';
+                    }, 800);
+                }, 800);
 
             } else {
-                // Анімація помилки
+                // --- ПОМИЛКА ---
+                pwdInput.style.borderColor = 'var(--red)';
+                pwdInput.style.color = 'var(--red)';
+                sub.innerText = "INVALID PASSCODE";
+                sub.style.color = "var(--red)";
+                
+                // Трясіння
                 container.style.transform = "translateX(10px)";
                 setTimeout(() => container.style.transform = "translateX(-10px)", 50);
                 setTimeout(() => container.style.transform = "translateX(5px)", 100);
                 setTimeout(() => container.style.transform = "translateX(0)", 150);
                 
-                document.getElementById('privacyPassword').value = '';
-                document.getElementById('privacyPassword').focus();
+                pwdInput.value = '';
+                pwdInput.focus();
+                
+                // Повертаємо колір через секунду
+                setTimeout(() => {
+                    pwdInput.style.borderColor = '';
+                    pwdInput.style.color = '';
+                    sub.innerText = "ENTER PASSCODE";
+                    sub.style.color = "#666";
+                }, 1000);
             }
         },
+
 
 
 
@@ -1489,6 +1556,7 @@
 
 </body>
 </html>
+
 
 
 
