@@ -95,6 +95,12 @@
         /* --- PRIVACY MODE STYLES (TOP SECRET / STRIPED) --- */
 
         /* 1. Глобальні налаштування і переходи */
+                /* Анімація для смужок (ефект активного захисту) */
+        @keyframes stripes-move {
+            0% { background-position: 0 0; }
+            100% { background-position: 28px 0; } /* Рухаємо на ширину патерну */
+        }
+
         .app-container, header, .nav-tabs, .pill, .med-card, .stat-card, 
         .chart-container, .photo-area, #mainView, .phase-scroll, .week-bar {
             transition: filter 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
@@ -118,8 +124,7 @@
         }
         body.privacy-mode .brand span { display: none; }
 
-        /* 4. ГОЛОВНА ФІШКА: ДІАГОНАЛЬНІ СМУЖКИ (REDACTED STYLE) */
-        /* Застосовуємо до всього тексту, який треба сховати */
+        /* 4. ГОЛОВНА ФІШКА: ДІАГОНАЛЬНІ СМУЖКИ (ANIMATED REDACTED STYLE) */
         body.privacy-mode .pill div, 
         body.privacy-mode .pill span,
         body.privacy-mode .stat-val, 
@@ -133,22 +138,27 @@
         body.privacy-mode .modal-title,
         body.privacy-mode .modal-content p {
             color: transparent !important;
-            color: transparent !important;
             background-color: transparent;
             border-radius: 4px;
+            
             /* Текстура смужок */
             background-image: repeating-linear-gradient(
                 135deg,
                 #1c1c1c,
-                #1c1c1c 6px,
-                #2a2a2a 6px,
-                #2a2a2a 12px
+                #1c1c1c 10px,
+                #2a2a2a 10px,
+                #2a2a2a 20px
             );
+            
+            /* ВАЖЛИВО: Розмір і анімація */
+            background-size: 28px 28px; 
+            animation: stripes-move 3s linear infinite; /* Повільний рух */
+            
             box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
             display: inline-block;
             min-height: 14px;
             margin-bottom: 2px;
-            pointer-events: none; /* Текст клікати не можна */
+            pointer-events: none;
         }
         
         /* Вирівнювання блоків, щоб виглядало гарно */
@@ -1052,24 +1062,39 @@
             c.innerHTML = `<div class="stats-grid">${statsHtml}</div><div class="week-bar">${wHtml}</div>${grid}<div style="margin-top:20px"><textarea class="note-input" placeholder="Звіт за тиждень..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week]||""}</textarea></div><div class="photo-area"><h3 style="color:#fff;font-size:1rem;margin:0 0 20px 0">📸 ФОТО W${this.state.week}</h3><div class="photo-grid">${pHtml}</div><label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label></div>`;
         },
 
-        renderAnalytics(c) {
+                renderAnalytics(c) {
             c.innerHTML = `<div class="chart-container"><canvas id="mainChart"></canvas></div>`;
             const labels = []; 
             const dataTest = []; 
             const dataWeight = [];
             
-            for(let w=1; w<=38; w++) {
+            // 1. ВИПРАВЛЕННЯ: Знаходимо реальну кількість тижнів у твоєму курсі
+            const weekKeys = Object.keys(this.data.schedule).map(Number);
+            const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
+            
+            // 2. Цикл тепер йде до реального останнього тижня (maxW), а не до 38
+            for(let w=1; w<=maxW; w++) {
                 labels.push(`W${w}`);
+                
+                // Підрахунок Тестостерону (сума за тиждень)
                 let weekTest = 0;
                 if(this.data.schedule[w]) {
                     this.data.schedule[w].forEach(day => day.forEach(pill => {
+                        // Шукаємо будь-які препарати з "Test", "Sust", "Enan", "Cyp" тощо, якщо треба розширити пошук
+                        // Поки залишаємо логіку на слово "test" (Test E, Test P...)
                         if(pill.name.toLowerCase().includes('test')) {
-                            const val = parseFloat(pill.dose);
-                            if(!isNaN(val)) weekTest += val;
+                            // Витягуємо число з дози (напр. "250mg" -> 250)
+                            const match = pill.dose.match(/(\d+([.,]\d+)?)/);
+                            if(match) {
+                                const val = parseFloat(match[0].replace(',', '.'));
+                                if(!isNaN(val)) weekTest += val;
+                            }
                         }
                     }));
                 }
                 dataTest.push(weekTest);
+                
+                // Підрахунок Ваги (середнє за тиждень)
                 let weightSum = 0; 
                 let weightCount = 0;
                 for(let d=0; d<7; d++) {
@@ -1082,36 +1107,80 @@
                 dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
             }
             
+            // Очищення старого графіку перед малюванням нового
             if (this.chartInstance) { 
                 this.chartInstance.destroy(); 
                 this.chartInstance = null; 
             }
             
+            // Малювання
             const ctx = document.getElementById('mainChart').getContext('2d');
             this.chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Testosterone (mg)', data: dataTest, backgroundColor: 'rgba(59, 130, 246, 0.5)', yAxisID: 'y', order: 2 },
-                        { label: 'Вага (kg)', data: dataWeight, borderColor: '#d4af37', backgroundColor: '#d4af37', type: 'line', yAxisID: 'y1', order: 1, tension: 0.4, spanGaps: true }
+                        { 
+                            label: 'Testosterone (mg)', 
+                            data: dataTest, 
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)', 
+                            yAxisID: 'y', 
+                            order: 2,
+                            barPercentage: 0.6 // Трохи тонші стовпчики для краси
+                        },
+                        { 
+                            label: 'Вага (kg)', 
+                            data: dataWeight, 
+                            borderColor: '#d4af37', 
+                            backgroundColor: '#d4af37', 
+                            type: 'line', 
+                            yAxisID: 'y1', 
+                            order: 1, 
+                            tension: 0.4, // Плавні лінії
+                            spanGaps: true, // З'єднувати точки, якщо пропущено день
+                            pointRadius: 2 
+                        }
                     ]
                 },
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     scales: {
-                        y: { type: 'linear', display: true, position: 'left', grid: {color: '#333'} },
-                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false} },
-                        x: { grid: {display: false} }
+                        y: { 
+                            type: 'linear', 
+                            display: true, 
+                            position: 'left', 
+                            grid: {color: '#333'},
+                            title: { display: true, text: 'mg', color: '#555' }
+                        },
+                        y1: { 
+                            type: 'linear', 
+                            display: true, 
+                            position: 'right', 
+                            grid: {drawOnChartArea: false},
+                            title: { display: true, text: 'kg', color: '#d4af37' }
+                        },
+                        x: { 
+                            grid: {display: false},
+                            ticks: { color: '#888', maxRotation: 0, autoSkip: true }
+                        }
                     },
                     plugins: { 
                         legend: { labels: { color: '#fff' } },
-                        filler: { propagate: true }
+                        tooltip: { 
+                            backgroundColor: 'rgba(0,0,0,0.8)', 
+                            titleColor: '#d4af37',
+                            bodyFont: { family: 'JetBrains Mono' }
+                        }
                     }
                 }
             });
         },
+
         renderAnalysis(c) {
             let html = '<div class="med-grid">';
             this.data.analysis.forEach((block, i) => {
@@ -1637,6 +1706,7 @@
 
 </body>
 </html>
+
 
 
 
