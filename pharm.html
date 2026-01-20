@@ -111,7 +111,8 @@
         
         /* Блокуємо скрол коли відкрито модалку пароля */
         body.privacy-locked { overflow: hidden; }
-        body.privacy-locked > .app-container { pointer-events: none; } 
+        body.privacy-locked > .app-container { pointer-events: none; }
+        body.privacy-locked header { pointer-events: auto; }
         /* --- END PRIVACY STYLES --- */
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -1320,3 +1321,4 @@
 
 </body>
 </html>
+
