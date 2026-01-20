@@ -74,93 +74,157 @@
         .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: #fff; }
         .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-     /* --- PRIVACY MODE STYLES (REDACTED / ЗАСЕКРЕЧЕНО) --- */
+    /* --- PRIVACY MODE STYLES (ENHANCED SECURITY UI) --- */
         
-        /* 1. Плавні переходи */
-        .brand, .pill, .chart-container, .med-card, .photo-card, .vitals-row, .week-bar {
-            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* 1. Плавні переходи для всього інтерфейсу */
+        .app-container, header, .nav-tabs, .pill, .med-card, .stat-card {
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        /* 2. Червона пульсуюча кнопка Ока */
+        /* 2. Ефект "червоної тривоги" для кнопки Ока */
         body.privacy-mode .btn-panic { 
             color: var(--red); border-color: var(--red); 
-            background: rgba(239, 68, 68, 0.15); 
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-            animation: pulse-red 2.5s infinite ease-in-out;
+            background: rgba(239, 68, 68, 0.1); 
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+            animation: pulse-red 2s infinite ease-in-out;
+            z-index: 60; /* Поверх всього */
         }
-        @keyframes pulse-red { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); } 50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); } }
         
-        /* 3. Шапка SYSTEM LOCKED */
-        body.privacy-mode .brand-icon { background: #1a1a1a; color: #444; box-shadow: none; filter: grayscale(100%); }
+        /* 3. ШАПКА: Заміна на SYSTEM LOCKED */
+        body.privacy-mode .brand-icon { background: #111; color: #333; box-shadow: none; filter: grayscale(100%); }
         body.privacy-mode .brand h1 { font-size: 0; }
         body.privacy-mode .brand h1::after { 
-            content: 'SYSTEM LOCKED'; font-size: 1.2rem; color: #777; letter-spacing: 3px; visibility: visible; font-family: 'JetBrains Mono', monospace;
+            content: 'SYSTEM LOCKED'; font-size: 1.2rem; color: #555; letter-spacing: 3px; visibility: visible; font-family: 'JetBrains Mono', monospace;
         }
         body.privacy-mode .brand span { display: none; }
         
-        /* 4. Блюр для великих блоків (графіки, фото) */
-        body.privacy-mode .chart-container,
-        body.privacy-mode .body-map-container,
-        body.privacy-mode .photo-area,
-        body.privacy-mode .note-input,
-        body.privacy-mode .med-grid,
-        body.privacy-mode .stats-grid,
-        body.privacy-mode .week-bar,
-        body.privacy-mode .phase-scroll { 
-            filter: blur(8px) grayscale(90%); opacity: 0.4; pointer-events: none; 
+        /* 4. МАСКУВАННЯ НАВІГАЦІЇ (Ховаємо назви вкладок) */
+        body.privacy-mode .nav-tab {
+            background: #0a0a0a !important;
+            border-color: #222 !important;
+            pointer-events: none;
         }
+        body.privacy-mode .nav-tab span { opacity: 0; }
+        body.privacy-mode .nav-tab::after {
+            content: '';
+            display: block; width: 60%; height: 8px; 
+            background: #222; margin: 0 auto; border-radius: 4px;
+            /* Текстура "штрихування" */
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 75%, transparent 75%, transparent);
+            background-size: 8px 8px;
+        }
+        /* Активна вкладка просто трохи світліша, але без назви */
+        body.privacy-mode .nav-tab.active::after { background-color: #333; width: 80%; }
 
-        /* 5. ЕФЕКТ "РЕДАКТУРИ" (СМУЖКИ) ДЛЯ ПРЕПАРАТІВ */
-        
-        /* Робимо саму плашку нейтральною сірою */
-        body.privacy-mode .pill {
-            background: #111 !important;
-            border-color: #2a2a2a !important; /* Прибираємо кольорові бортики */
-            color: transparent !important; /* Ховаємо оригінальний колір тексту */
+        /* 5. МАСКУВАННЯ ЗАГОЛОВКІВ (Аптечка, Аналізи) */
+        body.privacy-mode .category-header, 
+        body.privacy-mode .med-title {
+            color: transparent !important;
+            background: #1a1a1a !important;
             position: relative;
             overflow: hidden;
-        }
-
-        /* Перетворюємо текстові елементи на "смужки" */
-        body.privacy-mode .pill div:first-child div:first-child, /* Назва */
-        body.privacy-mode .pill-meta,                          /* Тег */
-        body.privacy-mode .pill > span {                       /* Доза */
-            color: transparent !important; /* Текст стає прозорим */
-            background: #2a2a2a; /* Фон стає кольором смужки */
             border-radius: 4px;
-            box-shadow: inset 0 0 2px rgba(0,0,0,0.5); /* Легка тінь всередину для об'єму */
-            display: inline-block;
-            line-height: 0.8; /* Робимо смужки трохи вужчими за текст */
-            padding: 2px 0;
+        }
+        body.privacy-mode .category-header::after {
+            content: 'RESTRICTED AREA';
+            position: absolute; left: 10px; top: 0; bottom: 0;
+            display: flex; align-items: center;
+            color: #333; font-size: 0.7rem; letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* 6. МАСКУВАННЯ КОНТЕНТУ (Смужки) */
+        /* Базовий стиль для прихованого блоку */
+        body.privacy-mode .pill, 
+        body.privacy-mode .check-row, 
+        body.privacy-mode .med-item {
+            background: #050505 !important;
+            border-color: #222 !important;
+            border-left: 3px solid #222 !important;
+            color: transparent !important;
+            position: relative;
+        }
+
+        /* Перетворення тексту на "смужки" */
+        body.privacy-mode .pill div, 
+        body.privacy-mode .pill span,
+        body.privacy-mode .med-name, 
+        body.privacy-mode .med-dose,
+        body.privacy-mode .check-name {
+            color: transparent !important;
+            background: #1c1c1c;
+            border-radius: 4px;
             margin: 2px 0;
-            pointer-events: none;
-            user-select: none;
-            /* Додаємо текстуру "заштриховки" */
-            background-image: linear-gradient(135deg, rgba(255,255,255,0.03) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.03) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        /* Доза має бути трохи коротшою візуально */
-        body.privacy-mode .pill > span { min-width: 40px; text-align: center; }
-
-        /* Блюримо показники життєдіяльності, але залишаємо їх видимими */
-        body.privacy-mode .vitals-row {
-            filter: blur(5px) grayscale(100%); opacity: 0.3; pointer-events: none;
+            display: inline-block;
+            min-height: 12px;
+            width: fit-content;
+            min-width: 50px;
+            /* Ефект штрихування */
+            background-image: repeating-linear-gradient(45deg, #222, #222 5px, #1c1c1c 5px, #1c1c1c 10px);
         }
 
-        /* Ховаємо інтерфейс редагування */
-        body.privacy-mode .edit-toggle,
+        /* Блюр великих об'єктів */
+        body.privacy-mode .chart-container,
+        body.privacy-mode .photo-area,
+        body.privacy-mode .body-map-container,
+        body.privacy-mode .note-input,
+        body.privacy-mode .stats-grid { 
+            filter: blur(10px) grayscale(100%) brightness(0.5); 
+            pointer-events: none; 
+            transition: filter 0.5s;
+        }
+
+        /* Ховаємо інтерфейс */
+        body.privacy-mode .edit-ui, 
+        body.privacy-mode .edit-toggle, 
         body.privacy-mode .btn-add-pill,
         body.privacy-mode .btn-upload,
-        body.privacy-mode .edit-ui,
-        body.privacy-mode [contenteditable] {
-             display: none !important;
-        }
+        body.privacy-mode .vitals-row { display: none !important; }
         
-        /* 6. БЛОКУВАННЯ ДОСТУПУ */
-        body.privacy-locked { overflow-y: auto; } /* Скрол дозволено */
-        body.privacy-locked > .app-container { pointer-events: none; user-select: none; } 
-        body.privacy-locked header { pointer-events: auto !important; } /* Шапка доступна */
+        /* 7. МОДАЛЬНЕ ВІКНО ПАРОЛЯ (Оновлено) */
+        #privacyModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92); z-index: 2000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(15px);
+            transition: opacity 0.5s ease, backdrop-filter 0.5s ease;
+        }
+        /* Клас для анімації зникнення */
+        #privacyModal.fade-out { opacity: 0; pointer-events: none; }
+
+        .privacy-modal-content {
+            background: #0a0a0a; padding: 40px; border-radius: 20px;
+            border: 1px solid #333; text-align: center; width: 320px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            position: relative; overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        /* Зелене підсвічування при успіху */
+        .privacy-modal-content.success { border-color: var(--green); box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
+
+        .privacy-icon { font-size: 3rem; margin-bottom: 20px; display: block; filter: grayscale(1); transition: 0.3s; }
+        .privacy-modal-content.success .privacy-icon { filter: grayscale(0); transform: scale(1.2); }
+
+        .privacy-pwd-input {
+            width: 100%; padding: 15px; background: #111; border: 1px solid #333;
+            border-radius: 12px; color: #fff; font-size: 1.5rem; text-align: center;
+            letter-spacing: 0.5em; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace;
+            outline: none; transition: 0.3s;
+        }
+        .privacy-pwd-input:focus { border-color: #555; box-shadow: 0 0 0 4px rgba(255,255,255,0.05); }
+
+        .btn-privacy-unlock {
+            width: 100%; padding: 15px; background: #222; color: #fff;
+            border: 1px solid #333; border-radius: 12px; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;
+        }
+        .btn-privacy-unlock:hover { background: #333; }
+        .privacy-modal-content.success .btn-privacy-unlock { background: var(--green); color: #000; border-color: var(--green); }
+
+        /* 8. БЛОКУВАННЯ ВЗАЄМОДІЇ */
+        body.privacy-locked { overflow-y: auto; }
+        body.privacy-locked > .app-container { pointer-events: none; user-select: none; }
+        body.privacy-locked header { pointer-events: auto !important; }
         /* --- END PRIVACY STYLES --- */
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -328,11 +392,12 @@
 <div id="undoFloat" onclick="App.undo()">↩</div>
 
 <div id="privacyModal">
-    <div class="privacy-modal-content">
-        <h2>🔒 PRIVACY MODE</h2>
-        <p>Введи пароль для виходу</p>
-        <input type="password" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
-        <button class="btn-privacy-unlock" onclick="App.unlockPrivacy()">РОЗБЛОКУВАТИ</button>
+    <div class="privacy-modal-content" id="pwdContainer">
+        <span class="privacy-icon" id="privIcon">🔒</span>
+        <h2 style="margin:0 0 10px 0; color:#fff; font-size:1.2rem">ACCESS LOCKED</h2>
+        <p style="color:#666; font-size:0.8rem; margin-bottom:20px">ENTER PASSCODE</p>
+        <input type="password" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
+        <button class="btn-privacy-unlock" id="unlockBtn" onclick="App.unlockPrivacy()">UNLOCK</button>
     </div>
 </div>
 
@@ -641,12 +706,41 @@
         
         unlockPrivacy() {
             const pwd = document.getElementById('privacyPassword').value;
-            if(pwd === this.data.privacyPassword) {
-                document.body.classList.remove('privacy-locked', 'privacy-mode');
-                document.getElementById('privacyModal').style.display = 'none';
-                document.getElementById('privacyPassword').value = '';
+            const truePass = this.data.privacyPassword || '2255';
+            
+            const container = document.getElementById('pwdContainer');
+            const icon = document.getElementById('privIcon');
+            const btn = document.getElementById('unlockBtn');
+
+            if(pwd === truePass) {
+                // Анімація успіху
+                container.classList.add('success');
+                icon.innerText = '🔓';
+                btn.innerText = 'GRANTED';
+                
+                // Чекаємо 0.5с, потім ховаємо
+                setTimeout(() => {
+                    document.getElementById('privacyModal').classList.add('fade-out');
+                    document.body.classList.remove('privacy-locked', 'privacy-mode'); // Знімаємо блюр і блок
+                    
+                    // Повний ресет модалки через 0.5с (коли зникне)
+                    setTimeout(() => {
+                        document.getElementById('privacyModal').style.display = 'none';
+                        document.getElementById('privacyModal').classList.remove('fade-out');
+                        container.classList.remove('success');
+                        icon.innerText = '🔒';
+                        btn.innerText = 'UNLOCK';
+                        document.getElementById('privacyPassword').value = '';
+                    }, 500);
+                }, 400);
+
             } else {
-                alert('❌ Невірний пароль!');
+                // Анімація помилки (вібрація)
+                container.style.transform = "translateX(10px)";
+                setTimeout(() => container.style.transform = "translateX(-10px)", 50);
+                setTimeout(() => container.style.transform = "translateX(5px)", 100);
+                setTimeout(() => container.style.transform = "translateX(0)", 150);
+                
                 document.getElementById('privacyPassword').value = '';
                 document.getElementById('privacyPassword').focus();
             }
@@ -1373,6 +1467,7 @@
 
 </body>
 </html>
+
 
 
 
