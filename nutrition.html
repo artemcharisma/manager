@@ -909,20 +909,24 @@
         },
 
         calcTargetKcal() {
-            const p = parseFloat(document.getElementById('tgP').value)||0;
-            const f = parseFloat(document.getElementById('tgF').value)||0;
-            const c = parseFloat(document.getElementById('tgC').value)||0;
-            // Формула: Б*4 + Ж*9 + В*4
+            // Добавили .replace(',', '.') перед parseFloat
+            const p = parseFloat(document.getElementById('tgP').value.replace(',','.'))||0;
+            const f = parseFloat(document.getElementById('tgF').value.replace(',','.'))||0;
+            const c = parseFloat(document.getElementById('tgC').value.replace(',','.'))||0;
             document.getElementById('tgK').value = Math.round(p*4 + f*9 + c*4);
         },
         
         saveTargets() {
             this.data.targets = {
-                p: parseFloat(document.getElementById('tgP').value)||0,
-                f: parseFloat(document.getElementById('tgF').value)||0,
-                c: parseFloat(document.getElementById('tgC').value)||0,
-                k: parseFloat(document.getElementById('tgK').value)||0
+                // И тут тоже добавляем замену
+                p: parseFloat(document.getElementById('tgP').value.replace(',','.'))||0,
+                f: parseFloat(document.getElementById('tgF').value.replace(',','.'))||0,
+                c: parseFloat(document.getElementById('tgC').value.replace(',','.'))||0,
+                k: parseFloat(document.getElementById('tgK').value.replace(',','.'))||0
             };
+            this.save(); this.updateStats();
+            document.getElementById('targetsModal').style.display='none';
+        },
             this.save(); this.updateStats();
             document.getElementById('targetsModal').style.display='none';
         },
@@ -945,3 +949,4 @@
 </body>
 
 </html>
+
