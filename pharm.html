@@ -58,6 +58,7 @@
             background: linear-gradient(135deg, #d4af37, #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center;
             font-size: 20px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+            transition: all 0.3s ease;
         }
         .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--primary); }
         .brand span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
@@ -73,35 +74,42 @@
         .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: #fff; }
         .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* --- PRIVACY MODE STYLES (ADDED FROM SAMPLE) --- */
+        /* --- PRIVACY MODE STYLES (ВИПРАВЛЕНО) --- */
+        /* Кнопка Ока стає червоною, коли режим активний */
+        body.privacy-mode .btn-panic { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.1); }
+        
+        /* Зміни в шапці */
         body.privacy-mode .brand-icon { background: #222; color: #444; box-shadow: none; filter: grayscale(100%); }
         body.privacy-mode .brand h1 { font-size: 0; }
         body.privacy-mode .brand h1::after { content: 'H-TRACK'; font-size: 1.2rem; color: #fff; }
         body.privacy-mode .brand span { display: none; }
         
-        /* Blur sensitive elements */
+        /* Блюр контенту (Більше селекторів для Pharma) */
         body.privacy-mode .stat-val, 
         body.privacy-mode .pill-meta, 
         body.privacy-mode .chart-container,
-        body.privacy-mode .med-grid,
-        body.privacy-mode .photo-grid,
-        body.privacy-mode .note-input,
+        body.privacy-mode .med-grid,        /* Блюримо список аптечки */
+        body.privacy-mode .days-grid,       /* Блюримо сітку днів */
+        body.privacy-mode .week-bar,        /* Блюримо вибір тижня */
+        body.privacy-mode .photo-grid,      /* Блюримо фото */
+        body.privacy-mode .note-input,      /* Блюримо нотатки */
         body.privacy-mode .body-map-container { 
             filter: blur(8px); opacity: 0.5; pointer-events: none; 
         }
 
-        /* Hide pill details */
+        /* Ховаємо назви препаратів у сітці */
         body.privacy-mode .pill div:first-child div:first-child { font-size: 0; } 
         body.privacy-mode .pill div:first-child div:first-child::after { content: 'Supplement'; font-size: 0.9rem; color: #777; }
         
-        /* Disable editing in privacy mode */
+        /* Блокуємо редагування */
         body.privacy-mode .edit-toggle,
         body.privacy-mode .btn-add-pill,
+        body.privacy-mode .btn-upload,
         body.privacy-mode [contenteditable] {
-            pointer-events: none !important; opacity: 0.3;
+            pointer-events: none !important; opacity: 0;
         }
         
-        /* Modal and Body Lock logic */
+        /* Блокуємо скрол коли відкрито модалку пароля */
         body.privacy-locked { overflow: hidden; }
         body.privacy-locked > .app-container { pointer-events: none; } 
         /* --- END PRIVACY STYLES --- */
@@ -244,7 +252,7 @@
                 <div><h1>COURSE</h1><span>GOLD PROTOCOL</span></div>
             </div>
             <div class="controls">
-                <button class="btn-icon" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
+                <button class="btn-icon btn-panic" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
                 <button class="btn-icon" onclick="App.smartSave()" title="Save">💾</button>
                 <button class="btn-icon" onclick="document.getElementById('fileInput').click()" title="Load">📂</button>
                 <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
