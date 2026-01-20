@@ -156,7 +156,21 @@
                 alert("⚠️ LocalStorage очищено, але IndexedDB заблокована. Перезавантажте сторінку вручну.");
                 location.reload();
             };
-            
+            function GlobalBackup() {
+            const bundle = {
+                date: new Date().toISOString(),
+                pharm: JSON.parse(localStorage.getItem('gold_protocol_data') || 'null'),
+                training: JSON.parse(localStorage.getItem('train_data') || 'null'),
+                nutrition: JSON.parse(localStorage.getItem('nutrition_data') || 'null')
+            };
+
+            const a = document.createElement('a');
+            a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle));
+            a.download = `ManagerOS_Full_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
             // Fallback якщо DB довго не відповідає
             setTimeout(() => location.reload(), 1000);
         }
@@ -171,3 +185,4 @@
 </body>
 
 </html>
+
