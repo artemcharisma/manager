@@ -74,53 +74,87 @@
         .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: #fff; }
         .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* --- PRIVACY MODE STYLES (ВИПРАВЛЕНО) --- */
-        /* Кнопка Ока стає червоною, коли режим активний */
-        body.privacy-mode .btn-panic { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.1); }
+       /* --- PRIVACY MODE STYLES (ВИПРАВЛЕНО: Скрол + Анімація + Захист) --- */
         
-        /* Зміни в шапці */
+        /* 1. Анімація для ВСІХ елементів, що будуть змінюватись (щоб було плавно) */
+        .brand h1, .brand span, .brand-icon,
+        .stat-val, .pill-meta, .chart-container, .med-grid, 
+        .photo-grid, .note-input, .body-map-container,
+        .pill > div > div:first-child,
+        .week-bar, .phase-scroll {
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* 2. Стиль кнопки "Око" коли режим активний */
+        body.privacy-mode .btn-panic { 
+            color: var(--red); 
+            border-color: var(--red); 
+            background: rgba(239,68,68,0.1); 
+        }
+        
+        /* 3. Зміни в шапці (H-TRACK) */
         body.privacy-mode .brand-icon { background: #222; color: #444; box-shadow: none; filter: grayscale(100%); }
-        body.privacy-mode .brand h1 { font-size: 0; }
-        body.privacy-mode .brand h1::after { content: 'H-TRACK'; font-size: 1.2rem; color: #fff; }
-        body.privacy-mode .brand span { display: none; }
         
-        /* Блюр контенту (Більше селекторів для Pharma) */
+        /* Ховаємо оригінальний текст, показуємо новий */
+        body.privacy-mode .brand h1 { font-size: 0; }
+        body.privacy-mode .brand h1::after { 
+            content: 'H-TRACK'; 
+            font-size: 1.2rem; 
+            color: #fff; 
+            visibility: visible; 
+        }
+        body.privacy-mode .brand span { opacity: 0; }
+        
+        /* 4. Блюр контенту */
         body.privacy-mode .stat-val, 
         body.privacy-mode .pill-meta, 
         body.privacy-mode .chart-container,
-        body.privacy-mode .med-grid,        /* Блюримо список аптечки */
-        body.privacy-mode .days-grid,       /* Блюримо сітку днів */
-        body.privacy-mode .week-bar,        /* Блюримо вибір тижня */
-        body.privacy-mode .photo-grid,      /* Блюримо фото */
-        body.privacy-mode .note-input,      /* Блюримо нотатки */
-        body.privacy-mode .body-map-container { 
-            filter: blur(8px); opacity: 0.5; pointer-events: none; 
+        body.privacy-mode .med-grid,
+        body.privacy-mode .photo-grid,
+        body.privacy-mode .note-input,
+        body.privacy-mode .body-map-container,
+        body.privacy-mode .days-grid .vitals-row,
+        body.privacy-mode .week-bar,
+        body.privacy-mode .phase-scroll { 
+            filter: blur(12px); 
+            opacity: 0.6; 
+            pointer-events: none; 
         }
 
-        /* Ховаємо назви препаратів у сітці */
-        body.privacy-mode .pill div:first-child div:first-child { font-size: 0; } 
-        body.privacy-mode .pill div:first-child div:first-child::after { content: 'Supplement'; font-size: 0.9rem; color: #777; }
+        /* 5. Заміна тексту препаратів на "Supplement" */
+        /* Знаходимо назву ліків всередині .pill */
+        body.privacy-mode .pill > div > div:first-child { 
+            font-size: 0 !important; 
+        } 
+        body.privacy-mode .pill > div > div:first-child::after { 
+            content: 'Supplement'; 
+            font-size: 0.95rem; 
+            color: #555; 
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        /* Блюримо дозування окремо */
+        body.privacy-mode .pill > span { filter: blur(4px); opacity: 0.5; }
         
-        /* Блокуємо редагування */
+        /* 6. Ховаємо редагування */
         body.privacy-mode .edit-toggle,
         body.privacy-mode .btn-add-pill,
         body.privacy-mode .btn-upload,
-        body.privacy-mode [contenteditable] {
+        body.privacy-mode .edit-ui {
             pointer-events: none !important; opacity: 0;
         }
         
-       /* Modal and Body Lock logic */
-        body.privacy-locked { overflow: hidden; }
-        
-        /* Блокуємо весь контент */
-        body.privacy-locked > .app-container { 
-            pointer-events: none; 
-        } 
-        
-        /* ВАЖЛИВО: Дозволяємо клікати по шапці (щоб натиснути Око) */
-        body.privacy-locked header { 
-            pointer-events: auto !important; 
+        /* 7. БЛОКУВАННЯ ВЗАЄМОДІЇ (Але залишаємо скрол!) */
+        body.privacy-locked { 
+            overflow-y: auto; /* Дозволяє скрол */
         }
+        
+        /* Блокуємо кліки по всьому, КРІМ шапки */
+        body.privacy-locked > .app-container > *:not(header) { 
+            pointer-events: none; 
+            user-select: none;
+        } 
         /* --- END PRIVACY STYLES --- */
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -531,7 +565,7 @@
         chartInstance: null,
         dayBuffer: null,
 
-        async init() {
+      async init() {
             await PhotoDB.init();
             this.load();
             await this.refreshPhotos();
@@ -539,10 +573,14 @@
             this.renderView();
             
             // --- PRIVACY MODE DEFAULT ---
-            // Force add privacy mode on load (default hidden)
+            // Завжди вмикаємо при завантаженні
             document.body.classList.add('privacy-mode', 'privacy-locked');
             
+            // Захищений RESET
             document.querySelector('.brand').ondblclick = () => {
+                // Якщо приватний режим активний - нічого не робити
+                if (document.body.classList.contains('privacy-mode')) return;
+
                 if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
                     localStorage.removeItem('gold_protocol_v6');
                     try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
@@ -550,7 +588,7 @@
                 }
             };
         },
-
+        
         load() {
             const s = localStorage.getItem('gold_protocol_v6');
             if(s) {
@@ -1329,4 +1367,5 @@
 
 </body>
 </html>
+
 
