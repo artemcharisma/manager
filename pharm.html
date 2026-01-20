@@ -76,64 +76,28 @@
         .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: #fff; }
         .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* --- PRIVACY MODE STYLES (ВИПРАВЛЕНО: СУЦІЛЬНИЙ БЛОК) --- */
-        
-        /* 1. Анімація переходів */
-        .brand, .pill, .chart-container, .med-card, .photo-card, .vitals-row, .week-bar {
-            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+            /* --- PRIVACY MODE STYLES (CYBERPUNK / REDACTED) --- */
 
-        /* 2. Кнопка Ока */
-        body.privacy-mode .btn-panic { 
-            color: var(--red); border-color: var(--red); 
-            background: rgba(239,68,68,0.15); 
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-            animation: pulse-red 2.5s infinite ease-in-out;
-        }
-        @keyframes pulse-red { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
-        
-        /* 3. Шапка */
-        body.privacy-mode .brand-icon { background: #1a1a1a; color: #444; box-shadow: none; filter: grayscale(100%); }
-        body.privacy-mode .brand h1 { font-size: 0; }
-        body.privacy-mode .brand h1::after { 
-            content: 'SYSTEM LOCKED'; font-size: 1.2rem; color: #777; letter-spacing: 3px; visibility: visible; font-family: 'JetBrains Mono', monospace;
-        }
-        body.privacy-mode .brand span { display: none; }
-        
-        /* 4. Блюр для великих блоків */
-        body.privacy-mode .chart-container,
-        body.privacy-mode .body-map-container,
-        body.privacy-mode .photo-area,
-        body.privacy-mode .note-input,
-        body.privacy-mode .med-grid,
-        body.privacy-mode .stats-grid,
-        body.privacy-mode .week-bar,
-        body.privacy-mode .phase-scroll { 
-            filter: blur(8px) grayscale(90%); opacity: 0.4; pointer-events: none; 
-        }
-
-        /* --- PRIVACY MODE STYLES (CYBERPUNK / REDACTED) --- */
-
-        /* 1. ГЛОБАЛЬНИЙ ЕФЕКТ "SCANLINE" (Ефект монітора) */
+        /* 1. ГЛОБАЛЬНИЙ ЕФЕКТ "SCANLINE" (Ефект монітора) - Прибирає пустоту */
         body.privacy-mode::before {
             content: " ";
             display: block;
             position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 99;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
         }
 
-        /* 2. АНІМАЦІЯ МЕРЕХТІННЯ ДЛЯ ПРИХОВАНОГО ТЕКСТУ */
+        /* 2. АНІМАЦІЯ МЕРЕХТІННЯ ДЛЯ "ЗАСЕКРЕЧЕНОГО" ТЕКСТУ */
         @keyframes decrypt-pulse {
             0% { opacity: 0.3; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.8; }
             100% { opacity: 0.3; }
         }
 
         /* 3. ШАПКА ТА НАВІГАЦІЯ */
-        /* Кнопка "Око" - зловісно червона */
+        /* Кнопка "Око" */
         body.privacy-mode .btn-panic { 
             color: var(--red); border-color: var(--red); 
             background: rgba(239, 68, 68, 0.1); 
@@ -148,7 +112,7 @@
         }
         body.privacy-mode .brand span { display: none; }
 
-        /* --- ЗАМІНА НАЗВ ВКЛАДОК --- */
+        /* --- НОВІ НАЗВИ ВКЛАДОК --- */
         body.privacy-mode .nav-tab {
             color: transparent !important; /* Ховаємо старий текст */
             position: relative;
@@ -156,7 +120,7 @@
             border-color: #222 !important;
             pointer-events: auto !important; /* Дозволяємо клікати */
         }
-        /* Нові назви через ::after */
+        /* Підставляємо нові назви для кожної вкладки по порядку */
         body.privacy-mode .nav-tab:nth-child(1)::after { content: '/// SECURE'; }
         body.privacy-mode .nav-tab:nth-child(2)::after { content: '/// DATA'; }
         body.privacy-mode .nav-tab:nth-child(3)::after { content: '/// BIO'; }
@@ -189,7 +153,7 @@
             display: inline-block;
             min-height: 12px;
             box-shadow: 0 0 0 1px rgba(255,255,255,0.05); /* Тонка рамка */
-            animation: decrypt-pulse 2s infinite ease-in-out;
+            animation: decrypt-pulse 2s infinite ease-in-out; /* Анімація */
             /* Ефект штрих-коду */
             background-image: linear-gradient(90deg, transparent 50%, #222 50%);
             background-size: 4px 100%;
@@ -233,11 +197,11 @@
             pointer-events: none; 
             user-select: none; 
         } 
+        body.privacy-locked header { pointer-events: auto !important; }
         
-        /* Плавні переходи */
-        .app-container * { transition: all 0.5s ease; }
+        /* Плавні переходи для виходу з режиму */
+        .app-container *, header, .nav-tabs { transition: all 0.5s ease; }
         /* --- END PRIVACY STYLES --- */
-
 
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -709,40 +673,43 @@
             const truePass = this.data.privacyPassword || '2255';
             
             const container = document.getElementById('pwdContainer');
-            const icon = document.getElementById('privIcon');
+            const icon = document.getElementById('privIcon'); // Іконка замка
             const btn = document.getElementById('unlockBtn');
 
             if(pwd === truePass) {
-                // 1. Вмикаємо зелений режим "Успіх"
+                // 1. Анімація відкриття замка
                 container.classList.add('success');
-                icon.innerText = '🔓';
+                icon.innerText = '🔓'; // Змінюємо іконку на відкриту
+                icon.style.transform = 'scale(1.2)';
+                
                 btn.innerText = 'ACCESS GRANTED';
                 btn.style.background = 'var(--green)';
                 btn.style.color = '#000';
                 
-                // 2. Чекаємо трохи, щоб побачити ефект
+                // 2. Чекаємо, щоб побачити ефект
                 setTimeout(() => {
                     // Плавно ховаємо модалку
                     document.getElementById('privacyModal').classList.add('fade-out');
                     
-                    // Знімаємо блюр з контенту (завдяки CSS transition це буде плавно)
+                    // Знімаємо клас privacy-mode (CSS transition зробить перехід плавним)
                     document.body.classList.remove('privacy-locked', 'privacy-mode'); 
                     
-                    // 3. Повний ресет вікна через 0.5с
+                    // 3. Скидаємо стан вікна (для наступного разу)
                     setTimeout(() => {
                         document.getElementById('privacyModal').style.display = 'none';
                         document.getElementById('privacyModal').classList.remove('fade-out');
                         container.classList.remove('success');
-                        icon.innerText = '🔒';
+                        icon.innerText = '🔒'; // Повертаємо закритий замок
+                        icon.style.transform = 'scale(1)';
                         btn.innerText = 'UNLOCK';
-                        btn.style.background = ''; // Скидаємо стиль кнопки
+                        btn.style.background = ''; 
                         btn.style.color = '';
                         document.getElementById('privacyPassword').value = '';
                     }, 500);
-                }, 400);
+                }, 600); // Затримка 0.6с перед зникненням
 
             } else {
-                // Анімація помилки (трясіння)
+                // Анімація помилки
                 container.style.transform = "translateX(10px)";
                 setTimeout(() => container.style.transform = "translateX(-10px)", 50);
                 setTimeout(() => container.style.transform = "translateX(5px)", 100);
@@ -752,8 +719,6 @@
                 document.getElementById('privacyPassword').focus();
             }
         },
-
-
 
 
         getMondayOfStartWeek() {
@@ -1480,6 +1445,7 @@
 
 </body>
 </html>
+
 
 
 
