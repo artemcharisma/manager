@@ -1,21 +1,44 @@
-/* common.js - Фінальна оптимізована версія */
+/* common.js */
 
+// 1. Спільна логіка для всіх сторінок
+window.Core = {
+    // Історія змін (Undo)
+    History: {
+        stack: [],
+        limit: 20,
+        // Зберегти стан
+        push(data) {
+            if (this.stack.length > this.limit) this.stack.shift();
+            this.stack.push(JSON.stringify(data));
+            this.toggleUI(true);
+        },
+        // Повернути стан
+        pop() {
+            if (!this.stack.length) return null;
+            const data = JSON.parse(this.stack.pop());
+            if (!this.stack.length) this.toggleUI(false);
+            return data;
+        },
+        // Показати/сховати кнопку Undo
+        toggleUI(show) {
+            const btn = document.getElementById('undoBtn'); // Кнопка в хедері
+            const float = document.getElementById('undoFloat'); // Плаваюча кнопка
+            if (btn) btn.style.display = show ? 'flex' : 'none';
+            if (float && document.body.classList.contains('editing')) {
+                show ? float.classList.add('visible') : float.classList.remove('visible');
+            }
+        }
+    }
+};
+
+// 2. Нижнє меню (твоє старе меню)
 window.SysSwitch = {
     el: null,
-    
     init() {
-        // 1. Отримуємо шлях поточної сторінки
         const path = window.location.pathname;
-        
-        // 2. Якщо ми на index.html або в корені папки — меню НЕ малюємо і виходимо
-        if (path.includes('index.html') || path.endsWith('/')) {
-            return; 
-        }
-
-        // 3. Перевірка на дублікат (якщо раптом скрипт підключили двічі)
+        if (path.includes('index.html') || path.endsWith('/')) return;
         if (document.getElementById('sys-fab')) return;
 
-        // 4. Малюємо меню тільки для внутрішніх сторінок (Pharm, Train, Food)
         const html = `
         <div id="sys-fab" onclick="window.SysSwitch.toggle()">✦</div>
         <div id="sys-overlay" onclick="window.SysSwitch.close()">
@@ -31,39 +54,22 @@ window.SysSwitch = {
                     <a href="nutrition.html" class="sys-card"><div class="sys-icon" style="color:#10b981">🥑</div><span>FOOD</span></a>
                 </div>
             </div>
-        </div>
-        `;
+        </div>`;
 
         document.body.insertAdjacentHTML('beforeend', html);
         this.el = document.getElementById('sys-overlay');
         
-        // 5. Підсвічуємо поточну іконку в меню
-        const links = document.querySelectorAll('.sys-card');
-        links.forEach(a => {
-            const href = a.getAttribute('href');
-            if (path.includes(href)) {
-                a.style.borderColor = '#555';
+        // Підсвітка активної сторінки
+        document.querySelectorAll('.sys-card').forEach(a => {
+            if (path.includes(a.getAttribute('href'))) {
                 a.style.background = '#222';
+                a.style.borderColor = '#555';
             }
         });
     },
-
-    toggle() { 
-        if(this.el.classList.contains('open')) this.close();
-        else this.open(); 
-    },
-    
-    open() { 
-        this.el.style.display = 'flex';
-        void this.el.offsetHeight; // Force reflow
-        this.el.classList.add('open'); 
-    },
-    
-    close() { 
-        this.el.classList.remove('open');
-        setTimeout(() => this.el.style.display = 'none', 300); 
-    }
+    toggle() { this.el.classList.contains('open') ? this.close() : this.open(); },
+    open() { this.el.style.display = 'flex'; void this.el.offsetHeight; this.el.classList.add('open'); },
+    close() { this.el.classList.remove('open'); setTimeout(() => this.el.style.display = 'none', 300); }
 };
 
-// Запуск
 window.SysSwitch.init();
