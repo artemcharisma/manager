@@ -112,116 +112,132 @@
             filter: blur(8px) grayscale(90%); opacity: 0.4; pointer-events: none; 
         }
 
-        /* --- PRIVACY MODE STYLES (ANIMATED SKELETON) --- */
+        /* --- PRIVACY MODE STYLES (CYBERPUNK / REDACTED) --- */
 
-        /* 1. Дозволяємо скрол, блокуємо кліки на контенті */
-        body.privacy-locked { overflow-y: auto; }
+        /* 1. ГЛОБАЛЬНИЙ ЕФЕКТ "SCANLINE" (Ефект монітора) */
+        body.privacy-mode::before {
+            content: " ";
+            display: block;
+            position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 99;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* 2. АНІМАЦІЯ МЕРЕХТІННЯ ДЛЯ ПРИХОВАНОГО ТЕКСТУ */
+        @keyframes decrypt-pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+        }
+
+        /* 3. ШАПКА ТА НАВІГАЦІЯ */
+        /* Кнопка "Око" - зловісно червона */
+        body.privacy-mode .btn-panic { 
+            color: var(--red); border-color: var(--red); 
+            background: rgba(239, 68, 68, 0.1); 
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+            animation: pulse-red 2s infinite;
+            z-index: 101; position: relative;
+        }
+
+        body.privacy-mode .brand h1 { font-size: 0; }
+        body.privacy-mode .brand h1::after { 
+            content: 'ENCRYPTED OS'; font-size: 1.2rem; color: #555; letter-spacing: 4px; font-family: monospace;
+        }
+        body.privacy-mode .brand span { display: none; }
+
+        /* --- ЗАМІНА НАЗВ ВКЛАДОК --- */
+        body.privacy-mode .nav-tab {
+            color: transparent !important; /* Ховаємо старий текст */
+            position: relative;
+            background: #080808 !important;
+            border-color: #222 !important;
+            pointer-events: auto !important; /* Дозволяємо клікати */
+        }
+        /* Нові назви через ::after */
+        body.privacy-mode .nav-tab:nth-child(1)::after { content: '/// SECURE'; }
+        body.privacy-mode .nav-tab:nth-child(2)::after { content: '/// DATA'; }
+        body.privacy-mode .nav-tab:nth-child(3)::after { content: '/// BIO'; }
+        body.privacy-mode .nav-tab:nth-child(4)::after { content: '/// MEDS'; }
+        
+        body.privacy-mode .nav-tab::after {
+            color: #444; position: absolute; left: 0; width: 100%; text-align: center;
+            font-family: monospace; letter-spacing: 1px; font-weight: 700; top: 12px;
+        }
+        body.privacy-mode .nav-tab.active::after { color: var(--primary); text-shadow: 0 0 5px var(--primary); }
+
+        /* 4. ЗАПОВНЕННЯ КОНТЕНТУ (ЩОБ НЕ БУЛО ПУСТО) */
+        
+        /* Перетворюємо весь текст на "Секретні смужки" */
+        body.privacy-mode .pill div:first-child div:first-child, /* Назва */
+        body.privacy-mode .pill span,                           /* Доза */
+        body.privacy-mode .stat-val,                            /* Статистика */
+        body.privacy-mode .stat-label,
+        body.privacy-mode .day-header span,
+        body.privacy-mode .med-name, 
+        body.privacy-mode .med-dose,
+        body.privacy-mode .check-name,
+        body.privacy-mode .category-header,
+        body.privacy-mode .med-title {
+            color: transparent !important;
+            background: #1a1a1a;
+            border-radius: 2px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+            display: inline-block;
+            min-height: 12px;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.05); /* Тонка рамка */
+            animation: decrypt-pulse 2s infinite ease-in-out;
+            /* Ефект штрих-коду */
+            background-image: linear-gradient(90deg, transparent 50%, #222 50%);
+            background-size: 4px 100%;
+        }
+
+        /* Вирівнювання ширини смужок для краси */
+        body.privacy-mode .pill div:first-child div:first-child { width: 120px; }
+        body.privacy-mode .pill span { width: 50px; }
+        body.privacy-mode .stat-val { width: 80%; height: 20px; }
+
+        /* Стиль контейнера препарату (Pill) */
+        body.privacy-mode .pill {
+            background: #050505 !important;
+            border: 1px solid #222 !important;
+            border-left: 2px solid #333 !important; /* Сірий борт */
+        }
+        
+        /* Ховаємо дрібниці */
+        body.privacy-mode .pill-meta, 
+        body.privacy-mode .prog-text,
+        body.privacy-mode .edit-ui,
+        body.privacy-mode .btn-add-pill { display: none !important; }
+
+        /* 5. БЛЮР ГРАФІЧНИХ ЕЛЕМЕНТІВ */
+        /* Ми їх не ховаємо повністю, а робимо "фоновим шумом" */
+        body.privacy-mode .chart-container,
+        body.privacy-mode .photo-area,
+        body.privacy-mode .body-map-container,
+        body.privacy-mode .note-input {
+            filter: blur(5px) grayscale(100%) contrast(1.2);
+            opacity: 0.3;
+            pointer-events: none;
+            border: 1px dashed #333;
+        }
+
+        /* 6. ФУНКЦІОНАЛ */
+        body.privacy-locked { overflow-y: auto; } /* Скрол дозволено */
+        
+        /* Блокуємо кліки по всьому, крім шапки */
         body.privacy-locked > .app-container > *:not(header) { 
             pointer-events: none; 
             user-select: none; 
         } 
-        /* Шапка і меню залишаються доступними */
-        body.privacy-locked header,
-        body.privacy-mode .nav-tabs { 
-            pointer-events: auto !important; 
-        }
-
-        /* 2. Стиль червоної кнопки "Око" */
-        body.privacy-mode .btn-panic { 
-            color: var(--red); border-color: var(--red); 
-            background: rgba(239, 68, 68, 0.15); 
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-            animation: pulse-red 2s infinite ease-in-out;
-            z-index: 100;
-        }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.6; } }
-
-        /* 3. ШАПКА: "SYSTEM LOCKED" */
-        body.privacy-mode .brand-icon { background: #111; color: #333; filter: grayscale(100%); box-shadow: none; }
-        body.privacy-mode .brand h1 { font-size: 0; }
-        body.privacy-mode .brand h1::after { 
-            content: 'SYSTEM LOCKED'; font-size: 1.2rem; color: #555; letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
-        }
-        body.privacy-mode .brand span { display: none; }
-
-        /* 4. АНІМАЦІЯ ДЛЯ "ЗАСЕКРЕЧЕНОГО" КОНТЕНТУ (Мерцание) */
-        @keyframes skeleton-pulse {
-            0% { background-position: 100% 0; }
-            100% { background-position: -100% 0; }
-        }
-
-        /* 5. ЗАСТОСУВАННЯ СТИЛЮ "СКЕЛЕТОНА" ДО ТЕКСТОВИХ ЕЛЕМЕНТІВ */
-        /* Цей блок робить текст прозорим і додає анімований фон-градієнт */
-        body.privacy-mode .pill > div:first-child > div:first-child, /* Назва препарату */
-        body.privacy-mode .pill > span:nth-child(2), /* Дозування */
-        body.privacy-mode .stat-val,
-        body.privacy-mode .stat-label,
-        body.privacy-mode .med-name,
-        body.privacy-mode .med-dose,
-        body.privacy-mode .check-name,
-        body.privacy-mode .category-header,
-        body.privacy-mode .med-title,
-        body.privacy-mode .med-header > div:first-child > div:nth-child(2), /* Timing в аналізах */
-        body.privacy-mode .note-input,
-        body.privacy-mode .day-header span {
-            color: transparent !important; /* Текст не видно */
-            /* Градієнт для імітації завантаження/засекреченості */
-            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
-            background-size: 200% 100%;
-            animation: skeleton-pulse 2s infinite linear; /* Анімація */
-            border-radius: 4px;
-            min-height: 1em;
-            margin-bottom: 2px;
-            display: inline-block; /* Важно для span */
-            box-shadow: none !important;
-            text-shadow: none !important;
-        }
-
-        /* Коригування ширини для реалістичності */
-        body.privacy-mode .pill > div:first-child > div:first-child { width: 70%; }
-        body.privacy-mode .pill > span:nth-child(2) { width: 40px; }
-        body.privacy-mode .stat-val { width: 80%; }
-        body.privacy-mode .stat-label { width: 50%; margin-top: 8px; }
-        body.privacy-mode .pill-meta, 
-        body.privacy-mode .prog-text { display: none !important; } /* Дрібний текст ховаємо */
-
-        /* 6. Убираємо кольорові індикатори */
-        body.privacy-mode .pill { border-left-color: #333 !important; }
-        body.privacy-mode .stat-card { border-color: #333 !important; }
-        body.privacy-mode .day-card { border-color: var(--border) !important; box-shadow: none !important; }
         
-        /* 7. Блюр для нетекстових блоків */
-        body.privacy-mode .chart-container canvas,
-        body.privacy-mode .photo-area img,
-        body.privacy-mode .body-svg,
-        body.privacy-mode .prog-bar { 
-            filter: blur(10px) grayscale(100%) brightness(0.4);
-            opacity: 0.5;
-            transition: all 0.5s;
-        }
-
-        /* 8. НАВІГАЦІЯ (Залишається видимою, але менш яскравою) */
-        body.privacy-mode .nav-tab { color: #555; }
-        body.privacy-mode .nav-tab.active { color: #888; }
-        body.privacy-mode .nav-tab.active::after { background-color: #888; }
-
-        /* 9. Приховуємо кнопки редагування */
-        body.privacy-mode .edit-ui, 
-        body.privacy-mode .edit-toggle, 
-        body.privacy-mode .btn-add-pill,
-        body.privacy-mode .btn-upload,
-        body.privacy-mode .vitals-row,
-        body.privacy-mode .week-bar, /* Ховаємо вибір тижнів */
-        body.privacy-mode .phase-scroll, /* Ховаємо фази */
-        body.privacy-mode [contenteditable] {
-             display: none !important;
-        }
-        
-        /* Плавні переходи властивостей */
-        .pill > *, .stat-card > *, .med-item > *, .check-row > *, .nav-tab, .day-header span {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        /* Плавні переходи */
+        .app-container * { transition: all 0.5s ease; }
         /* --- END PRIVACY STYLES --- */
+
 
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -1464,6 +1480,7 @@
 
 </body>
 </html>
+
 
 
 
