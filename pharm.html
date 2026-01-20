@@ -74,87 +74,121 @@
         .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: #fff; }
         .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-       /* --- PRIVACY MODE STYLES (ВИПРАВЛЕНО: Скрол + Анімація + Захист) --- */
+      /* --- PRIVACY MODE STYLES (ENCRYPTED STYLE) --- */
         
-        /* 1. Анімація для ВСІХ елементів, що будуть змінюватись (щоб було плавно) */
-        .brand h1, .brand span, .brand-icon,
-        .stat-val, .pill-meta, .chart-container, .med-grid, 
-        .photo-grid, .note-input, .body-map-container,
-        .pill > div > div:first-child,
-        .week-bar, .phase-scroll {
-            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        /* 1. Анімація переходу (плавно зникає/з'являється) */
+        .brand, .stat-card, .pill, .chart-container, .med-card, .photo-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 2. Стиль кнопки "Око" коли режим активний */
+        /* 2. Кнопка "Око" - єдине, що світиться в приватному режимі */
         body.privacy-mode .btn-panic { 
             color: var(--red); 
             border-color: var(--red); 
-            background: rgba(239,68,68,0.1); 
+            background: rgba(239, 68, 68, 0.2); 
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            animation: pulse-red 2s infinite;
         }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        /* 3. Зміни в шапці (H-TRACK) */
-        body.privacy-mode .brand-icon { background: #222; color: #444; box-shadow: none; filter: grayscale(100%); }
-        
-        /* Ховаємо оригінальний текст, показуємо новий */
+        /* 3. ШАПКА: Заміна на H-TRACK */
+        body.privacy-mode .brand-icon { 
+            background: #111; color: #333; box-shadow: none; filter: grayscale(100%); 
+        }
         body.privacy-mode .brand h1 { font-size: 0; }
         body.privacy-mode .brand h1::after { 
-            content: 'H-TRACK'; 
-            font-size: 1.2rem; 
-            color: #fff; 
-            visibility: visible; 
+            content: 'SYSTEM LOCKED'; 
+            font-size: 1.2rem; color: #555; letter-spacing: 2px; visibility: visible;
         }
-        body.privacy-mode .brand span { opacity: 0; }
+        body.privacy-mode .brand span { display: none; }
         
-        /* 4. Блюр контенту */
-        body.privacy-mode .stat-val, 
-        body.privacy-mode .pill-meta, 
+        /* 4. ЗАГАЛЬНИЙ БЛЮР для графіків, фото та карт */
         body.privacy-mode .chart-container,
-        body.privacy-mode .med-grid,
-        body.privacy-mode .photo-grid,
-        body.privacy-mode .note-input,
         body.privacy-mode .body-map-container,
-        body.privacy-mode .days-grid .vitals-row,
+        body.privacy-mode .photo-area,
+        body.privacy-mode .note-input,
+        body.privacy-mode .med-grid,    /* Нижні списки */
+        body.privacy-mode .stats-grid,  /* Верхні статистики */
         body.privacy-mode .week-bar,
         body.privacy-mode .phase-scroll { 
-            filter: blur(12px); 
-            opacity: 0.6; 
+            filter: blur(10px) grayscale(100%); 
+            opacity: 0.2; 
             pointer-events: none; 
         }
 
-        /* 5. Заміна тексту препаратів на "Supplement" */
-        /* Знаходимо назву ліків всередині .pill */
-        body.privacy-mode .pill > div > div:first-child { 
-            font-size: 0 !important; 
-        } 
-        body.privacy-mode .pill > div > div:first-child::after { 
-            content: 'Supplement'; 
-            font-size: 0.95rem; 
-            color: #555; 
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+        /* 5. МАСКУВАННЯ ПРЕПАРАТІВ (ГОЛОВНА ФІШКА) */
+        /* Робимо всі плашки однаковими (сірими), щоб не палити по кольорах */
+        body.privacy-mode .pill {
+            background: #111 !important;
+            border-color: #222 !important;
+            border-left-width: 1px !important;
+            color: #444 !important;
         }
-        /* Блюримо дозування окремо */
-        body.privacy-mode .pill > span { filter: blur(4px); opacity: 0.5; }
+
+        /* Ховаємо реальну назву */
+        body.privacy-mode .pill > div > div:first-child {
+            visibility: hidden; 
+            position: relative;
+        }
+        /* Підставляємо фейкову назву */
+        body.privacy-mode .pill > div > div:first-child::after {
+            content: 'ENCRYPTED_DATA';
+            visibility: visible;
+            position: absolute;
+            left: 0; top: 0;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+            color: #333;
+            background: #111;
+        }
+
+        /* Ховаємо дозування */
+        body.privacy-mode .pill > span {
+            visibility: hidden;
+            position: relative;
+        }
+        /* Підставляємо зірочки замість дози */
+        body.privacy-mode .pill > span::after {
+            content: '****';
+            visibility: visible;
+            position: absolute;
+            right: 0; top: 0;
+            color: #333;
+        }
+
+        /* Ховаємо теги (Base, AM...) */
+        body.privacy-mode .pill-meta { display: none; }
         
-        /* 6. Ховаємо редагування */
+        /* Ховаємо хрестики видалення */
+        body.privacy-mode .edit-ui { display: none !important; }
+
+        /* 6. ІНШІ ЕЛЕМЕНТИ */
+        /* Ховаємо життєві показники */
+        body.privacy-mode .vitals-row { display: none; }
+        
+        /* Ховаємо кнопки редагування */
         body.privacy-mode .edit-toggle,
         body.privacy-mode .btn-add-pill,
         body.privacy-mode .btn-upload,
-        body.privacy-mode .edit-ui {
+        body.privacy-mode [contenteditable] {
             pointer-events: none !important; opacity: 0;
         }
         
-        /* 7. БЛОКУВАННЯ ВЗАЄМОДІЇ (Але залишаємо скрол!) */
+        /* 7. БЛОКУВАННЯ ДОСТУПУ */
         body.privacy-locked { 
-            overflow-y: auto; /* Дозволяє скрол */
+            overflow-y: auto; /* Скрол залишаємо */
         }
         
-        /* Блокуємо кліки по всьому, КРІМ шапки */
-        body.privacy-locked > .app-container > *:not(header) { 
+        /* Блокуємо кліки по всьому контейнеру */
+        body.privacy-locked > .app-container { 
             pointer-events: none; 
             user-select: none;
         } 
+        
+        /* АЛЕ ДОЗВОЛЯЄМО КЛІК ПО ШАПЦІ (Щоб натиснути Око) */
+        body.privacy-locked header { 
+            pointer-events: auto !important; 
+        }
         /* --- END PRIVACY STYLES --- */
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -1367,5 +1401,6 @@
 
 </body>
 </html>
+
 
 
