@@ -112,84 +112,103 @@
             filter: blur(8px) grayscale(90%); opacity: 0.4; pointer-events: none; 
         }
 
-        /* 5. МАСКУВАННЯ ПРЕПАРАТІВ (СУЦІЛЬНА СМУЖКА) */
+        /* --- PRIVACY MODE STYLES (FINAL VERSION) --- */
         
-        /* Робимо весь блок однією суцільною смужкою */
-        body.privacy-mode .pill {
-            background: #111 !important;
-            border: 1px solid #2a2a2a !important;
-            border-left: 3px solid #333 !important; /* Нейтральний борт */
-            color: transparent !important;
-            position: relative;
-            overflow: hidden;
-            /* Текстура */
-            background-image: repeating-linear-gradient(
-                45deg,
-                #141414,
-                #141414 10px,
-                #1a1a1a 10px,
-                #1a1a1a 20px
-            ) !important;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        /* 1. Плавна анімація виходу з блюру для всього контенту */
+        .app-container, header, .nav-tabs, .pill, .med-card, .stat-card, 
+        .chart-container, .photo-area, #mainView {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Прибираємо внутрішні елементи */
-        body.privacy-mode .pill > div, 
-        body.privacy-mode .pill > span,
-        body.privacy-mode .edit-ui,
-        body.privacy-mode .pill-meta {
-            opacity: 0;
-            pointer-events: none;
+        /* 2. Стиль кнопки "Око" */
+        body.privacy-mode .btn-panic { 
+            color: var(--red); border-color: var(--red); 
+            background: rgba(239, 68, 68, 0.15); 
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            animation: pulse-red 2s infinite ease-in-out;
+            z-index: 60; 
+        }
+        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        
+        /* 3. Шапка */
+        body.privacy-mode .brand-icon { background: #111; color: #333; box-shadow: none; filter: grayscale(100%); }
+        body.privacy-mode .brand h1 { font-size: 0; }
+        body.privacy-mode .brand h1::after { 
+            content: 'SYSTEM LOCKED'; font-size: 1.2rem; color: #555; letter-spacing: 3px; visibility: visible; font-family: 'JetBrains Mono', monospace;
+        }
+        body.privacy-mode .brand span { display: none; }
+        
+        /* 4. Блюр та Маскування контенту */
+        body.privacy-mode #mainView,
+        body.privacy-mode .course-progress { 
+            filter: blur(10px) grayscale(100%); 
+            opacity: 0.6; 
+            pointer-events: none; /* Контент клікати не можна */
         }
 
-        /* Напис LOCKED по центру */
-        body.privacy-mode .pill::after {
-            content: 'LOCKED';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: #333;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.05);
-        }
-
-        /* Те саме для аптечки і аналізів (med-item, check-row) */
-        body.privacy-mode .med-item,
-        body.privacy-mode .check-row {
-            background: #111 !important;
-            color: transparent !important;
+        /* 5. НАВІГАЦІЯ (ДОСТУПНА, АЛЕ ЗАМАСКОВАНА) */
+        body.privacy-mode .nav-tab {
+            background: #0a0a0a !important;
             border-color: #222 !important;
-            position: relative;
-            overflow: hidden;
-            background-image: repeating-linear-gradient(45deg, #141414, #141414 10px, #1a1a1a 10px, #1a1a1a 20px) !important;
+            /* ВАЖЛИВО: Дозволяємо клікати по вкладках! */
+            pointer-events: auto !important; 
         }
-        body.privacy-mode .med-item *, body.privacy-mode .check-row * { opacity: 0; pointer-events: none; }
-
-        /* Маскування навігації */
-        body.privacy-mode .nav-tab { background: #0a0a0a !important; border-color: #222 !important; pointer-events: none; }
-        body.privacy-mode .nav-tab span { opacity: 0; }
+        body.privacy-mode .nav-tab span { display: none; } /* Ховаємо текст */
         body.privacy-mode .nav-tab::after {
-            content: ''; display: block; width: 60%; height: 6px; background: #222; margin: 0 auto; border-radius: 4px;
+            content: '///'; /* Символи замість тексту */
+            color: #444; font-family: monospace; letter-spacing: 2px;
         }
+        body.privacy-mode .nav-tab.active { border-color: #444 !important; }
+        body.privacy-mode .nav-tab.active::after { color: #888; content: 'ACCESS'; }
 
-        /* Блюримо показники */
-        body.privacy-mode .vitals-row { display: none; }
-
-        /* Ховаємо редагування */
+        /* 6. Ховаємо інтерфейс редагування */
         body.privacy-mode .edit-toggle,
         body.privacy-mode .btn-add-pill,
         body.privacy-mode .btn-upload,
+        body.privacy-mode .edit-ui,
         body.privacy-mode [contenteditable] {
              display: none !important;
         }
         
-        /* 6. БЛОКУВАННЯ ДОСТУПУ */
-        body.privacy-locked { overflow-y: auto; }
-        body.privacy-locked > .app-container > *:not(header) { pointer-events: none; user-select: none; } 
-        body.privacy-locked header { pointer-events: auto !important; }
+        /* 7. МОДАЛЬНЕ ВІКНО ПАРОЛЯ (ТЕРМІНАЛ) */
+        #privacyModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 2000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(20px);
+            transition: opacity 0.4s ease;
+        }
+        #privacyModal.fade-out { opacity: 0; pointer-events: none; }
+
+        .privacy-modal-content {
+            background: #050505; padding: 40px; border-radius: 12px;
+            border: 1px solid #333; text-align: center; width: 300px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            position: relative;
+            /* Ефект сканера зверху */
+            background-image: linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 4px;
+        }
+        
+        /* Анімація успіху (Зелений спалах) */
+        .privacy-modal-content.success { 
+            border-color: var(--green); 
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.2);
+        }
+
+        .privacy-icon { font-size: 3rem; margin-bottom: 20px; display: block; filter: grayscale(1); transition: 0.3s; }
+        .privacy-modal-content.success .privacy-icon { filter: grayscale(0); transform: scale(1.1); text-shadow: 0 0 20px var(--green); }
+
+        .privacy-pwd-input {
+            width: 100%; padding: 15px; background: #111; border: 1px solid #333;
+            border-radius: 8px; color: #fff; font-size: 1.5rem; text-align: center;
+            letter-spacing: 0.5em; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace;
+            outline: none; transition: 0.3s;
+        }
+        .privacy-pwd-input:focus { border-color: #555; }
+        
+        /* Блокування скролу в режимі введення пароля */
+        body.privacy-locked { overflow: hidden; }
         /* --- END PRIVACY STYLES --- */
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -653,20 +672,55 @@
             }
         },
         
-        unlockPrivacy() {
+                unlockPrivacy() {
             const pwd = document.getElementById('privacyPassword').value;
             const truePass = this.data.privacyPassword || '2255';
             
+            const container = document.getElementById('pwdContainer');
+            const icon = document.getElementById('privIcon');
+            const btn = document.getElementById('unlockBtn');
+
             if(pwd === truePass) {
-                document.body.classList.remove('privacy-locked', 'privacy-mode');
-                document.getElementById('privacyModal').style.display = 'none';
-                document.getElementById('privacyPassword').value = '';
+                // 1. Вмикаємо зелений режим "Успіх"
+                container.classList.add('success');
+                icon.innerText = '🔓';
+                btn.innerText = 'ACCESS GRANTED';
+                btn.style.background = 'var(--green)';
+                btn.style.color = '#000';
+                
+                // 2. Чекаємо трохи, щоб побачити ефект
+                setTimeout(() => {
+                    // Плавно ховаємо модалку
+                    document.getElementById('privacyModal').classList.add('fade-out');
+                    
+                    // Знімаємо блюр з контенту (завдяки CSS transition це буде плавно)
+                    document.body.classList.remove('privacy-locked', 'privacy-mode'); 
+                    
+                    // 3. Повний ресет вікна через 0.5с
+                    setTimeout(() => {
+                        document.getElementById('privacyModal').style.display = 'none';
+                        document.getElementById('privacyModal').classList.remove('fade-out');
+                        container.classList.remove('success');
+                        icon.innerText = '🔒';
+                        btn.innerText = 'UNLOCK';
+                        btn.style.background = ''; // Скидаємо стиль кнопки
+                        btn.style.color = '';
+                        document.getElementById('privacyPassword').value = '';
+                    }, 500);
+                }, 400);
+
             } else {
-                alert('❌ Невірний пароль!');
+                // Анімація помилки (трясіння)
+                container.style.transform = "translateX(10px)";
+                setTimeout(() => container.style.transform = "translateX(-10px)", 50);
+                setTimeout(() => container.style.transform = "translateX(5px)", 100);
+                setTimeout(() => container.style.transform = "translateX(0)", 150);
+                
                 document.getElementById('privacyPassword').value = '';
                 document.getElementById('privacyPassword').focus();
             }
         },
+
 
         getMondayOfStartWeek() {
             const d = new Date(this.data.startDate);
@@ -1390,3 +1444,4 @@
 
 </body>
 </html>
+
