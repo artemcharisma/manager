@@ -112,15 +112,15 @@
             filter: blur(8px) grayscale(90%); opacity: 0.4; pointer-events: none; 
         }
 
-        /* --- PRIVACY MODE STYLES (FINAL VERSION) --- */
+        /* --- PRIVACY MODE STYLES (FINAL & POLISHED) --- */
         
-        /* 1. Плавна анімація виходу з блюру для всього контенту */
+        /* 1. Плавна анімація для всього */
         .app-container, header, .nav-tabs, .pill, .med-card, .stat-card, 
         .chart-container, .photo-area, #mainView {
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 2. Стиль кнопки "Око" */
+        /* 2. Кнопка "Око" */
         body.privacy-mode .btn-panic { 
             color: var(--red); border-color: var(--red); 
             background: rgba(239, 68, 68, 0.15); 
@@ -210,6 +210,7 @@
         /* Блокування скролу в режимі введення пароля */
         body.privacy-locked { overflow: hidden; }
         /* --- END PRIVACY STYLES --- */
+
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
         .nav-tab { flex: 1; text-align: center; padding: 10px 0; color: var(--text-muted); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
@@ -376,13 +377,15 @@
 <div id="undoFloat" onclick="App.undo()">↩</div>
 
 <div id="privacyModal">
-    <div class="privacy-modal-content">
-        <h2>🔒 PRIVACY MODE</h2>
-        <p>Введи пароль для виходу</p>
-        <input type="password" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
-        <button class="btn-privacy-unlock" onclick="App.unlockPrivacy()">РОЗБЛОКУВАТИ</button>
+    <div class="privacy-modal-content" id="pwdContainer">
+        <span class="privacy-icon" id="privIcon">🔒</span>
+        <h2 style="margin:0 0 10px 0; color:#fff; font-size:1.2rem">ACCESS LOCKED</h2>
+        <p style="color:#666; font-size:0.8rem; margin-bottom:20px">ENTER PASSCODE</p>
+        <input type="password" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
+        <button class="btn-privacy-unlock" id="unlockBtn" onclick="App.unlockPrivacy()">UNLOCK</button>
     </div>
 </div>
+
 
 <div class="modal" id="addPillModal">
     <div class="modal-content">
@@ -672,7 +675,7 @@
             }
         },
         
-                unlockPrivacy() {
+                        unlockPrivacy() {
             const pwd = document.getElementById('privacyPassword').value;
             const truePass = this.data.privacyPassword || '2255';
             
@@ -720,6 +723,7 @@
                 document.getElementById('privacyPassword').focus();
             }
         },
+
 
 
         getMondayOfStartWeek() {
@@ -1444,4 +1448,5 @@
 
 </body>
 </html>
+
 
