@@ -396,6 +396,70 @@
         @media (max-width: 360px) {
             .brand h1, .brand span { display: none; }
         }
+        /* --- UI POLISH & ANIMATIONS (ГЛОБАЛЬНІ ПОКРАЩЕННЯ) --- */
+        
+        /* 1. Анімація "Червоний натяк" для кубка */
+        @keyframes secret-hint {
+            0% { transform: scale(1); filter: none; }
+            50% { 
+                transform: scale(1.15) rotate(5deg); 
+                background: linear-gradient(135deg, #ef4444, #991b1b); /* Червоний градієнт */
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+                border-color: #ef4444;
+                color: #fff;
+            }
+            100% { transform: scale(1); filter: none; }
+        }
+        .brand-icon.hint-active {
+            animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 2. "Живі" картки днів та статистики */
+        .day-card, .stat-card, .med-card {
+            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        /* Легкий підйом при наведенні (тільки якщо є мишка) */
+        @media (hover: hover) {
+            .day-card:hover, .med-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+                border-color: #444;
+            }
+        }
+
+        /* 3. Кнопки натискаються (приємний клік) */
+        .btn-icon, .edit-toggle, .phase-btn, .week-btn, .pill {
+            transition: transform 0.1s ease, background 0.2s ease;
+        }
+        .btn-icon:active, .edit-toggle:active, .phase-btn:active, .week-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* 4. Прогрес-бар з ефектом "Shimmer" (переливання) */
+        .prog-bar {
+            position: relative;
+            overflow: hidden;
+        }
+        .prog-bar::after {
+            content: '';
+            position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2.5s infinite;
+        }
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        /* 5. Покращені Tabs */
+        .nav-tab { position: relative; overflow: hidden; }
+        .nav-tab::before {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+            background: rgba(212, 175, 55, 0.1); border-radius: 50%;
+            transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease;
+        }
+        .nav-tab:active::before { width: 200%; height: 200%; }
+
     </style>
 </head>
 <body id="appBody">
@@ -690,16 +754,32 @@
             document.getElementById('fileInput').click();
         },
 
-        async init() {
+                async init() {
             await PhotoDB.init();
             this.load();
             await this.refreshPhotos();
             this.renderNav(); 
             this.renderView();
             
+            // Вмикаємо Privacy Mode на старті
             document.body.classList.add('privacy-mode', 'privacy-locked');
             
-            document.querySelector('.brand').ondblclick = () => {
+            const brandBlock = document.querySelector('.brand');
+            const brandIcon = document.querySelector('.brand-icon');
+
+            // 1. ОДИНОЧНИЙ КЛІК: Анімація "Натяк" (Червоний спалах)
+            brandBlock.onclick = () => {
+                // В приватному режимі не працює
+                if (document.body.classList.contains('privacy-mode')) return;
+                
+                // Перезапуск анімації CSS
+                brandIcon.classList.remove('hint-active');
+                void brandIcon.offsetWidth; // Магія для перезапуску анімації (reflow)
+                brandIcon.classList.add('hint-active');
+            };
+            
+            // 2. ПОДВІЙНИЙ КЛІК: Reset (Без змін логіки)
+            brandBlock.ondblclick = () => {
                 if (document.body.classList.contains('privacy-mode')) return;
 
                 if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
@@ -709,6 +789,7 @@
                 }
             };
         },
+
 
         load() {
             const s = localStorage.getItem('gold_protocol_v6');
@@ -1556,6 +1637,7 @@
 
 </body>
 </html>
+
 
 
 
