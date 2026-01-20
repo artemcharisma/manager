@@ -37,14 +37,24 @@
         .edit-toggle { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; padding: 0; }
         .edit-toggle.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
-        /* Privacy Mode Styles */
-        body.privacy-locked * { pointer-events: none !important; }
-        body.privacy-locked #privacyModal, body.privacy-locked #privacyModal * { pointer-events: auto !important; }
-        body.privacy-mode .brand h1 { font-size: 0; }
-        body.privacy-mode .brand h1::after { content: 'H-TRACK'; font-size: 1.2rem; color: #fff; }
-        body.privacy-mode .brand span { display: none; }
-        body.privacy-mode .stat-val, body.privacy-mode .pill-meta, body.privacy-mode .chart-container { filter: blur(8px); opacity: 0.5; }
-
+        /* Блюримо весь контент, коли клас активний */
+        body.privacy-mode .app-container {
+            filter: blur(15px);
+            pointer-events: none;
+            opacity: 0.4;
+            transition: 0.3s;
+        }
+        /* Ховаємо назву */
+        body.privacy-mode .brand h1, 
+        body.privacy-mode .brand span { opacity: 0; }
+        
+        /* Шар-перехоплювач кліків (щоб відкрити вікно пароля при кліку будь-де) */
+        #privacyOverlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1500;
+        }
+        body.privacy-mode #privacyOverlay { display: block; }
         /* Navigation Tabs */
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
         .nav-tab { flex: 1; text-align: center; padding: 10px 0; color: var(--text-muted); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
@@ -186,7 +196,7 @@
     </style>
 </head>
 <body id="appBody">
-
+<div id="privacyOverlay" onclick="App.openPrivacyUnlock()"></div>
 <div class="app-container">
     <header>
         <div class="header-top">
@@ -195,7 +205,7 @@
                 <div><h1>COURSE</h1><span>GOLD PROTOCOL</span></div>
             </div>
             <div class="controls">
-                <button class="btn-icon" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
+                <button class="btn-icon" onclick="App.handlePrivacyClick()" title="Privacy Mode">👁️</button>
                 <button class="btn-icon" onclick="App.smartSave()" title="Save">💾</button>
                 <button class="btn-icon" onclick="document.getElementById('fileInput').click()" title="Load">📂</button>
                 <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
@@ -455,134 +465,72 @@
         dayBuffer: null,
 
         async init() {
-            await PhotoDB.init();
-            this.load();
-            await this.refreshPhotos();
-            this.renderNav(); 
-            this.renderView();
-            
-            if(this.data.privacyEnabled) {
-                document.body.classList.add('privacy-mode', 'privacy-locked');
-                document.getElementById('privacyModal').style.display = 'flex';
-                setTimeout(() => document.getElementById('privacyPassword').focus(), 100);
-            }
-            
-            document.querySelector('.brand').ondblclick = () => {
-                if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
-                    localStorage.removeItem('gold_protocol_v6');
-                    try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
-                    location.reload();
-                }
-            };
-        },
-
-        load() {
-            const s = localStorage.getItem('gold_protocol_v6');
-            if(s) {
-                try {
-                    this.data = JSON.parse(s);
-                    if(!this.data.vitals) this.data.vitals = {};
-                    if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
-                    if(!this.data.bodyMap) this.data.bodyMap = { last: null, history: [] };
-                    if(!this.data.privacyEnabled) this.data.privacyEnabled = false;
-                    if(!this.data.privacyPassword) this.data.privacyPassword = '2255';
-                    if(!this.data.analysis) this.data.analysis = JSON.parse(JSON.stringify(DefaultData.analysis));
-                    if(!this.data.pharmacy) this.data.pharmacy = JSON.parse(JSON.stringify(DefaultData.pharmacy));
-                    if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
-                    if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
-                } catch(e) {
-                    console.error("Load error:", e);
-                    this.data = JSON.parse(JSON.stringify(DefaultData));
-                }
-            } else {
-                this.data = JSON.parse(JSON.stringify(DefaultData));
-            }
-            this.save();
-        },
-
-        save() { 
-            localStorage.setItem('gold_protocol_v6', JSON.stringify(this.data));
-        },
+        await PhotoDB.init();
+        this.load();
         
-        togglePrivacy() {
-            if(this.data.privacyEnabled) {
-                document.getElementById('privacyModal').style.display = 'flex';
-                document.getElementById('privacyPassword').value = '';
-                setTimeout(() => document.getElementById('privacyPassword').focus(), 100);
-            } else {
+        // 1. Якщо Privacy увімкнено - одразу ставимо клас (блюр)
+        if(this.data.privacyEnabled) {
+            document.body.classList.add('privacy-mode');
+        }
+
+        await this.refreshPhotos();
+        this.renderNav(); 
+        this.renderView();
+    },
+
+    // --- LOGIC: PRIVACY ---
+    handlePrivacyClick() {
+        if (this.data.privacyEnabled) {
+            // Вже приховано -> хочемо відкрити
+            this.openPrivacyUnlock();
+        } else {
+            // Відкрито -> хочемо приховати
+            if(confirm("Увімкнути Privacy Mode?")) {
                 this.data.privacyEnabled = true;
                 this.save();
-                document.body.classList.add('privacy-mode', 'privacy-locked');
-                document.getElementById('privacyModal').style.display = 'flex';
-                setTimeout(() => document.getElementById('privacyPassword').focus(), 100);
+                document.body.classList.add('privacy-mode');
             }
-        },
-        
-        unlockPrivacy() {
-            const pwd = document.getElementById('privacyPassword').value;
-            if(pwd === this.data.privacyPassword) {
-                this.data.privacyEnabled = false;
-                this.save();
-                document.body.classList.remove('privacy-locked', 'privacy-mode');
-                document.getElementById('privacyModal').style.display = 'none';
-                document.getElementById('privacyPassword').value = '';
-            } else {
-                alert('❌ Невірний пароль!');
-                document.getElementById('privacyPassword').value = '';
-                document.getElementById('privacyPassword').focus();
-            }
-        },
+        }
+    },
 
-        getMondayOfStartWeek() {
-            const d = new Date(this.data.startDate);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
-        },
+    openPrivacyUnlock() {
+        // Показуємо модалку пароля
+        document.getElementById('privacyModal').style.display = 'flex';
+        document.getElementById('privacyPassword').value = '';
+        setTimeout(() => document.getElementById('privacyPassword').focus(), 100);
+    },
 
-        getRealDateObj(week, dayIndex) {
-            const monday = this.getMondayOfStartWeek();
-            monday.setDate(monday.getDate() + ((week - 1) * 7) + dayIndex);
-            return monday;
-        },
+    unlockPrivacy() {
+        const pwd = document.getElementById('privacyPassword').value;
+        if(pwd === this.data.privacyPassword) {
+            // Пароль вірний: знімаємо блюр
+            document.body.classList.remove('privacy-mode');
+            document.getElementById('privacyModal').style.display = 'none';
+            // Ми НЕ зберігаємо privacyEnabled = false в базу, 
+            // щоб при перезавантаженні сторінки захист знову вмикався (безпека)
+        } else {
+            alert('❌ Невірний пароль!');
+            document.getElementById('privacyPassword').value = '';
+        }
+    },
 
-        getRealDate(week, dayIndex) {
-            return this.getRealDateObj(week, dayIndex).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
-        },
-        
-        isToday(week, dayIndex) {
-            const d = this.getRealDateObj(week, dayIndex);
-            d.setHours(0,0,0,0);
-            const now = new Date();
-            now.setHours(0,0,0,0);
-            return d.getTime() === now.getTime();
-        },
-        
-        changeStartDate() {
-            const newDate = prompt("Введи дату початку курсу (YYYY-MM-DD):", this.data.startDate);
-            if(newDate && newDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                this.pushHistory();
-                this.data.startDate = newDate;
-                this.save();
-                this.renderView();
-            }
-        },
+    // --- LOGIC: HISTORY (REFACTORING) ---
+    // Тепер використовуємо спільний код з common.js
+    pushHistory() {
+        // Використовуємо Core з common.js
+        window.Core.History.push(this.data);
+    },
 
-        pushHistory() {
-            if(this.history.length > 20) this.history.shift();
-            this.history.push(JSON.stringify(this.data));
-            if (this.state.editing) document.getElementById('undoFloat').classList.add('visible');
-        },
-
-        undo() {
-            if(this.history.length === 0) return;
-            this.data = JSON.parse(this.history.pop());
-            if(this.history.length === 0) document.getElementById('undoFloat').classList.remove('visible');
-            this.save(); 
-            this.refreshPhotos(); 
-            this.renderNav(); 
+    undo() {
+        const prevData = window.Core.History.pop();
+        if (prevData) {
+            this.data = prevData;
+            this.save();
+            this.refreshPhotos();
+            this.renderNav();
             this.renderView();
-        },
+        }
+    },
 
         async renderView() {
             const scrollPos = window.scrollY;
@@ -1155,4 +1103,5 @@
 </body>
 
 </html>
+
 
