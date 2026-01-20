@@ -89,10 +89,10 @@
         </div>
     </div>
 
-    <script src="common.js"></script>
+<script src="common.js"></script>
 
-    <script>
-      // 1. ЧАСЫ
+<script>
+    // 1. ГОДИННИК
     function updateClock() {
         const now = new Date();
         document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
@@ -100,102 +100,59 @@
     }
     setInterval(updateClock, 1000); updateClock();
 
-    // 2. ГЛОБАЛЬНЫЙ БЭКАП (СКАЧАТЬ)
-    function GlobalBackup() {
-        // Я исправил ключи на те, которые реально используются в твоих файлах:
+    // 2. БЕКАП (SAVE)
+    function CreateRestorePoint() {
         const bundle = {
             date: new Date().toISOString(),
-            pharm: JSON.parse(localStorage.getItem('gold_protocol_data') || 'null'), // Исправлено под pharm.html
-            training: JSON.parse(localStorage.getItem('train_data') || 'null'),       // Исправлено под training.html
-            nutrition: JSON.parse(localStorage.getItem('nutrition_data') || 'null')   // Исправлено под nutrition.html
+            pharm: JSON.parse(localStorage.getItem('gold_protocol_v6') || 'null'),
+            training: JSON.parse(localStorage.getItem('training_protocol') || 'null'),
+            nutrition: JSON.parse(localStorage.getItem('protocol_sys_plus_days') || 'null')
         };
-
         const a = document.createElement('a');
         a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle));
-        a.download = `ManagerOS_Backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `ManagerOS_FullBackup_${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     }
 
-    // 3. ЛОГИКА ВОССТАНОВЛЕНИЯ
-    const fileInput = document.getElementById('restore-input');
-    
-    // Клик по кнопке вызывает скрытый инпут
-    document.getElementById('restore-btn').onclick = () => {
-        // Если забыл добавить input в HTML, создадим его на лету, чтобы не было ошибок
-        if (!fileInput) {
-            alert('Ошибка: Не добавлен <input id="restore-input"> в HTML коде!');
-            return;
-        }
-        fileInput.click();
-    };
-
-    if (fileInput) {
-        fileInput.onchange = e => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    let count = 0;
-
-                    // Раскладываем данные по правильным полочкам
-                    if(data.pharm) { localStorage.setItem('gold_protocol_data', JSON.stringify(data.pharm)); count++; }
-                    if(data.training) { localStorage.setItem('train_data', JSON.stringify(data.training)); count++; }
-                    if(data.nutrition) { localStorage.setItem('nutrition_data', JSON.stringify(data.nutrition)); count++; }
-
-                    if (count > 0) {
-                        alert(`✅ Восстановлено модулей: ${count}`);
-                        location.reload();
-                    } else {
-                        alert("⚠️ В файле нет данных Manager OS.");
-                    }
-                } catch (err) {
-                    alert("❌ Ошибка чтения файла: " + err);
-                }
-            };
-            reader.readAsText(file);
-        };
-    }
-
-    // 4. ПОЛНАЯ ОЧИСТКА (WIPE)
-    function FullWipe() {
-        if(confirm("⚠ ВНИМАНИЕ: Это удалит ВСЕ данные приложения!\nПродолжить?")) {
+    // 3. ПОВНИЙ СКИДАННЯ (RESET)
+    function SystemReset() {
+        if(confirm("⚠ УВАГА: Це видалить ВСІ дані з телефону!\nПродовжити?")) {
             localStorage.clear();
-            indexedDB.deleteDatabase("GoldProtocolDB"); // Удаляем базу фото
+            // Спробуємо видалити базу фото, якщо вона є
+            try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e){}
             alert("♻️ Система очищена.");
             location.reload();
         }
     }
-// Оновлена реєстрація
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => reg.update());
-    });
-}
 
-// Функція примусового оновлення
-function ForceUpdate() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for (let registration of registrations) registration.unregister();
-            caches.keys().then((names) => {
-                for (let name of names) caches.delete(name);
+    // 4. ОНОВЛЕННЯ ПРОГРАМИ (Service Worker)
+    function ForceUpdate() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let registration of registrations) registration.unregister();
+                caches.keys().then((names) => {
+                    for (let name of names) caches.delete(name);
+                });
+                alert("Кеш очищено! Оновлення...");
+                window.location.reload(true);
             });
-            alert("Оновлення завантажено! Перезавантажую...");
+        } else {
             window.location.reload(true);
-        });
-    } else {
-        window.location.reload(true);
+        }
     }
-}
-    </script>
-</body>
 
+    // Реєстрація SW
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(reg => reg.update());
+        });
+    }
+</script>
+</body>
 </html>
+
 
 
 
