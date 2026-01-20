@@ -109,9 +109,18 @@
             pointer-events: none !important; opacity: 0;
         }
         
-        /* Блокуємо скрол коли відкрито модалку пароля */
+       /* Modal and Body Lock logic */
         body.privacy-locked { overflow: hidden; }
-        body.privacy-locked > .app-container { pointer-events: none; } 
+        
+        /* Блокуємо весь контент */
+        body.privacy-locked > .app-container { 
+            pointer-events: none; 
+        } 
+        
+        /* ВАЖЛИВО: Дозволяємо клікати по шапці (щоб натиснути Око) */
+        body.privacy-locked header { 
+            pointer-events: auto !important; 
+        }
         /* --- END PRIVACY STYLES --- */
 
         .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
@@ -1320,3 +1329,4 @@
 
 </body>
 </html>
+
