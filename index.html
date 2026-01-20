@@ -160,6 +160,14 @@
             // Fallback якщо DB довго не відповідає
             setTimeout(() => location.reload(), 1000);
         }
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW Registered'))
+                .catch(err => console.log('SW Error', err));
+        });
+    }    
     </script>
 </body>
+
 </html>
