@@ -83,7 +83,9 @@
             </button>
             <button onclick="SystemReset()" style="background:#111; border:1px solid #333; color:var(--red); padding:10px 15px; border-radius:8px; font-size:0.75rem; cursor:pointer; font-family:'JetBrains Mono'; font-weight:600">
                 ⚠ SYSTEM RESET
-            </button>
+            <button onclick="ForceUpdate()" style="background:#111; border:1px solid #d4af37; color:#d4af37; padding:10px 15px; border-radius:8px; font-size:0.75rem; cursor:pointer; font-family:'JetBrains Mono'; font-weight:600">
+                ⚡ UPDATE APP
+</button>
         </div>
     </div>
 
@@ -168,18 +170,32 @@
             location.reload();
         }
     }
+// Оновлена реєстрація
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => reg.update());
+    });
+}
 
-    // 5. РЕГИСТРАЦИЯ SERVICE WORKER
+// Функція примусового оновлення
+function ForceUpdate() {
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('SW OK'))
-                .catch(err => console.error('SW Fail', err));
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) registration.unregister();
+            caches.keys().then((names) => {
+                for (let name of names) caches.delete(name);
+            });
+            alert("Оновлення завантажено! Перезавантажую...");
+            window.location.reload(true);
         });
+    } else {
+        window.location.reload(true);
     }
+}
     </script>
 </body>
 
 </html>
+
 
 
