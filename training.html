@@ -934,12 +934,30 @@ addWeek(type, init=false) {
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
                         
-                        // 1. Якщо це КАРДІО
-                        if(m === 'cardio') {
-                            const s = ex.sets[0] || {};
-                            return `<div class="exercise cardio-block">${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}<div class="cardio-header">🏃 ${ex.n}</div><div class="cardio-grid"><div class="c-input-box"><span class="c-label">Час</span><input class="c-input" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'r',this.value)"></div><div class="c-input-box"><span class="c-label">Км</span><input class="c-input" value="${s.w||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'w',this.value)"></div><div class="c-input-box"><span class="c-label">Ккал</span><input class="c-input" value="${s.d||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'d',this.value)"></div></div></div>`;
-                        }
-
+                       /* --- CARDIO STYLE (Sleek Dark) --- */
+    .cardio-block { 
+        background: rgba(234, 179, 8, 0.05); 
+        border: 1px solid rgba(234, 179, 8, 0.15); 
+        border-radius: 12px; padding: 15px; 
+    }
+    .cardio-header { 
+        display: flex; align-items: center; gap: 8px; 
+        color: var(--cardio); font-weight: 800; font-size: 0.9rem; 
+        margin-bottom: 12px; text-transform: uppercase;
+    }
+    .cardio-grid { 
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
+    }
+    .c-input-box { 
+        background: #000; border: 1px solid #333; border-radius: 8px; 
+        padding: 6px 4px; display: flex; flex-direction: column; align-items: center;
+    }
+    .c-label { font-size: 0.55rem; color: #666; font-weight: 700; margin-bottom: 2px; }
+    .c-input { 
+        width: 100%; background: transparent !important; border: none !important; 
+        color: #fff !important; font-family: 'JetBrains Mono'; font-weight: 700; 
+        font-size: 1rem; text-align: center; padding: 0;
+    }
                         // 2. Якщо це ВПРАВА (Формуємо кольорові сета)
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') { // Вправа на час
