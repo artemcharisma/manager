@@ -35,12 +35,28 @@
             --radius: 12px;
         }
         
-        body {
+               body {
             background-color: var(--bg-app);
             color: var(--text-main);
             margin: 0; padding: 20px 10px; min-height: 100vh;
             display: flex; justify-content: center;
             overflow-x: hidden; padding-bottom: 100px;
+        
+            /* --- НОВЕ: Робимо інтерфейс як додаток --- */
+            -webkit-user-select: none; /* Заборона виділення для Chrome/Safari */
+            -moz-user-select: none;    /* Для Firefox */
+            -ms-user-select: none;     /* Для IE/Edge */
+            user-select: none;         /* Стандарт */
+            -webkit-tap-highlight-color: transparent; /* Прибирає синє миготіння при кліку на мобільному */
+        }
+        
+        /* --- ВИНЯТОК: Дозволяємо виділяти там, де треба писати --- */
+        input, textarea, [contenteditable] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            cursor: text;
         }
 
         .app-container { width: 100%; max-width: 1400px; padding-bottom: 120px; }
@@ -2047,6 +2063,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
