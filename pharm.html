@@ -1240,7 +1240,7 @@ renderAnalytics(c) {
             c.innerHTML = `<div class="chart-container"><canvas id="mainChart"></canvas></div>`;
             
             const labels = []; 
-            const dataTest = [];      // Тільки База (Тест)
+            const dataTest = [];    // База (Тест)
             const dataAnabolics = []; // Інші (Трен, Болд, Прімо...)
             const dataWeight = [];
             
@@ -1262,9 +1262,9 @@ renderAnalytics(c) {
                             const unit = pill.dose.toLowerCase();
 
                             if (!isNaN(val) && unit.includes('mg')) {
-                                // Рахуємо тільки те, що має "кольоровий" статус (стероїди)
+                                // Рахуємо тільки те, що має "кольоровий" статус (ін'єкційні/оральні стероїди)
                                 if (['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
-                                    // Розділяємо: Тест vs Інше
+                                    // Перевірка: Це Тест чи Анаболік?
                                     if(name.includes('test') || name.includes('sust') || name.includes('enan') || name.includes('cyp') || name.includes('prop')) {
                                         weekTest += val;
                                     } else {
@@ -1292,7 +1292,7 @@ renderAnalytics(c) {
             
             const ctx = document.getElementById('mainChart').getContext('2d');
             
-            // --- ГРАДІЄНТИ (SCIFI UI) ---
+            // --- ГРАДІЄНТИ (SCIFI UI STYLE) ---
             const gradientTest = ctx.createLinearGradient(0, 400, 0, 0);
             gradientTest.addColorStop(0, 'rgba(59, 130, 246, 0.2)'); // Blue Fade
             gradientTest.addColorStop(1, 'rgba(59, 130, 246, 0.8)'); // Blue Solid
@@ -1306,7 +1306,7 @@ renderAnalytics(c) {
                 data: {
                     labels: labels,
                     datasets: [
-                        // 1. ЛІНІЯ ВАГИ (Нагорі, найвищий пріоритет)
+                        // 1. ЛІНІЯ ВАГИ (Нагорі, найвищий z-index)
                         { 
                             label: 'Weight (kg)', 
                             data: dataWeight, 
@@ -1329,11 +1329,11 @@ renderAnalytics(c) {
                             borderColor: '#ef4444',
                             borderWidth: 1,
                             yAxisID: 'y', 
-                            stack: 'combined', // Групуємо в один стовпчик
+                            stack: 'combined', // Магія стеку
                             order: 1,
-                            borderRadius: {topLeft: 4, topRight: 4} // Закруглення тільки зверху
+                            borderRadius: {topLeft: 4, topRight: 4} // Закруглення зверху
                         },
-                        // 3. ТЕСТОСТЕРОН (Нижня частина стовпчика - База)
+                        // 3. ТЕСТОСТЕРОН (Нижня частина стовпчика)
                         { 
                             label: 'Test Base (mg)', 
                             data: dataTest, 
@@ -1343,7 +1343,7 @@ renderAnalytics(c) {
                             yAxisID: 'y', 
                             stack: 'combined', // Той самий стек
                             order: 2,
-                            borderRadius: {bottomLeft: 4, bottomRight: 4} 
+                            borderRadius: {bottomLeft: 4, bottomRight: 4} // Закруглення знизу (якщо треба)
                         }
                     ]
                 },
@@ -1353,12 +1353,12 @@ renderAnalytics(c) {
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         x: { 
-                            stacked: true, // Вмикаємо стек по Х
+                            stacked: true, 
                             grid: { display: false },
-                            ticks: { color: '#666', font: {family: 'JetBrains Mono', size: 10} }
+                            ticks: { color: '#666', font: {family: 'JetBrains Mono', size: 9} }
                         },
                         y: { 
-                            stacked: true, // Вмикаємо стек по Y (mg)
+                            stacked: true, // Вмикаємо стек
                             type: 'linear', display: true, position: 'left', 
                             grid: { color: '#222', borderDash: [5, 5] },
                             title: { display: true, text: 'LOAD (mg)', color: '#555', font: {size: 9, weight:'bold'} }
@@ -1371,7 +1371,7 @@ renderAnalytics(c) {
                     },
                     plugins: { 
                         legend: { 
-                            labels: { color: '#bbb', boxWidth: 12, usePointStyle: true, font: {size: 11} },
+                            labels: { color: '#bbb', boxWidth: 12, usePointStyle: true, font: {size: 10} },
                             position: 'top'
                         },
                         tooltip: {
@@ -1385,12 +1385,12 @@ renderAnalytics(c) {
                             displayColors: true,
                             callbacks: {
                                 footer: (items) => {
-                                    // Підсумок загального mg в тултіпі
+                                    // Рахуємо суму для тултіпа
                                     let total = 0;
                                     items.forEach(i => {
                                         if(i.dataset.yAxisID === 'y') total += i.raw;
                                     });
-                                    return total > 0 ? `━━━━━━━━━━\nTOTAL LOAD: ${total} mg` : '';
+                                    return total > 0 ? `━━━━━━━━━━\nTOTAL: ${total} mg` : '';
                                 }
                             }
                         }
@@ -1939,8 +1939,6 @@ renderAnalytics(c) {
 
 </body>
 </html>
-
-
 
 
 
