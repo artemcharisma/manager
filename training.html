@@ -14,8 +14,10 @@
     <link rel="stylesheet" href="assets/style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <style>
-        /* --- 1. GLOBAL SETTINGS --- */
+  <style>
+        /* --- 1. GLOBAL SETTINGS (ЯДЕРНИЙ МЕТОД + КУРСОРИ) --- */
+        
+        /* Блокуємо виділення всюди за замовчуванням */
         *, *::before, *::after {
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
@@ -23,12 +25,24 @@
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
-        /* Дозволяємо писати в інпутах */
+
+        /* Дозволяємо писати і ставимо текстовий курсор в полях */
         input, textarea, [contenteditable="true"] { 
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
             user-select: text !important;
-            cursor: text;
+            cursor: text !important;
+        }
+
+        /* --- ВАЖЛИВО: Робимо "палець" на всіх клікабельних елементах --- */
+        button, select, label,
+        .btn-icon, .edit-toggle, .week-btn, .prog-opt, 
+        .day-card, /* Якщо картку можна згорнути/розгорнути */
+        .ex-del, .set-btn, .btn-add, 
+        .mode-btn, .bank-del, .modal-close,
+        .nav-item, .sys-card, .scroll-top, #sys-fab 
+        {
+            cursor: pointer !important;
         }
 
         :root {
