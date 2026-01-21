@@ -643,16 +643,36 @@
     const PhotoDB = {
         db: null,
         init() {
-            return new Promise((r) => {
-                const req = indexedDB.open("GoldProtocolDB", 1);
-                req.onupgradeneeded = (e) => { 
-                    if(!e.target.result.objectStoreNames.contains("photos")) 
-                        e.target.result.createObjectStore("photos", { keyPath: "id", autoIncrement: true }); 
-                };
-                req.onsuccess = (e) => { this.db = e.target.result; r(); };
-                req.onerror = () => { console.warn("IndexedDB not available"); r(); };
-            });
-        },
+    return new Promise((r) => {
+        // Додано перевірку на наявність indexedDB
+        if (!window.indexedDB) {
+            console.warn("IndexedDB not supported");
+            this.db = null;
+            r();
+            return;
+        }
+        
+        const req = indexedDB.open("GoldProtocolDB", 1);
+        
+        req.onupgradeneeded = (e) => { 
+            const db = e.target.result;
+            if(!db.objectStoreNames.contains("photos")) 
+                db.createObjectStore("photos", { keyPath: "id", autoIncrement: true }); 
+        };
+        
+        req.onsuccess = (e) => { this.db = e.target.result; r(); };
+        
+        req.onerror = (e) => { 
+            console.error("IndexedDB error:", e.target.error); 
+            r(); 
+        };
+        
+        // Важливо: закривати з'єднання при оновленні версії в іншій вкладці
+        req.onblocked = () => {
+            alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
+        };
+    });
+},
         add(week, file) {
             return new Promise((r) => {
                 if(!this.db) { r(); return; }
@@ -893,7 +913,7 @@
                 if (document.body.classList.contains('privacy-mode')) return;
 
                 if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
-                    localStorage.removeItem('gold_protocol_v6');
+                    localStorage.removeItem('gold_protocol');
                     try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
                     location.reload();
                 }
@@ -902,7 +922,7 @@
 
 
         load() {
-            const s = localStorage.getItem('gold_protocol_v6');
+            const s = localStorage.getItem('gold_protocol');
             if(s) {
                 try {
                     this.data = JSON.parse(s);
@@ -1757,10 +1777,6 @@
                 try {
                     const compressedBase64 = await compressImage(f); // Стискаємо
                     // Перетворюємо Base64 назад у Blob для старої логіки (або модифікуємо PhotoDB.add)
-                    // Але PhotoDB.add очікує File/Blob, тому спростимо:
-                    // Ми змінимо логіку PhotoDB.add трохи пізніше, або тут передамо об'єкт.
-                    // ДАВАЙ ЗРОБИМО ПРОСТІШЕ: Прямо запишемо в базу.
-                    
                     if(PhotoDB.db) {
                         const tx = PhotoDB.db.transaction(["photos"], "readwrite");
                         tx.objectStore("photos").add({ week: this.state.week, data: compressedBase64 });
@@ -1794,7 +1810,7 @@
             this.renderView();
         },
         
-                renderNav() { 
+         renderNav() { 
             const nav = document.getElementById('phaseNav');
             let html = this.data.phases.map((p, idx) => `
                 <div class="phase-btn ${p.id===this.state.phaseId?'active':''}" onclick="App.setPhase(${p.id})">
@@ -1815,7 +1831,7 @@
         }
     };
 
-    window.onload = () => App.init();
+    window.onload = () => App.();
    
 </script>
 
@@ -1823,6 +1839,7 @@
 
 </body>
 </html>
+
 
 
 
