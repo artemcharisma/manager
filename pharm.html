@@ -623,7 +623,22 @@
         </div>
     </div>
 </div>
-
+<div class="modal" id="compareModal" style="z-index: 3000;">
+    <div class="modal-content" style="max-width: 800px; width: 95%;">
+        <span class="modal-close" onclick="document.getElementById('compareModal').style.display='none'">✕</span>
+        <h3 class="modal-title" style="text-align:center">⚔️ PROGRESS CHECK</h3>
+        <div class="compare-grid">
+            <div class="compare-col">
+                <div class="compare-label">START (W1)</div>
+                <div class="compare-img-box" id="imgStart">Немає фото</div>
+            </div>
+            <div class="compare-col">
+                <div class="compare-label">CURRENT (W<span id="compCurW"></span>)</div>
+                <div class="compare-img-box" id="imgCurrent">Немає фото</div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     const PhotoDB = {
         db: null,
@@ -1801,22 +1816,6 @@
     };
 
     window.onload = () => App.init();
-<div class="modal" id="compareModal" style="z-index: 3000;">
-    <div class="modal-content" style="max-width: 800px; width: 95%;">
-        <span class="modal-close" onclick="document.getElementById('compareModal').style.display='none'">✕</span>
-        <h3 class="modal-title" style="text-align:center">⚔️ PROGRESS CHECK</h3>
-        <div class="compare-grid">
-            <div class="compare-col">
-                <div class="compare-label">START (W1)</div>
-                <div class="compare-img-box" id="imgStart">Немає фото</div>
-            </div>
-            <div class="compare-col">
-                <div class="compare-label">CURRENT (W<span id="compCurW"></span>)</div>
-                <div class="compare-img-box" id="imgCurrent">Немає фото</div>
-            </div>
-        </div>
-    </div>
-</div>
    
 </script>
 
@@ -1824,6 +1823,7 @@
 
 </body>
 </html>
+
 
 
 
