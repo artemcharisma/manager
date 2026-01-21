@@ -239,6 +239,22 @@
         }
 
         #fileInput { display: none; }
+        /* --- ANIMATION: SECRET HINT (HARD RESET) --- */
+            @keyframes secret-hint {
+                0% { transform: scale(1); filter: none; }
+                50% { 
+                    transform: scale(1.15) rotate(5deg); 
+                    background: linear-gradient(135deg, #ef4444, #991b1b); /* Red Warning */
+                    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+                    color: #fff;
+                    border-color: #ef4444;
+                }
+                100% { transform: scale(1); filter: none; }
+            }
+            .brand-icon.hint-active {
+                animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .brand { cursor: pointer; } /* Показуємо, що сюди можна клікати */      
     </style>
 </head>
 <body class="prog-balanced">
@@ -246,13 +262,14 @@
 <div class="app-container">
     <header>
         <div class="header-top">
-            <div class="brand">
+            <div class="brand" id="brandBlock">
                 <div class="brand-icon">⚖️</div>
                 <div>
                     <h1>TRAINING</h1>
                     <span>PROTOCOL</span>
                 </div>
             </div>
+
             <div class="controls">
                 <button class="btn-icon" id="undoBtn" onclick="App.undo()" style="display:none;color:var(--theme)">↩</button>
                 <button class="btn-icon" onclick="App.exportData()">💾</button>
@@ -261,7 +278,7 @@
                 <button class="edit-toggle" id="editBtn" onclick="App.toggleEdit()">✎</button>
             </div>
         </div>
-        </header>
+    </header>
 
     <div id="viewSchedule">
         <div class="program-selector">
@@ -485,7 +502,24 @@
                 this.data = JSON.parse(JSON.stringify(InitialData));
                 this.addWeek('mass', true);
             }
-            
+            // --- HARD RESET LOGIC (ЯК У PHARM) ---
+            const brandBlock = document.getElementById('brandBlock');
+            const brandIcon = brandBlock.querySelector('.brand-icon');
+
+            // 1. Одиночний клік: Анімація (Натяк)
+            brandBlock.onclick = () => {
+                brandIcon.classList.remove('hint-active');
+                void brandIcon.offsetWidth; // Магія перезапуску анімації
+                brandIcon.classList.add('hint-active');
+            };
+
+            // 2. Подвійний клік: Скидання даних
+            brandBlock.ondblclick = () => {
+                if(confirm("⚠ HARD RESET? \nЦе знищить усі записи тренувань і поверне налаштування за замовчуванням.")) {
+                    localStorage.removeItem('training_protocol');
+                    location.reload();
+                }
+            };
             // Фінальна страховка
             if(!this.data.currentProgram) this.data.currentProgram = 'balanced';
             this.setTheme(this.data.currentProgram);
