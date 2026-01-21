@@ -329,83 +329,134 @@
         .vitals-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 15px; border-top: 1px solid #27272a; }
         .vital-input { background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 8px; font-size: 0.75rem; width: 100%; text-align: center; }
 
-       /* --- PROFESSIONAL MEDICAL CARDS --- */
+      /* --- VISUAL UPGRADE: LABS & PHARMACY --- */
+        
+        /* 1. СІТКА КАРТОК */
         .med-grid, .pharma-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 40px;
         }
 
         .med-card, .category-block { 
-            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; 
-            overflow: hidden; display: flex; flex-direction: column;
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--bg-panel); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
         }
-        .med-card:hover, .category-block:hover { 
-            border-color: #444; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        
+        /* Ефект "підйому" при наведенні */
+        .med-card:hover, .category-block:hover {
+            transform: translateY(-4px);
+            border-color: #444;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
-        /* HEADER */
+        /* 2. ЗАГОЛОВКИ КАРТОК */
         .med-header, .category-header { 
-            background: rgba(255,255,255,0.02); padding: 15px; 
-            border-bottom: 1px solid var(--border); 
+            padding: 15px 18px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
             display: flex; justify-content: space-between; align-items: flex-start;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
         }
+        
         .med-title { 
-            color: var(--primary); font-weight: 800; font-size: 0.95rem; 
-            text-transform: uppercase; margin-bottom: 5px; 
+            color: #fff; font-weight: 800; font-size: 0.95rem; 
+            text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;
         }
         .med-timing { 
-            font-size: 0.75rem; color: #666; font-family: monospace; 
-            background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222;
+            font-size: 0.7rem; color: var(--primary); font-family: 'JetBrains Mono', monospace; 
+            margin-top: 4px; display: block; opacity: 0.8;
         }
 
-        /* ANALYSIS LIST */
+        /* Кольорові полоски для категорій аптечки */
+        .category-header { font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+        .category-block { border-top: 3px solid transparent; } /* Місце під колір */
+        
+        /* Специфічні кольори для категорій */
+        .category-block:has(.heart) { border-top-color: var(--blue); }
+        .category-block:has(.liver) { border-top-color: var(--green); }
+        .category-block:has(.sleep) { border-top-color: var(--purple); }
+        .category-block:has(.sos) { border-top-color: var(--red); }
+        
+        .category-header.heart { color: var(--blue); }
+        .category-header.liver { color: var(--green); }
+        .category-header.sleep { color: var(--purple); }
+        .category-header.sos { color: var(--red); }
+
+        /* 3. СПИСКИ (АНАЛІЗИ) */
         .med-list { padding: 5px 0; flex-grow: 1; }
         .check-row { 
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); 
-            font-size: 0.9rem; 
+            display: flex; align-items: flex-start; 
+            padding: 10px 18px; 
+            border-bottom: 1px solid rgba(255,255,255,0.02); 
+            font-size: 0.9rem; color: #ccc;
+            line-height: 1.4;
         }
         .check-row:last-child { border-bottom: none; }
-        .check-icon { color: var(--green); margin-right: 10px; font-size: 0.8rem; }
-        .check-name { flex-grow: 1; color: #e4e4e7; line-height: 1.4; }
+        .check-icon { 
+            color: var(--green); margin-right: 12px; font-size: 0.7rem; margin-top: 5px; 
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+        .check-name { flex: 1; }
 
-        /* PHARMACY ITEMS (STYLE FROM REFERENCE) */
-        .category-header { font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
-        .category-header.heart { background: rgba(59, 130, 246, 0.1); color: var(--blue); }
-        .category-header.liver { background: rgba(16, 185, 129, 0.1); color: var(--green); }
-        .category-header.sleep { background: rgba(139, 92, 246, 0.1); color: var(--purple); }
-        .category-header.sos { background: rgba(239, 68, 68, 0.1); color: var(--red); }
-
-        .med-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-        .med-row-1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .med-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
+        /* 4. ЕЛЕМЕНТИ АПТЕЧКИ (ITEM + DOSE) */
+        .med-item { 
+            padding: 12px 18px; 
+            border-bottom: 1px solid rgba(255,255,255,0.03); 
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .med-item:last-child { border-bottom: none; }
         
-        /* Чорний блок для дози справа */
+        .med-row-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .med-name { 
+            font-weight: 700; color: #fff; font-size: 0.95rem; 
+        }
+        
+        /* Стильний "Badge" для дози */
         .med-dose { 
-            background: #000; color: #ccc; padding: 2px 8px; 
-            border-radius: 6px; font-size: 0.75rem; font-weight: 700; 
-            border: 1px solid #222; margin-right: 8px;
+            background: #000; color: #ccc; 
+            padding: 4px 8px; border-radius: 6px; 
+            font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+            border: 1px solid #333; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            min-width: 60px; text-align: center;
         }
-        .med-desc { font-size: 0.8rem; color: #555; font-style: italic; }
-
-        /* ADD BUTTONS */
-        .btn-add-check, .btn-add-med {
-            width: 100%; text-align: center; font-size: 0.8rem; color: #444;
-            padding: 12px; cursor: pointer; border-top: 1px dashed var(--border);
-            text-transform: uppercase; font-weight: 700; transition: 0.2s;
-        }
-        .btn-add-check:hover, .btn-add-med:hover { background: #1a1a1a; color: #888; }
         
-        .btn-new-block {
-            width: 100%; padding: 15px; border: 2px dashed #333;
-            background: transparent; color: #666; border-radius: 12px;
-            cursor: pointer; margin-top: 20px; font-weight: 700;
+        .med-desc { 
+            font-size: 0.8rem; color: #666; 
+            padding-right: 20px; font-style: italic;
         }
 
-        /* PRIVACY FIXES FOR NEW CLASSES */
-        body.privacy-mode .med-title, body.privacy-mode .med-timing,
-        body.privacy-mode .check-name, body.privacy-mode .med-name,
-        body.privacy-mode .med-dose, body.privacy-mode .med-desc {
+        /* 5. КНОПКИ */
+        .btn-ghost {
+            width: 100%; text-align: center; font-size: 0.75rem; color: #555;
+            padding: 12px; cursor: pointer; border-top: 1px dashed #222;
+            text-transform: uppercase; font-weight: 700; letter-spacing: 1px;
+            transition: 0.2s; background: transparent; border-left: none; border-right: none; border-bottom: none;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        
+        .btn-new-section {
+            width: 100%; padding: 15px; border: 1px dashed #444;
+            background: transparent; color: #888; border-radius: 12px;
+            cursor: pointer; margin-top: 10px; font-weight: 600; font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .btn-new-section:hover { border-color: var(--primary); color: var(--primary); background: rgba(212, 175, 55, 0.05); }
+
+        /* PRIVACY PATCH: Додаємо нові класи до штриховки */
+        body.privacy-mode .med-title, 
+        body.privacy-mode .med-timing,
+        body.privacy-mode .check-name, 
+        body.privacy-mode .med-name,
+        body.privacy-mode .med-dose, 
+        body.privacy-mode .med-desc {
             color: transparent !important;
             background-image: repeating-linear-gradient(135deg, #1c1c1c, #1c1c1c 10px, #2a2a2a 10px, #2a2a2a 20px);
             background-size: 28px 28px; animation: stripes-move 3s linear infinite;
@@ -1395,58 +1446,78 @@ renderAnalytics(c) {
 
         renderAnalysis(c) {
             let html = '<div class="med-grid">';
+            
             this.data.analysis.forEach((block, i) => {
                 html += `
                 <div class="med-card">
                     <div class="med-header">
                         <div style="flex-grow:1">
-                            <div class="med-title" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].title=this.innerText; App.save()">${block.title}</div>
-                            <div class="med-timing" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].timing=this.innerText; App.save()">${block.timing}</div>
+                            <div class="med-title" contenteditable="${this.state.editing}" 
+                                onblur="App.data.analysis[${i}].title=this.innerText; App.save()">${block.title}</div>
+                            <div class="med-timing" contenteditable="${this.state.editing}" 
+                                onblur="App.data.analysis[${i}].timing=this.innerText; App.save()">${block.timing}</div>
                         </div>
-                        ${this.state.editing ? `<div style="cursor:pointer; color:#ef4444;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}
+                        ${this.state.editing ? `<div style="cursor:pointer; color:#ef4444; padding:0 0 10px 10px;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}
                     </div>
+                    
                     <div class="med-list">
                         ${block.checks.map((chk, j) => `
                             <div class="check-row">
-                                <div style="display:flex; align-items:center; flex-grow:1">
-                                    <span class="check-icon">●</span>
-                                    <span class="check-name" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
-                                </div>
-                                ${this.state.editing ? `<span class="edit-ui" style="color:#ef4444;cursor:pointer;margin-left:10px" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
+                                <span class="check-icon">●</span>
+                                <span class="check-name" contenteditable="${this.state.editing}" 
+                                    onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
+                                ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;margin-left:10px; font-size:0.8rem" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
                             </div>
                         `).join('')}
                     </div>
-                    ${this.state.editing ? `<div class="btn-add-check" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий показник'); App.save(); App.renderView()">+ Add Check</div>` : ''}
+                    
+                    ${this.state.editing ? `<button class="btn-ghost" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий показник'); App.save(); App.renderView()">+ Add Check</button>` : ''}
                 </div>`;
             });
+
             html += `</div>`;
-            if (this.state.editing) html += `<button class="btn-new-block" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:['Показник']}); App.save(); App.renderView()">+ ДОДАТИ ЕТАП</button>`;
+            
+            if (this.state.editing) {
+                html += `<button class="btn-new-section" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:['Показник']}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
+            }
+            
             c.innerHTML = html;
         },
         
-        renderPharm(c) {
-            let html = '<div class="med-grid">'; // Використовуємо ту саму сітку
+       renderPharm(c) {
+            let html = '<div class="med-grid">'; // Та сама сітка
+            
             this.data.pharmacy.forEach((cat, i) => {
                 html += `
                 <div class="category-block">
-                    <div class="category-header ${cat.style}">${cat.title}</div>
-                    <div>
+                    <div class="category-header ${cat.style}">
+                        <span>${cat.title}</span>
+                        ${this.state.editing ? `<span style="cursor:pointer;opacity:0.5" onclick="alert('Видалення категорій поки недоступне, видаліть вміст')">⚙️</span>` : ''}
+                    </div>
+                    
+                    <div class="med-list">
                         ${cat.items.map((item, j) => `
                             <div class="med-item">
-                                <div class="med-row-1">
-                                    <span class="med-name" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].n=this.innerText; App.save()">${item.n}</span>
-                                    <div style="display:flex; align-items:center;">
-                                        <span class="med-dose" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()">${item.d}</span>
-                                        ${this.state.editing ? `<span class="edit-ui" style="color:#ef4444;cursor:pointer;" onclick="App.delMed(${i},${j})">✕</span>` : ''}
+                                <div class="med-row-top">
+                                    <span class="med-name" contenteditable="${this.state.editing}" 
+                                        onblur="App.data.pharmacy[${i}].items[${j}].n=this.innerText; App.save()">${item.n}</span>
+                                    
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span class="med-dose" contenteditable="${this.state.editing}" 
+                                            onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()">${item.d}</span>
+                                        ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;font-size:0.8rem" onclick="App.delMed(${i},${j})">✕</span>` : ''}
                                     </div>
                                 </div>
-                                <div class="med-desc" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].i=this.innerText; App.save()">${item.i}</div>
+                                <div class="med-desc" contenteditable="${this.state.editing}" 
+                                    onblur="App.data.pharmacy[${i}].items[${j}].i=this.innerText; App.save()">${item.i}</div>
                             </div>
                         `).join('')}
                     </div>
-                    ${this.state.editing ? `<div class="btn-add-med" onclick="App.addMed(${i})">+ Add Item</div>` : ''}
+                    
+                    ${this.state.editing ? `<button class="btn-ghost" onclick="App.addMed(${i})">+ Add Item</button>` : ''}
                 </div>`;
             });
+            
             html += '</div>';
             c.innerHTML = html;
         },
@@ -1976,6 +2047,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
