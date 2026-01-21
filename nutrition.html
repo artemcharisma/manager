@@ -3,61 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NUTRITION PROTOCOL</title>
+    <title>PROTOCOL: NUTRITION</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Manager OS">
+    <meta name="apple-mobile-web-app-title" content="Nutrition">
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="assets/style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        /* --- 1. GLOBAL SETTINGS (ЯДЕРНИЙ МЕТОД) --- */
-        *, *::before, *::after {
-            -webkit-user-select: none !important;
-            -moz-user-select: none !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-            box-sizing: border-box; outline: none;
-        }
-        input, textarea, [contenteditable="true"] { 
-            -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            user-select: text !important;
-            cursor: text !important;
-        }
-        button, .icon-btn, .day-tab, .meal-block, .food-row, .target-badge, .btn-add-food, .btn-new-meal, .modal-overlay, .bank-row {
-            cursor: pointer !important;
-        }
-
+        /* --- CORE SETTINGS --- */
         :root {
-            /* Scrollbar */
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: #000; }
-            ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-
             --bg-app: #000000;
             --bg-panel: #121212;
             --border: #2a2a2a;
+            --theme: #d4af37; /* GOLD */
             
-            /* GOLD THEME */
-            --theme: #d4af37; 
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
             
             --danger: #ef4444;
             --success: #10b981;
             
-            /* MACROS COLORS */
-            --p-color: #3b82f6; /* Protein Blue */
-            --f-color: #eab308; /* Fat Gold/Yellow */
-            --c-color: #10b981; /* Carb Green */
+            /* MACROS */
+            --p-color: #3b82f6; 
+            --f-color: #eab308; 
+            --c-color: #10b981; 
             
-            --radius: 14px;
             --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box; outline: none;
+        }
+
+        input, textarea { 
+            -webkit-user-select: text !important; user-select: text !important;
+            cursor: text !important;
         }
 
         body {
@@ -65,62 +55,60 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 120px;
+            padding-bottom: 150px;
         }
 
-        .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
+        .app-container { width: 100%; max-width: 600px; margin: 0 auto; }
 
-        /* HEADER */
+        /* --- HEADER --- */
         header {
-            display: flex; flex-direction: column; gap: 15px; 
-            margin-bottom: 20px; padding-bottom: 15px; 
-            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 20px; border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
         }
-        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, var(--theme), #fcd34d);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
         }
         .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
         .brand span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
 
-        .controls { display: flex; gap: 8px; align-items: center; }
+        .controls { display: flex; gap: 8px; }
         .icon-btn {
             width: 42px; height: 42px; border-radius: 12px; 
             border: 1px solid #333; background: #121212; color: #888;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: all 0.2s ease;
-            -webkit-appearance: none; appearance: none; padding: 0; margin: 0;
+            font-size: 1.2rem; cursor: pointer; transition: 0.2s;
         }
         .icon-btn:active { transform: scale(0.95); background: #000; color: #fff; }
 
-        /* DAY BAR */
+        /* --- DAY NAV --- */
         .day-bar {
-            display: flex; overflow-x: auto; gap: 8px; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none;
+            display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; margin-bottom: 15px; scrollbar-width: none;
         }
         .day-tab {
-            min-width: 80px; padding: 10px 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s; font-size: 0.85rem; font-weight: 700;
+            min-width: 70px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
+            border-radius: 10px; background: var(--bg-panel); border: 1px solid var(--border);
+            color: #555; transition: 0.2s; font-size: 0.8rem; font-weight: 700; cursor: pointer;
         }
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
-            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); transform: translateY(-2px);
         }
         .day-add-btn {
-            min-width: 40px; border-radius: 12px; border: 1px dashed #444; background: transparent;
-            color: #666; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+            min-width: 40px; border-radius: 10px; border: 1px dashed #444; background: transparent;
+            color: #666; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
 
-        /* HUD (DASHBOARD) */
+        /* --- HUD --- */
         .hud {
             background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
             padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
         .hud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
         
@@ -130,17 +118,18 @@
 
         .target-badge {
             background: #000; border: 1px solid #333; padding: 6px 12px; border-radius: 8px;
-            font-family: var(--font-mono); font-size: 0.7rem; color: #888;
+            font-family: var(--font-mono); font-size: 0.7rem; color: #888; cursor: pointer;
         }
         .target-badge span { color: var(--theme); font-weight: 700; }
 
-        .macro-row { display: grid; grid-template-columns: 35px 1fr 50px; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .hud-macros { display: flex; flex-direction: column; gap: 8px; }
+        .macro-row { display: grid; grid-template-columns: 35px 1fr 60px; align-items: center; gap: 10px; }
         .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #666; }
         .mr-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
         .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
         .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; }
 
-        /* MEALS LIST */
+        /* --- MEALS --- */
         .meal-block { 
             background: rgba(255,255,255,0.03); border: 1px solid var(--border); 
             border-radius: 14px; margin-bottom: 15px; overflow: hidden;
@@ -154,12 +143,13 @@
         
         .mh-meta { display: flex; align-items: center; gap: 10px; }
         .mh-kcal { font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem; color: var(--theme); }
-        .mh-del { color: var(--danger); opacity: 0.5; font-size: 14px; padding: 5px; }
+        .mh-del { color: var(--danger); opacity: 0.5; font-size: 14px; padding: 5px; cursor: pointer; }
 
         .food-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;
         }
+        .food-row:active { background: rgba(255,255,255,0.05); }
         .food-row:last-of-type { border-bottom: none; }
         
         .fr-info h4 { margin: 0; font-size: 0.9rem; font-weight: 600; color: #e4e4e7; }
@@ -171,17 +161,17 @@
         .btn-add-food {
             width: 100%; padding: 12px; background: #080808; border: none; border-top: 1px solid var(--border);
             color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
-            transition: 0.2s;
+            transition: 0.2s; cursor: pointer;
         }
         .btn-add-food:active { background: #111; color: #fff; }
 
         .btn-new-meal {
             width: 100%; padding: 15px; border: 1px dashed #333; border-radius: 14px; 
             background: transparent; color: #666; font-weight: 600; font-size: 0.9rem;
-            margin-top: 15px;
+            margin-top: 15px; cursor: pointer;
         }
 
-        /* MODALS & INPUTS */
+        /* --- MODALS & INPUTS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
@@ -202,7 +192,7 @@
         .inp-main {
             width: 100%; background: #000; border: 1px solid #333;
             padding: 14px; border-radius: 12px; color: #fff; font-size: 1rem;
-            font-family: 'Inter', sans-serif; outline: none; transition: 0.2s;
+            font-family: 'JetBrains Mono', monospace; outline: none; transition: 0.2s;
         }
         .inp-main:focus { border-color: var(--theme); }
 
@@ -214,11 +204,11 @@
         .btn-primary {
             width: 100%; background: var(--theme); color: #000; padding: 16px;
             border-radius: 12px; font-weight: 800; border: none; text-transform: uppercase;
-            margin-top: 10px;
+            margin-top: 10px; cursor: pointer;
         }
         .btn-danger {
             width: 100%; background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 14px;
-            border-radius: 12px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 5px;
+            border-radius: 12px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 5px; cursor: pointer;
         }
 
         /* AUTOCOMPLETE */
@@ -226,7 +216,7 @@
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
             margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;
         }
-        .sugg-item { padding: 12px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; }
+        .sugg-item { padding: 12px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; cursor: pointer; }
         .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; }
 
         /* COLORS */
@@ -243,14 +233,14 @@
         .bank-list-container { max-height: 60vh; overflow-y: auto; margin-top: 10px; }
         .bank-row {
             padding: 12px 0; border-bottom: 1px solid #222; 
-            display: flex; justify-content: space-between; align-items: center; 
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
         .bank-row b { display: block; font-size: 0.95rem; color: #eee; margin-bottom: 2px; }
         .bank-row span { font-family: var(--font-mono); font-size: 0.7rem; color: #666; }
         
         .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
         .day-name-edit { font-size: 1.1rem; font-weight: 800; color: #fff; border-bottom: 1px dashed #333; }
-        .btn-del-day { background: transparent; border: none; color: #666; font-size: 0.8rem; }
+        .btn-del-day { background: transparent; border: none; color: #666; font-size: 0.8rem; cursor: pointer; }
 
         /* ANIMATION */
         @keyframes secret-hint {
@@ -259,7 +249,6 @@
             100% { transform: scale(1); }
         }
         .brand-icon.hint-active { animation: secret-hint 0.4s ease; }
-        
     </style>
 </head>
 <body>
@@ -289,14 +278,17 @@
     
     <div class="day-control-panel">
         <span class="day-name-edit" contenteditable="true" onblur="App.renameDay(this.innerText)" id="currentDayTitle">День</span>
-        <button class="btn-del-day" onclick="App.deleteDay()">🗑 Видалити</button>
+        <div style="display:flex; gap:10px">
+             <button class="btn-del-day" onclick="App.duplicateDay()">❐ Копія</button>
+             <button class="btn-del-day" onclick="App.deleteDay()" style="color:var(--danger)">🗑</button>
+        </div>
     </div>
 
     <div class="hud">
         <div class="hud-header">
             <div class="k-group">
                 <span class="k-val" id="disp-k">0</span>
-                <span class="k-label">ВСЬОГО ККАЛ</span>
+                <span class="k-label">ККАЛ СЬОГОДНІ</span>
             </div>
             <div class="target-badge" onclick="App.openTargets()">
                 ЦІЛЬ: <span id="disp-target">2700</span>
@@ -342,10 +334,10 @@
         <input type="number" id="inpWeight" class="inp-main" placeholder="Вага (г) або шт" inputmode="decimal">
 
         <div class="stats-grid">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input id="inpP" disabled></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input id="inpF" disabled></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input id="inpC" disabled></div>
-            <div class="stat-box"><label>ККАЛ</label><input id="inpK" disabled></div>
+            <div class="stat-box"><label class="color-p">БІЛ</label><input id="inpP"></div>
+            <div class="stat-box"><label class="color-f">ЖИР</label><input id="inpF"></div>
+            <div class="stat-box"><label class="color-c">ВУГ</label><input id="inpC"></div>
+            <div class="stat-box"><label>ККАЛ</label><input id="inpK"></div>
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
@@ -360,9 +352,7 @@
             <span onclick="document.getElementById('bankModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         <button class="btn-primary" onclick="App.openBankEdit(null)">+ СТВОРИТИ НОВИЙ</button>
-        
         <input class="inp-main" style="margin-top:10px; padding:12px; font-size:0.9rem" placeholder="🔍 Фільтр..." oninput="App.renderBank(this.value)">
-        
         <div class="bank-list-container" id="bankList"></div>
     </div>
 </div>
@@ -373,21 +363,17 @@
             <h3 class="mc-title">РЕДАКТОР</h3>
             <span onclick="document.getElementById('bankEditModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
-        
         <input id="bankInpName" class="inp-main" placeholder="Назва продукту">
-        
         <div class="stats-grid">
             <div class="stat-box"><label class="color-p">Б</label><input id="bankInpP" placeholder="0" inputmode="decimal"></div>
             <div class="stat-box"><label class="color-f">Ж</label><input id="bankInpF" placeholder="0" inputmode="decimal"></div>
             <div class="stat-box"><label class="color-c">В</label><input id="bankInpC" placeholder="0" inputmode="decimal"></div>
             <div class="stat-box"><label>К</label><input id="bankInpK" placeholder="Auto" inputmode="decimal"></div>
         </div>
-
         <div class="chk-wrap">
             <input type="checkbox" id="bankInpUnit">
             <label for="bankInpUnit">Це одна порція/шт (не 100г)</label>
         </div>
-
         <button class="btn-primary" onclick="App.saveBankItem()">ЗБЕРЕГТИ В БАЗУ</button>
         <button class="btn-danger" id="btnDelBank" onclick="App.delFromBank()">ВИДАЛИТИ З БАЗИ</button>
     </div>
@@ -396,7 +382,7 @@
 <div id="targetsModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
-            <h3 class="mc-title">МОЇ ЦІЛІ (На день)</h3>
+            <h3 class="mc-title">МОЇ ЦІЛІ</h3>
             <span onclick="document.getElementById('targetsModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         <div class="stats-grid">
@@ -417,15 +403,12 @@
         "Рис": {p:2.7, f:0.3, c:28, k:130},
         "Гречка": {p:4, f:1, c:21, k:110},
         "Макарони": {p:5, f:1, c:30, k:150},
-        "Картопля": {p:2, f:0, c:17, k:77},
         "Куряче філе": {p:23, f:1, c:0, k:110},
         "Яловичина": {p:20, f:10, c:0, k:180},
         "Яйце (1шт)": {p:6, f:5, c:0.5, k:70, unit:true},
-        "Білок яєчний": {p:3, f:0, c:0, k:15, unit:true},
         "Сир кисломолочний": {p:18, f:5, c:2, k:120},
         "Олія оливкова": {p:0, f:100, c:0, k:884},
         "Горіхи": {p:15, f:60, c:10, k:650},
-        "Авокадо": {p:2, f:15, c:9, k:160},
         "Банан": {p:1, f:0, c:21, k:90},
         "Протеїн (1 порція)": {p:24, f:1, c:2, k:110, unit:true}
     };
@@ -498,7 +481,6 @@
             this.save(); this.render();
         },
 
-        // --- DAY MANAGER ---
         getCurrentDay() {
             return this.data.days.find(d => d.id === this.state.currentDayId);
         },
@@ -521,6 +503,24 @@
             this.data.days.push(newDay);
             this.state.currentDayId = id;
             if(!silent) { this.save(); this.render(); }
+        },
+
+        // NEW: Copy current day structure
+        duplicateDay() {
+            const day = this.getCurrentDay();
+            if(!day) return;
+            this.pushHistory();
+            const id = Date.now();
+            // Deep copy logic
+            const newDay = JSON.parse(JSON.stringify(day));
+            newDay.id = id;
+            newDay.name = day.name + " (Копія)";
+            // Regenerate IDs for meals to avoid conflict
+            newDay.meals.forEach(m => m.id = Math.random());
+            
+            this.data.days.push(newDay);
+            this.state.currentDayId = id;
+            this.save(); this.render();
         },
 
         switchDay(id) {
@@ -546,7 +546,6 @@
             this.save(); this.render();
         },
 
-        // --- RENDER ENGINE ---
         render() {
             this.renderDaysBar();
             const day = this.getCurrentDay();
@@ -560,13 +559,23 @@
                 let mCal = 0, mP = 0, mF = 0, mC = 0;
 
                 const foodsHtml = m.foods.map((f, i) => {
-                    const ref = this.data.bank[f.n] || f; 
-                    const r = ref.unit ? f.w : f.w/100;
+                    // Fallback to saved data if not in bank (Quick Add support)
+                    const ref = this.data.bank[f.n] || {p:f.p, f:f.f, c:f.c, k:f.k, unit:f.unit}; 
                     
-                    const k = Math.round((ref.k || 0) * r);
-                    const p = Math.round((ref.p || 0) * r);
-                    const fat = Math.round((ref.f || 0) * r);
-                    const c = Math.round((ref.c || 0) * r);
+                    // If manually entered, we trust saved Kcal, else calculate
+                    let k, p, fat, c;
+                    
+                    if(this.data.bank[f.n]) {
+                        // Logic for Bank Item
+                        const r = ref.unit ? f.w : f.w/100;
+                        k = Math.round((ref.k || 0) * r);
+                        p = Math.round((ref.p || 0) * r);
+                        fat = Math.round((ref.f || 0) * r);
+                        c = Math.round((ref.c || 0) * r);
+                    } else {
+                        // Logic for Quick Add Item (already calculated per weight)
+                         k = f.k; p = f.p; fat = f.f; c = f.c;
+                    }
                     
                     mCal += k; mP += p; mF += fat; mC += c;
 
@@ -626,9 +635,14 @@
 
             let t = {p:0, f:0, c:0, k:0};
             day.meals.forEach(m => m.foods.forEach(f => {
-                const ref = this.data.bank[f.n] || f;
-                const r = ref.unit ? f.w : f.w/100;
-                t.p += (ref.p||0)*r; t.f += (ref.f||0)*r; t.c += (ref.c||0)*r; t.k += (ref.k||0)*r;
+                const ref = this.data.bank[f.n];
+                if(ref) {
+                    const r = ref.unit ? f.w : f.w/100;
+                    t.p += (ref.p||0)*r; t.f += (ref.f||0)*r; t.c += (ref.c||0)*r; t.k += (ref.k||0)*r;
+                } else {
+                    // Handle non-bank items
+                    t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
+                }
             }));
             
             const tg = this.data.targets;
@@ -644,7 +658,7 @@
                 const txt = document.getElementById('disp-'+id);
                 const pct = Math.min(100, (val/max)*100);
                 el.style.width = pct + '%';
-                txt.innerText = Math.round(val) + 'г';
+                txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
             };
             
             updateBar('p', t.p, tg.p);
@@ -652,7 +666,6 @@
             updateBar('c', t.c, tg.c);
         },
 
-        // --- FOOD ACTIONS ---
         searchFood(q) {
             const list = document.getElementById('sugg-list');
             list.innerHTML = '';
@@ -693,7 +706,10 @@
         editFood(mid, idx) {
             this.state.mid = mid; this.state.fidx = idx;
             const f = this.getCurrentDay().meals.find(m=>m.id===mid).foods[idx];
-            let base = this.data.bank[f.n] || f; 
+            // If in bank, use bank data, else use saved data
+            let base = this.data.bank[f.n] ? this.data.bank[f.n] : f;
+            // Need to reverse calc per 100g if it was quick added? 
+            // For simplicity, quick edit just loads values
             this.openModal('РЕДАГУВАТИ', {...base, w: f.w, n: f.n}, true);
         },
 
@@ -701,11 +717,19 @@
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('inpName').value = f.n||'';
             document.getElementById('inpWeight').value = f.w||'';
-            const ref = this.data.bank[f.n] || f;
-            document.getElementById('inpP').value = ref.p||0;
-            document.getElementById('inpF').value = ref.f||0;
-            document.getElementById('inpC').value = ref.c||0;
-            document.getElementById('inpK').value = ref.k||0;
+            
+            // Allow manual entry (Quick Add)
+            const isBank = !!this.data.bank[f.n];
+            
+            document.getElementById('inpP').value = f.p||0;
+            document.getElementById('inpF').value = f.f||0;
+            document.getElementById('inpC').value = f.c||0;
+            document.getElementById('inpK').value = f.k||0;
+            
+            // Unlock inputs if adding new
+            const inputs = ['inpP','inpF','inpC','inpK'];
+            inputs.forEach(id => document.getElementById(id).disabled = isBank);
+            
             document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
             document.getElementById('foodModal').style.display = 'flex';
             document.getElementById('sugg-list').style.display = 'none';
@@ -718,15 +742,24 @@
             const w = parseFloat(document.getElementById('inpWeight').value);
             if(!n || isNaN(w)) return;
             
-            if(!this.data.bank[n]) {
-                if(confirm(`"${n}" немає в базі. Створити?`)) {
-                    this.data.bank[n] = {p:0,f:0,c:0,k:0,unit:false};
-                } else return;
+            const meal = this.getCurrentDay().meals.find(m=>m.id===this.state.mid);
+            let item;
+
+            if(this.data.bank[n]) {
+                // Bank Item: Save only ref and weight
+                item = {n, w};
+            } else {
+                // Quick Add: Save calculated macros
+                const p = parseFloat(document.getElementById('inpP').value)||0;
+                const f = parseFloat(document.getElementById('inpF').value)||0;
+                const c = parseFloat(document.getElementById('inpC').value)||0;
+                let k = parseFloat(document.getElementById('inpK').value);
+                if(!k && (p||f||c)) k = Math.round(p*4 + f*9 + c*4);
+                
+                // For quick add, we save the TOTAL macros for this entry
+                item = {n, w, p, f, c, k, unit: true}; // Treat as unit to avoid recalc issues
             }
 
-            const meal = this.getCurrentDay().meals.find(m=>m.id===this.state.mid);
-            const item = {n, w};
-            
             this.pushHistory();
             if(this.state.fidx === -1) meal.foods.push(item);
             else meal.foods[this.state.fidx] = item;
