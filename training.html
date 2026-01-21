@@ -15,201 +15,217 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
-    /* --- 1. GLOBAL SETTINGS --- */
-    *, *::before, *::after {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        user-select: none !important;
-        -webkit-tap-highlight-color: transparent !important;
-        box-sizing: border-box; outline: none;
-    }
-    /* Дозволяємо писати в інпутах */
-    input, textarea, [contenteditable="true"] { 
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        user-select: text !important;
-        cursor: text;
-    }
+        /* --- 1. GLOBAL SETTINGS --- */
+        *, *::before, *::after {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            box-sizing: border-box; outline: none;
+        }
+        /* Дозволяємо писати в інпутах */
+        input, textarea, [contenteditable="true"] { 
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            user-select: text !important;
+            cursor: text;
+        }
 
-    :root {
-        --bg-app: #000000;
-        --bg-panel: #121212;
-        --border: #2a2a2a;
-        --theme: #d4af37; /* GOLD */
-        --text-main: #f4f4f5;
-        --text-muted: #a1a1aa;
-        --danger: #ef4444;
-        --success: #10b981;
-        --cardio: #eab308;
-    }
+        :root {
+            /* Scrollbar */
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
+            ::-webkit-scrollbar-track { background: #000; }
+            ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 
-    body.prog-arms { --theme: #8b5cf6; } /* Purple override */
+            --bg-app: #000000;
+            --bg-panel: #121212; /* Трохи світліший чорний для блоків */
+            --border: #2a2a2a;
+            
+            /* GOLD THEME (PHARM STYLE) */
+            --theme: #d4af37; 
+            --primary: #d4af37;
+            
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            
+            --danger: #ef4444;
+            --success: #10b981; /* Emerald Green виглядає краще з золотом */
+            --cardio: #eab308;
+            
+            /* Для сумісності зі старим кодом */
+            --mass: #d4af37; 
+            --cut: #3b82f6; /* Синій для сушки, гарний контраст */
+        }
 
-    body {
-        background-color: var(--bg-app);
-        color: var(--text-main);
-        font-family: 'Inter', sans-serif;
-        margin: 0; padding: 15px; min-height: 100vh;
-        padding-bottom: 100px;
-    }
+        body.prog-arms { --theme: #8b5cf6; --mass: #8b5cf6; } /* Purple override */
 
-    .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 15px; min-height: 100vh;
+            padding-bottom: 100px;
+        }
 
-    /* --- 2. HEADER & CONTROLS --- */
-    header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border);
-    }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon {
-        width: 44px; height: 44px; 
-        background: linear-gradient(135deg, var(--theme), #fcd34d);
-        border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); color: #000;
-    }
-    .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
-    .brand span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
-    .controls { display: flex; gap: 8px; }
-    .btn-icon, .edit-toggle {
-        width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
-        background: var(--bg-panel); color: var(--text-muted); cursor: pointer; 
-        display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.2s;
-    }
-    .btn-icon:hover { background: #222; color: #fff; border-color: var(--theme); }
-    .edit-toggle.active { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme); }
+        /* --- 2. HEADER & CONTROLS --- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-icon {
+            width: 44px; height: 44px; 
+            background: linear-gradient(135deg, var(--theme), #fcd34d);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
+        }
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
+        .brand span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
 
-    /* --- 3. SCHEDULE UI (DIARY) --- */
-    .program-selector {
-        background: #111; padding: 4px; border-radius: 14px; border: 1px solid #333; margin-bottom: 25px;
-        display: flex;
-    }
-    .prog-opt {
-        flex: 1; padding: 12px; text-align: center; font-size: 0.8rem; font-weight: 700; cursor: pointer;
-        transition: 0.3s; color: #666; border-radius: 10px; text-transform: uppercase;
-    }
-    .prog-opt.active { color: #000; background: var(--theme); }
+        .controls { display: flex; gap: 8px; }
+        .btn-icon, .edit-toggle {
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+            background: var(--bg-panel); color: var(--text-muted); cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.2s;
+        }
+        .btn-icon:hover { background: #222; color: #fff; border-color: var(--theme); }
+        .edit-toggle.active { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
 
-    .week-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
-    .week-btn { 
-        min-width: 75px; padding: 12px 0; display: flex; flex-direction: column; align-items: center; 
-        border-radius: 12px; cursor: pointer; color: #555; border: 1px solid var(--border); 
-        background: var(--bg-panel); position: relative;
-    }
-    .week-btn span { font-weight: 800; font-size: 1.1rem; }
-    .week-btn small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 3px; }
-    .week-btn.active { border-color: var(--theme); color: #fff; background: rgba(212, 175, 55, 0.1); }
-    .week-btn.active small { color: var(--theme); }
+        /* --- 3. SCHEDULE UI (DIARY) --- */
+        .program-selector {
+            background: #111; padding: 4px; border-radius: 14px; border: 1px solid #333; margin-bottom: 25px;
+            display: flex;
+        }
+        .prog-opt {
+            flex: 1; padding: 12px; text-align: center; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: 0.3s; color: #666; border-radius: 10px; text-transform: uppercase;
+        }
+        .prog-opt.active { color: #000; background: var(--theme); box-shadow: 0 2px 15px rgba(0,0,0,0.3); }
 
-    .day-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
-    .day-header { 
-        padding: 12px 15px; border-bottom: 1px solid var(--border); 
-        background: linear-gradient(to right, rgba(255,255,255,0.03), transparent);
-        display: flex; justify-content: space-between; align-items: center;
-    }
-    .day-title { font-weight: 800; font-size: 1rem; color: #fff; }
-    .day-group { 
-        font-size: 0.65rem; font-family: 'JetBrains Mono'; padding: 4px 8px; border-radius: 6px; 
-        background: #000; text-transform: uppercase; font-weight: 700; color: var(--theme); border: 1px solid #333;
-    }
+        .week-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .week-btn { 
+            min-width: 75px; padding: 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 12px; cursor: pointer; color: #555; border: 1px solid var(--border); 
+            background: var(--bg-panel); position: relative; transition: 0.2s;
+        }
+        .week-btn span { font-weight: 800; font-size: 1.1rem; }
+        .week-btn small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 3px; }
+        
+        .week-btn.active { border-color: var(--theme); color: #fff; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .week-btn.active small { color: var(--theme); }
 
-    .exercise { position: relative; padding: 12px; border-bottom: 1px dashed #333; }
-    .exercise:last-child { border-bottom: none; }
-    .ex-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; }
-    
-    /* INPUTS FOR SETS (DESIGN UPDATE) */
-    .sets-wrapper { display: flex; flex-wrap: wrap; gap: 8px; }
-    .set-row { 
-        display: flex; align-items: center; background: #000; 
-        border: 1px solid #333; border-radius: 6px; overflow: hidden; height: 34px;
-    }
-    .set-num { 
-        background: #1a1a1a; color: #666; font-size: 0.7rem; font-weight: 800; 
-        height: 100%; padding: 0 10px; display: flex; align-items: center; border-right: 1px solid #333;
-    }
-    .set-part { display: flex; align-items: baseline; padding: 0 6px; }
-    .set-input { 
-        width: 32px; background: transparent; border: none; padding: 0;
-        text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
-    }
-    .set-input.w-val { color: var(--theme); } 
-    .set-unit { font-size: 0.6rem; color: #444; margin-left: 2px; }
-    .set-divider { width: 1px; height: 16px; background: #333; }
+        .day-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
+        .day-header { 
+            padding: 12px 15px; border-bottom: 1px solid var(--border); 
+            background: linear-gradient(to right, rgba(255,255,255,0.03), transparent);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .day-title { font-weight: 800; font-size: 1rem; color: #fff; }
+        .day-group { 
+            font-size: 0.65rem; font-family: 'JetBrains Mono'; padding: 4px 8px; border-radius: 6px; 
+            background: #000; text-transform: uppercase; font-weight: 700; color: var(--theme); border: 1px solid #333;
+        }
 
-    /* --- 4. STATS (RESTORED LAYOUT + NEW COLORS) --- */
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
-    .stat-box { 
-        background: var(--bg-panel); border: 1px solid var(--border); 
-        padding: 15px; border-radius: 12px; display: flex; flex-direction: column; 
-    }
-    .stat-header-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-    .stat-target-input { 
-        width: 30px; background: #000; border: 1px solid #333; color: #888; 
-        font-size: 0.7rem; text-align: center; border-radius: 4px; 
-    }
-    .stat-val { font-size: 1.5rem; font-weight: 800; font-family: 'JetBrains Mono'; color: #fff; }
-    .stat-bar-bg { height: 4px; background: #222; border-radius: 2px; overflow: hidden; margin-top: auto; }
-    .stat-bar-fill { height: 100%; background: var(--theme); transition: width 0.5s; }
+        .ex-list { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        .exercise { position: relative; padding-bottom: 12px; border-bottom: 1px dashed #333; }
+        .exercise:last-of-type { border-bottom: none; padding-bottom: 0; }
+        
+        .ex-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; padding-right: 35px; }
+        .ex-name-row { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .ex-name-input { background: transparent; border: none; color: #fff; font-weight: 700; width: 100%; font-size: 0.95rem; }
+        .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; line-height: 1.4; display: block; }
+        .ex-badge { font-size: 0.6rem; color: var(--text-muted); background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222; width: fit-content; }
 
-    /* --- 5. GUIDE (RESTORED LAYOUT + NEW COLORS) --- */
-    .guide-switcher { display: flex; gap: 10px; margin-bottom: 15px; }
-    .mode-btn { 
-        flex: 1; padding: 10px; border-radius: 8px; text-align: center; font-weight: 700; 
-        cursor: pointer; border: 1px solid #333; background: #111; color: #666; transition: 0.2s; 
-    }
-    .mode-btn.mass.active { background: rgba(212, 175, 55, 0.2); color: #fff; border-color: var(--theme); }
-    .mode-btn.cut.active { background: rgba(6, 182, 212, 0.2); color: #fff; border-color: #06b6d4; }
+        /* SETS (Зберігаємо твій вигляд, тільки кольори підправив) */
+        .sets-wrapper { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .set-row { 
+            display: flex; align-items: center; background: #0a0a0a; border: 1px solid #333; 
+            border-radius: 8px; overflow: hidden; height: 38px;
+        }
+        .set-num { 
+            background: #18181b; color: #555; font-size: 0.7rem; font-weight: 800; 
+            height: 100%; padding: 0 10px; display: flex; align-items: center; justify-content: center;
+            border-right: 1px solid #333;
+        }
+        .set-part { display: flex; align-items: baseline; padding: 0 6px; }
+        .set-input { 
+            width: 32px; background: transparent; border: none; padding: 0;
+            text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
+        }
+        .set-input.w-val { color: var(--theme); } 
+        .set-unit { font-size: 0.6rem; color: #444; font-weight: 700; margin-left: 3px; }
+        .set-divider { width: 1px; height: 16px; background: #333; margin: 0 2px; }
 
-    .guide-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .guide-table th { 
-        text-align: left; padding: 12px; color: #666; font-size: 0.7rem; 
-        text-transform: uppercase; border-bottom: 1px solid #333; 
-    }
-    .guide-table td { padding: 12px; border-bottom: 1px solid #222; color: #ccc; vertical-align: top; }
-    .tag-warm { 
-        display: inline-block; font-size: 0.65rem; color: #888; background: #000; 
-        padding: 3px 6px; border-radius: 4px; border: 1px solid #333; font-family: 'JetBrains Mono'; 
-    }
-    .row-note { font-size: 0.75rem; color: #666; font-style: italic; margin-top: 4px; }
+        /* --- 4. STATS (Gold Edition) --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .stat-box { 
+            background: var(--bg-panel); border: 1px solid var(--border); 
+            padding: 15px; border-radius: 12px; display: flex; flex-direction: column; 
+        }
+        .stat-header-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .stat-target-input { width: 30px; background: #000; border: 1px solid #333; color: #888; font-size: 0.7rem; text-align: center; border-radius: 4px; }
+        .stat-bar-bg { height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-top: auto; }
+        .stat-bar-fill { height: 100%; background: var(--theme); border-radius: 3px; transition: width 0.5s; }
+        .stat-val { font-size: 1.4rem; font-weight: 800; font-family: 'JetBrains Mono'; color: #fff; }
 
-    /* --- 6. FLOATING BUTTONS FIX --- */
-    .scroll-top { 
-        position: fixed; 
-        bottom: 170px; /* <--- ПІДНЯВ ВИЩЕ, ЩОБ НЕ ЗАВАЖАЛО ЗІРЦІ */
-        right: 20px; 
-        width: 45px; height: 45px; 
-        background: rgba(18,18,18,0.9); 
-        border: 1px solid var(--theme); 
-        border-radius: 50%; 
-        color: var(--theme); 
-        display: flex; align-items: center; justify-content: center; 
-        cursor: pointer; z-index: 90; font-size: 1.2rem; backdrop-filter: blur(5px); 
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    }
+        /* --- 5. GUIDE (Gold Edition) --- */
+        .guide-search { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 15px; }
+        .guide-switcher { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-btn { flex: 1; padding: 10px; border-radius: 8px; text-align: center; font-weight: 700; cursor: pointer; border: 1px solid #333; background: #111; color: #666; transition: 0.2s; }
+        .mode-btn.mass.active { background: var(--theme); color: #000; border-color: var(--theme); }
+        .mode-btn.cut.active { background: var(--cut); color: #fff; border-color: var(--cut); }
 
-    /* System Menu Button (SysSwitch) fix */
-    #sys-fab { bottom: 90px !important; z-index: 100 !important; }
+        .guide-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .guide-table th { text-align: left; padding: 10px; color: #666; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid #333; }
+        .guide-table td { padding: 12px 10px; border-bottom: 1px solid #222; color: #ddd; vertical-align: top; }
+        .tag-warm { display: inline-block; font-size: 0.7rem; color: #aaa; background: #1a1a1a; padding: 3px 6px; border-radius: 4px; margin: 2px 2px 2px 0; border: 1px solid #333; font-family: 'JetBrains Mono'; }
+        .row-note { font-size: 0.8rem; color: #777; font-style: italic; display: block; line-height: 1.3; margin-top: 6px; }
 
-    /* --- 7. EDIT & NAV --- */
-    .edit-ui { display: none !important; }
-    body.editing .edit-ui { display: flex !important; }
-    .bottom-nav { 
-        position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; 
-        background: rgba(0,0,0,0.95); border-top: 1px solid var(--border); 
-        display: flex; justify-content: space-around; align-items: center; 
-        z-index: 100; backdrop-filter: blur(10px); padding-bottom: 10px; 
-    }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: #666; width: 33%; transition: 0.2s; }
-    .nav-item.active { color: var(--theme); }
-    .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
-    
-    /* Other Helpers */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
-    .modal-content { background: var(--bg-panel); width: 90%; max-width: 500px; border-radius: 16px; border: 1px solid var(--border); padding: 20px; }
-    #fileInput { display: none; }
-</style>
+        /* UI ELEMENTS */
+        .edit-ui { display: none !important; }
+        body.editing .edit-ui { display: flex !important; }
+        
+        .ex-del { position: absolute; right: 0; top: 0; color: var(--danger); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10; opacity: 0.6; border-radius: 50%; }
+        .set-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #333; background: #111; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; }
+        .add-controls { display: flex; gap: 10px; margin-top: 15px; border-top: 1px dashed #333; padding-top: 12px; }
+        .btn-add { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; color: #888; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; background: #111; }
+        .group-select { background: #000; color: #fff; border: 1px solid #333; font-size: 0.7rem; padding: 2px; border-radius: 4px; }
+        .notes-area { width: 100%; background: #000; border: none; border-top: 1px solid var(--border); padding: 15px; color: #aaa; font-family: inherit; font-size: 0.85rem; resize: vertical; min-height: 50px; display: block; }
+        
+        body.editing [contenteditable] { border-bottom: 1px dashed #555; cursor: text; padding: 0 2px; background: rgba(255,255,255,0.05); }
+        body.editing [contenteditable]:focus { border-bottom: 1px solid #fff; color: #fff; outline: none; background: #000; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-panel); width: 90%; max-width: 500px; max-height: 80vh; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .bank-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
+        .modal-input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(15,15,15,0.95); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; backdrop-filter: blur(10px); padding-bottom: 10px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; font-size: 0.7rem; font-weight: 600; cursor: pointer; width: 33%; height: 100%; transition: 0.2s; }
+        .nav-item.active { color: var(--theme); }
+        .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
+        .nav-item.active .nav-icon { transform: scale(1.1); transition: 0.2s; }
+
+        /* --- STICKY BUTTONS FIX --- */
+        .scroll-top { 
+            position: fixed; 
+            bottom: 200px; /* <--- ПІДНЯВ ЗНАЧНО ВИЩЕ */
+            right: 20px; 
+            width: 45px; height: 45px; 
+            background: rgba(30,30,30,0.8); 
+            border: 1px solid #444; border-radius: 50%; 
+            color: #fff; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; z-index: 101; /* ВИЩИЙ ПРІОРИТЕТ НІЖ МЕНЮ */
+            font-size: 1.2rem; backdrop-filter: blur(5px); 
+        }
+
+        #fileInput { display: none; }
+    </style>
 </head>
 <body class="prog-balanced">
 
@@ -608,13 +624,12 @@
             this.openBank();
         },
 
-      addWeek(type, init=false) {
+addWeek(type, init=false) {
             if (!init) this.pushHistory(); 
             
             const prog = this.data.currentProgram || 'balanced';
             let newData;
             
-            // Копіюємо останній тиждень, щоб зберегти структуру, але очищаємо значення
             const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
             if(lastWeek && !init) {
                 newData = JSON.parse(JSON.stringify(lastWeek.days));
@@ -625,14 +640,13 @@
             } else {
                 newData = JSON.parse(JSON.stringify(Templates[prog][type]));
             }
-            
             const w = { id: Date.now(), type, prog, num: this.data.weeks.length + 1, days: newData };
             this.data.weeks.push(w);
             this.updateBank();
             this.save(); 
             this.render();
             
-            // --- FIX: SCROLL ПРИБРАНО ---
+            // --- FIX: АВТО-СКРОЛ ВИМКНЕНО ---
             // if(!init) setTimeout(()=>document.getElementById(`week-${w.id}`).scrollIntoView({behavior:'smooth'}),100);
         },
 
