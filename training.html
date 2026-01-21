@@ -217,6 +217,33 @@
         .set-unit { font-size: 0.6rem; color: #444; font-weight: 700; margin-left: 3px; }
         .set-divider { width: 1px; height: 16px; background: #333; margin: 0 2px; }
 
+              /* --- CARDIO STYLE (ВСТАВ ЦЕ В CSS) --- */
+        .cardio-block { 
+            background: rgba(234, 179, 8, 0.05); 
+            border: 1px solid rgba(234, 179, 8, 0.15); 
+            border-radius: 12px; padding: 15px; margin-bottom: 10px;
+        }
+        .cardio-header { 
+            display: flex; align-items: center; gap: 8px; 
+            color: var(--cardio); font-weight: 800; font-size: 0.9rem; 
+            margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .cardio-grid { 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
+        }
+        .c-input-box { 
+            background: #000; border: 1px solid #333; border-radius: 8px; 
+            padding: 6px 4px; display: flex; flex-direction: column; align-items: center;
+            transition: 0.3s;
+        }
+        .c-input-box:focus-within { border-color: var(--cardio); }
+        .c-label { font-size: 0.55rem; color: #666; font-weight: 700; margin-bottom: 2px; }
+        .c-input { 
+            width: 100%; background: transparent !important; border: none !important; 
+            color: #fff !important; font-family: 'JetBrains Mono'; font-weight: 700; 
+            font-size: 1rem; text-align: center; padding: 0;
+        }
+
         /* --- 4. STATS (Gold Edition) --- */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
         .stat-box { 
