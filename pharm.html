@@ -1403,15 +1403,59 @@ renderAnalytics(c) {
         renderAnalysis(c) {
             let html = '<div class="med-grid">';
             this.data.analysis.forEach((block, i) => {
-                html += `<div class="med-card"><div class="med-header"><div style="flex-grow:1"><div class="med-title" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].title=this.innerText; App.save()">${block.title}</div><div style="font-size:0.75rem; color:#999; margin-top:5px;" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].timing=this.innerText; App.save()">${block.timing}</div></div>${this.state.editing ? `<div style="cursor:pointer; color:#ef4444;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}</div><div>${block.checks.map((chk, j) => `<div class="check-row"><span style="color:#10b981; font-size:0.8rem">●</span><span class="check-name" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>${this.state.editing ? `<span class="edit-ui" style="color:#ef4444;cursor:pointer" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}</div>`).join('')}</div>${this.state.editing ? `<div class="btn-add-pill" style="margin-top:10px; font-size:1rem" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий'); App.save(); App.renderView()">+</div>` : ''}</div>`;
+                html += `
+                <div class="med-card">
+                    <div class="med-header">
+                        <div style="flex-grow:1">
+                            <div class="med-title" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].title=this.innerText; App.save()">${block.title}</div>
+                            <div class="med-timing" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].timing=this.innerText; App.save()">${block.timing}</div>
+                        </div>
+                        ${this.state.editing ? `<div style="cursor:pointer; color:#ef4444;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}
+                    </div>
+                    <div class="med-list">
+                        ${block.checks.map((chk, j) => `
+                            <div class="check-row">
+                                <div style="display:flex; align-items:center; flex-grow:1">
+                                    <span class="check-icon">●</span>
+                                    <span class="check-name" contenteditable="${this.state.editing}" onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
+                                </div>
+                                ${this.state.editing ? `<span class="edit-ui" style="color:#ef4444;cursor:pointer;margin-left:10px" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${this.state.editing ? `<div class="btn-add-check" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий показник'); App.save(); App.renderView()">+ Add Check</div>` : ''}
+                </div>`;
             });
             html += `</div>`;
-            if (this.state.editing) html += `<button class="btn-add-pill" style="width:100%; margin-top:20px; font-size:1rem" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиж ?', checks:['Показник']}); App.save(); App.renderView()">+ ЕТАП</button>`;
+            if (this.state.editing) html += `<button class="btn-new-block" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:['Показник']}); App.save(); App.renderView()">+ ДОДАТИ ЕТАП</button>`;
             c.innerHTML = html;
         },
-
+        
         renderPharm(c) {
-            c.innerHTML = '<div class="med-grid">' + this.data.pharmacy.map((cat, i) => `<div class="category-block"><div class="category-header ${cat.style}">${cat.title}</div>${cat.items.map((item, j) => `<div class="med-item"><span class="med-name" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].n=this.innerText; App.save()">${item.n}</span><div style="display:flex;gap:10px;align-items:center"><span class="med-dose" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()">${item.d}</span><span class="edit-ui" style="color:#ef4444;cursor:pointer; font-size:0.8rem" onclick="App.pushHistory(); App.data.pharmacy[${i}].items.splice(${j},1); App.save(); App.renderView()">✕</span></div></div>`).join('')}<div class="btn-add-pill edit-ui" style="font-size:1rem;border:none;border-top:1px solid #333;border-radius:0;margin:0" onclick="App.pushHistory(); App.data.pharmacy[${i}].items.push({n:'Нова',d:'-',i:'-'}); App.save(); App.renderView()">+</div></div>`).join('') + '</div>';
+            let html = '<div class="med-grid">'; // Використовуємо ту саму сітку
+            this.data.pharmacy.forEach((cat, i) => {
+                html += `
+                <div class="category-block">
+                    <div class="category-header ${cat.style}">${cat.title}</div>
+                    <div>
+                        ${cat.items.map((item, j) => `
+                            <div class="med-item">
+                                <div class="med-row-1">
+                                    <span class="med-name" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].n=this.innerText; App.save()">${item.n}</span>
+                                    <div style="display:flex; align-items:center;">
+                                        <span class="med-dose" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()">${item.d}</span>
+                                        ${this.state.editing ? `<span class="edit-ui" style="color:#ef4444;cursor:pointer;" onclick="App.delMed(${i},${j})">✕</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="med-desc" contenteditable="${this.state.editing}" onblur="App.data.pharmacy[${i}].items[${j}].i=this.innerText; App.save()">${item.i}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${this.state.editing ? `<div class="btn-add-med" onclick="App.addMed(${i})">+ Add Item</div>` : ''}
+                </div>`;
+            });
+            html += '</div>';
+            c.innerHTML = html;
         },
 
         openBodyMap() { 
@@ -1939,6 +1983,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
