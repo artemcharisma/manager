@@ -17,24 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     
     <style>
-/* --- ЯДЕРНИЙ МЕТОД (Вставити на самий початок) --- */
-        /* 1. Блокуємо ВСЕ */
-        *, *::before, *::after {
-            -webkit-user-select: none !important;
-            -moz-user-select: none !important;
-            -ms-user-select: none !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-        }
-
-        /* 2. Дозволяємо ТІЛЬКИ поля вводу */
-        input, textarea, [contenteditable="true"], [contenteditable="true"] * {
-            -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
-            user-select: text !important;
-            cursor: text;
-        }
+        /* Специфічні стилі для PHARM */
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
@@ -656,33 +639,7 @@
         
         /* В Privacy Mode ховаємо Compare */
         body.privacy-mode .btn-compare { display: none !important; }
-/* ДОДАЙ ЦЕ В КІНЕЦЬ БЛОКУ <style> */
 
-        /* 1. Клас-утиліта, який забороняє виділення (найсильніший пріоритет) */
-        .no-select, 
-        .btn-icon, .edit-toggle, .phase-btn, .week-btn, 
-        .nav-tab, .pill, .med-card, .stat-card, 
-        .brand, .header-top, .course-progress {
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* IE10+/Edge */
-            user-select: none;         /* Standard */
-            -webkit-touch-callout: none; /* iOS Safari: вимикає спливаюче меню при довгому натисканні */
-        }
-
-        /* 2. Гарантуємо, що поля вводу ЗАВЖДИ можна виділяти і редагувати */
-        input, textarea, [contenteditable="true"] {
-            -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
-            user-select: text !important;
-            cursor: text;
-        }
-
-        /* 3. Фікс для мобільних: прибирає синє підсвічування при кліку */
-        button, div, span, a {
-            -webkit-tap-highlight-color: transparent;
-        }
     </style>
 </head>
 <body id="appBody">
@@ -2106,9 +2063,6 @@ renderAnalytics(c) {
 
 </body>
 </html>
-
-
-
 
 
 
