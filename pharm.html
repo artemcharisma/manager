@@ -1240,8 +1240,8 @@ renderAnalytics(c) {
             c.innerHTML = `<div class="chart-container"><canvas id="mainChart"></canvas></div>`;
             
             const labels = []; 
-            const dataTest = [];    // Тільки тест
-            const dataOthers = [];  // Все інше (Анаболіки - Тест)
+            const dataTest = [];    // База (Тест)
+            const dataAnabolics = []; // Інші (Трен, Болд, Прімо...)
             const dataWeight = [];
             
             const weekKeys = Object.keys(this.data.schedule).map(Number);
@@ -1250,8 +1250,8 @@ renderAnalytics(c) {
             for(let w=1; w<=maxW; w++) {
                 labels.push(`W${w}`);
                 
-                let weekTestMg = 0;
-                let weekOtherMg = 0;
+                let weekTest = 0;
+                let weekAnabolic = 0;
 
                 if(this.data.schedule[w]) {
                     this.data.schedule[w].forEach(day => day.forEach(pill => {
@@ -1262,18 +1262,142 @@ renderAnalytics(c) {
                             const unit = pill.dose.toLowerCase();
 
                             if (!isNaN(val) && unit.includes('mg')) {
-                                // Фільтруємо сміття (тільки кольорові теги)
+                                // Рахуємо тільки те, що має "кольоровий" статус (ін'єкційні/оральні стероїди)
                                 if (['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
-                                    if(name.includes('test') || name.includes('sust') || name.includes('enan') || name.includes('cyp')) {
-                                        weekTestMg += val;
+                                    // Перевірка: Це Тест чи Анаболік?
+                                    if(name.includes('test') || name.includes('sust') || name.includes('enan') || name.includes('cyp') || name.includes('prop')) {
+                                        weekTest += val;
                                     } else {
-                                        weekOtherMg += val;
+                                        weekAnabolic += val;
                                     }
                                 }
                             }
                         }
                     }));
                 }
+                
+                dataTest.push(weekTest);
+                dataAnabolics.push(weekAnabolic);
+
+                // Вага (середнє за тиждень)
+                let weightSum = 0; let weightCount = 0;
+                for(let d=0; d<7; d++) {
+                    const v = this.data.vitals[`${w}-${d}`];
+                    if(v && v.w) { weightSum += parseFloat(v.w.toString().replace(',','.')); weightCount++; }
+                }
+                dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
+            }
+            
+            if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
+            
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            // --- ГРАДІЄНТИ (SCIFI UI STYLE) ---
+            const gradientTest = ctx.createLinearGradient(0, 400, 0, 0);
+            gradientTest.addColorStop(0, 'rgba(59, 130, 246, 0.2)'); // Blue Fade
+            gradientTest.addColorStop(1, 'rgba(59, 130, 246, 0.8)'); // Blue Solid
+
+            const gradientAnabolic = ctx.createLinearGradient(0, 400, 0, 0);
+            gradientAnabolic.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); // Red Fade
+            gradientAnabolic.addColorStop(1, 'rgba(239, 68, 68, 0.9)'); // Red Solid
+
+            this.chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        // 1. ЛІНІЯ ВАГИ (Нагорі, найвищий z-index)
+                        { 
+                            label: 'Weight (kg)', 
+                            data: dataWeight, 
+                            type: 'line',
+                            borderColor: '#d4af37', // Gold
+                            backgroundColor: '#d4af37', 
+                            borderWidth: 2,
+                            yAxisID: 'y1', 
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#000',
+                            pointBorderWidth: 2,
+                            order: 0 
+                        },
+                        // 2. АНАБОЛІКИ (Верхня частина стовпчика)
+                        { 
+                            label: 'Anabolics (mg)', 
+                            data: dataAnabolics, 
+                            backgroundColor: gradientAnabolic,
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            yAxisID: 'y', 
+                            stack: 'combined', // Магія стеку
+                            order: 1,
+                            borderRadius: {topLeft: 4, topRight: 4} // Закруглення зверху
+                        },
+                        // 3. ТЕСТОСТЕРОН (Нижня частина стовпчика)
+                        { 
+                            label: 'Test Base (mg)', 
+                            data: dataTest, 
+                            backgroundColor: gradientTest,
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            yAxisID: 'y', 
+                            stack: 'combined', // Той самий стек
+                            order: 2,
+                            borderRadius: {bottomLeft: 4, bottomRight: 4} // Закруглення знизу (якщо треба)
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { 
+                            stacked: true, 
+                            grid: { display: false },
+                            ticks: { color: '#666', font: {family: 'JetBrains Mono', size: 9} }
+                        },
+                        y: { 
+                            stacked: true, // Вмикаємо стек
+                            type: 'linear', display: true, position: 'left', 
+                            grid: { color: '#222', borderDash: [5, 5] },
+                            title: { display: true, text: 'LOAD (mg)', color: '#555', font: {size: 9, weight:'bold'} }
+                        },
+                        y1: { 
+                            type: 'linear', display: true, position: 'right', 
+                            grid: { display: false },
+                            title: { display: true, text: 'WEIGHT (kg)', color: '#d4af37', font: {size: 9, weight:'bold'} }
+                        }
+                    },
+                    plugins: { 
+                        legend: { 
+                            labels: { color: '#bbb', boxWidth: 12, usePointStyle: true, font: {size: 10} },
+                            position: 'top'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#ccc',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            padding: 10,
+                            displayColors: true,
+                            callbacks: {
+                                footer: (items) => {
+                                    // Рахуємо суму для тултіпа
+                                    let total = 0;
+                                    items.forEach(i => {
+                                        if(i.dataset.yAxisID === 'y') total += i.raw;
+                                    });
+                                    return total > 0 ? `━━━━━━━━━━\nTOTAL: ${total} mg` : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        },
                 
                 dataTest.push(weekTestMg);
                 dataOthers.push(weekOtherMg);
@@ -1908,6 +2032,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
