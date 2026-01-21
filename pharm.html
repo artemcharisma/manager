@@ -469,6 +469,42 @@
             transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease;
         }
         .nav-tab:active::before { width: 200%; height: 200%; }
+        /* --- VISUAL UPGRADES --- */
+
+        /* 1. Glassmorphism для модалок (Виглядає дорого) */
+        .modal-content, .privacy-modal-content {
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 2. Стилі порівняння (Before/After) */
+        .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .compare-col { display: flex; flex-direction: column; gap: 5px; }
+        .compare-label { 
+            text-align: center; font-size: 0.75rem; color: var(--primary); 
+            font-weight: 800; letter-spacing: 1px; background: rgba(212, 175, 55, 0.1);
+            padding: 5px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .compare-img-box {
+            aspect-ratio: 3/4; background: #000; border-radius: 8px; border: 1px dashed #333;
+            display: flex; align-items: center; justify-content: center; overflow: hidden; color: #555;
+            position: relative;
+        }
+        .compare-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* 3. Кнопка Compare в розділі фото */
+        .btn-compare {
+            background: linear-gradient(135deg, #3b82f6, #2563eb); 
+            color: #fff; border: none; padding: 10px; border-radius: 8px; 
+            width: 100%; margin-top: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        /* В Privacy Mode ховаємо Compare */
+        body.privacy-mode .btn-compare { display: none !important; }
 
     </style>
 </head>
@@ -740,6 +776,33 @@
         ],
         notes: {}
     };
+    // --- HELPER: IMAGE COMPRESSOR ---
+    const compressImage = (file, maxWidth = 1024, quality = 0.7) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+            };
+        });
+    };
 
     const App = {
         data: null,
@@ -755,6 +818,28 @@
             }
             this.smartSave();
         },
+        
+    async openCompareModal() {
+        document.getElementById('compareModal').style.display = 'flex';
+        const w = this.state.week;
+        document.getElementById('compCurW').innerText = w;
+
+        const startPhotos = await PhotoDB.get(1); // Беремо з 1 тижня
+        const curPhotos = await PhotoDB.get(w);   // Беремо з поточного
+
+        const renderImg = (arr, elId) => {
+            const el = document.getElementById(elId);
+            if(arr && arr.length > 0) {
+                el.innerHTML = `<img src="${arr[0].data}">`;
+            } else {
+                el.innerHTML = `<span style="font-size:2rem; opacity:0.3">📷</span>`;
+            }
+        };
+
+        renderImg(startPhotos, 'imgStart');
+        renderImg(curPhotos, 'imgCurrent');
+    },
+
 
         safeLoad() {
             if(document.body.classList.contains('privacy-mode')) {
@@ -838,88 +923,101 @@
             }
         },
         
-                        unlockPrivacy() {
+        unlockPrivacy() {
             const pwdInput = document.getElementById('privacyPassword');
             const pwd = pwdInput.value;
             const truePass = this.data.privacyPassword || '2255';
-            
+            const fakePass = '1111'; // 4. ПАРОЛЬ-ОБМАНКА
+
             const container = document.getElementById('pwdContainer');
             const icon = document.getElementById('privIcon');
             const btn = document.getElementById('unlockBtn');
-            const title = container.querySelector('h2'); // Заголовок
-            const sub = container.querySelector('p');    // Підпис
+            const title = container.querySelector('h2'); 
+            const sub = container.querySelector('p');    
 
-            if(pwd === truePass) {
-                // --- УСПІХ ---
-                // 1. Зміна кольорів
+            // Функція успішного входу (спільна)
+            const grantAccess = (isFake) => {
                 container.classList.add('success');
                 pwdInput.style.borderColor = 'var(--green)';
                 pwdInput.style.color = 'var(--green)';
-                
-                // 2. Зміна тексту
                 title.innerText = "IDENTITY VERIFIED";
                 title.style.color = "var(--green)";
                 sub.innerText = "DECRYPTING DATA...";
                 sub.style.color = "var(--green)";
-                
-                // 3. Анімація ключика
                 icon.style.transform = 'rotateY(360deg) scale(1.2)';
                 setTimeout(() => icon.innerText = '🔓', 200);
-                
                 btn.innerText = 'ACCESS GRANTED';
-                
-                // 4. Вихід
+
                 setTimeout(() => {
                     document.getElementById('privacyModal').classList.add('fade-out');
-                    document.body.classList.remove('privacy-locked', 'privacy-mode'); 
+                    document.body.classList.remove('privacy-locked', 'privacy-mode');
                     
-                    // Повний ресет (повертаємо все як було)
+                    // ЯКЩО ФЕЙК: Підміняємо дані на льоту
+                    if (isFake) {
+                        this.enableFakeMode();
+                    }
+
                     setTimeout(() => {
                         document.getElementById('privacyModal').style.display = 'none';
                         document.getElementById('privacyModal').classList.remove('fade-out');
                         container.classList.remove('success');
-                        
-                        icon.innerText = '🔒';
-                        icon.style.transform = 'none';
-                        
-                        title.innerText = "ACCESS LOCKED";
-                        title.style.color = "#fff";
-                        sub.innerText = "ENTER PASSCODE";
-                        sub.style.color = "#666";
-                        
+                        icon.innerText = '🔒'; icon.style.transform = 'none';
+                        title.innerText = "ACCESS LOCKED"; title.style.color = "#fff";
+                        sub.innerText = "ENTER PASSCODE"; sub.style.color = "#666";
                         btn.innerText = 'UNLOCK';
-                        pwdInput.value = '';
-                        pwdInput.style.borderColor = '';
-                        pwdInput.style.color = '';
+                        pwdInput.value = ''; pwdInput.style.borderColor = ''; pwdInput.style.color = '';
                     }, 800);
                 }, 800);
+            };
 
+            if (pwd === truePass) {
+                grantAccess(false); // Реальний вхід
+            } else if (pwd === fakePass) {
+                grantAccess(true);  // 4. Фейковий вхід
             } else {
-                // --- ПОМИЛКА ---
+                // ... код помилки (той самий, що був) ...
                 pwdInput.style.borderColor = 'var(--red)';
                 pwdInput.style.color = 'var(--red)';
                 sub.innerText = "INVALID PASSCODE";
                 sub.style.color = "var(--red)";
-                
-                // Трясіння
                 container.style.transform = "translateX(10px)";
                 setTimeout(() => container.style.transform = "translateX(-10px)", 50);
                 setTimeout(() => container.style.transform = "translateX(5px)", 100);
                 setTimeout(() => container.style.transform = "translateX(0)", 150);
-                
-                pwdInput.value = '';
-                pwdInput.focus();
-                
-                // Повертаємо колір через секунду
+                pwdInput.value = ''; pwdInput.focus();
                 setTimeout(() => {
-                    pwdInput.style.borderColor = '';
-                    pwdInput.style.color = '';
-                    sub.innerText = "ENTER PASSCODE";
-                    sub.style.color = "#666";
+                    pwdInput.style.borderColor = ''; pwdInput.style.color = '';
+                    sub.innerText = "ENTER PASSCODE"; sub.style.color = "#666";
                 }, 1000);
             }
         },
 
+        // 4. ФУНКЦІЯ ДЛЯ РЕЖИМУ ОБМАНКИ
+        enableFakeMode() {
+            // Очищаємо екран і малюємо "невинні" вітамінки
+            const c = document.getElementById('mainView');
+            c.innerHTML = `
+                <div style="padding:20px; text-align:center; color:#888;">
+                    <h2>VITAMIN TRACKER</h2>
+                    <p>Daily Wellness Plan</p>
+                </div>
+                <div class="days-grid">
+                    ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `
+                        <div class="day-card" style="min-height:100px; border-color:#333">
+                            <div class="day-header">${d}</div>
+                            <div class="pill c-yellow"><div style="flex:1">Omega-3</div><span>1000mg</span></div>
+                            <div class="pill c-green"><div style="flex:1">Multivitamin</div><span>1 tab</span></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            // Ховаємо елементи керування, щоб не спалитись
+            document.querySelector('.nav-tabs').style.display = 'none';
+            document.querySelector('.phase-scroll').style.display = 'none';
+            document.querySelector('.controls').innerHTML = '<div style="color:#444">User: Guest</div>';
+            document.querySelector('.brand h1').innerText = "HEALTH";
+            document.querySelector('.brand span').innerText = "DAILY";
+        },
 
 
 
@@ -1059,61 +1157,79 @@
             const photos = await PhotoDB.get(this.state.week);
             const pHtml = photos.map(p=>`<div class="photo-card"><img src="${p.data}" onclick="document.getElementById('modalImg').src=this.src;document.getElementById('imgModal').style.display='flex'"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
             
-            c.innerHTML = `<div class="stats-grid">${statsHtml}</div><div class="week-bar">${wHtml}</div>${grid}<div style="margin-top:20px"><textarea class="note-input" placeholder="Звіт за тиждень..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week]||""}</textarea></div><div class="photo-area"><h3 style="color:#fff;font-size:1rem;margin:0 0 20px 0">📸 ФОТО W${this.state.week}</h3><div class="photo-grid">${pHtml}</div><label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label></div>`;
+            c.innerHTML = `
+                <div class="stats-grid">${statsHtml}</div>
+                <div class="week-bar">${wHtml}</div>
+                ${grid}
+                <div style="margin-top:20px">
+                    <textarea class="note-input" placeholder="Звіт за тиждень..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week]||""}</textarea>
+                </div>
+                <div class="photo-area">
+                    <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
+                    
+                    <button class="btn-compare" onclick="App.openCompareModal()">⚔️ ПОРІВНЯТИ (W1 vs W${this.state.week})</button>
+                    
+                    <div class="photo-grid">${pHtml}</div>
+                    <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
+                </div>`;
         },
 
-                renderAnalytics(c) {
+
+        renderAnalytics(c) {
             c.innerHTML = `<div class="chart-container"><canvas id="mainChart"></canvas></div>`;
             const labels = []; 
             const dataTest = []; 
             const dataWeight = [];
+            const dataTotal = []; // 3. НОВЕ: Загальне навантаження
             
-            // 1. ВИПРАВЛЕННЯ: Знаходимо реальну кількість тижнів у твоєму курсі
             const weekKeys = Object.keys(this.data.schedule).map(Number);
             const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
             
-            // 2. Цикл тепер йде до реального останнього тижня (maxW), а не до 38
             for(let w=1; w<=maxW; w++) {
                 labels.push(`W${w}`);
-                
-                // Підрахунок Тестостерону (сума за тиждень)
                 let weekTest = 0;
+                let weekTotalMg = 0; // Лічильник для Total Load
+
                 if(this.data.schedule[w]) {
                     this.data.schedule[w].forEach(day => day.forEach(pill => {
-                        // Шукаємо будь-які препарати з "Test", "Sust", "Enan", "Cyp" тощо, якщо треба розширити пошук
-                        // Поки залишаємо логіку на слово "test" (Test E, Test P...)
-                        if(pill.name.toLowerCase().includes('test')) {
-                            // Витягуємо число з дози (напр. "250mg" -> 250)
-                            const match = pill.dose.match(/(\d+([.,]\d+)?)/);
-                            if(match) {
-                                const val = parseFloat(match[0].replace(',', '.'));
-                                if(!isNaN(val)) weekTest += val;
+                        // Чистимо дозу від зайвого
+                        const match = pill.dose.match(/(\d+([.,]\d+)?)/);
+                        if (match) {
+                            const val = parseFloat(match[0].replace(',', '.'));
+                            if (!isNaN(val)) {
+                                const name = pill.name.toLowerCase();
+                                const unit = pill.dose.toLowerCase();
+                                
+                                // Тестостерон окремо
+                                if(name.includes('test')) weekTest += val;
+
+                                // 3. ЛОГІКА TOTAL LOAD:
+                                // Рахуємо тільки mg (ігноруємо IU/mcg для цього графіку)
+                                // Рахуємо тільки "кольорові" (анаболіки), ігноруємо сині (якщо це не тест) або сірі
+                                if (unit.includes('mg')) {
+                                    // Фільтр: не рахуємо TUDCA, Aspirin, Omega і т.д.
+                                    // Рахуємо, якщо колір: blue, green, red, pink, yellow (тільки якщо mg)
+                                    if (['c-blue', 'c-green', 'c-red', 'c-pink'].includes(pill.color)) {
+                                        weekTotalMg += val;
+                                    }
+                                }
                             }
                         }
                     }));
                 }
                 dataTest.push(weekTest);
-                
-                // Підрахунок Ваги (середнє за тиждень)
-                let weightSum = 0; 
-                let weightCount = 0;
+                dataTotal.push(weekTotalMg); // Пушимо Total
+
+                let weightSum = 0; let weightCount = 0;
                 for(let d=0; d<7; d++) {
                     const v = this.data.vitals[`${w}-${d}`];
-                    if(v && v.w) { 
-                        weightSum += parseFloat(v.w.toString().replace(',','.')); 
-                        weightCount++; 
-                    }
+                    if(v && v.w) { weightSum += parseFloat(v.w.toString().replace(',','.')); weightCount++; }
                 }
                 dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
             }
             
-            // Очищення старого графіку перед малюванням нового
-            if (this.chartInstance) { 
-                this.chartInstance.destroy(); 
-                this.chartInstance = null; 
-            }
+            if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
             
-            // Малювання
             const ctx = document.getElementById('mainChart').getContext('2d');
             this.chartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -1121,65 +1237,33 @@
                     labels: labels,
                     datasets: [
                         { 
-                            label: 'Testosterone (mg)', 
-                            data: dataTest, 
-                            backgroundColor: 'rgba(59, 130, 246, 0.5)', 
-                            yAxisID: 'y', 
-                            order: 2,
-                            barPercentage: 0.6 // Трохи тонші стовпчики для краси
+                            label: 'Total Load (mg)', // Новий датасет
+                            data: dataTotal,
+                            type: 'line',
+                            borderColor: '#ef4444', // Червона лінія
+                            backgroundColor: '#ef4444',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y',
+                            order: 0, // Зверху
+                            tension: 0.4
                         },
-                        { 
-                            label: 'Вага (kg)', 
-                            data: dataWeight, 
-                            borderColor: '#d4af37', 
-                            backgroundColor: '#d4af37', 
-                            type: 'line', 
-                            yAxisID: 'y1', 
-                            order: 1, 
-                            tension: 0.4, // Плавні лінії
-                            spanGaps: true, // З'єднувати точки, якщо пропущено день
-                            pointRadius: 2 
-                        }
+                        { label: 'Testosterone (mg)', data: dataTest, backgroundColor: 'rgba(59, 130, 246, 0.3)', yAxisID: 'y', order: 2, barPercentage: 0.6 },
+                        { label: 'Вага (kg)', data: dataWeight, borderColor: '#d4af37', backgroundColor: '#d4af37', type: 'line', yAxisID: 'y1', order: 1, tension: 0.4, spanGaps: true, pointRadius: 2 }
                     ]
                 },
                 options: {
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                     scales: {
-                        y: { 
-                            type: 'linear', 
-                            display: true, 
-                            position: 'left', 
-                            grid: {color: '#333'},
-                            title: { display: true, text: 'mg', color: '#555' }
-                        },
-                        y1: { 
-                            type: 'linear', 
-                            display: true, 
-                            position: 'right', 
-                            grid: {drawOnChartArea: false},
-                            title: { display: true, text: 'kg', color: '#d4af37' }
-                        },
-                        x: { 
-                            grid: {display: false},
-                            ticks: { color: '#888', maxRotation: 0, autoSkip: true }
-                        }
+                        y: { type: 'linear', display: true, position: 'left', grid: {color: '#333'}, title: { display: true, text: 'mg', color: '#555' } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: { display: true, text: 'kg', color: '#d4af37' } },
+                        x: { grid: {display: false} }
                     },
-                    plugins: { 
-                        legend: { labels: { color: '#fff' } },
-                        tooltip: { 
-                            backgroundColor: 'rgba(0,0,0,0.8)', 
-                            titleColor: '#d4af37',
-                            bodyFont: { family: 'JetBrains Mono' }
-                        }
-                    }
+                    plugins: { legend: { labels: { color: '#fff' } } }
                 }
             });
         },
+
 
         renderAnalysis(c) {
             let html = '<div class="med-grid">';
@@ -1651,12 +1735,29 @@
             this.photoKeys = await PhotoDB.keys(); 
         },
 
-        async uploadPhoto(inp) { 
+                async uploadPhoto(inp) { 
             this.pushHistory(); 
-            for(let f of inp.files) await PhotoDB.add(this.state.week, f); 
+            // 1. Проходимось по файлах і стискаємо їх
+            for(let f of inp.files) {
+                try {
+                    const compressedBase64 = await compressImage(f); // Стискаємо
+                    // Перетворюємо Base64 назад у Blob для старої логіки (або модифікуємо PhotoDB.add)
+                    // Але PhotoDB.add очікує File/Blob, тому спростимо:
+                    // Ми змінимо логіку PhotoDB.add трохи пізніше, або тут передамо об'єкт.
+                    // ДАВАЙ ЗРОБИМО ПРОСТІШЕ: Прямо запишемо в базу.
+                    
+                    if(PhotoDB.db) {
+                        const tx = PhotoDB.db.transaction(["photos"], "readwrite");
+                        tx.objectStore("photos").add({ week: this.state.week, data: compressedBase64 });
+                    }
+                } catch(e) {
+                    console.error("Compression failed", e);
+                }
+            }
             await this.refreshPhotos(); 
             this.renderView(); 
         },
+
 
         async deletePhoto(id) { 
             if(confirm("Видалити фото?")) { 
@@ -1700,12 +1801,30 @@
     };
 
     window.onload = () => App.init();
+<div class="modal" id="compareModal" style="z-index: 3000;">
+    <div class="modal-content" style="max-width: 800px; width: 95%;">
+        <span class="modal-close" onclick="document.getElementById('compareModal').style.display='none'">✕</span>
+        <h3 class="modal-title" style="text-align:center">⚔️ PROGRESS CHECK</h3>
+        <div class="compare-grid">
+            <div class="compare-col">
+                <div class="compare-label">START (W1)</div>
+                <div class="compare-img-box" id="imgStart">Немає фото</div>
+            </div>
+            <div class="compare-col">
+                <div class="compare-label">CURRENT (W<span id="compCurW"></span>)</div>
+                <div class="compare-img-box" id="imgCurrent">Немає фото</div>
+            </div>
+        </div>
+    </div>
+</div>
+   
 </script>
 
 <script src="assets/common.js"></script>
 
 </body>
 </html>
+
 
 
 
