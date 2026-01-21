@@ -464,17 +464,32 @@
             if(s) {
                 try {
                     this.data = JSON.parse(s);
-                    // Перевірка на валідність структури (якщо після ресету залишилось пусте {})
-                    if(!this.data.weeks) throw new Error("Corrupt data"); 
+                    
+                    // --- БЛОК ВІДНОВЛЕННЯ ДАНИХ (FIX) ---
+                    // Якщо в пам'яті немає довідника — беремо його з InitialData
+                    if(!this.data.guidelines) {
+                        this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
+                    }
+                    // Якщо немає цілей для статистики — беремо дефолтні
+                    if(!this.data.targets) {
+                        this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
+                    }
+                    // Якщо немає режиму — ставимо масу
+                    if(!this.data.guideMode) this.data.guideMode = 'mass';
+                    // -------------------------------------
+
                     if(!this.data.exBank) this.data.exBank = [];
                 } catch(e) {
+                    // Якщо старі дані биті — скидаємо все
                     this.data = JSON.parse(JSON.stringify(InitialData));
                     this.addWeek('mass', true);
                 }
             } else {
+                // Чистий старт
                 this.data = JSON.parse(JSON.stringify(InitialData));
                 this.addWeek('mass', true);
             }
+            
             if(!this.data.currentProgram) this.data.currentProgram = 'balanced';
             this.setTheme(this.data.currentProgram);
             this.updateBank();
@@ -675,14 +690,70 @@
         },
 
         setView(v) {
+            // 1. Активна кнопка
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.getElementById(`nav-${v}`).classList.add('active');
+            
+            // 2. Перемикання екранів
             document.getElementById('viewSchedule').style.display = v==='schedule'?'block':'none';
             document.getElementById('viewStats').style.display = v==='stats'?'block':'none';
             document.getElementById('viewGuide').style.display = v==='guide'?'block':'none';
+            
+            // 3. ПРИМУСОВЕ ОНОВЛЕННЯ ДАНИХ
             if(v === 'stats') this.renderStats();
+            if(v === 'guide') this.renderGuide();
         },
 
+        renderStats() {
+            const sel = document.getElementById('statsWeekSelect');
+            
+            // Заповнюємо селект (якщо він порожній або треба оновити)
+            if(sel.innerHTML === "" || this.data.weeks.length !== sel.options.length) {
+                 sel.innerHTML = this.data.weeks.map((w, i) => `<option value="${i}">Тиждень ${w.num} (${w.type})</option>`).join('');
+                 // Автовибір останнього тижня
+                 if (this.data.weeks.length > 0) sel.value = this.data.weeks.length - 1;
+            }
+
+            const wIdx = sel.value;
+            const currentWeek = this.data.weeks[wIdx];
+            
+            // Якщо даних немає
+            if (!currentWeek) { 
+                document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px;grid-column:1/-1">Ще немає даних для аналізу.<br>Додайте тиждень у щоденнику.</div>'; 
+                return; 
+            }
+            
+            const stats = {}; 
+            Groups.forEach(g => stats[g] = 0);
+            
+            currentWeek.days.forEach(d => {
+                d.exercises.forEach(ex => {
+                    const g = ex.g || ResolveGroup(ex.n);
+                    if (stats[g] !== undefined) stats[g] += ex.sets.length;
+                });
+            });
+
+            let html = '';
+            for(const [k,v] of Object.entries(stats)) {
+                if(k === "Інше") continue;
+                const target = this.data.targets[k] || 10; // Беремо ціль або 10 по дефолту
+                const pct = Math.min(100, (v / target) * 100);
+                
+                let color = 'var(--mass)';
+                if (v >= target) color = 'var(--success)';
+                if (v > target * 1.5) color = 'var(--danger)';
+
+                html += `<div class="stat-box">
+                    <div class="stat-header-row">
+                        <span class="stat-label">${k}</span>
+                        <input class="stat-target-input" value="${target}" onchange="App.updateTarget('${k}', this.value)">
+                    </div>
+                    <span class="stat-val">${v} <span style="font-size:0.8rem; color:#666">/ ${target}</span></span>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${pct}%; background:${color}"></div></div>
+                </div>`;
+            }
+            document.getElementById('statsContent').innerHTML = html;
+        },
         exportData() {
             const a = document.createElement('a');
             a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
