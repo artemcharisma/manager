@@ -17,7 +17,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     
     <style>
-        /* Специфічні стилі для PHARM */
+/* --- ЯДЕРНИЙ МЕТОД (Вставити на самий початок) --- */
+        /* 1. Блокуємо ВСЕ */
+        *, *::before, *::after {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        /* 2. Дозволяємо ТІЛЬКИ поля вводу */
+        input, textarea, [contenteditable="true"], [contenteditable="true"] * {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            cursor: text;
+        }
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
@@ -2089,6 +2106,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
