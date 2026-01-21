@@ -624,17 +624,23 @@
     </div>
 </div>
 <div class="modal" id="compareModal" style="z-index: 3000;">
-    <div class="modal-content" style="max-width: 800px; width: 95%;">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
         <span class="modal-close" onclick="document.getElementById('compareModal').style.display='none'">✕</span>
-        <h3 class="modal-title" style="text-align:center">⚔️ PROGRESS CHECK</h3>
+        <h3 class="modal-title" style="text-align:center; margin-bottom: 20px;">⚔️ PROGRESS COMPARISON</h3>
+        
         <div class="compare-grid">
             <div class="compare-col">
-                <div class="compare-label">START (W1)</div>
-                <div class="compare-img-box" id="imgStart">Немає фото</div>
+                <select id="compSelectL" class="modal-input" style="text-align:center; font-weight:bold; margin-bottom:10px;" onchange="App.loadCompareImage('L', this.value)"></select>
+                <div class="compare-img-box" id="imgBoxL">
+                    <span style="opacity:0.3">Loading...</span>
+                </div>
             </div>
+
             <div class="compare-col">
-                <div class="compare-label">CURRENT (W<span id="compCurW"></span>)</div>
-                <div class="compare-img-box" id="imgCurrent">Немає фото</div>
+                <select id="compSelectR" class="modal-input" style="text-align:center; font-weight:bold; margin-bottom:10px;" onchange="App.loadCompareImage('R', this.value)"></select>
+                <div class="compare-img-box" id="imgBoxR">
+                    <span style="opacity:0.3">Loading...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -854,26 +860,46 @@
             this.smartSave();
         },
         
-    async openCompareModal() {
-        document.getElementById('compareModal').style.display = 'flex';
-        const w = this.state.week;
-        document.getElementById('compCurW').innerText = w;
+// 1. ОНОВЛЕНА ФУНКЦІЯ ВІДКРИТТЯ
+        async openCompareModal() {
+            document.getElementById('compareModal').style.display = 'flex';
+            
+            // Отримуємо всі тижні, де є записи або фото
+            const weeks = Object.keys(this.data.schedule).map(Number).sort((a,b)=>a-b);
+            const maxW = Math.max(...weeks);
+            
+            // Заповнюємо селекти
+            const selL = document.getElementById('compSelectL');
+            const selR = document.getElementById('compSelectR');
+            
+            const createOpts = () => weeks.map(w => `<option value="${w}">WEEK ${w}</option>`).join('');
+            
+            selL.innerHTML = createOpts();
+            selR.innerHTML = createOpts();
+            
+            // Встановлюємо дефолтні значення (W1 vs Current)
+            selL.value = 1; 
+            selR.value = this.state.week;
 
-        const startPhotos = await PhotoDB.get(1); // Беремо з 1 тижня
-        const curPhotos = await PhotoDB.get(w);   // Беремо з поточного
+            // Завантажуємо картинки
+            await this.loadCompareImage('L', 1);
+            await this.loadCompareImage('R', this.state.week);
+        },
 
-        const renderImg = (arr, elId) => {
-            const el = document.getElementById(elId);
-            if(arr && arr.length > 0) {
-                el.innerHTML = `<img src="${arr[0].data}">`;
+        // 2. НОВА ФУНКЦІЯ ЗАВАНТАЖЕННЯ ФОТО
+        async loadCompareImage(side, week) {
+            const box = document.getElementById(`imgBox${side}`);
+            box.innerHTML = '<span style="opacity:0.5; font-size:0.8rem">Searching...</span>';
+            
+            const photos = await PhotoDB.get(parseInt(week));
+            
+            if(photos && photos.length > 0) {
+                // Показуємо перше фото (можна додати карусель, але поки так)
+                box.innerHTML = `<img src="${photos[0].data}" style="width:100%; height:100%; object-fit:contain;">`;
             } else {
-                el.innerHTML = `<span style="font-size:2rem; opacity:0.3">📷</span>`;
+                box.innerHTML = `<div style="text-align:center; opacity:0.3"><div style="font-size:2rem">🚫</div><small>No Photo</small></div>`;
             }
-        };
-
-        renderImg(startPhotos, 'imgStart');
-        renderImg(curPhotos, 'imgCurrent');
-    },
+        },
 
 
         safeLoad() {
@@ -1210,51 +1236,49 @@
         },
 
 
-        renderAnalytics(c) {
+renderAnalytics(c) {
             c.innerHTML = `<div class="chart-container"><canvas id="mainChart"></canvas></div>`;
+            
             const labels = []; 
-            const dataTest = []; 
+            const dataTest = [];    // Тільки тест
+            const dataOthers = [];  // Все інше (Анаболіки - Тест)
             const dataWeight = [];
-            const dataTotal = []; // 3. НОВЕ: Загальне навантаження
             
             const weekKeys = Object.keys(this.data.schedule).map(Number);
             const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
             
             for(let w=1; w<=maxW; w++) {
                 labels.push(`W${w}`);
-                let weekTest = 0;
-                let weekTotalMg = 0; // Лічильник для Total Load
+                
+                let weekTestMg = 0;
+                let weekOtherMg = 0;
 
                 if(this.data.schedule[w]) {
                     this.data.schedule[w].forEach(day => day.forEach(pill => {
-                        // Чистимо дозу від зайвого
                         const match = pill.dose.match(/(\d+([.,]\d+)?)/);
                         if (match) {
                             const val = parseFloat(match[0].replace(',', '.'));
-                            if (!isNaN(val)) {
-                                const name = pill.name.toLowerCase();
-                                const unit = pill.dose.toLowerCase();
-                                
-                                // Тестостерон окремо
-                                if(name.includes('test')) weekTest += val;
+                            const name = pill.name.toLowerCase();
+                            const unit = pill.dose.toLowerCase();
 
-                                // 3. ЛОГІКА TOTAL LOAD:
-                                // Рахуємо тільки mg (ігноруємо IU/mcg для цього графіку)
-                                // Рахуємо тільки "кольорові" (анаболіки), ігноруємо сині (якщо це не тест) або сірі
-                                if (unit.includes('mg')) {
-                                    // Фільтр: не рахуємо TUDCA, Aspirin, Omega і т.д.
-                                    // Рахуємо, якщо колір: blue, green, red, pink, yellow (тільки якщо mg)
-                                    if (['c-blue', 'c-green', 'c-red', 'c-pink'].includes(pill.color)) {
-                                        weekTotalMg += val;
+                            if (!isNaN(val) && unit.includes('mg')) {
+                                // Фільтруємо сміття (тільки кольорові теги)
+                                if (['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
+                                    if(name.includes('test') || name.includes('sust') || name.includes('enan') || name.includes('cyp')) {
+                                        weekTestMg += val;
+                                    } else {
+                                        weekOtherMg += val;
                                     }
                                 }
                             }
                         }
                     }));
                 }
-                dataTest.push(weekTest);
-                dataTotal.push(weekTotalMg); // Пушимо Total
+                
+                dataTest.push(weekTestMg);
+                dataOthers.push(weekOtherMg);
 
+                // Вага
                 let weightSum = 0; let weightCount = 0;
                 for(let d=0; d<7; d++) {
                     const v = this.data.vitals[`${w}-${d}`];
@@ -1272,29 +1296,74 @@
                     labels: labels,
                     datasets: [
                         { 
-                            label: 'Total Load (mg)', // Новий датасет
-                            data: dataTotal,
+                            label: 'Weight (kg)', 
+                            data: dataWeight, 
                             type: 'line',
-                            borderColor: '#ef4444', // Червона лінія
-                            backgroundColor: '#ef4444',
+                            borderColor: '#d4af37', 
+                            backgroundColor: '#d4af37', 
                             borderWidth: 2,
-                            pointRadius: 0,
-                            yAxisID: 'y',
-                            order: 0, // Зверху
-                            tension: 0.4
+                            yAxisID: 'y1', 
+                            tension: 0.4,
+                            pointRadius: 1
                         },
-                        { label: 'Testosterone (mg)', data: dataTest, backgroundColor: 'rgba(59, 130, 246, 0.3)', yAxisID: 'y', order: 2, barPercentage: 0.6 },
-                        { label: 'Вага (kg)', data: dataWeight, borderColor: '#d4af37', backgroundColor: '#d4af37', type: 'line', yAxisID: 'y1', order: 1, tension: 0.4, spanGaps: true, pointRadius: 2 }
+                        { 
+                            label: 'Others (mg)', 
+                            data: dataOthers, 
+                            backgroundColor: '#ef4444', // Червоний (добавки)
+                            yAxisID: 'y', 
+                            stack: 'stack1' // Групуємо в один стовпчик
+                        },
+                        { 
+                            label: 'Testosterone (mg)', 
+                            data: dataTest, 
+                            backgroundColor: '#3b82f6', // Синій (база)
+                            yAxisID: 'y', 
+                            stack: 'stack1' // Групуємо в один стовпчик
+                        }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
-                        y: { type: 'linear', display: true, position: 'left', grid: {color: '#333'}, title: { display: true, text: 'mg', color: '#555' } },
-                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: { display: true, text: 'kg', color: '#d4af37' } },
-                        x: { grid: {display: false} }
+                        x: { 
+                            stacked: true, // Вмикаємо стек по Х
+                            grid: { display: false },
+                            ticks: { color: '#666', font: {size: 9} }
+                        },
+                        y: { 
+                            stacked: true, // Вмикаємо стек по Y (mg)
+                            type: 'linear', display: true, position: 'left', 
+                            grid: { color: '#222' },
+                            title: { display: true, text: 'Total mg', color: '#555', font: {size: 9} }
+                        },
+                        y1: { 
+                            type: 'linear', display: true, position: 'right', 
+                            grid: { display: false },
+                            title: { display: true, text: 'kg', color: '#d4af37', font: {size: 9} }
+                        }
                     },
-                    plugins: { legend: { labels: { color: '#fff' } } }
+                    plugins: { 
+                        legend: { labels: { color: '#aaa', boxWidth: 10, font: {size: 10} } },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#ccc',
+                            borderColor: '#333',
+                            borderWidth: 1,
+                            callbacks: {
+                                footer: (items) => {
+                                    // Підсумок загального mg в тултіпі
+                                    let total = 0;
+                                    items.forEach(i => {
+                                        if(i.dataset.yAxisID === 'y') total += i.raw;
+                                    });
+                                    return total > 0 ? `Total Load: ${total} mg` : '';
+                                }
+                            }
+                        }
+                    }
                 }
             });
         },
@@ -1839,6 +1908,7 @@
 
 </body>
 </html>
+
 
 
 
