@@ -465,35 +465,110 @@
                 try {
                     this.data = JSON.parse(s);
                     
-                    // --- БЛОК ВІДНОВЛЕННЯ ДАНИХ (FIX) ---
-                    // Якщо в пам'яті немає довідника — беремо його з InitialData
-                    if(!this.data.guidelines) {
+                    // --- ЛІКУВАННЯ ДАНИХ (FIX 2.0) ---
+                    
+                    // 1. Якщо цілей немає — беремо стандартні
+                    if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
+                    
+                    // 2. ГОЛОВНЕ: Перевіряємо довідник. Якщо він відсутній АБО пустий АБО в ньому немає маси
+                    if(!this.data.guidelines || !this.data.guidelines.mass || this.data.guidelines.mass.length === 0) {
+                        console.log("Відновлюємо довідник...");
                         this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
                     }
-                    // Якщо немає цілей для статистики — беремо дефолтні
-                    if(!this.data.targets) {
-                        this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
-                    }
-                    // Якщо немає режиму — ставимо масу
-                    if(!this.data.guideMode) this.data.guideMode = 'mass';
-                    // -------------------------------------
 
+                    // 3. Перевіряємо режим відображення
+                    if(!this.data.guideMode) this.data.guideMode = 'mass';
+                    
                     if(!this.data.exBank) this.data.exBank = [];
+                    
                 } catch(e) {
-                    // Якщо старі дані биті — скидаємо все
+                    console.error("Помилка даних:", e);
                     this.data = JSON.parse(JSON.stringify(InitialData));
                     this.addWeek('mass', true);
                 }
             } else {
-                // Чистий старт
                 this.data = JSON.parse(JSON.stringify(InitialData));
                 this.addWeek('mass', true);
             }
             
+            // Фінальна страховка
             if(!this.data.currentProgram) this.data.currentProgram = 'balanced';
             this.setTheme(this.data.currentProgram);
             this.updateBank();
-            this.render();
+            this.render(); // Малюємо графік/календар
+            
+            // Відразу зберігаємо "вилікувані" дані
+            this.save();
+        },
+
+        renderGuide() {
+            // Захист від помилок, якщо режим не вибрано
+            if (!this.data.guideMode) this.data.guideMode = 'mass';
+            
+            const m = this.data.guideMode;
+            
+            // Захист, якщо раптом guidelines все одно немає (беремо з InitialData напряму для відображення)
+            const sourceData = (this.data.guidelines && this.data.guidelines[m]) 
+                                ? this.data.guidelines 
+                                : InitialData.guidelines;
+                                
+            const data = sourceData[m];
+            
+            // Якщо все одно пусто
+            if (!data || data.length === 0) {
+                document.getElementById('guideContent').innerHTML = '<div style="padding:20px;text-align:center;color:#666">Дані завантажуються... Оновіть сторінку.</div>';
+                return;
+            }
+
+            const color = m === 'mass' ? 'var(--mass)' : 'var(--cut)';
+            const isEd = document.body.classList.contains('editing');
+            
+            // Оновлюємо кнопки
+            document.getElementById('btnG-mass').className = `mode-btn mass ${m==='mass'?'active':''}`;
+            document.getElementById('btnG-cut').className = `mode-btn cut ${m==='cut'?'active':''}`;
+            
+            let h = `<table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th style="color:${color}; width:35%">Вправа</th>
+                                <th style="width:25%">Схема</th>
+                                <th>Деталі</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            data.forEach((r,i) => {
+                h += `<tr>
+                        <td>
+                            <b contenteditable="${isEd}" onblur="App.updateGuide('${m}',${i},'n',this.innerText)">${r.n}</b>
+                            ${isEd ? `<div class="ex-del" style="position:relative;float:right;width:20px;height:20px;font-size:10px" onclick="App.delGuideRow('${m}',${i})">✕</div>` : ''}
+                        </td>
+                        <td style="font-family:'JetBrains Mono'; color:${color}; font-size:0.8rem">
+                            <div contenteditable="${isEd}" onblur="App.updateGuide('${m}',${i},'s',this.innerText)">${r.s}</div>
+                            <div style="font-size:0.65rem; color:#666; margin-top:4px" contenteditable="${isEd}" onblur="App.updateGuide('${m}',${i},'p',this.innerText)">${r.p}</div>
+                        </td>
+                        <td>
+                            <div class="tag-warm" contenteditable="${isEd}" onblur="App.updateGuide('${m}',${i},'w',this.innerText)">${r.w}</div>
+                            <div class="row-note" contenteditable="${isEd}" onblur="App.updateGuide('${m}',${i},'i',this.innerText)">${r.i}</div>
+                        </td>
+                      </tr>`;
+            });
+            h += `</tbody></table>`;
+            
+            // Якщо режим редагування, додаємо кнопку "Додати"
+            if (isEd) {
+                h += `<div style="padding:10px; text-align:center"><button class="btn-add" onclick="App.addGuideRow('${m}')">+ Додати запис</button></div>`;
+            }
+
+            document.getElementById('guideContent').innerHTML = h;
+        },
+        
+        // Додай цю функцію, щоб можна було додавати нові рядки
+        addGuideRow(m) {
+            this.pushHistory();
+            this.data.guidelines[m].push({n:"Нова вправа", p:"-", s:"3x10", w:"-", i:"-"});
+            this.save();
+            this.renderGuide();
         },
 
         save() { localStorage.setItem('training_protocol', JSON.stringify(this.data)); },
