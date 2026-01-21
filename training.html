@@ -83,11 +83,22 @@
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
-        /* --- 2. HEADER & CONTROLS --- */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border);
+            /* --- 2. HEADER & CONTROLS --- */
+           header {
+            /* Сам хедер тепер просто контейнер */
+            display: flex; flex-direction: column; gap: 15px; 
+            margin-bottom: 25px; padding-bottom: 15px; 
+            border-bottom: 1px solid var(--border);
         }
+    
+        .header-top { 
+            /* А ось це відповідає за розкидання Лого і Кнопок по краях */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 100%;
+        }
+    
         .brand { display: flex; align-items: center; gap: 12px; }
         .brand-icon {
             width: 44px; height: 44px; 
@@ -98,15 +109,42 @@
         .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
         .brand span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
 
-        .controls { display: flex; gap: 8px; }
-        .btn-icon, .edit-toggle {
-            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
-            background: var(--bg-panel); color: var(--text-muted); cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.2s;
-        }
-        .btn-icon:hover { background: #222; color: #fff; border-color: var(--theme); }
-        .edit-toggle.active { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+       /* --- HEADER BUTTONS FIX --- */
+    .controls { display: flex; gap: 8px; align-items: center; }
 
+    .btn-icon, .edit-toggle {
+        width: 42px; height: 42px; /* Трохи більші для пальця */
+        border-radius: 12px; 
+        border: 1px solid #333; /* Темна рамка */
+        background: #121212;    /* Темний фон */
+        color: #888;            /* Сіра іконка */
+        
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;      /* Розмір смайлика */
+        cursor: pointer; 
+        transition: all 0.2s ease;
+        padding: 0; margin: 0;
+        
+        /* Важливо: прибирає стандартний вигляд кнопок iOS/Android */
+        -webkit-appearance: none; 
+        appearance: none;
+    }
+
+    /* Активний стан (коли натискаєш) */
+    .btn-icon:active, .edit-toggle:active {
+        transform: scale(0.95);
+        background: #000;
+        border-color: #555;
+        color: #fff;
+    }
+
+    /* Кнопка редагування активна */
+    .edit-toggle.active { 
+        background: var(--theme); 
+        color: #000; 
+        border-color: var(--theme); 
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
         /* --- 3. SCHEDULE UI (DIARY) --- */
         .program-selector {
             background: #111; padding: 4px; border-radius: 14px; border: 1px solid #333; margin-bottom: 25px;
