@@ -1371,11 +1371,18 @@
 
 
 renderAnalytics(c) {
-            c.innerHTML = `<div class="chart-container"><canvas id="mainChart"></canvas></div>`;
+            // 1. Створюємо контейнер
+            c.innerHTML = `
+                <div class="chart-container" style="position:relative; height:350px;">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div style="text-align:center; font-size:0.7rem; color:#666; margin-top:10px; font-family:'JetBrains Mono'">
+                    * TEST (Base) vs STACK (Compounds)
+                </div>`;
             
             const labels = []; 
             const dataTest = [];    
-            const dataAnabolics = []; 
+            const dataStack = []; 
             const dataWeight = [];
             
             const weekKeys = Object.keys(this.data.schedule).map(Number);
@@ -1395,7 +1402,6 @@ renderAnalytics(c) {
                             const unit = pill.dose.toLowerCase();
 
                             if (!isNaN(val) && unit.includes('mg') && ['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
-                                // Розділяємо Тест і Інше
                                 if(name.includes('test') || name.includes('sust') || name.includes('enan') || name.includes('cyp') || name.includes('prop')) {
                                     weekTest += val;
                                 } else {
@@ -1406,7 +1412,7 @@ renderAnalytics(c) {
                     }));
                 }
                 dataTest.push(weekTest);
-                dataAnabolics.push(weekOther);
+                dataStack.push(weekOther);
 
                 let weightSum = 0; let weightCount = 0;
                 for(let d=0; d<7; d++) {
@@ -1420,33 +1426,131 @@ renderAnalytics(c) {
             
             const ctx = document.getElementById('mainChart').getContext('2d');
             
-            // Градієнти
             const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
-            gradTest.addColorStop(0, 'rgba(59, 130, 246, 0.2)'); gradTest.addColorStop(1, 'rgba(59, 130, 246, 0.9)');
+            gradTest.addColorStop(0, 'rgba(59, 130, 246, 0.1)'); 
+            gradTest.addColorStop(1, 'rgba(59, 130, 246, 0.8)');
             
-            const gradAnabolic = ctx.createLinearGradient(0, 400, 0, 0);
-            gradAnabolic.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); gradAnabolic.addColorStop(1, 'rgba(239, 68, 68, 0.9)');
+            const gradStack = ctx.createLinearGradient(0, 400, 0, 0);
+            gradStack.addColorStop(0, 'rgba(16, 185, 129, 0.1)'); 
+            gradStack.addColorStop(1, 'rgba(16, 185, 129, 0.8)'); 
+
+            Chart.defaults.font.family = "'JetBrains Mono', monospace";
+            Chart.defaults.color = "#666";
 
             this.chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Вага (kg)', data: dataWeight, type: 'line', borderColor: '#d4af37', backgroundColor: '#d4af37', borderWidth: 2, yAxisID: 'y1', pointRadius: 2, order: 0, tension: 0.4 },
-                        { label: 'Анаболіки (mg)', data: dataAnabolics, backgroundColor: gradAnabolic, yAxisID: 'y', stack: 'total', order: 1, borderRadius: {topLeft:4, topRight:4} },
-                        { label: 'Тестостерон (mg)', data: dataTest, backgroundColor: gradTest, yAxisID: 'y', stack: 'total', order: 2, borderRadius: {bottomLeft:4, bottomRight:4} }
+                        { 
+                            label: 'Вага (kg)', 
+                            data: dataWeight, 
+                            type: 'line', 
+                            borderColor: '#d4af37', 
+                            backgroundColor: '#d4af37', 
+                            borderWidth: 2, 
+                            yAxisID: 'y1', 
+                            pointRadius: 3,
+                            pointBackgroundColor: '#000',
+                            pointBorderColor: '#d4af37',
+                            pointBorderWidth: 2,
+                            tension: 0.4,
+                            order: 0,
+                            shadowBlur: 10,
+                            shadowColor: '#d4af37'
+                        },
+                        { 
+                            label: 'Стек (mg)', 
+                            data: dataStack, 
+                            backgroundColor: gradStack, 
+                            yAxisID: 'y', 
+                            stack: 'total', 
+                            order: 1, 
+                            borderRadius: 4,
+                            borderSkipped: false
+                        },
+                        { 
+                            label: 'Тестостерон (mg)', 
+                            data: dataTest, 
+                            backgroundColor: gradTest, 
+                            yAxisID: 'y', 
+                            stack: 'total', 
+                            order: 2, 
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    
+                    // --- 🚀 АНІМАЦІЯ ТУТ ---
+                    animation: {
+                        duration: 1500, // 1.5 секунди загальна тривалість
+                        easing: 'easeOutQuart', // Плавне гальмування в кінці
+                        delay: (context) => {
+                            let delay = 0;
+                            // Анімуємо тільки дані, не осі чи сітку
+                            if (context.type === 'data' && context.mode === 'default') {
+                                // dataIndex - це номер тижня (0, 1, 2...)
+                                // Множимо на 100ms, щоб кожен наступний тиждень виростав пізніше
+                                delay = context.dataIndex * 150 + context.datasetIndex * 100;
+                            }
+                            return delay;
+                        }
+                    },
+
+                    events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'],
+                    interaction: { mode: 'index', intersect: false },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
+                    onClick: (e) => {
+                        const chart = this.chartInstance;
+                        const points = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+                        if (!points.length) {
+                            chart.setActiveElements([], { x: 0, y: 0 });
+                            chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                            chart.update();
+                        }
+                    },
+
                     scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { color: '#666' } },
-                        y: { stacked: true, position: 'left', grid: { color: '#222' }, title: { display: true, text: 'LOAD (mg)', color: '#555' } },
-                        y1: { display: true, position: 'right', grid: { display: false }, title: { display: true, text: 'KG', color: '#d4af37' } }
+                        x: { 
+                            stacked: true, 
+                            grid: { display: false }, 
+                            ticks: { color: '#555', font: {size: 10} } 
+                        },
+                        y: { 
+                            stacked: true, 
+                            position: 'left', 
+                            grid: { color: '#222', borderDash: [5, 5] }, 
+                            title: { display: true, text: 'LOAD (mg)', color: '#444', font: {size: 9} },
+                            border: { display: false }
+                        },
+                        y1: { 
+                            display: true, 
+                            position: 'right', 
+                            grid: { display: false }, 
+                            title: { display: true, text: 'KG', color: '#d4af37', font: {size: 9} },
+                            border: { display: false }
+                        }
                     },
                     plugins: { 
-                        legend: { labels: { color: '#bbb' } },
+                        legend: { 
+                            labels: { color: '#999', boxWidth: 10, font: { size: 10 } },
+                            position: 'bottom'
+                        },
                         tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#ccc',
+                            borderColor: '#333',
+                            borderWidth: 1,
+                            padding: 10,
+                            titleFont: { family: 'JetBrains Mono' },
+                            bodyFont: { family: 'JetBrains Mono' },
                             callbacks: {
                                 footer: (items) => {
                                     let total = 0; items.forEach(i => { if(i.dataset.yAxisID==='y') total += i.raw; });
@@ -1458,7 +1562,6 @@ renderAnalytics(c) {
                 }
             });
         },
-
 
         renderAnalysis(c) {
             let html = '<div class="med-grid">';
@@ -2063,6 +2166,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
