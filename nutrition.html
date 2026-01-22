@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 1. GLOBAL SETTINGS --- */
+        /* --- 1. GLOBAL SETTINGS & CURSORS --- */
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
@@ -43,18 +43,19 @@
             box-sizing: border-box; outline: none;
         }
 
-        body { cursor: default; }
+        /* 1. БАЗА: Звичайна стрілка на фоні */
+        body, html { cursor: default; }
 
-        /* Текстовий курсор ТІЛЬКИ в полях */
+        /* 2. ТЕКСТ: Текстовий курсор тільки в полях вводу */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* Палець на всіх активних елементах */
-        button, select, label, a,
-        [onclick], [class*="btn"], .day-tab, .meal-header, .food-row,
-        .target-badge, .bank-row, .sugg-item, .modal-overlay,
-        .chk-wrap input 
+        /* 3. АКТИВНІ ЕЛЕМЕНТИ: Палець (Pointer) */
+        /* Це покриває всі кнопки, посилання, чекбокси та елементи з onclick */
+        button, select, label, a, input[type="checkbox"], [onclick],
+        .icon-btn, .day-tab, .food-row, .bank-row, .sugg-item, 
+        .target-badge, .mh-title, .mh-del, .sys-card, .sys-close
         {
             cursor: pointer !important;
         }
@@ -64,7 +65,7 @@
             color: var(--text-main);
             font-family: var(--font-ui);
             margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 80px; /* Менший відступ, бо немає нижнього меню */
+            padding-bottom: 50px; /* Оптимальний відступ */
         }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
@@ -72,7 +73,7 @@
         /* --- 2. HEADER --- */
         header {
             display: flex; 
-            justify-content: space-between; 
+            justify-content: space-between; /* Розносить краї */
             align-items: center;
             padding-bottom: 20px; 
             margin-bottom: 20px;
@@ -95,17 +96,15 @@
             width: 42px; height: 42px; border-radius: 12px; 
             border: 1px solid #333; background: #121212; color: #888;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: 0.2s;
-            padding: 0; margin: 0;
+            font-size: 1.2rem; transition: 0.2s; padding: 0; margin: 0;
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
         /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
-            padding: 5px 10px 15px 10px; 
-            margin-bottom: 10px; 
-            scrollbar-width: none;
+            padding: 5px 10px 15px 10px; /* Щоб тіні не різались */
+            margin-bottom: 10px; scrollbar-width: none;
             margin-left: -10px; margin-right: -10px;
         }
         .day-tab {
@@ -119,8 +118,7 @@
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
             box-shadow: 0 6px 15px rgba(212, 175, 55, 0.15);
-            transform: translateY(-2px);
-            z-index: 2;
+            transform: translateY(-2px); z-index: 2;
         }
         .day-tab.active small { color: var(--theme); }
 
@@ -284,8 +282,6 @@
         .bank-row b { display: block; font-size: 1rem; color: #fff; margin-bottom: 4px; }
         .bank-row span { font-family: var(--font-mono); font-size: 0.75rem; color: #666; }
 
-        /* SCROLL TOP REMOVED */
-        
         /* RED ALERT ANIMATION */
         @keyframes secret-hint {
             0% { transform: scale(1); filter: none; }
