@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOCOL: NUTRITION</title>
+    <title>NUTRITION PROTOCOL</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Nutrition">
     
     <link rel="apple-touch-icon" href="icon.png">
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="assets/style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,12 +16,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CORE SETTINGS --- */
+        /* --- 1. CORE VISUALS (Gold Theme) --- */
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
             --border: #2a2a2a;
-            --theme: #d4af37; /* GOLD */
+            --theme: #d4af37; /* Gold */
             
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
@@ -31,80 +29,91 @@
             --danger: #ef4444;
             --success: #10b981;
             
-            /* MACROS */
+            /* Macros Colors */
             --p-color: #3b82f6; 
             --f-color: #eab308; 
             --c-color: #10b981; 
             
+            --font-ui: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
 
+        /* Reset & Base */
         *, *::before, *::after {
             -webkit-user-select: none; user-select: none;
             -webkit-tap-highlight-color: transparent;
             box-sizing: border-box; outline: none;
         }
-
-        input, textarea { 
-            -webkit-user-select: text !important; user-select: text !important;
-            cursor: text !important;
+        input, textarea, [contenteditable] { 
+            -webkit-user-select: text !important; user-select: text !important; cursor: text !important;
+        }
+        button, .icon-btn, .day-tab, .meal-block, .food-row, .target-badge, .btn-action, .modal-overlay, .bank-row {
+            cursor: pointer !important;
         }
 
         body {
             background-color: var(--bg-app); 
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-ui);
             margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 150px;
+            padding-bottom: 150px; /* Space for bottom nav */
         }
 
-        .app-container { width: 100%; max-width: 600px; margin: 0 auto; }
+        .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
-        /* --- HEADER --- */
+        /* --- 2. HEADER (FIXED LAYOUT) --- */
         header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 20px; border-bottom: 1px solid var(--border);
+            display: flex; 
+            justify-content: space-between; /* Лого зліва, кнопки справа */
+            align-items: center;
+            padding-bottom: 20px; 
             margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
         }
         
-        .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .brand { display: flex; align-items: center; gap: 12px; }
         .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, var(--theme), #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
         }
-        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
-        .brand span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
+        .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
+        .brand-text span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: block; }
 
-        .controls { display: flex; gap: 8px; }
+        .controls { display: flex; gap: 10px; align-items: center; }
         .icon-btn {
             width: 42px; height: 42px; border-radius: 12px; 
             border: 1px solid #333; background: #121212; color: #888;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+            font-size: 1.2rem; transition: 0.2s;
         }
-        .icon-btn:active { transform: scale(0.95); background: #000; color: #fff; }
+        .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
-        /* --- DAY NAV --- */
+        /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; margin-bottom: 15px; scrollbar-width: none;
         }
         .day-tab {
-            min-width: 70px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
-            border-radius: 10px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
+            border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
+            color: #555; transition: 0.2s;
         }
+        .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); }
+        .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+        
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transform: translateY(-2px);
         }
+        .day-tab.active small { color: var(--theme); }
+
         .day-add-btn {
-            min-width: 40px; border-radius: 10px; border: 1px dashed #444; background: transparent;
-            color: #666; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            min-width: 50px; border-radius: 12px; border: 1px dashed #444; background: transparent;
+            color: #666; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- HUD --- */
+        /* --- 4. HUD (DASHBOARD) --- */
         .hud {
             background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
             padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
@@ -113,111 +122,124 @@
         .hud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
         
         .k-group { display: flex; flex-direction: column; }
-        .k-val { font-family: var(--font-mono); font-size: 2.8rem; font-weight: 700; line-height: 1; color: #fff; letter-spacing: -2px; }
-        .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
+        .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
+        .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
 
         .target-badge {
             background: #000; border: 1px solid #333; padding: 6px 12px; border-radius: 8px;
-            font-family: var(--font-mono); font-size: 0.7rem; color: #888; cursor: pointer;
+            font-family: var(--font-mono); font-size: 0.75rem; color: #666; transition: 0.2s;
         }
         .target-badge span { color: var(--theme); font-weight: 700; }
+        .target-badge:active { transform: scale(0.95); border-color: var(--theme); }
 
-        .hud-macros { display: flex; flex-direction: column; gap: 8px; }
+        .hud-macros { display: flex; flex-direction: column; gap: 10px; }
         .macro-row { display: grid; grid-template-columns: 35px 1fr 60px; align-items: center; gap: 10px; }
-        .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #666; }
+        .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #555; }
         .mr-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
-        .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+        .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
         .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; }
 
-        /* --- MEALS --- */
+        /* --- 5. MEALS LIST --- */
         .meal-block { 
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border); 
-            border-radius: 14px; margin-bottom: 15px; overflow: hidden;
+            background: var(--bg-panel); border: 1px solid var(--border); 
+            border-radius: 16px; margin-bottom: 20px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .meal-header {
-            padding: 12px 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
+            padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
             display: flex; justify-content: space-between; align-items: center;
         }
-        .mh-title { font-weight: 700; font-size: 0.95rem; color: #fff; border-bottom: 1px dashed transparent; }
+        .mh-title { 
+            font-weight: 800; font-size: 0.95rem; color: #fff; text-transform: uppercase;
+            border-bottom: 1px dashed transparent; 
+        }
         .mh-title:focus { border-bottom-color: var(--theme); outline: none; }
         
-        .mh-meta { display: flex; align-items: center; gap: 10px; }
+        .mh-meta { display: flex; align-items: center; gap: 12px; }
         .mh-kcal { font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem; color: var(--theme); }
-        .mh-del { color: var(--danger); opacity: 0.5; font-size: 14px; padding: 5px; cursor: pointer; }
+        .mh-del { color: var(--danger); opacity: 0.3; font-size: 16px; padding: 5px; transition: 0.2s; }
+        .mh-del:active { opacity: 1; transform: scale(1.2); }
 
         .food-row {
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-            padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;
         }
-        .food-row:active { background: rgba(255,255,255,0.05); }
         .food-row:last-of-type { border-bottom: none; }
+        .food-row:active { background: rgba(212, 175, 55, 0.05); }
         
-        .fr-info h4 { margin: 0; font-size: 0.9rem; font-weight: 600; color: #e4e4e7; }
-        .fr-info p { margin: 3px 0 0; font-family: var(--font-mono); font-size: 0.65rem; color: #666; }
+        .fr-info h4 { margin: 0; font-size: 0.9rem; font-weight: 600; color: #e4e4e7; margin-bottom: 4px; }
+        .fr-info p { margin: 0; font-family: var(--font-mono); font-size: 0.65rem; color: #666; }
         .fr-vals { text-align: right; }
-        .fr-w { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: #fff; }
+        .fr-w { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; color: #fff; }
         .fr-k { font-family: var(--font-mono); font-size: 0.7rem; color: #666; margin-top: 2px; }
 
-        .btn-add-food {
-            width: 100%; padding: 12px; background: #080808; border: none; border-top: 1px solid var(--border);
+        /* Buttons */
+        .btn-action {
+            width: 100%; padding: 14px; background: #0a0a0a; border: none; border-top: 1px solid var(--border);
             color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
-            transition: 0.2s; cursor: pointer;
+            letter-spacing: 1px; transition: 0.2s;
         }
-        .btn-add-food:active { background: #111; color: #fff; }
+        .btn-action:active { background: #151515; color: var(--theme); }
 
-        .btn-new-meal {
-            width: 100%; padding: 15px; border: 1px dashed #333; border-radius: 14px; 
-            background: transparent; color: #666; font-weight: 600; font-size: 0.9rem;
-            margin-top: 15px; cursor: pointer;
+        .btn-main-add {
+            width: 100%; padding: 16px; border: 1px dashed #333; border-radius: 14px; 
+            background: transparent; color: #666; font-weight: 700; font-size: 0.9rem;
+            margin-top: 20px; transition: 0.2s;
         }
+        .btn-main-add:active { border-color: var(--theme); color: var(--theme); background: rgba(212, 175, 55, 0.05); }
 
-        /* --- MODALS & INPUTS --- */
+        /* --- 6. MODALS & FORMS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
             z-index: 100; display: none; align-items: flex-end; justify-content: center;
         }
         .modal-card {
-            background: #141414; width: 100%; max-width: 600px;
-            border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; 
-            padding: 25px; padding-bottom: 40px; display: flex; flex-direction: column; gap: 15px;
+            background: #121212; width: 100%; max-width: 600px;
+            border-top: 1px solid var(--border); border-radius: 24px 24px 0 0; 
+            padding: 25px; padding-bottom: 50px; display: flex; flex-direction: column; gap: 15px;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
             animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
         .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .mc-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase; }
+        .mc-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
         .inp-main {
             width: 100%; background: #000; border: 1px solid #333;
-            padding: 14px; border-radius: 12px; color: #fff; font-size: 1rem;
-            font-family: 'JetBrains Mono', monospace; outline: none; transition: 0.2s;
+            padding: 16px; border-radius: 12px; color: #fff; font-size: 1.1rem;
+            font-family: var(--font-mono); outline: none; transition: 0.2s;
         }
         .inp-main:focus { border-color: var(--theme); }
+        .inp-main::placeholder { color: #444; font-family: var(--font-ui); }
 
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .stat-box { background: #0a0a0a; padding: 10px 5px; border-radius: 8px; text-align: center; border: 1px solid #222; }
+        .stat-box { background: #050505; padding: 10px 5px; border-radius: 10px; text-align: center; border: 1px solid #222; }
         .stat-box label { display: block; font-size: 0.6rem; color: #666; font-weight: 700; margin-bottom: 4px; }
-        .stat-box input { width: 100%; background: transparent; border: none; color: #fff; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem; }
+        .stat-box input { width: 100%; background: transparent; border: none; color: #fff; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: 1rem; padding: 0; }
 
         .btn-primary {
             width: 100%; background: var(--theme); color: #000; padding: 16px;
             border-radius: 12px; font-weight: 800; border: none; text-transform: uppercase;
-            margin-top: 10px; cursor: pointer;
+            margin-top: 10px; font-size: 1rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
         .btn-danger {
-            width: 100%; background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 14px;
-            border-radius: 12px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 5px; cursor: pointer;
+            width: 100%; background: transparent; color: var(--danger); padding: 14px;
+            border-radius: 12px; font-weight: 700; border: 1px solid #333; margin-top: 5px;
+            font-size: 0.8rem;
         }
 
         /* AUTOCOMPLETE */
         #sugg-list {
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
             margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;
+            position: absolute; width: 100%; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        .sugg-item { padding: 12px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; cursor: pointer; }
-        .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; }
+        .sugg-item { padding: 14px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; }
+        .sugg-item:active { background: #333; }
+        .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; font-weight: 700; }
 
         /* COLORS */
         .color-p { color: var(--p-color) !important; }
@@ -226,29 +248,32 @@
         
         #fileInput { display: none; }
         .chk-wrap { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
-        .chk-wrap input { accent-color: var(--theme); width: 18px; height: 18px; }
-        .chk-wrap label { font-size: 0.85rem; color: #888; }
+        .chk-wrap input { accent-color: var(--theme); width: 20px; height: 20px; }
+        .chk-wrap label { font-size: 0.9rem; color: #aaa; }
 
         /* BANK LIST */
-        .bank-list-container { max-height: 60vh; overflow-y: auto; margin-top: 10px; }
+        .bank-list-container { max-height: 60vh; overflow-y: auto; margin-top: 15px; }
         .bank-row {
-            padding: 12px 0; border-bottom: 1px solid #222; 
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            padding: 14px 0; border-bottom: 1px solid #222; 
+            display: flex; justify-content: space-between; align-items: center; 
         }
-        .bank-row b { display: block; font-size: 0.95rem; color: #eee; margin-bottom: 2px; }
-        .bank-row span { font-family: var(--font-mono); font-size: 0.7rem; color: #666; }
+        .bank-row b { display: block; font-size: 1rem; color: #fff; margin-bottom: 4px; }
+        .bank-row span { font-family: var(--font-mono); font-size: 0.75rem; color: #666; }
         
         .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
-        .day-name-edit { font-size: 1.1rem; font-weight: 800; color: #fff; border-bottom: 1px dashed #333; }
-        .btn-del-day { background: transparent; border: none; color: #666; font-size: 0.8rem; cursor: pointer; }
+        .day-name-edit { font-size: 1.2rem; font-weight: 800; color: #fff; border-bottom: 1px dashed #333; padding-bottom: 2px; }
+        .day-name-edit:focus { border-color: var(--theme); }
+        .btn-mini { background: transparent; border: 1px solid #333; color: #888; font-size: 0.7rem; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
 
-        /* ANIMATION */
-        @keyframes secret-hint {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15) rotate(5deg); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); border-color: var(--danger); color: var(--danger); }
-            100% { transform: scale(1); }
+        /* SCROLL TOP */
+        .scroll-top { 
+            position: fixed; bottom: 200px; right: 20px; 
+            width: 45px; height: 45px; background: rgba(30,30,30,0.8); 
+            border: 1px solid var(--theme); border-radius: 50%; color: var(--theme); 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; z-index: 101; font-size: 1.2rem; backdrop-filter: blur(5px); 
         }
-        .brand-icon.hint-active { animation: secret-hint 0.4s ease; }
+
     </style>
 </head>
 <body>
@@ -256,21 +281,19 @@
 <div class="app-container">
     
     <header>
-        <div class="header-top">
-            <div class="brand" id="brandBlock">
-                <div class="brand-icon">🥑</div>
-                <div>
-                    <h1>NUTRITION</h1>
-                    <span>SYSTEM</span>
-                </div>
+        <div class="brand" id="brandBlock">
+            <div class="brand-icon">🥑</div>
+            <div class="brand-text">
+                <h1>NUTRITION</h1>
+                <span>PROTOCOL</span>
             </div>
-            <div class="controls">
-                <button class="icon-btn" onclick="App.undo()" id="undoBtn" style="display:none; color:var(--theme)">↩</button>
-                <button class="icon-btn" onclick="App.exportData()">💾</button>
-                <button class="icon-btn" onclick="document.getElementById('fileInput').click()">📂</button>
-                <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
-                <button class="icon-btn" onclick="App.openBank()" style="color:var(--theme)">📚</button>
-            </div>
+        </div>
+        <div class="controls">
+            <button class="icon-btn" onclick="App.undo()" id="undoBtn" style="display:none; color:var(--theme)">↩</button>
+            <button class="icon-btn" onclick="App.exportData()">💾</button>
+            <button class="icon-btn" onclick="document.getElementById('fileInput').click()">📂</button>
+            <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
+            <button class="icon-btn" onclick="App.openBank()" style="color:var(--theme)">📚</button>
         </div>
     </header>
 
@@ -278,9 +301,9 @@
     
     <div class="day-control-panel">
         <span class="day-name-edit" contenteditable="true" onblur="App.renameDay(this.innerText)" id="currentDayTitle">День</span>
-        <div style="display:flex; gap:10px">
-             <button class="btn-del-day" onclick="App.duplicateDay()">❐ Копія</button>
-             <button class="btn-del-day" onclick="App.deleteDay()" style="color:var(--danger)">🗑</button>
+        <div style="display:flex; gap:8px">
+             <button class="btn-mini" onclick="App.duplicateDay()">❐ КОПІЯ</button>
+             <button class="btn-mini" onclick="App.deleteDay()" style="border-color:var(--danger); color:var(--danger)">🗑</button>
         </div>
     </div>
 
@@ -288,7 +311,7 @@
         <div class="hud-header">
             <div class="k-group">
                 <span class="k-val" id="disp-k">0</span>
-                <span class="k-label">ККАЛ СЬОГОДНІ</span>
+                <span class="k-label">КАЛОРІЇ</span>
             </div>
             <div class="target-badge" onclick="App.openTargets()">
                 ЦІЛЬ: <span id="disp-target">2700</span>
@@ -315,9 +338,11 @@
     </div>
 
     <div id="mealList"></div>
-    <button class="btn-new-meal" onclick="App.addMealBlock()">+ ПРИЙОМ ЇЖІ</button>
+    <button class="btn-main-add" onclick="App.addMealBlock()">+ ДОДАТИ ПРИЙОМ ЇЖІ</button>
 
 </div>
+
+<div class="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
 
 <div id="foodModal" class="modal-overlay">
     <div class="modal-card">
@@ -327,7 +352,7 @@
         </div>
 
         <div style="position:relative">
-            <input id="inpName" class="inp-main" placeholder="Пошук продукту..." autocomplete="off" oninput="App.searchFood(this.value)">
+            <input id="inpName" class="inp-main" placeholder="Пошук або назва..." autocomplete="off" oninput="App.searchFood(this.value)">
             <div id="sugg-list"></div>
         </div>
 
@@ -363,17 +388,21 @@
             <h3 class="mc-title">РЕДАКТОР</h3>
             <span onclick="document.getElementById('bankEditModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
+        
         <input id="bankInpName" class="inp-main" placeholder="Назва продукту">
+        
         <div class="stats-grid">
             <div class="stat-box"><label class="color-p">Б</label><input id="bankInpP" placeholder="0" inputmode="decimal"></div>
             <div class="stat-box"><label class="color-f">Ж</label><input id="bankInpF" placeholder="0" inputmode="decimal"></div>
             <div class="stat-box"><label class="color-c">В</label><input id="bankInpC" placeholder="0" inputmode="decimal"></div>
             <div class="stat-box"><label>К</label><input id="bankInpK" placeholder="Auto" inputmode="decimal"></div>
         </div>
+
         <div class="chk-wrap">
             <input type="checkbox" id="bankInpUnit">
             <label for="bankInpUnit">Це одна порція/шт (не 100г)</label>
         </div>
+
         <button class="btn-primary" onclick="App.saveBankItem()">ЗБЕРЕГТИ В БАЗУ</button>
         <button class="btn-danger" id="btnDelBank" onclick="App.delFromBank()">ВИДАЛИТИ З БАЗИ</button>
     </div>
@@ -403,12 +432,15 @@
         "Рис": {p:2.7, f:0.3, c:28, k:130},
         "Гречка": {p:4, f:1, c:21, k:110},
         "Макарони": {p:5, f:1, c:30, k:150},
+        "Картопля": {p:2, f:0, c:17, k:77},
         "Куряче філе": {p:23, f:1, c:0, k:110},
         "Яловичина": {p:20, f:10, c:0, k:180},
         "Яйце (1шт)": {p:6, f:5, c:0.5, k:70, unit:true},
+        "Білок яєчний": {p:3, f:0, c:0, k:15, unit:true},
         "Сир кисломолочний": {p:18, f:5, c:2, k:120},
         "Олія оливкова": {p:0, f:100, c:0, k:884},
         "Горіхи": {p:15, f:60, c:10, k:650},
+        "Авокадо": {p:2, f:15, c:9, k:160},
         "Банан": {p:1, f:0, c:21, k:90},
         "Протеїн (1 порція)": {p:24, f:1, c:2, k:110, unit:true}
     };
@@ -505,7 +537,6 @@
             if(!silent) { this.save(); this.render(); }
         },
 
-        // NEW: Copy current day structure
         duplicateDay() {
             const day = this.getCurrentDay();
             if(!day) return;
@@ -559,21 +590,16 @@
                 let mCal = 0, mP = 0, mF = 0, mC = 0;
 
                 const foodsHtml = m.foods.map((f, i) => {
-                    // Fallback to saved data if not in bank (Quick Add support)
                     const ref = this.data.bank[f.n] || {p:f.p, f:f.f, c:f.c, k:f.k, unit:f.unit}; 
-                    
-                    // If manually entered, we trust saved Kcal, else calculate
                     let k, p, fat, c;
                     
                     if(this.data.bank[f.n]) {
-                        // Logic for Bank Item
                         const r = ref.unit ? f.w : f.w/100;
                         k = Math.round((ref.k || 0) * r);
                         p = Math.round((ref.p || 0) * r);
                         fat = Math.round((ref.f || 0) * r);
                         c = Math.round((ref.c || 0) * r);
                     } else {
-                        // Logic for Quick Add Item (already calculated per weight)
                          k = f.k; p = f.p; fat = f.f; c = f.c;
                     }
                     
@@ -605,7 +631,7 @@
                         <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
                     </div>
                     <div>${foodsHtml}</div>
-                    <button class="btn-add-food" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
+                    <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
                 </div>`;
             });
             this.updateStats();
@@ -617,12 +643,12 @@
             this.data.days.forEach(d => {
                 const el = document.createElement('div');
                 el.className = `day-tab ${d.id === this.state.currentDayId ? 'active' : ''}`;
-                el.innerText = d.name;
+                el.innerHTML = `<span>${d.name.split(' ')[0]}</span><small>${d.name.split(' ').slice(1).join(' ') || '•'}</small>`;
                 el.onclick = () => App.switchDay(d.id);
                 bar.appendChild(el);
             });
             
-            const addBtn = document.createElement('button');
+            const addBtn = document.createElement('div');
             addBtn.className = 'day-add-btn';
             addBtn.innerText = '+';
             addBtn.onclick = () => App.addDay();
@@ -640,7 +666,6 @@
                     const r = ref.unit ? f.w : f.w/100;
                     t.p += (ref.p||0)*r; t.f += (ref.f||0)*r; t.c += (ref.c||0)*r; t.k += (ref.k||0)*r;
                 } else {
-                    // Handle non-bank items
                     t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
                 }
             }));
@@ -651,7 +676,7 @@
             document.getElementById('disp-target').innerText = tg.k;
             
             if(t.k > tg.k) dispK.style.color = 'var(--danger)';
-            else dispK.style.color = 'var(--text-main)';
+            else dispK.style.color = '#fff';
 
             const updateBar = (id, val, max) => {
                 const el = document.getElementById('bar-'+id);
@@ -706,10 +731,7 @@
         editFood(mid, idx) {
             this.state.mid = mid; this.state.fidx = idx;
             const f = this.getCurrentDay().meals.find(m=>m.id===mid).foods[idx];
-            // If in bank, use bank data, else use saved data
             let base = this.data.bank[f.n] ? this.data.bank[f.n] : f;
-            // Need to reverse calc per 100g if it was quick added? 
-            // For simplicity, quick edit just loads values
             this.openModal('РЕДАГУВАТИ', {...base, w: f.w, n: f.n}, true);
         },
 
@@ -718,17 +740,18 @@
             document.getElementById('inpName').value = f.n||'';
             document.getElementById('inpWeight').value = f.w||'';
             
-            // Allow manual entry (Quick Add)
-            const isBank = !!this.data.bank[f.n];
-            
             document.getElementById('inpP').value = f.p||0;
             document.getElementById('inpF').value = f.f||0;
             document.getElementById('inpC').value = f.c||0;
             document.getElementById('inpK').value = f.k||0;
             
-            // Unlock inputs if adding new
-            const inputs = ['inpP','inpF','inpC','inpK'];
-            inputs.forEach(id => document.getElementById(id).disabled = isBank);
+            // Auto-lock fields ONLY if it's in the bank (prevent messing up bank logic)
+            // But unlock for Quick Add / Edit Custom
+            const isBank = !!this.data.bank[f.n];
+            // We allow editing even for bank items locally if needed, but standard logic is to lock
+            // Let's keep them editable for maximum flexibility
+            // const inputs = ['inpP','inpF','inpC','inpK'];
+            // inputs.forEach(id => document.getElementById(id).disabled = isBank);
             
             document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
             document.getElementById('foodModal').style.display = 'flex';
@@ -746,18 +769,14 @@
             let item;
 
             if(this.data.bank[n]) {
-                // Bank Item: Save only ref and weight
                 item = {n, w};
             } else {
-                // Quick Add: Save calculated macros
                 const p = parseFloat(document.getElementById('inpP').value)||0;
                 const f = parseFloat(document.getElementById('inpF').value)||0;
                 const c = parseFloat(document.getElementById('inpC').value)||0;
                 let k = parseFloat(document.getElementById('inpK').value);
                 if(!k && (p||f||c)) k = Math.round(p*4 + f*9 + c*4);
-                
-                // For quick add, we save the TOTAL macros for this entry
-                item = {n, w, p, f, c, k, unit: true}; // Treat as unit to avoid recalc issues
+                item = {n, w, p, f, c, k, unit: true}; 
             }
 
             this.pushHistory();
@@ -838,7 +857,6 @@
             const c = parseFloat(document.getElementById('bankInpC').value)||0;
             let k = parseFloat(document.getElementById('bankInpK').value);
             if(!k) k = Math.round(p*4 + f*9 + c*4);
-            
             const unit = document.getElementById('bankInpUnit').checked;
 
             if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
