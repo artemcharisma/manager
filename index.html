@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MMXXVI // OS</title>
+    <title>PROTOCOL // OS</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,99 +13,180 @@
     <link rel="stylesheet" href="assets/style.css">
 
     <style>
-        /* Унікальні стилі для HUB (index.html) */
         :root { 
             --bg: #050505; 
-            --card: #121212; 
+            --card-bg: rgba(18, 18, 18, 0.6); /* Напівпрозорий фон */
             --border: #2a2a2a; 
             --gold: #d4af37; 
             --blue: #3b82f6; 
             --green: #10b981; 
+            --red: #ef4444;
             --text: #f4f4f5; 
             --text-dim: #a1a1aa; 
         }
         
         body { 
-            background: var(--bg); 
+            background-color: var(--bg);
+            /* Легкий градієнт на фоні для глибини */
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 60%);
             color: var(--text); 
             font-family: 'JetBrains Mono', monospace, sans-serif;
             margin: 0; 
-            /* Зменшив відступи для мобілок, щоб все влізло */
             padding: 15px; 
             min-height: 100vh; 
             display: flex; flex-direction: column; 
             align-items: center; 
-            /* Важливо: центрування по вертикалі, якщо екран великий */
             justify-content: center; 
             box-sizing: border-box;
+            overflow-x: hidden;
         }
 
-        .hub-container { width: 100%; max-width: 450px; animation: fadeIn 0.8s ease; }
+        .hub-container { width: 100%; max-width: 450px; }
         
-        /* --- НОВИЙ КОМПАКТНИЙ HEADER (System Bar Status) --- */
+        /* --- HEADER --- */
         header { 
             display: flex; 
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-family: 'JetBrains Mono', monospace;
+            padding: 15px 5px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            animation: slideDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .sys-status-left {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            gap: 12px;
+            font-size: 0.75rem;
+            color: #fff;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        /* Анімація індикатора мережі */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--green);
+            animation: pulse 2s infinite;
         }
 
         .sys-status-right {
             font-size: 0.9rem;
             font-weight: 700;
-            letter-spacing: 3px;
-            color: #fff;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            opacity: 0.7;
         }
-        /* ----------------------------------------------- */
         
-        /* WIDGET CLOCK */
-        .sys-widget { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; font-family: 'JetBrains Mono', monospace; }
-        .time { font-size: 1.8rem; font-weight: 700; color: #fff; letter-spacing: 2px; }
-        .date { font-size: 0.8rem; color: var(--gold); text-transform: uppercase; margin-top: 5px; }
+        /* --- WIDGET CLOCK --- */
+        .sys-widget { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(10px); /* Ефект матового скла */
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border); 
+            border-radius: 16px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            animation: fadeIn 1s ease 0.2s backwards;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+        .time { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            color: #fff; 
+            letter-spacing: 3px; 
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .date { font-size: 0.75rem; color: var(--gold); text-transform: uppercase; margin-top: 5px; letter-spacing: 1px; }
 
-        .app-grid { display: grid; gap: 12px; }
+        /* --- CARDS GRID --- */
+        .app-grid { display: grid; gap: 12px; width: 100%; }
         
         .app-card { 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            padding: 18px; /* Трохи зменшив падінг карток */
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.05); 
+            padding: 18px; 
             border-radius: 14px; 
             text-decoration: none; 
             display: flex; 
             align-items: center; 
             gap: 15px; 
-            transition: 0.3s; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative; 
             overflow: hidden;
-            font-family: 'JetBrains Mono', monospace;
+            animation: fadeInUp 0.6s ease backwards;
         }
-        .app-card:hover { transform: translateY(-3px); border-color: #444; }
+
+        /* Затримка анімації для кожної картки */
+        .app-card:nth-child(1) { animation-delay: 0.3s; }
+        .app-card:nth-child(2) { animation-delay: 0.4s; }
+        .app-card:nth-child(3) { animation-delay: 0.5s; }
+
+        /* Ефекти наведення */
+        .app-card:hover { transform: translateY(-2px) scale(1.01); background: rgba(255,255,255,0.03); }
         .app-card:active { transform: scale(0.98); }
         
-        .icon-box { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); }
+        .icon-box { 
+            width: 45px; height: 45px; 
+            border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; 
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            transition: 0.3s;
+        }
         
-        .info h3 { margin: 0; font-size: 1rem; color: #fff; letter-spacing: -0.5px; }
-        .info p { margin: 3px 0 0; font-size: 0.7rem; color: var(--text-dim); font-weight: 300; }
+        .info h3 { margin: 0; font-size: 1rem; color: #fff; letter-spacing: 0.5px; font-weight: 600; }
+        .info p { margin: 3px 0 0; font-size: 0.7rem; color: var(--text-dim); font-weight: 400; }
         
-        .card-pharm:hover { border-color: var(--gold); } .card-pharm .icon-box { color: var(--gold); }
-        .card-nutri:hover { border-color: var(--green); } .card-nutri .icon-box { color: var(--green); }
-        .card-train:hover { border-color: var(--blue); } .card-train .icon-box { color: var(--blue); }
+        /* Кольорові акценти при наведенні */
+        .card-pharm:hover { border-color: rgba(212, 175, 55, 0.4); box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); } 
+        .card-pharm:hover .icon-box { color: var(--gold); border-color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+        .card-train:hover { border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); } 
+        .card-train:hover .icon-box { color: var(--blue); border-color: var(--blue); text-shadow: 0 0 10px var(--blue); }
+
+        .card-nutri:hover { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); } 
+        .card-nutri:hover .icon-box { color: var(--green); border-color: var(--green); text-shadow: 0 0 10px var(--green); }
+
+        /* --- BUTTONS --- */
+        .ctrl-btn {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #333;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'JetBrains Mono';
+            font-weight: 600;
+            transition: 0.2s;
+            display: flex; align-items: center; gap: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .btn-save { color: var(--green); }
+        .btn-save:hover { background: rgba(16, 185, 129, 0.1); border-color: var(--green); box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
         
-        @keyframes fadeIn { from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:translateY(0)} }
+        .btn-reset { color: var(--red); }
+        .btn-reset:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--red); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); opacity: 1; }
+            50% { opacity: 0.8; }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); opacity: 1; }
+        }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
     </style>
 </head>
 <body>
@@ -113,7 +194,8 @@
         
         <header>
             <div class="sys-status-left">
-                <span style="color: var(--gold);">✦</span> SYSTEM READY
+                <div class="status-dot"></div>
+                <span>PROTOCOL MANAGER</span>
             </div>
             <div class="sys-status-right">
                 MMXXVI
@@ -122,7 +204,7 @@
 
         <div class="sys-widget">
             <div class="time" id="clock-time">00:00</div>
-            <div class="date" id="clock-date">LOADING...</div>
+            <div class="date" id="clock-date">SYSTEM LOADING...</div>
         </div>
 
         <div class="app-grid">
@@ -140,19 +222,19 @@
             </a>
         </div>
         
-        <div style="margin-top: 30px; text-align: center; color: #333; font-size: 0.7rem; font-family: 'JetBrains Mono'">SYSTEM CONTROL</div>
+        <div style="margin-top: 40px; text-align: center; color: #333; font-size: 0.65rem; letter-spacing: 2px; margin-bottom: 15px;">SYSTEM CONTROL</div>
 
-        <div style="margin-top: 15px; display:flex; gap:10px; justify-content:center;">
-            <button onclick="CreateRestorePoint()" style="background:#111; border:1px solid #333; color:#10b981; padding:10px 15px; border-radius:8px; font-size:0.7rem; cursor:pointer; font-family:'JetBrains Mono'; font-weight:600">
-                💾 SAVE POINT
+        <div style="display:flex; gap:15px; justify-content:center;">
+            <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">
+                💾 SAVE STATE
             </button>
-            <button onclick="SystemReset()" style="background:#111; border:1px solid #333; color:#ef4444; padding:10px 15px; border-radius:8px; font-size:0.7rem; cursor:pointer; font-family:'JetBrains Mono'; font-weight:600">
-                ⚠ RESET
+            <button onclick="SystemReset()" class="ctrl-btn btn-reset">
+                ⚠ HARD RESET
             </button>
         </div>
         
-        <div id="last-backup" style="margin-top: 10px; text-align: center; font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #666;">
-            NO RESTORE POINT FOUND
+        <div id="last-backup" style="margin-top: 15px; text-align: center; font-size: 0.6rem; color: #555;">
+            NO DATA FOUND
         </div>
     </div>
 
@@ -164,87 +246,61 @@
         }
         setInterval(updateClock, 1000); 
 
-        // Основні ключі даних
-        const APP_KEYS = [
-            'gold_protocol',       // Фарма
-            'training_protocol',      // Тренування
-            'protocol_sys_plus_days'  // Харчування
-        ];
+        // --- ЛОГІКА (та сама, що і була) ---
+        const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
-        // 1. СТВОРЕННЯ ТОЧКИ ВІДНОВЛЕННЯ
         function CreateRestorePoint() {
-            if(!confirm("Зберегти поточний стан як нову 'Точку Відновлення'?\n\nВ майбутньому Reset поверне дані саме до цього стану, а не до нуля.")) return;
-
+            if(!confirm("Створити точку відновлення?")) return;
             let savedCount = 0;
             APP_KEYS.forEach(key => {
                 const data = localStorage.getItem(key);
-                if(data) {
-                    localStorage.setItem(key + '_backup', data);
-                    savedCount++;
-                }
+                if(data) { localStorage.setItem(key + '_backup', data); savedCount++; }
             });
-
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
-
-            if(savedCount > 0) alert(`Успішно! Точка відновлення створена: ${now}`);
-            else alert("Помилка: Немає даних для збереження (системи пусті).");
+            if(savedCount > 0) alert(`Saved: ${now}`);
+            else alert("System Empty.");
         }
 
-        // Відображення дати бекапу
         function updateBackupLabel() {
             const ts = localStorage.getItem('backup_timestamp');
             const el = document.getElementById('last-backup');
             if(ts) {
                 el.innerText = "LAST BACKUP: " + ts;
-                el.style.color = "#10b981"; // Зелений
+                el.style.color = "#10b981"; 
+                el.style.textShadow = "0 0 10px rgba(16,185,129,0.3)";
             } else {
                 el.innerText = "NO RESTORE POINT FOUND";
-                el.style.color = "#666";
+                el.style.color = "#555";
+                el.style.textShadow = "none";
             }
         }
 
-        // 2. РОЗУМНЕ СКИДАННЯ
         function SystemReset() {
             const hasBackup = APP_KEYS.some(key => localStorage.getItem(key + '_backup'));
-
             if(hasBackup) {
-                const choice = prompt(
-                    "ЗНАЙДЕНО ТОЧКУ ВІДНОВЛЕННЯ.\n\n" +
-                    "[ 1 ] - ВІДНОВИТИ (Повернутись до збереженої точки)\n" +
-                    "[ 2 ] - ВИДАЛИТИ ВСЕ (Повне очищення до заводських)\n\n" +
-                    "Введіть цифру:", "1"
-                );
-
+                const choice = prompt("[1] RESTORE \n[2] WIPE ALL", "1");
                 if (choice === '1') {
                     APP_KEYS.forEach(key => {
                         const backup = localStorage.getItem(key + '_backup');
                         if (backup) localStorage.setItem(key, backup);
                     });
-                    alert("Дані успішно відновлено до точки збереження!");
                     location.reload();
-
                 } else if (choice === '2') {
-                    if(confirm("Ви впевнені? Це видалить також і вашу точку відновлення.")) {
-                        FullWipe();
-                    }
+                    if(confirm("Delete everything?")) FullWipe();
                 }
             } else {
-                if(confirm("Точки відновлення немає. Видалити всі дані повністю?")) {
-                    FullWipe();
-                }
+                if(confirm("Wipe system?")) FullWipe();
             }
         }
 
         function FullWipe() {
             localStorage.clear();
             try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e){}
-            alert("Система повністю очищена.");
             location.reload();
         }
 
-        // Ініціалізація
         window.onload = () => {
             updateClock();
             updateBackupLabel();
