@@ -15,7 +15,8 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
-       /* --- 1. GLOBAL SETTINGS (FIXED CURSORS) --- */
+      <style>
+        /* --- 1. GLOBAL SETTINGS (FIXED CURSORS & LAYOUT) --- */
         *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
@@ -32,34 +33,40 @@
         }
 
         /* 3. ПАЛЕЦЬ (Тільки на активних елементах) */
-        /* Кнопки */
         button, select, label, .btn-icon, .edit-toggle, 
         .week-btn, .prog-opt, .mode-btn, .btn-add, .set-btn,
         .scroll-top, .sys-card, .sys-close, #sys-fab,
-        
-        /* Хрестики видалення */
-        .ex-del, .bank-del, .modal-close,
-        
-        /* Елементи навігації */
-        .nav-item, 
-        
-        /* Активні елементи списків */
-        .bank-item span,
-        
-        /* Чекбокси та інше */
-        [onclick] 
+        .ex-del, .bank-del, .modal-close, .nav-item, 
+        .day-header, /* Заголовок дня тепер клікабельний */
+        .bank-item span, [onclick] 
         {
             cursor: pointer !important;
         }
-        /* --- ВАЖЛИВО: Робимо "палець" на всіх клікабельних елементах --- */
-        button, select, label,
-        .btn-icon, .edit-toggle, .week-btn, .prog-opt, 
-        .day-card, /* Якщо картку можна згорнути/розгорнути */
-        .ex-del, .set-btn, .btn-add, 
-        .mode-btn, .bank-del, .modal-close,
-        .nav-item, .sys-card, .scroll-top, #sys-fab 
-        {
-            cursor: pointer !important;
+
+        /* --- ВИПРАВЛЕННЯ ВКЛАДОК (TABS FIX) --- */
+        .week-scroll { 
+            display: flex; gap: 10px; overflow-x: auto; 
+            padding: 5px 10px 15px 10px; /* Відступи для тіні */
+            margin: 0 -10px 15px -10px; /* Компенсація країв */
+            scrollbar-width: none; 
+        }
+        .week-btn { 
+            flex: 0 0 auto; /* ЗАБОРОНА СТИСКАННЯ */
+            min-width: 75px; padding: 12px 0; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 12px; cursor: pointer; color: #555; border: 1px solid var(--border); 
+            background: var(--bg-panel); position: relative; transition: 0.2s;
+        }
+
+        /* --- ACCORDION STYLES --- */
+        .day-card.collapsed .ex-list { display: none; }
+        .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
+        .day-card.collapsed { opacity: 0.8; }
+        
+        .day-chevron {
+            display: inline-block; margin-right: 10px;
+            transition: transform 0.3s ease; color: var(--theme);
+            font-size: 0.8rem;
         }
 
         :root {
