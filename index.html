@@ -238,7 +238,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         function updateClock() {
             const now = new Date();
             document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
@@ -246,58 +246,85 @@
         }
         setInterval(updateClock, 1000); 
 
-        // --- ЛОГІКА (та сама, що і була) ---
+        // Основні ключі даних
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
+        // 1. ЗБЕРЕЖЕННЯ (SAVE)
         function CreateRestorePoint() {
-            if(!confirm("Створити точку відновлення?")) return;
+            if(!confirm("Створити нову точку відновлення (Backup)?\nЦе перезапише попереднє збереження.")) return;
+            
             let savedCount = 0;
             APP_KEYS.forEach(key => {
                 const data = localStorage.getItem(key);
-                if(data) { localStorage.setItem(key + '_backup', data); savedCount++; }
+                if(data) { 
+                    localStorage.setItem(key + '_backup', data); 
+                    savedCount++; 
+                }
             });
+            
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
-            if(savedCount > 0) alert(`Saved: ${now}`);
-            else alert("System Empty.");
+            
+            if(savedCount > 0) alert(`Успішно збережено: ${now}`);
+            else alert("Система пуста, нічого зберігати.");
         }
 
         function updateBackupLabel() {
             const ts = localStorage.getItem('backup_timestamp');
             const el = document.getElementById('last-backup');
             if(ts) {
-                el.innerText = "LAST BACKUP: " + ts;
+                el.innerText = "RESTORE POINT: " + ts;
                 el.style.color = "#10b981"; 
                 el.style.textShadow = "0 0 10px rgba(16,185,129,0.3)";
             } else {
-                el.innerText = "NO RESTORE POINT FOUND";
+                el.innerText = "NO DATA FOUND";
                 el.style.color = "#555";
                 el.style.textShadow = "none";
             }
         }
 
+        // 2. СКЛАДНЕ СКИДАННЯ (RESET / RESTORE)
         function SystemReset() {
+            // Перевіряємо, чи існує хоч один бекап
             const hasBackup = APP_KEYS.some(key => localStorage.getItem(key + '_backup'));
+
             if(hasBackup) {
-                const choice = prompt("[1] RESTORE \n[2] WIPE ALL", "1");
+                // Якщо бекап є - даємо вибір
+                const choice = prompt(
+                    "⚙️ SYSTEM RECOVERY\n\n" +
+                    "[ 1 ] — ВІДНОВИТИ З БЕКАПУ (Restore)\n" +
+                    "[ 2 ] — ПОВНЕ ВИДАЛЕННЯ (Wipe All)\n\n" +
+                    "Введіть цифру:", "1"
+                );
+
                 if (choice === '1') {
+                    // Логіка відновлення
                     APP_KEYS.forEach(key => {
                         const backup = localStorage.getItem(key + '_backup');
                         if (backup) localStorage.setItem(key, backup);
                     });
+                    alert("Систему успішно відновлено!");
                     location.reload();
+
                 } else if (choice === '2') {
-                    if(confirm("Delete everything?")) FullWipe();
+                    // Логіка видалення
+                    if(confirm("Ви точно хочете видалити ВСЕ? Це знищить і поточні дані, і точку відновлення.")) {
+                        FullWipe();
+                    }
                 }
             } else {
-                if(confirm("Wipe system?")) FullWipe();
+                // Якщо бекапу немає - просто питаємо про видалення
+                if(confirm("Точки відновлення немає. Видалити всі дані і скинути систему?")) {
+                    FullWipe();
+                }
             }
         }
 
         function FullWipe() {
             localStorage.clear();
             try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e){}
+            alert("Система очищена.");
             location.reload();
         }
 
@@ -308,3 +335,4 @@
     </script>
 </body>
 </html>
+
