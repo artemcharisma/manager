@@ -15,39 +15,36 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
-      <style>
-      <style>
-        /* --- 1. GLOBAL SETTINGS (ACCORDION & LAYOUT) --- */
-        *, *::before, *::after {
+      *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* 1. БАЗА */
+        /* 1. БАЗА: Звичайна стрілка */
         body, html, .app-container, .day-card, .exercise { 
             cursor: default; 
         }
 
-        /* 2. ТЕКСТОВИЙ КУРСОР */
+        /* 2. ТЕКСТОВИЙ КУРСОР (Тільки в полях) */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* 3. ПАЛЕЦЬ (Тільки активні елементи) */
+        /* 3. ПАЛЕЦЬ (Тільки на активних елементах) */
         button, select, label, .btn-icon, .edit-toggle, 
         .week-btn, .prog-opt, .mode-btn, .btn-add, .set-btn,
         .scroll-top, .sys-card, .sys-close, #sys-fab,
         .ex-del, .bank-del, .modal-close, .nav-item, 
-        .day-header, /* Заголовок дня тепер клікабельний! */
+        .day-header, /* Заголовок дня тепер клікабельний */
         .bank-item span, [onclick] 
         {
             cursor: pointer !important;
         }
 
-        /* --- TABS FIX (Щоб вкладки не стискались) --- */
+        /* --- ВИПРАВЛЕННЯ ВКЛАДОК (TABS FIX) --- */
         .week-scroll { 
-            display: flex; gap: 8px; overflow-x: auto; 
-            padding: 5px 10px 15px 10px; /* Місце для тіні */
+            display: flex; gap: 10px; overflow-x: auto; 
+            padding: 5px 10px 15px 10px; /* Відступи для тіні */
             margin: 0 -10px 15px -10px; /* Компенсація країв */
             scrollbar-width: none; 
         }
@@ -60,7 +57,6 @@
         }
 
         /* --- ACCORDION STYLES --- */
-        /* Стан "Згорнуто" */
         .day-card.collapsed .ex-list { display: none; }
         .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
         .day-card.collapsed { opacity: 0.8; }
@@ -612,14 +608,14 @@
 
 const App = {
         data: null, history: [],
-        dayStates: {}, // Зберігає ID відкритих днів
+        dayStates: {}, // Тут зберігаємо, які дні ВІДКРИТІ (решта закриті)
 
         init() {
             const s = localStorage.getItem('training_protocol');
             if(s) {
                 try {
                     this.data = JSON.parse(s);
-                    // Лікування даних (як у старому коді)
+                    // Лікування даних (як у попередньому коді)
                     if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
                     if(!this.data.guidelines || !this.data.guidelines.mass) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
                     if(!this.data.guideMode) this.data.guideMode = 'mass';
@@ -633,7 +629,7 @@ const App = {
                 this.addWeek('mass', true);
             }
             
-            // Hard Reset
+            // Hard Reset Logic
             const brandBlock = document.getElementById('brandBlock');
             const brandIcon = brandBlock.querySelector('.brand-icon');
             brandBlock.onclick = () => {
@@ -657,7 +653,7 @@ const App = {
 
         // --- ЛОГІКА АКОРДЕОНУ ---
         toggleDay(uid) {
-            // Перемикач: якщо є в об'єкті - видаляємо (закриваємо), якщо немає - додаємо (відкриваємо)
+            // Перемикаємо стан: якщо було відкрито -> закриваємо, і навпаки
             if (this.dayStates[uid]) {
                 delete this.dayStates[uid];
             } else {
@@ -674,20 +670,20 @@ const App = {
             document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
             document.getElementById(`prog-${this.data.currentProgram}`).classList.add('active');
 
-            // Навігація
+            // Навігація тижнів
             nav.innerHTML = this.data.weeks.map((w,i) => {
                 const badge = w.prog === 'arms' ? '<div class="prog-badge arms">A</div>' : '';
                 return `<div class="week-btn ${w.type}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})"><span>${w.num}</span><small>${w.type}</small>${badge}</div>`;
             }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444">+ M</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444">+ C</div>`;
 
-            // Список днів
+            // Основний список
             c.innerHTML = this.data.weeks.map((week, wIdx) => {
                 const theme = week.type === 'mass' ? 'mass-theme' : 'cut-theme';
                 
                 const daysHtml = week.days.map((day, dIdx) => {
                     const uid = week.id + '-' + dIdx;
-                    // ЗАМОВЧУВАННЯ: День згорнутий (class 'collapsed'), якщо його немає в dayStates
-                    const isOpen = this.dayStates[uid] === true;
+                    // ЗА ЗАМОВЧУВАННЯМ: ЗГОРНУТО (якщо в dayStates немає true - значить закрито)
+                    const isExpanded = this.dayStates[uid] === true;
 
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
@@ -715,13 +711,13 @@ const App = {
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${wIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
-                        return `<div class="exercise">${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}<div class="ex-info"><div class="ex-name-row">${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${wIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}${groupSelect}</div><div class="edit-ui" style="display:flex;gap:5px"><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},-1)">-</div><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},1)">+</div></div></div><div class="sets-wrapper">${setsHtml}</div></div>`;
+                        return `<div class="exercise">${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}<div class="ex-info"><div class="ex-name-row">${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${wIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}${groupSelect}</div><div class="edit-ui" style="display:flex; gap:5px"><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},-1)">-</div><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},1)">+</div></div></div><div class="sets-wrapper">${setsHtml}</div></div>`;
                     }).join('');
 
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${wIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
-                    // ACCORDION HEADER
-                    return `<div class="day-card ${isOpen ? '' : 'collapsed'}">
+                    // Accordion Header
+                    return `<div class="day-card ${isExpanded ? '' : 'collapsed'}">
                         <div class="day-header" onclick="App.toggleDay('${uid}')">
                             <div style="display:flex; align-items:center">
                                 <span class="day-chevron">▼</span>
