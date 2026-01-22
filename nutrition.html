@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nutrition">
     
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.pngF">
     <link rel="stylesheet" href="assets/style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,18 +40,21 @@
         }
 
         *, *::before, *::after {
-            -webkit-user-select: none; user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* Дозволяємо виділення тексту тільки в полях вводу */
-        input, textarea, [contenteditable] { 
-            -webkit-user-select: text !important; user-select: text !important; cursor: text !important;
+        /* Текстовий курсор для полів вводу */
+        input, textarea, [contenteditable="true"] { 
+            cursor: text !important;
         }
 
-        /* Курсор-палець для клікабельних елементів */
-        button, .icon-btn, .day-tab, .meal-block, .food-row, .target-badge, .btn-action, .modal-overlay, .bank-row, .btn-mini {
+        /* Курсор-палець ТІЛЬКИ для кнопок і активних елементів */
+        button, .icon-btn, .day-tab, .meal-block, .food-row, 
+        .target-badge, .btn-action, .modal-overlay, .bank-row, 
+        .btn-mini, .day-add-btn, .btn-main-add, .btn-add-food,
+        .btn-new-meal, .btn-primary, .btn-danger, 
+        label, .chk-wrap input, .sys-card, .scroll-top {
             cursor: pointer !important;
         }
 
@@ -972,3 +975,4 @@
     
 </body>
 </html>
+
