@@ -40,23 +40,38 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        *, *::before, *::after {
+       *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        body { cursor: default; }
+        /* 1. СТРІЛКА (За замовчуванням усюди) */
+        body, html, .meal-header, .modal-overlay, .app-container { 
+            cursor: default; 
+        }
 
-        /* Текстовий курсор ТІЛЬКИ в полях вводу */
+        /* 2. ТЕКСТ (Тільки в полях вводу та заголовках, які редагуються) */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* Палець на всіх активних елементах */
-        button, select, label, a,
-        [onclick], [class*="btn"], .day-tab, .meal-header, .food-row,
-        .target-badge, .bank-row, .sugg-item, .modal-overlay,
-        .chk-wrap input, .mh-del, .sys-card, .sys-close, .brand
+        /* 3. ПАЛЕЦЬ (Тільки на реальних кнопках і клікабельних рядках) */
+        button, 
+        select, 
+        label, 
+        a, 
+        input[type="checkbox"],
+        [class*="btn"],  /* Ловить усі класи btn-action, icon-btn, btn-mini тощо */
+        .day-tab,        /* Вкладка дня */
+        .mh-del,         /* Хрестик видалення */
+        .target-badge,   /* Кнопка цілі */
+        .food-row,       /* Рядок їжі (бо він клікабельний для редагування) */
+        .bank-row,       /* Рядок у базі */
+        .sugg-item,      /* Елемент пошуку */
+        .sys-card, 
+        .sys-close, 
+        .brand,
+        .mc-header span  /* Хрестик закриття модалки */
         {
             cursor: pointer !important;
         }
@@ -963,3 +978,4 @@
     
 </body>
 </html>
+
