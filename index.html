@@ -30,7 +30,8 @@
         body { 
             background: var(--bg); 
             color: var(--text); 
-            /* font-family вже в style.css */
+            /* Додаємо шрифт глобально, щоб уникнути стандартного serif */
+            font-family: 'JetBrains Mono', monospace, sans-serif;
             margin: 0; padding: 20px; 
             min-height: 100vh; 
             display: flex; flex-direction: column; 
@@ -49,13 +50,29 @@
         .date { font-size: 0.8rem; color: var(--gold); text-transform: uppercase; margin-top: 5px; }
 
         .app-grid { display: grid; gap: 15px; }
-        .app-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; text-decoration: none; display: flex; align-items: center; gap: 20px; transition: 0.3s; position: relative; overflow: hidden; }
+        
+        /* Додав font-family сюди для карток */
+        .app-card { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            padding: 20px; 
+            border-radius: 16px; 
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+            transition: 0.3s; 
+            position: relative; 
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace; /* ВИПРАВЛЕННЯ ШРИФТУ */
+        }
         .app-card:hover { transform: translateY(-3px); border-color: #444; }
         .app-card:active { transform: scale(0.98); }
         
         .icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); }
-        .info h3 { margin: 0; font-size: 1.1rem; color: #fff; }
-        .info p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-dim); }
+        
+        .info h3 { margin: 0; font-size: 1.1rem; color: #fff; letter-spacing: -0.5px; }
+        .info p { margin: 4px 0 0; font-size: 0.75rem; color: var(--text-dim); font-weight: 300; }
         
         .card-pharm:hover { border-color: var(--gold); } .card-pharm .icon-box { color: var(--gold); }
         .card-nutri:hover { border-color: var(--green); } .card-nutri .icon-box { color: var(--green); }
@@ -122,7 +139,7 @@
             'protocol_sys_plus_days'  // Харчування
         ];
 
-        // 1. СТВОРЕННЯ ТОЧКИ ВІДНОВЛЕННЯ (ОНОВЛЕНО)
+        // 1. СТВОРЕННЯ ТОЧКИ ВІДНОВЛЕННЯ
         function CreateRestorePoint() {
             if(!confirm("Зберегти поточний стан як нову 'Точку Відновлення'?\n\nВ майбутньому Reset поверне дані саме до цього стану, а не до нуля.")) return;
 
@@ -135,7 +152,6 @@
                 }
             });
 
-            // Зберігаємо час бекапу
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
@@ -202,36 +218,5 @@
             updateBackupLabel();
         };
     </script>
-
-    <div id="sys-fab" onclick="SysSwitch.toggle()">✦</div>
-
-    <div id="sys-overlay" onclick="SysSwitch.close()">
-        <div class="sys-panel" onclick="event.stopPropagation()">
-            <div class="sys-header">
-                <span>MANAGER OS</span>
-                <div class="sys-close" onclick="SysSwitch.close()">✕</div>
-            </div>
-            <div class="sys-grid">
-                <a href="index.html" class="sys-card">
-                    <div class="sys-icon" style="color:#fff">🏠</div>
-                    <span>HUB</span>
-                </a>
-                <a href="pharm.html" class="sys-card">
-                    <div class="sys-icon" style="color:#d4af37">🏆</div>
-                    <span>PHARM</span>
-                </a>
-                <a href="training.html" class="sys-card">
-                    <div class="sys-icon" style="color:#3b82f6">⚖️</div>
-                    <span>TRAIN</span>
-                </a>
-                <a href="nutrition.html" class="sys-card">
-                    <div class="sys-icon" style="color:#10b981">🥑</div>
-                    <span>FOOD</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script src="assets/common.js"></script>
 </body>
 </html>
