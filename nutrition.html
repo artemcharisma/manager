@@ -39,49 +39,38 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-       /* --- 1. GLOBAL SETTINGS (FIXED CURSORS) --- */
+      /* --- 1. GLOBAL SETTINGS (FIXED) --- */
         *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* 1. ТЕКСТОВИЙ КУРСОР (Тільки там, де пишемо) */
+        /* 1. ТЕКСТ (Там де вводимо) */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* 2. ПАЛЕЦЬ (Тільки на тому, що реально клікається) */
-        button, 
-        select, 
-        label,
-        .icon-btn,       /* Кнопки в шапці */
+        /* 2. ПАЛЕЦЬ (Клікабельні елементи) */
+        button, select, label, input[type="checkbox"], a,
+        [onclick],       /* Якщо прописано прямо в HTML */
+        [class*="btn"],  /* МАГІЯ: Всі класи, що містять "btn" (icon-btn, btn-add, btn-del тощо) */
         .day-tab,        /* Вкладки днів */
-        .day-add-btn,    /* Плюс день */
-        .btn-del-day,    /* Видалити день */
-        .target-badge,   /* Кнопка цілі */
-        .mh-del,         /* Хрестик видалення прийому */
-        .btn-add-food,   /* + ПРОДУКТ */
-        .btn-new-meal,   /* + НОВИЙ ПРИЙОМ */
-        .food-row,       /* Рядок продукту (для редагування) */
-        .bank-row,       /* Рядок у базі */
-        .sugg-item,      /* Елемент пошуку */
-        .btn-primary,    /* Головні кнопки модалок */
-        .btn-danger,     /* Червоні кнопки */
-        .btn-mini,       /* Маленькі кнопки */
-        .btn-action,     /* Дії */
-        .scroll-top,     /* Кнопка вгору */
+        .food-row,       /* Рядки їжі */
+        .bank-row,       /* Рядки бази */
+        .sugg-item,      /* Випадаючий список */
+        .target-badge,   /* Ціль */
+        .mh-del,         /* Хрестик видалення */
+        .brand,          /* Лого */
         .sys-card,       /* Меню */
         .sys-close,      /* Закриття меню */
-        .mc-header span, /* Хрестик закриття модалки */
-        .chk-wrap input  /* Чекбокс */
+        .mc-header span, /* Хрестик модалки */
+        .scroll-top      /* Стрілка вгору */
         {
             cursor: pointer !important;
         }
 
-        /* 3. СТРІЛКА (На всьому іншому: панелі, фони, заголовки) */
-        body, html, .app-container, .meal-block, .modal-card, .hud {
-            cursor: default;
-        }
+        /* 3. СТРІЛКА (За замовчуванням) */
+        body { cursor: default; }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
@@ -992,6 +981,7 @@
     
 </body>
 </html>
+
 
 
 
