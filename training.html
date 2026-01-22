@@ -67,6 +67,21 @@
             background: var(--bg-panel); position: relative; transition: 0.2s;
         }
         .week-btn.active { border-color: var(--theme); color: #fff; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .week-btn.is-arms {
+            border-color: #8b5cf6 !important; /* Фіолетовий бордюр */
+        }
+        .week-btn.is-arms small {
+            color: #8b5cf6 !important; /* Фіолетовий текст */
+            font-weight: 900;
+        }
+        /* Активний стан для рук */
+        .week-btn.is-arms.active {
+            background: #8b5cf6 !important;
+            color: #000 !important;
+        }
+        .week-btn.is-arms.active small {
+            color: #000 !important;
+        }
 
         /* --- Акордеон (Згортання) --- */
         .day-card { transition: opacity 0.2s; }
@@ -725,7 +740,6 @@ const App = {
         this.render(); 
     },
 
-    // --- RENDER LOGIC ---
     render() {
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
@@ -737,16 +751,22 @@ const App = {
         const progBtn = document.getElementById(`prog-${prog}`);
         if(progBtn) progBtn.classList.add('active');
 
-        // Фільтрація
+        // Фільтруємо тижні по поточній програмі
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
         // Навігація
         nav.innerHTML = filteredWeeks.map((w) => {
-            const badge = w.prog === 'arms' ? '<div class="prog-badge arms">A</div>' : '';
-            return `<div class="week-btn ${w.type}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})"><span>${w.num}</span><small>${w.type}</small>${badge}</div>`;
+            // Додаємо клас 'is-arms', якщо це програма рук
+            const specialClass = w.prog === 'arms' ? 'is-arms' : '';
+            
+            return `<div class="week-btn ${w.type} ${specialClass}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
+                <span>${w.num}</span>
+                <small>${w.type}</small>
+            </div>`;
         }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5">+</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444; opacity:0.5">+</div>`;
 
-        // Основний рендер
+        // ... далі код render без змін (список днів, карток тощо) ...
+        // (скопіюй ту частину з попереднього коду, там де if (filteredWeeks.length === 0) ...)
         if (filteredWeeks.length === 0) {
             c.innerHTML = `<div style="text-align:center; padding:40px; color:#666">Програма порожня.</div>`;
         } else {
@@ -756,14 +776,11 @@ const App = {
                 
                 const daysHtml = week.days.map((day, dIdx) => {
                     const uid = week.id + '-' + dIdx;
-                    
-                    // Перевіряємо, чи день ВІДКРИТИЙ. Якщо ні - він закритий.
                     const isOpen = this.data.opened && this.data.opened[uid];
 
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
                         
-                        // Cardio
                         if(m === 'cardio') {
                             const s = ex.sets[0] || {};
                             return `<div class="exercise cardio-block">
@@ -778,7 +795,6 @@ const App = {
                             </div>`;
                         }
 
-                        // Strength
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
                                 return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
@@ -806,7 +822,6 @@ const App = {
 
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${realWIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
-                    // Якщо isOpen = true, класів немає. Якщо false/undefined -> 'collapsed'
                     return `
                     <div class="day-card ${isOpen ? '' : 'collapsed'}">
                         <div class="day-header" onclick="App.toggleDay('${uid}')">
@@ -1099,31 +1114,36 @@ const App = {
         this.save(); this.renderGuide();
     },
 
-    renderStats() {
+   renderStats() {
         const sel = document.getElementById('statsWeekSelect');
-        const prog = this.data.currentProgram;
-        
-        // 1. Фільтруємо тижні ТІЛЬКИ поточної програми
-        const relevantWeeks = this.data.weeks
-            .map((w, idx) => ({ ...w, realIndex: idx })) 
-            .filter(w => w.prog === prog);               
+        // Ми показуємо ВСІ тижні, щоб можна було порівняти, але сортуємо їх
+        // Додаємо realIndex кожному тижню, щоб знати, звідки брати дані
+        const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
 
-        sel.innerHTML = relevantWeeks.map(w => 
-            `<option value="${w.realIndex}">Тиждень ${w.num} (${w.type.toUpperCase()})</option>`
-        ).join('');
-
-        if(sel.value === "" && relevantWeeks.length > 0) {
-            sel.value = relevantWeeks[relevantWeeks.length - 1].realIndex;
+        // Якщо список пустий або кількість змінилась - перемальовуємо options
+        // Або якщо це перший запуск
+        if (sel.innerHTML === "" || sel.options.length !== allWeeks.length) {
+            sel.innerHTML = allWeeks.map(w => {
+                // Додаємо позначку про програму
+                const progLabel = w.prog === 'arms' ? '[ARMS]' : '[BALANCED]';
+                return `<option value="${w.realIndex}">Тиждень ${w.num} (${w.type.toUpperCase()}) ${progLabel}</option>`;
+            }).join('');
+            
+            // Автовибір останнього тижня при першому відкритті
+            if (allWeeks.length > 0) {
+                sel.value = allWeeks[allWeeks.length - 1].realIndex;
+            }
         }
 
-        const wIdx = sel.value;
-        const currentWeek = this.data.weeks[wIdx]; 
+        const wIdx = sel.value; // Це realIndex
+        const currentWeek = this.data.weeks[wIdx];
         
         if (!currentWeek) { 
-            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px;grid-column:1/-1">Немає даних для цієї програми.</div>'; 
+            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Немає даних</div>'; 
             return; 
         }
         
+        // --- Далі логіка підрахунку без змін ---
         const stats = {}; 
         Groups.forEach(g => stats[g] = 0);
         
