@@ -7,6 +7,7 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nutrition">
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="stylesheet" href="assets/style.css">
@@ -16,12 +17,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 1. CORE VISUALS (Gold Theme) --- */
+        /* --- 1. CORE VISUALS --- */
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
             --border: #2a2a2a;
-            --theme: #d4af37; /* Gold */
+            --theme: #d4af37; /* GOLD */
             
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
@@ -38,16 +39,19 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        /* Reset & Base */
         *, *::before, *::after {
             -webkit-user-select: none; user-select: none;
             -webkit-tap-highlight-color: transparent;
             box-sizing: border-box; outline: none;
         }
+
+        /* Дозволяємо виділення тексту тільки в полях вводу */
         input, textarea, [contenteditable] { 
             -webkit-user-select: text !important; user-select: text !important; cursor: text !important;
         }
-        button, .icon-btn, .day-tab, .meal-block, .food-row, .target-badge, .btn-action, .modal-overlay, .bank-row {
+
+        /* Курсор-палець для клікабельних елементів */
+        button, .icon-btn, .day-tab, .meal-block, .food-row, .target-badge, .btn-action, .modal-overlay, .bank-row, .btn-mini {
             cursor: pointer !important;
         }
 
@@ -56,27 +60,28 @@
             color: var(--text-main);
             font-family: var(--font-ui);
             margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 150px; /* Space for bottom nav */
+            padding-bottom: 100px;
         }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
-        /* --- 2. HEADER (FIXED LAYOUT) --- */
+        /* --- 2. HEADER --- */
         header {
             display: flex; 
-            justify-content: space-between; /* Лого зліва, кнопки справа */
+            justify-content: space-between; 
             align-items: center;
             padding-bottom: 20px; 
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-bottom: 1px solid var(--border);
         }
         
-        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, var(--theme), #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
+            transition: 0.3s;
         }
         .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
         .brand-text span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: block; }
@@ -87,31 +92,39 @@
             border: 1px solid #333; background: #121212; color: #888;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem; transition: 0.2s;
+            -webkit-appearance: none; appearance: none; padding: 0; margin: 0;
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
-        /* --- 3. DAY NAVIGATION --- */
+        /* --- 3. DAY NAVIGATION (FIXED CLIPPING) --- */
         .day-bar {
-            display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; margin-bottom: 15px; scrollbar-width: none;
+            display: flex; overflow-x: auto; gap: 10px; 
+            /* Важливо: додаємо відступи всередині скролу, щоб тіні не обрізались */
+            padding: 5px 5px 15px 5px; 
+            margin-bottom: 5px; 
+            scrollbar-width: none;
         }
         .day-tab {
-            min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
+            min-width: 80px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center;
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s;
+            color: #555; transition: all 0.2s ease; position: relative;
         }
-        .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); }
+        .day-tab span { font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); white-space: nowrap; }
         .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
         
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.6); /* Тінь тепер не обрізається */
+            transform: translateY(-3px);
+            z-index: 2;
         }
         .day-tab.active small { color: var(--theme); }
 
         .day-add-btn {
-            min-width: 50px; border-radius: 12px; border: 1px dashed #444; background: transparent;
-            color: #666; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+            min-width: 45px; border-radius: 12px; border: 1px dashed #444; background: transparent;
+            color: #666; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
+        .day-add-btn:active { background: #111; color: var(--theme); border-color: var(--theme); }
 
         /* --- 4. HUD (DASHBOARD) --- */
         .hud {
@@ -237,7 +250,7 @@
             margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;
             position: absolute; width: 100%; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        .sugg-item { padding: 14px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; }
+        .sugg-item { padding: 14px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; cursor: pointer; }
         .sugg-item:active { background: #333; }
         .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; font-weight: 700; }
 
@@ -263,15 +276,28 @@
         .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
         .day-name-edit { font-size: 1.2rem; font-weight: 800; color: #fff; border-bottom: 1px dashed #333; padding-bottom: 2px; }
         .day-name-edit:focus { border-color: var(--theme); }
-        .btn-mini { background: transparent; border: 1px solid #333; color: #888; font-size: 0.7rem; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
+        
+        .btn-mini { 
+            background: #111; border: 1px solid #333; color: #888; 
+            font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-mini:active { background: #333; color: #fff; }
 
-        /* SCROLL TOP */
-        .scroll-top { 
-            position: fixed; bottom: 200px; right: 20px; 
-            width: 45px; height: 45px; background: rgba(30,30,30,0.8); 
-            border: 1px solid var(--theme); border-radius: 50%; color: var(--theme); 
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; z-index: 101; font-size: 1.2rem; backdrop-filter: blur(5px); 
+        /* ANIMATION: SECRET HINT (RED ALERT) */
+        @keyframes secret-hint {
+            0% { transform: scale(1); filter: none; }
+            50% { 
+                transform: scale(1.15) rotate(5deg); 
+                background: linear-gradient(135deg, #ef4444, #991b1b); /* RED GRADIENT */
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+                color: #fff;
+                border-color: #ef4444;
+            }
+            100% { transform: scale(1); filter: none; }
+        }
+        .brand-icon.hint-active {
+            animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
     </style>
@@ -302,8 +328,8 @@
     <div class="day-control-panel">
         <span class="day-name-edit" contenteditable="true" onblur="App.renameDay(this.innerText)" id="currentDayTitle">День</span>
         <div style="display:flex; gap:8px">
-             <button class="btn-mini" onclick="App.duplicateDay()">❐ КОПІЯ</button>
-             <button class="btn-mini" onclick="App.deleteDay()" style="border-color:var(--danger); color:var(--danger)">🗑</button>
+             <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
+             <button class="btn-mini" onclick="App.deleteDay()" style="border-color:rgba(239, 68, 68, 0.4); color:var(--danger)">🗑</button>
         </div>
     </div>
 
@@ -311,7 +337,7 @@
         <div class="hud-header">
             <div class="k-group">
                 <span class="k-val" id="disp-k">0</span>
-                <span class="k-label">КАЛОРІЇ</span>
+                <span class="k-label">ККАЛ СЬОГОДНІ</span>
             </div>
             <div class="target-badge" onclick="App.openTargets()">
                 ЦІЛЬ: <span id="disp-target">2700</span>
@@ -342,8 +368,6 @@
 
 </div>
 
-<div class="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
-
 <div id="foodModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -352,7 +376,7 @@
         </div>
 
         <div style="position:relative">
-            <input id="inpName" class="inp-main" placeholder="Пошук або назва..." autocomplete="off" oninput="App.searchFood(this.value)">
+            <input id="inpName" class="inp-main" placeholder="Пошук продукту..." autocomplete="off" oninput="App.searchFood(this.value)">
             <div id="sugg-list"></div>
         </div>
 
@@ -745,8 +769,7 @@
             document.getElementById('inpC').value = f.c||0;
             document.getElementById('inpK').value = f.k||0;
             
-            // Auto-lock fields ONLY if it's in the bank (prevent messing up bank logic)
-            // But unlock for Quick Add / Edit Custom
+            // Allow manual entry (Quick Add)
             const isBank = !!this.data.bank[f.n];
             // We allow editing even for bank items locally if needed, but standard logic is to lock
             // Let's keep them editable for maximum flexibility
@@ -857,6 +880,7 @@
             const c = parseFloat(document.getElementById('bankInpC').value)||0;
             let k = parseFloat(document.getElementById('bankInpK').value);
             if(!k) k = Math.round(p*4 + f*9 + c*4);
+            
             const unit = document.getElementById('bankInpUnit').checked;
 
             if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
