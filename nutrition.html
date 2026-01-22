@@ -39,35 +39,48 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-       /* --- 1. GLOBAL SETTINGS (SMART) --- */
+       /* --- 1. GLOBAL SETTINGS (FIXED CURSORS) --- */
         *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* 1. ТЕКСТОВИЙ КУРСОР (Там, де вводимо текст) */
-        input, textarea, [contenteditable="true"] { 
+        /* 1. ТЕКСТОВИЙ КУРСОР (Тільки там, де пишемо) */
+        input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        */
-        button, select, label, a, 
-        input[type="checkbox"],
-        [onclick] {
+        /* 2. ПАЛЕЦЬ (Тільки на тому, що реально клікається) */
+        button, 
+        select, 
+        label,
+        .icon-btn,       /* Кнопки в шапці */
+        .day-tab,        /* Вкладки днів */
+        .day-add-btn,    /* Плюс день */
+        .btn-del-day,    /* Видалити день */
+        .target-badge,   /* Кнопка цілі */
+        .mh-del,         /* Хрестик видалення прийому */
+        .btn-add-food,   /* + ПРОДУКТ */
+        .btn-new-meal,   /* + НОВИЙ ПРИЙОМ */
+        .food-row,       /* Рядок продукту (для редагування) */
+        .bank-row,       /* Рядок у базі */
+        .sugg-item,      /* Елемент пошуку */
+        .btn-primary,    /* Головні кнопки модалок */
+        .btn-danger,     /* Червоні кнопки */
+        .btn-mini,       /* Маленькі кнопки */
+        .btn-action,     /* Дії */
+        .scroll-top,     /* Кнопка вгору */
+        .sys-card,       /* Меню */
+        .sys-close,      /* Закриття меню */
+        .mc-header span, /* Хрестик закриття модалки */
+        .chk-wrap input  /* Чекбокс */
+        {
             cursor: pointer !important;
         }
 
-        /* 3. СТРІЛКА (Для всього іншого) */
-        body {
+        /* 3. СТРІЛКА (На всьому іншому: панелі, фони, заголовки) */
+        body, html, .app-container, .meal-block, .modal-card, .hud {
             cursor: default;
-        }
-
-        body {
-            background-color: var(--bg-app); 
-            color: var(--text-main);
-            font-family: var(--font-ui);
-            margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 100px;
         }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
@@ -979,6 +992,7 @@
     
 </body>
 </html>
+
 
 
 
