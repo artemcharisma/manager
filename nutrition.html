@@ -9,7 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nutrition">
     
-    <link rel="apple-touch-icon" href="icon.pngF">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="assets/style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 1. CORE VISUALS --- */
+        /* --- 1. GLOBAL SETTINGS (FIXED CURSORS) --- */
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
             --border: #2a2a2a;
-            --theme: #d4af37; /* GOLD */
+            --theme: #d4af37; /* Gold */
             
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
@@ -30,7 +31,7 @@
             --danger: #ef4444;
             --success: #10b981;
             
-            /* Macros Colors */
+            /* Macros */
             --p-color: #3b82f6; 
             --f-color: #eab308; 
             --c-color: #10b981; 
@@ -39,58 +40,59 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-      /* --- 1. GLOBAL SETTINGS (FIXED) --- */
         *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* 1. ТЕКСТ (Там де вводимо) */
+        /* 1. За замовчуванням - стрілка */
+        body { cursor: default; }
+
+        /* 2. Текстовий курсор ТІЛЬКИ в полях */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* 2. ПАЛЕЦЬ (Клікабельні елементи) */
-        button, select, label, input[type="checkbox"], a,
-        [onclick],       /* Якщо прописано прямо в HTML */
-        [class*="btn"],  /* МАГІЯ: Всі класи, що містять "btn" (icon-btn, btn-add, btn-del тощо) */
-        .day-tab,        /* Вкладки днів */
-        .food-row,       /* Рядки їжі */
-        .bank-row,       /* Рядки бази */
-        .sugg-item,      /* Випадаючий список */
-        .target-badge,   /* Ціль */
-        .mh-del,         /* Хрестик видалення */
-        .brand,          /* Лого */
-        .sys-card,       /* Меню */
-        .sys-close,      /* Закриття меню */
-        .mc-header span, /* Хрестик модалки */
-        .scroll-top      /* Стрілка вгору */
+        /* 3. Палець на всіх активних елементах */
+        button, select, label, a,
+        .icon-btn, .day-tab, .day-add-btn,
+        .meal-block .meal-header, /* Заголовок прийому (згортання/видалення) */
+        .food-row,                /* Рядок їжі */
+        .btn-add-food, .btn-new-meal, 
+        .target-badge, .btn-mini,
+        .bank-row, .sugg-item,
+        .modal-overlay, .sys-card, .scroll-top,
+        [onclick] /* Будь-який елемент з кліком */
         {
             cursor: pointer !important;
         }
 
-        /* 3. СТРІЛКА (За замовчуванням) */
-        body { cursor: default; }
+        body {
+            background-color: var(--bg-app); 
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            margin: 0; padding: 15px; min-height: 100vh;
+            padding-bottom: 150px;
+        }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
-        /* --- 2. HEADER --- */
+        /* --- 2. HEADER (FIXED LAYOUT) --- */
         header {
             display: flex; 
-            justify-content: space-between; 
-            align-items: center;
+            justify-content: space-between; /* Розносить краї */
+            align-items: center;            /* Центрує вертикально */
             padding-bottom: 20px; 
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             border-bottom: 1px solid var(--border);
         }
         
-        .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .brand { display: flex; align-items: center; gap: 12px; }
         .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, var(--theme), #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
-            transition: 0.3s;
         }
         .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
         .brand-text span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: block; }
@@ -101,39 +103,33 @@
             border: 1px solid #333; background: #121212; color: #888;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem; transition: 0.2s;
-            -webkit-appearance: none; appearance: none; padding: 0; margin: 0;
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
-        /* --- 3. DAY NAVIGATION (FIXED CLIPPING) --- */
+        /* --- 3. DAY NAVIGATION --- */
         .day-bar {
-            display: flex; overflow-x: auto; gap: 10px; 
-            /* Важливо: додаємо відступи всередині скролу, щоб тіні не обрізались */
-            padding: 5px 5px 15px 5px; 
-            margin-bottom: 5px; 
-            scrollbar-width: none;
+            display: flex; overflow-x: auto; gap: 8px; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none;
+            padding-left: 2px; padding-right: 2px; /* Fix clipping */
         }
         .day-tab {
-            min-width: 80px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center;
+            min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: all 0.2s ease; position: relative;
+            color: #555; transition: 0.2s;
         }
-        .day-tab span { font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); white-space: nowrap; }
+        .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); }
         .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
         
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.6); /* Тінь тепер не обрізається */
-            transform: translateY(-3px);
-            z-index: 2;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transform: translateY(-2px);
         }
         .day-tab.active small { color: var(--theme); }
 
         .day-add-btn {
-            min-width: 45px; border-radius: 12px; border: 1px dashed #444; background: transparent;
-            color: #666; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            min-width: 50px; border-radius: 12px; border: 1px dashed #444; background: transparent;
+            color: #666; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
         }
-        .day-add-btn:active { background: #111; color: var(--theme); border-color: var(--theme); }
+        .day-add-btn:active { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* --- 4. HUD (DASHBOARD) --- */
         .hud {
@@ -181,7 +177,7 @@
         .mh-meta { display: flex; align-items: center; gap: 12px; }
         .mh-kcal { font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem; color: var(--theme); }
         .mh-del { color: var(--danger); opacity: 0.3; font-size: 16px; padding: 5px; transition: 0.2s; }
-        .mh-del:active { opacity: 1; transform: scale(1.2); }
+        .mh-del:hover { opacity: 1; }
 
         .food-row {
             display: flex; justify-content: space-between; align-items: center;
@@ -196,7 +192,6 @@
         .fr-w { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; color: #fff; }
         .fr-k { font-family: var(--font-mono); font-size: 0.7rem; color: #666; margin-top: 2px; }
 
-        /* Buttons */
         .btn-action {
             width: 100%; padding: 14px; background: #0a0a0a; border: none; border-top: 1px solid var(--border);
             color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
@@ -259,7 +254,7 @@
             margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;
             position: absolute; width: 100%; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        .sugg-item { padding: 14px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; cursor: pointer; }
+        .sugg-item { padding: 14px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; }
         .sugg-item:active { background: #333; }
         .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; font-weight: 700; }
 
@@ -385,7 +380,7 @@
         </div>
 
         <div style="position:relative">
-            <input id="inpName" class="inp-main" placeholder="Пошук продукту..." autocomplete="off" oninput="App.searchFood(this.value)">
+            <input id="inpName" class="inp-main" placeholder="Пошук або назва..." autocomplete="off" oninput="App.searchFood(this.value)">
             <div id="sugg-list"></div>
         </div>
 
@@ -981,8 +976,3 @@
     
 </body>
 </html>
-
-
-
-
-
