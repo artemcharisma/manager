@@ -39,26 +39,27 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-       /* --- 1. GLOBAL SETTINGS (ВИПРАВЛЕНО) --- */
+       /* --- 1. GLOBAL SETTINGS (SMART) --- */
         *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* Текстовий курсор для полів */
+        /* 1. ТЕКСТОВИЙ КУРСОР (Там, де вводимо текст) */
         input, textarea, [contenteditable="true"] { 
             cursor: text !important;
         }
 
-        /* Курсор-палець ТІЛЬКИ для кнопок (прибрав .meal-block) */
-        button, .icon-btn, .day-tab, .food-row, 
-        .target-badge, .btn-action, .modal-overlay, .bank-row, 
-        .btn-mini, .day-add-btn, .btn-main-add, .btn-add-food,
-        .btn-new-meal, .btn-primary, .btn-danger, 
-        label, .chk-wrap input, .sys-card, .scroll-top,
-        .mh-del /* Хрестик видалення */
-        {
+        */
+        button, select, label, a, 
+        input[type="checkbox"],
+        [onclick] {
             cursor: pointer !important;
+        }
+
+        /* 3. СТРІЛКА (Для всього іншого) */
+        body {
+            cursor: default;
         }
 
         body {
@@ -978,5 +979,6 @@
     
 </body>
 </html>
+
 
 
