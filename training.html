@@ -232,25 +232,31 @@
         .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; line-height: 1.4; display: block; }
         .ex-badge { font-size: 0.6rem; color: var(--text-muted); background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222; width: fit-content; }
 
-        /* SETS (Зберігаємо твій вигляд, тільки кольори підправив) */
-        .sets-wrapper { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        /* --- ВИПРАВЛЕННЯ СІТКИ СЕТІВ (GRID) --- */
+        .sets-wrapper { 
+            display: grid; 
+            /* Це робить рівні колонки, які не розтягуються на всю ширину дарма */
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 8px; 
+            margin-top: 8px;
+        }
         .set-row { 
-            display: flex; align-items: center; background: #0a0a0a; border: 1px solid #333; 
+            display: flex; align-items: center; 
+            background: #0a0a0a; border: 1px solid #333; 
             border-radius: 8px; overflow: hidden; height: 38px;
         }
         .set-num { 
             background: #18181b; color: #555; font-size: 0.7rem; font-weight: 800; 
-            height: 100%; padding: 0 10px; display: flex; align-items: center; justify-content: center;
-            border-right: 1px solid #333;
+            width: 30px; /* Фіксована ширина */
+            height: 100%; display: flex; align-items: center; justify-content: center;
+            border-right: 1px solid #333; flex-shrink: 0;
         }
-        .set-part { display: flex; align-items: baseline; padding: 0 6px; }
+        .set-part { display: flex; align-items: center; justify-content: center; flex: 1; }
         .set-input { 
-            width: 32px; background: transparent; border: none; padding: 0;
+            width: 40px; background: transparent; border: none; padding: 0;
             text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
         }
-        .set-input.w-val { color: var(--theme); } 
-        .set-unit { font-size: 0.6rem; color: #444; font-weight: 700; margin-left: 3px; }
-        .set-divider { width: 1px; height: 16px; background: #333; margin: 0 2px; }
+        .set-unit { font-size: 0.6rem; color: #444; font-weight: 700; margin-left: 3px; margin-top: 3px; }
 
               /* --- CARDIO STYLE (ВСТАВ ЦЕ В CSS) --- */
         .cardio-block { 
@@ -356,18 +362,30 @@
         .nav-item.active .nav-icon { transform: scale(1.1); transition: 0.2s; }
 
         /* --- STICKY BUTTONS FIX --- */
-        .scroll-top { 
-            position: fixed; 
-            bottom: 200px; /* <--- ПІДНЯВ ЗНАЧНО ВИЩЕ */
-            right: 20px; 
-            width: 45px; height: 45px; 
-            background: rgba(30,30,30,0.8); 
-            border: 1px solid #444; border-radius: 50%; 
-            color: #fff; display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; z-index: 101; /* ВИЩИЙ ПРІОРИТЕТ НІЖ МЕНЮ */
-            font-size: 1.2rem; backdrop-filter: blur(5px); 
+        .scroll-top {
+            position: fixed;
+            bottom: 90px; /* Трохи вище над меню */
+            right: 20px;
+            width: 45px; height: 45px;
+            background: rgba(30,30,30,0.9);
+            border: 1px solid var(--theme); /* Колір теми */
+            border-radius: 50%;
+            color: var(--theme);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 101;
+            font-size: 1.5rem;
+            
+            /* Додано для анімації */
+            opacity: 0; 
+            transform: translateY(20px);
+            pointer-events: none; /* Щоб не клікалась, коли невидима */
+            transition: all 0.3s ease;
         }
-
+      .scroll-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
         #fileInput { display: none; }
         /* --- ANIMATION: SECRET HINT (HARD RESET) --- */
             @keyframes secret-hint {
@@ -402,10 +420,10 @@
             }
         
             /* Логіка згорнутого стану */
-            .day-card.collapsed .ex-list { display: none; } /* Ховаємо вправи */
-            .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; } /* Крутимо стрілку */
-            .day-card.collapsed { opacity: 0.7; } /* Трохи приглушуємо колір */
-            .day-card.collapsed:hover { opacity: 1; }
+            .day-card { transition: all 0.2s ease; }
+            .day-card.collapsed .ex-list { display: none !important; }
+            .day-card.collapsed .day-header { border-bottom: none; opacity: 0.8; }
+            .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
     </style>
 </head>
 <body class="prog-balanced">
@@ -633,6 +651,8 @@ const App = {
                 if(!this.data.guidelines || !this.data.guidelines.mass) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
                 if(!this.data.guideMode) this.data.guideMode = 'mass';
                 if(!this.data.exBank) this.data.exBank = [];
+                // [НОВЕ] Ініціалізація стану згорнутих днів
+                if(!this.data.collapsed) this.data.collapsed = {}; 
             } catch(e) {
                 this.data = JSON.parse(JSON.stringify(InitialData));
                 this.addWeek('mass', true);
@@ -642,7 +662,7 @@ const App = {
             this.addWeek('mass', true);
         }
         
-        // --- HARD RESET LOGIC ---
+        // --- HARD RESET LOGIC (ТЕПЕР ВСЕРЕДИНІ INIT) ---
         const brandBlock = document.getElementById('brandBlock');
         const brandIcon = brandBlock.querySelector('.brand-icon');
         brandBlock.onclick = () => {
@@ -657,7 +677,7 @@ const App = {
             }
         };
 
-        // --- SCROLL ARROW LOGIC ---
+        // --- SCROLL ARROW LOGIC (ТЕПЕР ВСЕРЕДИНІ INIT) ---
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('scrollTopBtn');
             if(btn) {
@@ -674,9 +694,11 @@ const App = {
     },
 
     toggleDay(uid) {
+        if(!this.data.collapsed) this.data.collapsed = {};
         // Перемикаємо стан (true/false) в об'єкті collapsed
-        this.collapsed[uid] = !this.collapsed[uid];
-        this.render(); // Перемальовуємо
+        this.data.collapsed[uid] = !this.data.collapsed[uid];
+        this.save();
+        this.render(); 
     },
 
     // --- RENDER LOGIC (З АКОРДЕОНОМ) ---
@@ -684,34 +706,36 @@ const App = {
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
         const isEd = document.body.classList.contains('editing');
-        
-        // Оновлюємо вкладки програм
+        const prog = this.data.currentProgram;
+
+        // Оновлюємо кнопки програм
         document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
-        const progBtn = document.getElementById(`prog-${this.data.currentProgram}`);
+        const progBtn = document.getElementById(`prog-${prog}`);
         if(progBtn) progBtn.classList.add('active');
 
         // Фільтруємо тижні по поточній програмі
-        const prog = this.data.currentProgram;
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
         // Навігація тижнів
         nav.innerHTML = filteredWeeks.map((w) => {
             const badge = w.prog === 'arms' ? '<div class="prog-badge arms">A</div>' : '';
             return `<div class="week-btn ${w.type}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})"><span>${w.num}</span><small>${w.type}</small>${badge}</div>`;
-        }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444">+ M</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444">+ C</div>`;
+        }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5">+</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444; opacity:0.5">+</div>`;
 
         // Основний список
         if (filteredWeeks.length === 0) {
-            c.innerHTML = `<div style="text-align:center; padding:40px; color:#666">В цій програмі ще немає тижнів.<br>Додайте перший тиждень кнопками зверху.</div>`;
+            c.innerHTML = `<div style="text-align:center; padding:40px; color:#666">Програма порожня.</div>`;
         } else {
             c.innerHTML = filteredWeeks.map((week) => {
                 const theme = week.type === 'mass' ? 'mass-theme' : 'cut-theme';
-                // Знаходимо реальний індекс в головному масиві для функцій редагування
-                const realWIdx = this.data.weeks.findIndex(w => w.id === week.id);
+                
+                // [ВАЖЛИВО] Знаходимо СПРАВЖНІЙ індекс в базі даних
+                const realWIdx = this.getRealIndex(week);
                 
                 const daysHtml = week.days.map((day, dIdx) => {
                     const uid = week.id + '-' + dIdx;
-                    const isCollapsed = this.collapsed[uid]; // Перевіряємо, чи згорнуто
+                    // Перевіряємо, чи день згорнутий
+                    const isCollapsed = this.data.collapsed && this.data.collapsed[uid];
 
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
@@ -736,17 +760,30 @@ const App = {
                             if (m === 't') {
                                 return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
                             }
-                            return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="tel" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-divider"></div><div class="set-part"><input class="set-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
+                            return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="tel" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-part"><input class="set-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
                         }).join('');
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
-                        return `<div class="exercise">${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}<div class="ex-info"><div class="ex-name-row">${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${realWIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}${groupSelect}</div><div class="edit-ui"><div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},-1)">-</div><div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},1)">+</div></div></div><div class="sets-wrapper">${setsHtml}</div></div>`;
+                        return `<div class="exercise">
+                            ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
+                            <div class="ex-info">
+                                <div class="ex-name-row">
+                                    ${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${realWIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}
+                                    ${groupSelect}
+                                </div>
+                                <div class="edit-ui">
+                                    <div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},-1)">-</div>
+                                    <div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},1)">+</div>
+                                </div>
+                            </div>
+                            <div class="sets-wrapper">${setsHtml}</div>
+                        </div>`;
                     }).join('');
 
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${realWIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
-                    // HTML КАРТКИ ДНЯ
+                    // [АКОРДЕОН] Додаємо клас collapsed
                     return `
                     <div class="day-card ${isCollapsed ? 'collapsed' : ''}">
                         <div class="day-header" onclick="App.toggleDay('${uid}')">
@@ -767,7 +804,13 @@ const App = {
                     </div>`;
                 }).join('');
 
-                return `<div id="week-${week.id}" class="${theme}"><div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center"><div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${week.num} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div><span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${this.getRealIndex(week)})">Видалити</span></div><div class="days-list">${daysHtml}</div></div><hr style="border:0; border-top:1px dashed #333; margin:30px 0">`;
+                return `<div id="week-${week.id}" class="${theme}">
+                    <div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center">
+                        <div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${week.num} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
+                        <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${realWIdx})">Видалити</span>
+                    </div>
+                    <div class="days-list">${daysHtml}</div>
+                </div><hr style="border:0; border-top:1px dashed #333; margin:30px 0">`;
             }).join('');
         }
         
@@ -878,8 +921,6 @@ const App = {
         if(!confirm("Видалити тиждень?")) return;
         this.pushHistory();
         this.data.weeks.splice(idx, 1);
-        // Перерахунок номерів (опціонально, можна прибрати якщо хочете зберігати оригінальні номери)
-        // this.data.weeks.forEach((w,i) => w.num = i+1);
         this.save(); this.render();
     },
 
@@ -971,16 +1012,13 @@ const App = {
     },
 
     setView(v) {
-        // 1. Активна кнопка
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         document.getElementById(`nav-${v}`).classList.add('active');
         
-        // 2. Перемикання екранів
         document.getElementById('viewSchedule').style.display = v==='schedule'?'block':'none';
         document.getElementById('viewStats').style.display = v==='stats'?'block':'none';
         document.getElementById('viewGuide').style.display = v==='guide'?'block':'none';
         
-        // 3. ПРИМУСОВЕ ОНОВЛЕННЯ ДАНИХ
         if(v === 'stats') this.renderStats();
         if(v === 'guide') this.renderGuide();
     },
@@ -989,7 +1027,6 @@ const App = {
         const c = document.getElementById('guideContent');
         const m = this.data.guideMode || 'mass';
         
-        // Кнопки перемикання Mass/Cut
         document.getElementById('btnG-mass').classList.toggle('active', m==='mass');
         document.getElementById('btnG-cut').classList.toggle('active', m==='cut');
 
@@ -1041,17 +1078,26 @@ const App = {
 
     renderStats() {
         const sel = document.getElementById('statsWeekSelect');
+        const prog = this.data.currentProgram;
         
-        if(sel.innerHTML === "" || this.data.weeks.length !== sel.options.length) {
-                sel.innerHTML = this.data.weeks.map((w, i) => `<option value="${i}">Тиждень ${w.num} (${w.type})</option>`).join('');
-                if (this.data.weeks.length > 0) sel.value = this.data.weeks.length - 1;
+        // 1. Фільтруємо тижні ТІЛЬКИ поточної програми
+        const relevantWeeks = this.data.weeks
+            .map((w, idx) => ({ ...w, realIndex: idx })) 
+            .filter(w => w.prog === prog);               
+
+        sel.innerHTML = relevantWeeks.map(w => 
+            `<option value="${w.realIndex}">Тиждень ${w.num} (${w.type.toUpperCase()})</option>`
+        ).join('');
+
+        if(sel.value === "" && relevantWeeks.length > 0) {
+            sel.value = relevantWeeks[relevantWeeks.length - 1].realIndex;
         }
 
         const wIdx = sel.value;
-        const currentWeek = this.data.weeks[wIdx];
+        const currentWeek = this.data.weeks[wIdx]; 
         
         if (!currentWeek) { 
-            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px;grid-column:1/-1">Ще немає даних для аналізу.<br>Додайте тиждень у щоденнику.</div>'; 
+            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px;grid-column:1/-1">Немає даних для цієї програми.</div>'; 
             return; 
         }
         
