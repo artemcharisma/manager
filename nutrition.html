@@ -47,16 +47,16 @@
 
         body { cursor: default; }
 
-        /* Текстовий курсор ТІЛЬКИ в полях */
+        /* Текстовий курсор ТІЛЬКИ в полях вводу */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
         /* Палець на всіх активних елементах */
         button, select, label, a,
-        [onclick], [class*="btn"], .day-tab, .food-row,
+        [onclick], [class*="btn"], .day-tab, .meal-header, .food-row,
         .target-badge, .bank-row, .sugg-item, .modal-overlay,
-        .chk-wrap input, .mh-del, .sys-card, .sys-close
+        .chk-wrap input, .mh-del, .sys-card, .sys-close, .brand
         {
             cursor: pointer !important;
         }
@@ -66,7 +66,7 @@
             color: var(--text-main);
             font-family: var(--font-ui);
             margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 80px; /* Місце для FAB */
+            padding-bottom: 80px;
         }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
@@ -105,8 +105,9 @@
         /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
-            padding: 5px 10px 15px 10px; 
-            margin-bottom: 10px; 
+            /* Збільшено відступи, щоб не обрізало тіні */
+            padding: 10px 10px 20px 10px; 
+            margin-bottom: 0; 
             scrollbar-width: none;
             margin-left: -10px; margin-right: -10px;
         }
@@ -121,7 +122,7 @@
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
             box-shadow: 0 6px 15px rgba(212, 175, 55, 0.15);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             z-index: 2;
         }
         .day-tab.active small { color: var(--theme); }
@@ -288,13 +289,16 @@
 
         /* RED ALERT ANIMATION */
         @keyframes secret-hint {
-            0% { transform: scale(1); filter: none; }
+            0% { transform: scale(1); }
             50% { 
-                transform: scale(1.2) rotate(5deg); 
-                /* Makes the avocado reddish/evil looking */
-                filter: sepia(1) saturate(1000%) hue-rotate(-50deg) brightness(0.8) contrast(1.5);
+                transform: scale(1.15) rotate(5deg); 
+                /* Зміна фону на червоний градієнт */
+                background: linear-gradient(135deg, #ef4444, #991b1b);
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+                border-color: #ef4444;
+                color: #fff;
             }
-            100% { transform: scale(1); filter: none; }
+            100% { transform: scale(1); }
         }
         .brand-icon.hint-active {
             animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -398,7 +402,7 @@
     <div class="modal-card" style="height:85vh; max-height:85vh">
         <div class="mc-header">
             <h3 class="mc-title">БАЗА ПРОДУКТІВ</h3>
-            <span onclick="document.getElementById('bankModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         <button class="btn-primary" onclick="App.openBankEdit(null)">+ СТВОРИТИ НОВИЙ</button>
         <input class="inp-main" style="margin-top:10px; padding:12px; font-size:0.9rem" placeholder="🔍 Фільтр..." oninput="App.renderBank(this.value)">
@@ -410,7 +414,7 @@
     <div class="modal-card">
         <div class="mc-header">
             <h3 class="mc-title">РЕДАКТОР</h3>
-            <span onclick="document.getElementById('bankEditModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
         <input id="bankInpName" class="inp-main" placeholder="Назва продукту">
@@ -436,7 +440,7 @@
     <div class="modal-card">
         <div class="mc-header">
             <h3 class="mc-title">МОЇ ЦІЛІ</h3>
-            <span onclick="document.getElementById('targetsModal').style.display='none'" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         <div class="stats-grid">
             <div class="stat-box"><label class="color-p">БІЛ</label><input id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
@@ -516,6 +520,12 @@
             this.render();
         },
 
+        // --- SYS FAB LOGIC ---
+        toggleFab(show) {
+            const fab = document.getElementById('sys-fab');
+            if(fab) fab.style.display = show ? 'flex' : 'none';
+        },
+
         save() {
             localStorage.setItem(DB_KEY, JSON.stringify(this.data));
             this.updateStats();
@@ -566,13 +576,10 @@
             if(!day) return;
             this.pushHistory();
             const id = Date.now();
-            // Deep copy logic
             const newDay = JSON.parse(JSON.stringify(day));
             newDay.id = id;
             newDay.name = day.name + " (Копія)";
-            // Regenerate IDs for meals to avoid conflict
             newDay.meals.forEach(m => m.id = Math.random());
-            
             this.data.days.push(newDay);
             this.state.currentDayId = id;
             this.save(); this.render();
@@ -626,7 +633,6 @@
                     } else {
                          k = f.k; p = f.p; fat = f.f; c = f.c;
                     }
-                    
                     mCal += k; mP += p; mF += fat; mC += c;
 
                     return `
@@ -671,7 +677,6 @@
                 el.onclick = () => App.switchDay(d.id);
                 bar.appendChild(el);
             });
-            
             const addBtn = document.createElement('div');
             addBtn.className = 'day-add-btn';
             addBtn.innerText = '+';
@@ -682,7 +687,6 @@
         updateStats() {
             const day = this.getCurrentDay();
             if(!day) return;
-
             let t = {p:0, f:0, c:0, k:0};
             day.meals.forEach(m => m.foods.forEach(f => {
                 const ref = this.data.bank[f.n];
@@ -693,15 +697,11 @@
                     t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
                 }
             }));
-            
             const tg = this.data.targets;
             const dispK = document.getElementById('disp-k');
             dispK.innerText = Math.round(t.k);
             document.getElementById('disp-target').innerText = tg.k;
-            
-            if(t.k > tg.k) dispK.style.color = 'var(--danger)';
-            else dispK.style.color = '#fff';
-
+            if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
             const updateBar = (id, val, max) => {
                 const el = document.getElementById('bar-'+id);
                 const txt = document.getElementById('disp-'+id);
@@ -709,17 +709,13 @@
                 el.style.width = pct + '%';
                 txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
             };
-            
-            updateBar('p', t.p, tg.p);
-            updateBar('f', t.f, tg.f);
-            updateBar('c', t.c, tg.c);
+            updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
         },
 
         searchFood(q) {
             const list = document.getElementById('sugg-list');
             list.innerHTML = '';
             if(q.length < 1) { list.style.display='none'; return; }
-            
             const matches = Object.keys(this.data.bank).filter(k => k.toLowerCase().includes(q.toLowerCase()));
             if(matches.length) {
                 list.style.display = 'block';
@@ -760,36 +756,32 @@
         },
 
         openModal(title, f, del) {
+            this.toggleFab(false);
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('inpName').value = f.n||'';
             document.getElementById('inpWeight').value = f.w||'';
-            
             document.getElementById('inpP').value = f.p||0;
             document.getElementById('inpF').value = f.f||0;
             document.getElementById('inpC').value = f.c||0;
             document.getElementById('inpK').value = f.k||0;
-            
-            // Allow manual entry (Quick Add)
-            const isBank = !!this.data.bank[f.n];
-            
             document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
             document.getElementById('foodModal').style.display = 'flex';
             document.getElementById('sugg-list').style.display = 'none';
         },
         
-        closeModal() { document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none'); },
+        closeModal() { 
+            document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none');
+            this.toggleFab(true);
+        },
 
         saveFood() {
             const n = document.getElementById('inpName').value;
             const w = parseFloat(document.getElementById('inpWeight').value);
             if(!n || isNaN(w)) return;
-            
             const meal = this.getCurrentDay().meals.find(m=>m.id===this.state.mid);
             let item;
-
-            if(this.data.bank[n]) {
-                item = {n, w};
-            } else {
+            if(this.data.bank[n]) { item = {n, w}; } 
+            else {
                 const p = parseFloat(document.getElementById('inpP').value)||0;
                 const f = parseFloat(document.getElementById('inpF').value)||0;
                 const c = parseFloat(document.getElementById('inpC').value)||0;
@@ -797,11 +789,9 @@
                 if(!k && (p||f||c)) k = Math.round(p*4 + f*9 + c*4);
                 item = {n, w, p, f, c, k, unit: true}; 
             }
-
             this.pushHistory();
             if(this.state.fidx === -1) meal.foods.push(item);
             else meal.foods[this.state.fidx] = item;
-            
             this.save(); this.render(); this.closeModal();
         },
 
@@ -844,10 +834,12 @@
                 </div>`).join('');
         },
         openBank() {
+            this.toggleFab(false);
             this.renderBank();
             document.getElementById('bankModal').style.display='flex';
         },
         openBankEdit(name) {
+            this.toggleFab(false);
             this.state.editName = name;
             if(name) {
                 const d = this.data.bank[name];
@@ -876,25 +868,26 @@
             const c = parseFloat(document.getElementById('bankInpC').value)||0;
             let k = parseFloat(document.getElementById('bankInpK').value);
             if(!k) k = Math.round(p*4 + f*9 + c*4);
-            
             const unit = document.getElementById('bankInpUnit').checked;
 
             if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
-            
             this.data.bank[n] = {p,f,c,k,unit};
             this.save(); this.renderBank();
             document.getElementById('bankEditModal').style.display='none';
-            this.render(); 
+            this.render();
+            this.closeModal(); 
         },
         delFromBank() {
             if(confirm('Видалити з бази назавжди?')) {
                 delete this.data.bank[this.state.editName];
                 this.save(); this.renderBank();
                 document.getElementById('bankEditModal').style.display='none';
+                this.closeModal();
             }
         },
 
         openTargets() {
+            this.toggleFab(false);
             const t = this.data.targets;
             document.getElementById('tgP').value = t.p;
             document.getElementById('tgF').value = t.f;
@@ -919,6 +912,7 @@
             };
             this.save(); this.updateStats();
             document.getElementById('targetsModal').style.display='none';
+            this.closeModal();
         },
 
         exportData() {
