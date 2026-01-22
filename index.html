@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MANAGER OS</title>
+    <title>MMXXVI // OS</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Manager OS">
+    <meta name="apple-mobile-web-app-title" content="MMXXVI">
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
@@ -30,7 +30,6 @@
         body { 
             background: var(--bg); 
             color: var(--text); 
-            /* Додаємо шрифт глобально, щоб уникнути стандартного serif */
             font-family: 'JetBrains Mono', monospace, sans-serif;
             margin: 0; padding: 20px; 
             min-height: 100vh; 
@@ -40,9 +39,56 @@
 
         .hub-container { width: 100%; max-width: 500px; animation: fadeIn 0.8s ease; }
         
-        header { text-align: center; margin-bottom: 40px; }
-        h1 { font-family: 'JetBrains Mono', monospace; font-size: 2rem; margin: 0; letter-spacing: -1px; }
-        .subtitle { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 3px; margin-top: 5px; }
+        /* --- НОВИЙ HEADER (Brutalist / Luxury Style) --- */
+        header { 
+            display: flex; 
+            justify-content: center; 
+            margin-bottom: 40px; 
+        }
+
+        .header-frame {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            border: 1px solid rgba(255,255,255,0.08); /* Тонка рамка */
+            border-radius: 4px; /* Гострі кути для строгості */
+            background: linear-gradient(180deg, rgba(20,20,20,0.8) 0%, rgba(5,5,5,0.9) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Глибина */
+        }
+
+        .header-star {
+            font-size: 1.2rem;
+            color: var(--gold); /* Золота зірка */
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .header-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 500;
+            letter-spacing: 5px; /* Широка розрядка */
+            color: #fff;
+            line-height: 1;
+        }
+
+        .header-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            margin-top: 10px;
+            text-transform: uppercase;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 6px;
+            width: 100%;
+            text-align: center;
+        }
+        /* ----------------------------------------------- */
         
         /* WIDGET CLOCK */
         .sys-widget { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; font-family: 'JetBrains Mono', monospace; }
@@ -51,7 +97,6 @@
 
         .app-grid { display: grid; gap: 15px; }
         
-        /* Додав font-family сюди для карток */
         .app-card { 
             background: var(--card); 
             border: 1px solid var(--border); 
@@ -64,7 +109,7 @@
             transition: 0.3s; 
             position: relative; 
             overflow: hidden;
-            font-family: 'JetBrains Mono', monospace; /* ВИПРАВЛЕННЯ ШРИФТУ */
+            font-family: 'JetBrains Mono', monospace;
         }
         .app-card:hover { transform: translateY(-3px); border-color: #444; }
         .app-card:active { transform: scale(0.98); }
@@ -83,9 +128,13 @@
 </head>
 <body>
     <div class="hub-container">
+        
         <header>
-            <h1>MANAGER OS</h1>
-            <div class="subtitle">PROTOCOL MANAGEMENT</div>
+            <div class="header-frame">
+                <div class="header-star">✦</div>
+                <h1 class="header-title">MMXXVI</h1>
+                <div class="header-subtitle">MASTER SYSTEM</div>
+            </div>
         </header>
 
         <div class="sys-widget">
@@ -96,7 +145,7 @@
         <div class="app-grid">
             <a href="pharm.html" class="app-card card-pharm">
                 <div class="icon-box">🏆</div>
-                <div class="info"><h3>Здоров'я</h3><p>Gold Protocol • Курс • Аналізи</p></div>
+                <div class="info"><h3>Фармакологія</h3><p>Gold Protocol • Курс • Аналізи</p></div>
             </a>
             <a href="training.html" class="app-card card-train">
                 <div class="icon-box">⚖️</div>
@@ -134,7 +183,7 @@
 
         // Основні ключі даних
         const APP_KEYS = [
-            'gold_protocol_v3',       // Фарма
+            'gold_protocol',       // Фарма
             'training_protocol',      // Тренування
             'protocol_sys_plus_days'  // Харчування
         ];
