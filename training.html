@@ -366,7 +366,28 @@
             .brand-icon.hint-active {
                 animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             }
-            .brand { cursor: pointer; } /* Показуємо, що сюди можна клікати */      
+            .brand { cursor: pointer; } /* Показуємо, що сюди можна клікати */
+              /* --- ACCORDION / DROPDOWN TABS --- */
+            .day-header { 
+                cursor: pointer !important; /* Робимо курсор пальцем */
+                transition: background 0.2s;
+            }
+            .day-header:active { background: rgba(255,255,255,0.1); }
+        
+            .day-chevron {
+                display: inline-block;
+                margin-right: 10px;
+                transition: transform 0.3s ease;
+                color: var(--theme);
+                font-size: 0.8rem;
+                width: 15px; text-align: center;
+            }
+        
+            /* Логіка згорнутого стану */
+            .day-card.collapsed .ex-list { display: none; } /* Ховаємо вправи */
+            .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; } /* Крутимо стрілку */
+            .day-card.collapsed { opacity: 0.7; } /* Трохи приглушуємо колір */
+            .day-card.collapsed:hover { opacity: 1; }
     </style>
 </head>
 <body class="prog-balanced">
@@ -987,66 +1008,98 @@ addWeek(type, init=false) {
             r.readAsText(inp.files[0]);
         },
 
-render() {
-    const c = document.getElementById('scheduleList');
-    const nav = document.getElementById('weekNav');
-    const isEd = document.body.classList.contains('editing');
-    
-    document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
-    document.getElementById(`prog-${this.data.currentProgram}`).classList.add('active');
+// 1. Нова функція для перемикання (додай перед render)
+        collapsed: {}, // Стан згорнутих днів
 
-    // Навігація тижнів
-    nav.innerHTML = this.data.weeks.map((w,i) => {
-        const badge = w.prog === 'arms' ? '<div class="prog-badge arms">A</div>' : '';
-        return `<div class="week-btn ${w.type}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})"><span>${w.num}</span><small>${w.type}</small>${badge}</div>`;
-    }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444">+ M</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444">+ C</div>`;
+        toggleDay(uid) {
+            // Перемикаємо стан (true/false)
+            this.collapsed[uid] = !this.collapsed[uid];
+            this.render(); // Перемальовуємо
+        },
 
-    // Основний список
-    c.innerHTML = this.data.weeks.map((week, wIdx) => {
-        const theme = week.type === 'mass' ? 'mass-theme' : 'cut-theme';
-        
-        const daysHtml = week.days.map((day, dIdx) => {
-            const exsHtml = day.exercises.map((ex, eIdx) => {
-                const m = ex.m || 'wr';
+        // 2. Оновлений render (ЗАМІНИ СТАРИЙ)
+        render() {
+            const c = document.getElementById('scheduleList');
+            const nav = document.getElementById('weekNav');
+            const isEd = document.body.classList.contains('editing');
+            
+            document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
+            document.getElementById(`prog-${this.data.currentProgram}`).classList.add('active');
+
+            // Навігація тижнів
+            nav.innerHTML = this.data.weeks.map((w,i) => {
+                const badge = w.prog === 'arms' ? '<div class="prog-badge arms">A</div>' : '';
+                return `<div class="week-btn ${w.type}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})"><span>${w.num}</span><small>${w.type}</small>${badge}</div>`;
+            }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444">+ M</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444">+ C</div>`;
+
+            // Основний список (З ЛОГІКОЮ АКОРДЕОНУ)
+            c.innerHTML = this.data.weeks.map((week, wIdx) => {
+                const theme = week.type === 'mass' ? 'mass-theme' : 'cut-theme';
                 
-                // 1. ЛОГІКА КАРДІО
-                if(m === 'cardio') {
-                    const s = ex.sets[0] || {};
-                    return `<div class="exercise cardio-block">
-                        ${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}
-                        <div class="cardio-header">🏃 ${ex.n}</div>
-                        <div class="cardio-grid">
-                            <div class="c-input-box"><span class="c-label">ХВ</span><input class="c-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'r',this.value)"></div>
-                            <div class="c-input-box"><span class="c-label">КМ</span><input class="c-input" type="tel" value="${s.w||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'w',this.value)"></div>
-                            <div class="c-input-box"><span class="c-label">ККАЛ</span><input class="c-input" type="tel" value="${s.d||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'d',this.value)"></div>
-                            <div class="c-input-box"><span class="c-label">BPM</span><input class="c-input" type="tel" value="${s.h||''}" placeholder="❤️" style="color:var(--danger) !important" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'h',this.value)"></div>
+                const daysHtml = week.days.map((day, dIdx) => {
+                    // Унікальний ID для кожного дня (щоб пам'ятати, хто згорнутий)
+                    const uid = week.id + '-' + dIdx;
+                    const isCollapsed = this.collapsed[uid]; // Перевіряємо стан
+
+                    const exsHtml = day.exercises.map((ex, eIdx) => {
+                        const m = ex.m || 'wr';
+                        
+                        // Логіка КАРДІО
+                        if(m === 'cardio') {
+                            const s = ex.sets[0] || {};
+                            return `<div class="exercise cardio-block">
+                                ${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}
+                                <div class="cardio-header">🏃 ${ex.n}</div>
+                                <div class="cardio-grid">
+                                    <div class="c-input-box"><span class="c-label">ХВ</span><input class="c-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'r',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">КМ</span><input class="c-input" type="tel" value="${s.w||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'w',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">ККАЛ</span><input class="c-input" type="tel" value="${s.d||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'d',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">BPM</span><input class="c-input" type="tel" value="${s.h||''}" placeholder="❤️" style="color:var(--danger) !important" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},0,'h',this.value)"></div>
+                                </div>
+                            </div>`;
+                        }
+
+                        // Логіка СИЛОВИХ
+                        const setsHtml = ex.sets.map((s, sIdx) => {
+                            if (m === 't') {
+                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
+                            }
+                            return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="tel" value="${s.w||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-divider"></div><div class="set-part"><input class="set-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
+                        }).join('');
+
+                        const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${wIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
+                        
+                        return `<div class="exercise">${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}<div class="ex-info"><div class="ex-name-row">${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${wIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}${groupSelect}</div><div class="edit-ui"><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},-1)">-</div><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},1)">+</div></div></div><div class="sets-wrapper">${setsHtml}</div></div>`;
+                    }).join('');
+
+                    const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${wIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
+
+                    // HTML КАРТКИ ДНЯ (З класом collapsed якщо треба)
+                    return `
+                    <div class="day-card ${isCollapsed ? 'collapsed' : ''}">
+                        <div class="day-header" onclick="App.toggleDay('${uid}')">
+                            <div style="display:flex; align-items:center">
+                                <span class="day-chevron">▼</span>
+                                <span class="day-title">${day.day}</span>
+                            </div>
+                            ${dayGroup}
+                        </div>
+                        <div class="ex-list">
+                            ${exsHtml}
+                            <div class="add-controls edit-ui">
+                                <div class="btn-add" style="color:var(--success)" onclick="App.addEx(${wIdx},${dIdx},'wr'); event.stopPropagation()">+ Вправа</div>
+                                <div class="btn-add" style="color:var(--cardio)" onclick="App.addEx(${wIdx},${dIdx},'cardio'); event.stopPropagation()">+ 🏃</div>
+                            </div>
+                            <textarea class="notes-area" placeholder="Нотатки..." onblur="App.updateEx(${wIdx},${dIdx},'note',this.value)" onclick="event.stopPropagation()">${day.note||''}</textarea>
                         </div>
                     </div>`;
-                }
-
-                // 2. ЛОГІКА ЗВИЧАЙНИХ ВПРАВ
-                const setsHtml = ex.sets.map((s, sIdx) => {
-                    if (m === 't') {
-                        return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
-                    }
-                    return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="tel" value="${s.w||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-divider"></div><div class="set-part"><input class="set-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${wIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
                 }).join('');
 
-                const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${wIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
-                
-                return `<div class="exercise">${isEd ? `<div class="ex-del" onclick="App.delEx(${wIdx},${dIdx},${eIdx})">✕</div>` : ''}<div class="ex-info"><div class="ex-name-row">${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${wIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}${groupSelect}</div><div class="edit-ui"><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},-1)">-</div><div class="set-btn" onclick="App.changeSets(${wIdx},${dIdx},${eIdx},1)">+</div></div></div><div class="sets-wrapper">${setsHtml}</div></div>`;
+                return `<div id="week-${week.id}" class="${theme}"><div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center"><div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${week.num} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div><span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${wIdx})">Видалити</span></div><div class="days-list">${daysHtml}</div></div><hr style="border:0; border-top:1px dashed #333; margin:30px 0">`;
             }).join('');
-
-            const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${wIdx},${dIdx},'group',this.innerText)">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
-
-            return `<div class="day-card"><div class="day-header"><span class="day-title">${day.day}</span>${dayGroup}</div><div class="ex-list">${exsHtml}<div class="add-controls edit-ui"><div class="btn-add" style="color:var(--success)" onclick="App.addEx(${wIdx},${dIdx},'wr')">+ Вправа</div><div class="btn-add" style="color:var(--cardio)" onclick="App.addEx(${wIdx},${dIdx},'cardio')">+ 🏃</div></div><textarea class="notes-area" placeholder="Нотатки..." onblur="App.updateEx(${wIdx},${dIdx},'note',this.value)">${day.note||''}</textarea></div></div>`;
-        }).join('');
-
-        return `<div id="week-${week.id}" class="${theme}"><div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center"><div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${week.num} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div><span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${wIdx})">Видалити</span></div><div class="days-list">${daysHtml}</div></div><hr style="border:0; border-top:1px dashed #333; margin:30px 0">`;
-    }).join('');
-    
-    this.renderGuide();
-}
+            
+            this.renderGuide();
+        }
     };
     window.onload = () => App.init();
 </script>
