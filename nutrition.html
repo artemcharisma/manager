@@ -7,8 +7,10 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nutrition">
     
     <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="assets/style.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 1. GLOBAL SETTINGS & CURSORS --- */
+        /* --- 1. GLOBAL SETTINGS --- */
         :root {
             --bg-app: #000000;
             --bg-panel: #121212;
@@ -43,19 +45,18 @@
             box-sizing: border-box; outline: none;
         }
 
-        /* 1. БАЗА: Звичайна стрілка на фоні */
-        body, html { cursor: default; }
+        body { cursor: default; }
 
-        /* 2. ТЕКСТ: Текстовий курсор тільки в полях вводу */
+        /* Текстовий курсор ТІЛЬКИ в полях */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* 3. АКТИВНІ ЕЛЕМЕНТИ: Палець (Pointer) */
-        /* Це покриває всі кнопки, посилання, чекбокси та елементи з onclick */
-        button, select, label, a, input[type="checkbox"], [onclick],
-        .icon-btn, .day-tab, .food-row, .bank-row, .sugg-item, 
-        .target-badge, .mh-title, .mh-del, .sys-card, .sys-close
+        /* Палець на всіх активних елементах */
+        button, select, label, a,
+        [onclick], [class*="btn"], .day-tab, .food-row,
+        .target-badge, .bank-row, .sugg-item, .modal-overlay,
+        .chk-wrap input, .mh-del, .sys-card, .sys-close
         {
             cursor: pointer !important;
         }
@@ -65,7 +66,7 @@
             color: var(--text-main);
             font-family: var(--font-ui);
             margin: 0; padding: 15px; min-height: 100vh;
-            padding-bottom: 50px; /* Оптимальний відступ */
+            padding-bottom: 80px; /* Місце для FAB */
         }
 
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
@@ -73,7 +74,7 @@
         /* --- 2. HEADER --- */
         header {
             display: flex; 
-            justify-content: space-between; /* Розносить краї */
+            justify-content: space-between; 
             align-items: center;
             padding-bottom: 20px; 
             margin-bottom: 20px;
@@ -96,15 +97,17 @@
             width: 42px; height: 42px; border-radius: 12px; 
             border: 1px solid #333; background: #121212; color: #888;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: 0.2s; padding: 0; margin: 0;
+            font-size: 1.2rem; transition: 0.2s;
+            padding: 0; margin: 0;
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
         /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
-            padding: 5px 10px 15px 10px; /* Щоб тіні не різались */
-            margin-bottom: 10px; scrollbar-width: none;
+            padding: 5px 10px 15px 10px; 
+            margin-bottom: 10px; 
+            scrollbar-width: none;
             margin-left: -10px; margin-right: -10px;
         }
         .day-tab {
@@ -118,7 +121,8 @@
         .day-tab.active {
             border-color: var(--theme); color: #fff; background: #1a1a1a;
             box-shadow: 0 6px 15px rgba(212, 175, 55, 0.15);
-            transform: translateY(-2px); z-index: 2;
+            transform: translateY(-2px);
+            z-index: 2;
         }
         .day-tab.active small { color: var(--theme); }
 
@@ -562,10 +566,13 @@
             if(!day) return;
             this.pushHistory();
             const id = Date.now();
+            // Deep copy logic
             const newDay = JSON.parse(JSON.stringify(day));
             newDay.id = id;
             newDay.name = day.name + " (Копія)";
+            // Regenerate IDs for meals to avoid conflict
             newDay.meals.forEach(m => m.id = Math.random());
+            
             this.data.days.push(newDay);
             this.state.currentDayId = id;
             this.save(); this.render();
@@ -619,6 +626,7 @@
                     } else {
                          k = f.k; p = f.p; fat = f.f; c = f.c;
                     }
+                    
                     mCal += k; mP += p; mF += fat; mC += c;
 
                     return `
@@ -663,6 +671,7 @@
                 el.onclick = () => App.switchDay(d.id);
                 bar.appendChild(el);
             });
+            
             const addBtn = document.createElement('div');
             addBtn.className = 'day-add-btn';
             addBtn.innerText = '+';
@@ -673,6 +682,7 @@
         updateStats() {
             const day = this.getCurrentDay();
             if(!day) return;
+
             let t = {p:0, f:0, c:0, k:0};
             day.meals.forEach(m => m.foods.forEach(f => {
                 const ref = this.data.bank[f.n];
@@ -683,11 +693,15 @@
                     t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
                 }
             }));
+            
             const tg = this.data.targets;
             const dispK = document.getElementById('disp-k');
             dispK.innerText = Math.round(t.k);
             document.getElementById('disp-target').innerText = tg.k;
-            if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
+            
+            if(t.k > tg.k) dispK.style.color = 'var(--danger)';
+            else dispK.style.color = '#fff';
+
             const updateBar = (id, val, max) => {
                 const el = document.getElementById('bar-'+id);
                 const txt = document.getElementById('disp-'+id);
@@ -695,13 +709,17 @@
                 el.style.width = pct + '%';
                 txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
             };
-            updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
+            
+            updateBar('p', t.p, tg.p);
+            updateBar('f', t.f, tg.f);
+            updateBar('c', t.c, tg.c);
         },
 
         searchFood(q) {
             const list = document.getElementById('sugg-list');
             list.innerHTML = '';
             if(q.length < 1) { list.style.display='none'; return; }
+            
             const matches = Object.keys(this.data.bank).filter(k => k.toLowerCase().includes(q.toLowerCase()));
             if(matches.length) {
                 list.style.display = 'block';
@@ -745,10 +763,15 @@
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('inpName').value = f.n||'';
             document.getElementById('inpWeight').value = f.w||'';
+            
             document.getElementById('inpP').value = f.p||0;
             document.getElementById('inpF').value = f.f||0;
             document.getElementById('inpC').value = f.c||0;
             document.getElementById('inpK').value = f.k||0;
+            
+            // Allow manual entry (Quick Add)
+            const isBank = !!this.data.bank[f.n];
+            
             document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
             document.getElementById('foodModal').style.display = 'flex';
             document.getElementById('sugg-list').style.display = 'none';
@@ -760,10 +783,13 @@
             const n = document.getElementById('inpName').value;
             const w = parseFloat(document.getElementById('inpWeight').value);
             if(!n || isNaN(w)) return;
+            
             const meal = this.getCurrentDay().meals.find(m=>m.id===this.state.mid);
             let item;
-            if(this.data.bank[n]) { item = {n, w}; } 
-            else {
+
+            if(this.data.bank[n]) {
+                item = {n, w};
+            } else {
                 const p = parseFloat(document.getElementById('inpP').value)||0;
                 const f = parseFloat(document.getElementById('inpF').value)||0;
                 const c = parseFloat(document.getElementById('inpC').value)||0;
@@ -771,9 +797,11 @@
                 if(!k && (p||f||c)) k = Math.round(p*4 + f*9 + c*4);
                 item = {n, w, p, f, c, k, unit: true}; 
             }
+
             this.pushHistory();
             if(this.state.fidx === -1) meal.foods.push(item);
             else meal.foods[this.state.fidx] = item;
+            
             this.save(); this.render(); this.closeModal();
         },
 
@@ -848,9 +876,11 @@
             const c = parseFloat(document.getElementById('bankInpC').value)||0;
             let k = parseFloat(document.getElementById('bankInpK').value);
             if(!k) k = Math.round(p*4 + f*9 + c*4);
+            
             const unit = document.getElementById('bankInpUnit').checked;
 
             if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
+            
             this.data.bank[n] = {p,f,c,k,unit};
             this.save(); this.renderBank();
             document.getElementById('bankEditModal').style.display='none';
