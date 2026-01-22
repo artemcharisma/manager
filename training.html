@@ -15,25 +15,42 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
-        /* --- 1. GLOBAL SETTINGS (ЯДЕРНИЙ МЕТОД + КУРСОРИ) --- */
-        
-        /* Блокуємо виділення всюди за замовчуванням */
+       /* --- 1. GLOBAL SETTINGS (FIXED CURSORS) --- */
         *, *::before, *::after {
-            -webkit-user-select: none !important;
-            -moz-user-select: none !important;
-            user-select: none !important;
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
 
-        /* Дозволяємо писати і ставимо текстовий курсор в полях */
-        input, textarea, [contenteditable="true"] { 
-            -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            user-select: text !important;
+        /* 1. БАЗА: Звичайна стрілка */
+        body, html, .app-container, .day-card, .exercise { 
+            cursor: default; 
+        }
+
+        /* 2. ТЕКСТОВИЙ КУРСОР (Тільки в полях) */
+        input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
+        /* 3. ПАЛЕЦЬ (Тільки на активних елементах) */
+        /* Кнопки */
+        button, select, label, .btn-icon, .edit-toggle, 
+        .week-btn, .prog-opt, .mode-btn, .btn-add, .set-btn,
+        .scroll-top, .sys-card, .sys-close, #sys-fab,
+        
+        /* Хрестики видалення */
+        .ex-del, .bank-del, .modal-close,
+        
+        /* Елементи навігації */
+        .nav-item, 
+        
+        /* Активні елементи списків */
+        .bank-item span,
+        
+        /* Чекбокси та інше */
+        [onclick] 
+        {
+            cursor: pointer !important;
+        }
         /* --- ВАЖЛИВО: Робимо "палець" на всіх клікабельних елементах --- */
         button, select, label,
         .btn-icon, .edit-toggle, .week-btn, .prog-opt, 
