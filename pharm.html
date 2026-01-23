@@ -71,51 +71,45 @@
         }
 
         .header-top { display: flex; justify-content: space-between; align-items: center; }
-        /* 1. БЛОК ШАПКИ (Як у Nutrition) */
+        /* --- BRAND HEADER (Як у Nutrition) --- */
         .brand { 
             display: flex; 
             align-items: center; 
-            gap: 12px; /* Відступ 12px */
+            gap: 12px; 
         }
 
-        /* 2. ІКОНКА (Збільшуємо шрифт до 24px, як у Nutrition) */
-        .brand-icon { 
+        .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, #d4af37, #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            
-            font-size: 24px; /* <--- ТУТ БУЛА РІЗНИЦЯ (було 22, ставимо 24) */
-            
-            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
-            transition: transform 0.2s ease;
+            font-size: 24px; 
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); 
+            color: #000;
+            transition: 0.3s;
             cursor: pointer;
         }
 
-        /* 3. ЗАГОЛОВОК (Стискаємо літери, як у Nutrition) */
-        .brand h1 { 
+        .brand-text h1 { 
             margin: 0; 
             font-size: 1.2rem; 
             font-weight: 800; 
             color: var(--primary); 
-            
+            letter-spacing: -0.5px; /* Стискає букви */
             font-family: sans-serif;
-            letter-spacing: -0.5px; /* <--- ЦЕ РОБИТЬ НАПИС КОМПАКТНИМ */
-            line-height: 1; 
-            margin-top: 0;
+            line-height: 1; /* Робить заголовок компактним */
         }
 
-        /* 4. ПІДЗАГОЛОВОК (Розтягуємо літери, як у Nutrition) */
-        .brand span { 
-            font-size: 0.65rem; /* Дрібний шрифт */
+        .brand-text span { 
+            font-size: 0.65rem; 
             color: var(--text-muted); 
             font-weight: 600; 
             text-transform: uppercase; 
-            
-            font-family: sans-serif;
+            letter-spacing: 2px; /* Розтягує букви */
             display: block; 
-            letter-spacing: 2px; /* <--- ЦЕ РОБИТЬ НАПИС ШИРОКИМ І СТИЛЬНИМ */
+            font-family: sans-serif;
             margin-top: 2px;
         }
+
         .controls { display: flex; gap: 6px; }
         .btn-icon, .edit-toggle {
             width: 38px; height: 38px;
@@ -685,7 +679,7 @@
         <div class="header-top">
             <div class="brand">
                 <div class="brand-icon">🏆</div>
-                <div><h1>COURSE</h1><span>GOLD PROTOCOL</span></div>
+                <div class="brand-text"> <h1>COURSE</h1><span>GOLD PROTOCOL</span></div>
             </div>
             <div class="controls">
                 <button class="btn-icon btn-panic" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
@@ -2205,7 +2199,6 @@ renderAnalytics(c) {
 
 </body>
 </html>
-
 
 
 
