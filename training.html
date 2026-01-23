@@ -710,16 +710,19 @@ const App = {
             }
         });
 
-        // 2. Hard Reset
+      // 2. Hard Reset & Animation
         const brandBlock = document.getElementById('brandBlock');
         const brandIcon = brandBlock.querySelector('.brand-icon');
-        brandBlock.onclick = () => {
-           brandIcon.onclick = (e) => {
-            e.stopPropagation(); // Щоб не спрацьовували інші події, якщо вони є
+
+        // Окремо клік по іконці (Анімація)
+        brandIcon.onclick = (e) => {
+            e.stopPropagation(); // Щоб клік не пішов вище
             brandIcon.classList.remove('hint-active');
             void brandIcon.offsetWidth; 
             brandIcon.classList.add('hint-active');
         };
+
+        // Окремо подвійний клік по шапці (Скидання)
         brandBlock.ondblclick = () => {
             if(confirm("⚠ HARD RESET?")) {
                 localStorage.removeItem('training_protocol');
