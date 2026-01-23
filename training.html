@@ -366,8 +366,11 @@
         .add-controls { display: flex; gap: 10px; margin-top: 15px; border-top: 1px dashed #333; padding-top: 12px; }
         .btn-add { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; color: #888; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; background: #111; }
         .group-select { background: #000; color: #fff; border: 1px solid #333; font-size: 0.7rem; padding: 2px; border-radius: 4px; }
-        .notes-area { width: 100%; background: #000; border: none; border-top: 1px solid var(--border); padding: 15px; color: #aaa; font-family: inherit; font-size: 0.85rem; resize: vertical; min-height: 50px; display: block; }
-        
+        .notes-area { 
+            width: 100%; background: #000; border: none; border-top: 1px solid var(--border); padding: 15px; color: #aaa; font-family: inherit; font-size: 0.85rem; resize: vertical; min-height: 50px; display: block; 
+            
+            cursor: text !important; /* <--- ДОДАЙ ЦЕ, щоб повернути паличку замість руки */
+        }
         body.editing [contenteditable] { border-bottom: 1px dashed #555; cursor: text; padding: 0 2px; background: rgba(255,255,255,0.05); }
         body.editing [contenteditable]:focus { border-bottom: 1px solid #fff; color: #fff; outline: none; background: #000; }
 
@@ -384,7 +387,7 @@
         .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
         .nav-item.active .nav-icon { transform: scale(1.1); transition: 0.2s; }
 
-/* --- STICKY BUTTONS FIX (Оновлено) --- */
+        /* --- STICKY BUTTONS FIX (Оновлено) --- */
         .scroll-top { 
             position: fixed; 
             bottom: 150px; /* <--- ПІДНЯВ ВИЩЕ, щоб не перекривала зірка */
@@ -437,7 +440,6 @@
             .brand-icon.hint-active {
                 animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             }
-            .brand { cursor: pointer; } /* Показуємо, що сюди можна клікати */
               /* --- ACCORDION / DROPDOWN TABS --- */
             .day-header { 
                 cursor: pointer !important; /* Робимо курсор пальцем */
