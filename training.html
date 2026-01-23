@@ -123,14 +123,14 @@
 
         body.prog-arms { --theme: #8b5cf6; --mass: #8b5cf6; } /* Purple override */
 
-        body {
+       body {
             background-color: var(--bg-app);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            /* Стандартний системний шрифт, як у Protocol */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 15px; min-height: 100vh;
             padding-bottom: 100px;
         }
-
         .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
 
             /* --- 2. HEADER & CONTROLS --- */
@@ -149,16 +149,24 @@
             width: 100%;
         }
     
-        .brand { display: flex; align-items: center; gap: 12px; }
+       /* Зменшив gap з 12px до 10px, прибрав cursor: pointer з батьківського блоку */
+        .brand { display: flex; align-items: center; gap: 10px; } 
+        
         .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, var(--theme), #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
+            
+            cursor: pointer; /* <--- ПАЛЕЦЬ ТЕПЕР ТІЛЬКИ ТУТ */
+            transition: transform 0.2s ease; /* Додав плавність для натискання */
         }
-        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); letter-spacing: -0.5px; }
-        .brand span { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
-
+        
+        /* Прибрав letter-spacing, щоб відповідало Protocol */
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
+        
+        /* Збільшив шрифт з 0.65rem до 0.7rem */
+        .brand span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
        /* --- HEADER BUTTONS FIX --- */
     .controls { display: flex; gap: 8px; align-items: center; }
 
@@ -706,6 +714,8 @@ const App = {
         const brandBlock = document.getElementById('brandBlock');
         const brandIcon = brandBlock.querySelector('.brand-icon');
         brandBlock.onclick = () => {
+           brandIcon.onclick = (e) => {
+            e.stopPropagation(); // Щоб не спрацьовували інші події, якщо вони є
             brandIcon.classList.remove('hint-active');
             void brandIcon.offsetWidth; 
             brandIcon.classList.add('hint-active');
