@@ -71,7 +71,7 @@
         }
 
         .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
         .brand-icon { 
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, #d4af37, #fcd34d);
@@ -80,7 +80,10 @@
             transition: transform 0.2s ease;
             cursor: pointer;
         }
-        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--primary); line-height: 1; /* <--- ДОДАЙ ЦЕ, щоб текст став компактнішим по висоті */
+            margin-top: -2px; /* Трохи підняти, щоб вирівняти по центру іконки */
+            font-family: sans-serif;
+        }
         .brand span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
         .controls { display: flex; gap: 6px; }
@@ -2172,6 +2175,7 @@ renderAnalytics(c) {
 
 </body>
 </html>
+
 
 
 
