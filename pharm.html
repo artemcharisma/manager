@@ -70,26 +70,23 @@
             position: relative; z-index: 50;
         }
 
-        .brand { display: flex; align-items: center; gap: 10px; } 
-        
-        .brand-icon {
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-icon { 
             width: 44px; height: 44px; 
-            background: linear-gradient(135deg, var(--theme), #fcd34d);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
-            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
-            
-            cursor: pointer; /* <--- ПАЛЕЦЬ ТЕПЕР ТІЛЬКИ ТУТ */
-            transition: transform 0.2s ease; /* Додав плавність для натискання */
+            background: linear-gradient(135deg, #d4af37, #fcd34d);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+            transition: transform 0.2s ease;
+            cursor: pointer;
         }
-        
-        /* Прибрав letter-spacing, щоб відповідало Protocol */
-        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
-        
-        /* Збільшив шрифт з 0.65rem до 0.7rem */
-        .brand span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
-       /* --- HEADER BUTTONS FIX --- */
-        .controls { display: flex; gap: 8px; align-items: center; }
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--primary); line-height: 1; /* <--- ДОДАЙ ЦЕ, щоб текст став компактнішим по висоті */
+            margin-top: -2px; /* Трохи підняти, щоб вирівняти по центру іконки */
+            font-family: sans-serif;
+        }
+        .brand span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
+        .controls { display: flex; gap: 6px; }
         .btn-icon, .edit-toggle {
             width: 38px; height: 38px;
             border-radius: 10px; border: 1px solid var(--border);
@@ -2178,9 +2175,6 @@ renderAnalytics(c) {
 
 </body>
 </html>
-
-
-
 
 
 
