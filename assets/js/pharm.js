@@ -19,7 +19,7 @@ const PhotoDB = {
             };
             req.onsuccess = (e) => { this.db = e.target.result; r(); };
             req.onerror = (e) => { console.error("IndexedDB error:", e.target.error); r(); };
-            req.onblocked = () => alert("Закрийте інші вкладки з цією програмою для оновлення БД.");
+            req.onblocked = () => alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
         });
     },
     add(week, file) {
@@ -108,7 +108,6 @@ const DefaultData = {
     schedule: (function(){
         let s = {}; 
         for(let i=1; i<=38; i++) s[i] = [[],[],[],[],[],[],[]];
-        // Генерація дефолтного розкладу (скорочена для читабельності, логіка збережена)
         const add = (w,d,n,v,c,m) => s[w][d].push({name:n, dose:v, color:c, meta:m});
         for(let w=1; w<=38; w++) {
             let pid = 1;
@@ -118,14 +117,34 @@ const DefaultData = {
             if([1,2,4,8].includes(pid)) {
                 let t = pid===4?"250mg":(pid===8?"100mg":"200mg");
                 let p = pid===1?"67mg":(pid===4?"166mg":"133mg");
-                add(w,0,"Test E",t,"c-blue","Base"); add(w,3,"Test E",t,"c-blue","Base");
-                add(w,0,"Primo",p,"c-green","Anabolic"); add(w,2,"Primo",p,"c-green","Anabolic"); add(w,4,"Primo",p,"c-green","Anabolic");
+                add(w,0,"Test E",t,"c-blue","Base"); 
+                add(w,3,"Test E",t,"c-blue","Base");
+                add(w,0,"Primo",p,"c-green","Anabolic"); 
+                add(w,2,"Primo",p,"c-green","Anabolic"); 
+                add(w,4,"Primo",p,"c-green","Anabolic");
             }
             if([3,5].includes(pid)) { 
                 add(w,0,"Test E","150mg","c-blue","Cruise");
                 for(let d=0;d<7;d++) add(w,d,"HGH","2 IU","c-purple","AM Fasted"); 
             }
-            // ... (інші умови з оригінального файлу збережені в структурі, якщо потрібно - розгорну)
+            if(pid===6) { 
+                add(w,0,"Test E","175mg","c-blue","Base");
+                add(w,3,"Test E","175mg","c-blue","Base"); 
+                let clen = (20+((w-27)*20))+"mcg"; 
+                for(let d=0;d<7;d++) { 
+                    add(w,d,"HGH","3 IU","c-purple","AM"); 
+                    add(w,d,"Clen",clen,"c-yellow","Pre-Cardio");
+                }
+            }
+            if(pid===7) { 
+                add(w,0,"Test E","150mg","c-blue","Base");
+                add(w,3,"Test E","150mg","c-blue","Base"); 
+                for(let d=0;d<7;d++) add(w,d,"HGH","3 IU","c-purple","AM"); 
+                for(let d=0;d<7;d++) { 
+                    let absDay = ((w-31)*7)+d;
+                    if(absDay % 2 === 0) add(w,d,"Tren A","50mg","c-red","Deep IM"); 
+                }
+            }
         }
         return s;
     })(),
@@ -192,6 +211,9 @@ const App = {
             if(!this.data.vitals) this.data.vitals = {};
             if(!this.data.bodyMap) this.data.bodyMap = { last: null, history: [] };
             if(!this.data.privacyPassword) this.data.privacyPassword = '2255';
+            if(!this.data.analysis) this.data.analysis = JSON.parse(JSON.stringify(DefaultData.analysis));
+            if(!this.data.pharmacy) this.data.pharmacy = JSON.parse(JSON.stringify(DefaultData.pharmacy));
+            if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
             if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
         } else {
             this.data = JSON.parse(JSON.stringify(DefaultData));
@@ -216,7 +238,7 @@ const App = {
             };
             brandBlock.ondblclick = () => {
                 if (document.body.classList.contains('privacy-mode')) return;
-                if(confirm("⚠ HARD RESET?")) {
+                if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
                     localStorage.removeItem('gold_protocol');
                     try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
                     location.reload();
@@ -404,6 +426,7 @@ const App = {
             else if(key.includes('primo')) color = 'green'; 
             else if(key.includes('hgh')) color = 'purple';
             else if(key.includes('hcg')) color = 'pink';
+            else if(key.includes('clen')) color = 'yellow'; 
             
             return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
         }).join('') || '';
@@ -646,6 +669,9 @@ const App = {
         document.getElementById('pillDose').value = ''; 
         document.getElementById('pillMeta').value = '';
         document.getElementById('fillPhase').checked = false; 
+        document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
+        document.querySelector('.color-opt').classList.add('selected'); 
+        
         this.updateSuggestions();
         document.getElementById('addPillModal').style.display = 'flex';
         setTimeout(() => document.getElementById('pillName').focus(), 100);
@@ -683,8 +709,14 @@ const App = {
         this.pushHistory();
         if(fillPhase) {
             const phase = this.data.phases.find(p => p.weeks.includes(this.state.tempPill.w));
-            if(phase) phase.weeks.filter(w => w >= this.state.tempPill.w).forEach(w => this.data.schedule[w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color }));
-            else this.data.schedule[this.state.tempPill.w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
+            if(phase) {
+                const futureWeeks = phase.weeks.filter(w => w >= this.state.tempPill.w);
+                futureWeeks.forEach(w => {
+                    this.data.schedule[w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
+                });
+            } else {
+                this.data.schedule[this.state.tempPill.w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
+            }
         } else {
             this.data.schedule[this.state.tempPill.w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
         }
@@ -698,19 +730,60 @@ const App = {
         if(!this.dayBuffer) { this.dayBuffer = JSON.parse(JSON.stringify(this.data.schedule[w][d])); this.renderView(); } 
         else { if(confirm("Вставити день?")) { this.pushHistory(); this.data.schedule[w][d] = JSON.parse(JSON.stringify(this.dayBuffer)); this.dayBuffer = null; this.save(); this.renderView(); } }
     },
+    
     smartSave() {
-        let report = `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n\n`;
+        let report = `═══════════════════════════════════════\n`;
+        report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
+        report += `═══════════════════════════════════════\n\n`;
+        
         const stats = this.calc(this.state.week);
-        if(Object.keys(stats).length > 0) Object.entries(stats).forEach(([k, v]) => report += `${k}: ${v.v.toFixed(1)} ${v.u}\n`);
-        report += `\n`;
-        // ... (скорочена логіка генерації звіту для коду, функціонал збережено) ...
+        if(Object.keys(stats).length > 0) {
+            report += `📊 ПРЕПАРАТИ:\n`;
+            report += `───────────────────────────────────────\n`;
+            Object.entries(stats).forEach(([k, v]) => {
+                report += `${k.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
+            });
+            report += `\n`;
+        }
+        
+        const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+        report += `📅 ПО ДНЯХ:\n`;
+        report += `───────────────────────────────────────\n`;
+        
+        for(let i=0; i<7; i++) {
+            const pills = this.data.schedule[this.state.week]?.[i] || [];
+            const realDate = this.getRealDate(this.state.week, i);
+            report += `\n${dayNames[i]} (${realDate}):\n`;
+            if(pills.length === 0) {
+                report += `  (немає)\n`;
+            } else {
+                pills.forEach(p => {
+                    report += `  • ${p.name} - ${p.dose}`;
+                    if(p.meta) report += ` [${p.meta}]`;
+                    report += `\n`;
+                });
+            }
+        }
+        
+        if(this.data.notes[this.state.week]) {
+            report += `\n📝 НОТАТКИ:\n`;
+            report += `───────────────────────────────────────\n`;
+            report += this.data.notes[this.state.week] + `\n`;
+        }
+        
+        report += `\n═══════════════════════════════════════\n`;
+        
         navigator.clipboard.writeText(report).then(() => {
             alert('✅ Скопійовано!');
-            if(confirm("Скачати JSON?")) {
-                const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data, null, 2)); 
-                a.download = `gold_protocol_w${this.state.week}.json`; a.click();
+            
+            if(confirm("Скачати JSON бекап?")) {
+                const jsonForFile = JSON.stringify(this.data, null, 2);
+                const a = document.createElement('a'); 
+                a.href = "data:text/json;charset=utf-8," + encodeURIComponent(jsonForFile); 
+                a.download = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`; 
+                a.click();
             }
-        });
+        }).catch(e => alert('❌ Помилка'));
     },
     
     // UI Switchers
