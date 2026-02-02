@@ -70,9 +70,3 @@ input, textarea, [contenteditable] {
 .sys-icon { font-size: 1.5rem; }
 
 .sys-card span { font-size: 0.6rem; color: #aaa; font-family: monospace; font-weight: 700; }
-
-#sys-fab svg {
-    width: 24px;
-    height: 24px;
-    display: block;
-}
