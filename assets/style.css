@@ -68,4 +68,11 @@ input, textarea, [contenteditable] {
 @media (hover: hover) { .sys-card:hover { background: #222; border-color: #555; } }
 .sys-card:active { background: #222; border-color: #555; transform: scale(0.96); }
 .sys-icon { font-size: 1.5rem; }
+
 .sys-card span { font-size: 0.6rem; color: #aaa; font-family: monospace; font-weight: 700; }
+
+#sys-fab svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
