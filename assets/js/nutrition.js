@@ -26,15 +26,14 @@ const App = {
         targets: {p:200, f:80, c:300, k:2700}, 
         days: [] 
     },
-    state: { mid: null, fidx: null, editName: null, currentDayId: null },
+    // Додано tempFood для зберігання базового продукту (на 100г/1шт) під час редагування
+    state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null },
     history: [],
 
     init() {
-        // 1. Завантаження через Utils
         const loadedData = Utils.load(DB_KEY, null);
 
         if(loadedData) {
-            // Міграція для старих даних (якщо збережено в старому форматі без 'days')
             if(!loadedData.days) {
                 this.data.bank = loadedData.bank || DefaultBank;
                 this.data.targets = loadedData.targets;
@@ -42,14 +41,11 @@ const App = {
             } else {
                 this.data = loadedData;
             }
-            // Об'єднуємо збережену базу з дефолтною (щоб нові продукти з DefaultBank з'являлися у старих юзерів)
             this.data.bank = {...DefaultBank, ...this.data.bank};
         } else {
-            // Якщо даних немає - створюємо перший день
             this.addDay("Мій день", true);
         }
         
-        // Встановлюємо активний день
         if(!this.state.currentDayId && this.data.days.length > 0) {
             this.state.currentDayId = this.data.days[0].id;
         }
@@ -58,7 +54,6 @@ const App = {
         this.render();
     },
 
-    // Логіка Hard Reset винесена в окремий метод
     setupHardReset() {
         const brandBlock = document.getElementById('brandBlock');
         if(!brandBlock) return;
@@ -66,7 +61,7 @@ const App = {
         const brandIcon = brandBlock.querySelector('.brand-icon');
         brandBlock.onclick = () => {
             brandIcon.classList.remove('hint-active');
-            void brandIcon.offsetWidth; // Force reflow
+            void brandIcon.offsetWidth; 
             brandIcon.classList.add('hint-active');
         };
         brandBlock.ondblclick = () => {
@@ -77,14 +72,13 @@ const App = {
         };
     },
 
-    // --- SYS FAB LOGIC ---
+    // --- ЛОГІКА ЗНИКНЕННЯ ЗІРКИ (FAB) ---
     toggleFab(show) {
         const fab = document.getElementById('sys-fab');
         if(fab) fab.style.display = show ? 'flex' : 'none';
     },
 
     save() {
-        // 2. Збереження через Utils
         Utils.save(DB_KEY, this.data);
         this.updateStats();
     },
@@ -101,7 +95,6 @@ const App = {
         this.data = JSON.parse(this.history.pop());
         if(!this.history.length) document.getElementById('undoBtn').style.display='none';
         
-        // Перевірка, чи існує поточний день після відміни
         if(!this.data.days.find(d => d.id === this.state.currentDayId)) {
             this.state.currentDayId = this.data.days[0]?.id || null;
         }
@@ -115,10 +108,9 @@ const App = {
     addDay(name = null, silent=false) {
        if(!silent) this.pushHistory();
         if(!name) {
-            // Використовуємо Utils для дати
             name = Utils.date();
         }
-        const id = Utils.id(); // Використовуємо Utils для ID
+        const id = Utils.id();
         const newDay = {
             id: id, name: name, 
             meals: [
@@ -140,7 +132,6 @@ const App = {
         const newDay = JSON.parse(JSON.stringify(day));
         newDay.id = id;
         newDay.name = day.name + " (Копія)";
-        // Оновлюємо ID прийомів їжі, щоб вони не конфліктували
         newDay.meals.forEach((m, index) => m.id = id + index + 1);
         this.data.days.push(newDay);
         this.state.currentDayId = id;
@@ -304,8 +295,31 @@ const App = {
         } else { list.style.display='none'; }
     },
 
+    // --- НОВА ФУНКЦІЯ: ДИНАМІЧНИЙ ПЕРЕРАХУНОК ---
+    recalcModal() {
+        if (!this.state.tempFood) return; // Якщо немає бази, не рахуємо
+
+        const val = document.getElementById('inpWeight').value;
+        if(val === '') return; // Даємо користувачу стерти все
+        
+        const w = parseFloat(val) || 0;
+        const ref = this.state.tempFood;
+
+        // Коефіцієнт: для штук = w, для грам = w/100
+        const ratio = ref.unit ? w : w / 100;
+
+        document.getElementById('inpP').value = Math.round((ref.p || 0) * ratio);
+        document.getElementById('inpF').value = Math.round((ref.f || 0) * ratio);
+        document.getElementById('inpC').value = Math.round((ref.c || 0) * ratio);
+        document.getElementById('inpK').value = Math.round((ref.k || 0) * ratio);
+    },
+
     selectSuggestion(name) {
         const f = this.data.bank[name];
+        
+        // ЗБЕРІГАЄМО БАЗУ для перерахунку
+        this.state.tempFood = { ...f };
+
         document.getElementById('inpName').value = name;
         document.getElementById('inpP').value = f.p;
         document.getElementById('inpF').value = f.f;
@@ -313,11 +327,18 @@ const App = {
         document.getElementById('inpK').value = f.k;
         document.getElementById('sugg-list').style.display='none';
         document.getElementById('inpWeight').placeholder = f.unit ? "Кількість (шт)" : "Вага (г)";
+        
+        // Ставимо дефолтну вагу (100г або 1шт) і відразу рахуємо
+        const defW = f.unit ? 1 : 100;
+        document.getElementById('inpWeight').value = defW;
+        this.recalcModal();
+
         document.getElementById('inpWeight').focus();
     },
 
     addFood(mid) {
         this.state.mid = mid; this.state.fidx = -1;
+        this.state.tempFood = null; // Очищаємо, бо новий продукт
         this.openModal('ДОДАТИ', {}, false);
         setTimeout(() => document.getElementById('inpName').focus(), 100);
     },
@@ -325,12 +346,31 @@ const App = {
     editFood(mid, idx) {
         this.state.mid = mid; this.state.fidx = idx;
         const f = this.getCurrentDay().meals.find(m=>m.id===mid).foods[idx];
-        let base = this.data.bank[f.n] ? this.data.bank[f.n] : f;
-        this.openModal('РЕДАГУВАТИ', {...base, w: f.w, n: f.n}, true);
+        
+        // Логіка для редагування:
+        // 1. Дивимось, чи є такий продукт в базі.
+        const ref = this.data.bank[f.n];
+        let editItem = { ...f }; // копія поточного запису
+        
+        if (ref) {
+            // Якщо є в базі - зберігаємо базу в tempFood
+            this.state.tempFood = ref;
+            // Перераховуємо БЖВ для поточної ваги (про всяк випадок, щоб цифри були актуальні)
+            const ratio = ref.unit ? f.w : f.w / 100;
+            editItem.p = Math.round(ref.p * ratio);
+            editItem.f = Math.round(ref.f * ratio);
+            editItem.c = Math.round(ref.c * ratio);
+            editItem.k = Math.round(ref.k * ratio);
+        } else {
+            // Якщо це ручний запис - tempFood пустий, динаміка не працює
+            this.state.tempFood = null;
+        }
+
+        this.openModal('РЕДАГУВАТИ', editItem, true);
     },
 
     openModal(title, f, del) {
-        this.toggleFab(false);
+        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -345,7 +385,7 @@ const App = {
     
     closeModal() { 
         document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none');
-        this.toggleFab(true);
+        this.toggleFab(true); // ПОВЕРТАЄМО ЗІРКУ
     },
 
     saveFood() {
@@ -408,12 +448,12 @@ const App = {
             </div>`).join('');
     },
     openBank() {
-        this.toggleFab(false);
+        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
         this.renderBank();
         document.getElementById('bankModal').style.display='flex';
     },
     openBankEdit(name) {
-        this.toggleFab(false);
+        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
         this.state.editName = name;
         if(name) {
             const d = this.data.bank[name];
@@ -461,7 +501,7 @@ const App = {
     },
 
     openTargets() {
-        this.toggleFab(false);
+        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
         const t = this.data.targets;
         document.getElementById('tgP').value = t.p;
         document.getElementById('tgF').value = t.f;
