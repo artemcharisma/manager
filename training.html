@@ -507,6 +507,7 @@
         <div style="display:flex; gap:10px; margin-bottom:15px">
             <input type="text" class="guide-search" placeholder="🔍 Пошук..." onkeyup="App.filterGuide(this.value)">
             <button class="btn-icon" title="Керування Базою Вправ" onclick="App.openBank()" style="min-width:40px">📚</button>
+            <button class="btn-icon" title="1RM Калькулятор" onclick="document.getElementById('rmModal').style.display='flex'" style="min-width:40px; font-weight:800">1RM</button>
         </div>
         <div class="guide-switcher">
             <div class="mode-btn mass active" id="btnG-mass" onclick="App.setGuideMode('mass')">MASS (МАСА)</div>
@@ -543,7 +544,40 @@
         <div id="bankList" style="overflow-y:auto; flex:1"></div>
     </div>
 </div>
+    
+<div id="rmModal" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px">
+            <h3 style="margin:0; color:#fff">🔥 1RM Calculator</h3>
+            <span onclick="document.getElementById('rmModal').style.display='none'" style="cursor:pointer">✕</span>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-bottom:15px">
+            <div style="flex:1">
+                <label style="font-size:0.7rem; color:#888">ВАГА (КГ)</label>
+                <input id="rm-w" type="number" inputmode="decimal" class="modal-input" style="text-align:center; font-size:1.2rem; font-weight:bold" oninput="App.calc1RM()">
+            </div>
+            <div style="flex:1">
+                <label style="font-size:0.7rem; color:#888">ПОВТОРИ</label>
+                <input id="rm-r" type="number" inputmode="decimal" class="modal-input" style="text-align:center; font-size:1.2rem; font-weight:bold" oninput="App.calc1RM()">
+            </div>
+        </div>
 
+        <div style="background:#111; padding:15px; border-radius:12px; border:1px solid #333">
+            <div style="font-size:0.8rem; color:#666; margin-bottom:5px">ТВІЙ МАКСИМУМ (Estimated)</div>
+            <div id="rm-result" style="font-size:2.5rem; color:var(--theme); font-weight:900; font-family:'JetBrains Mono'">0</div>
+            <div style="font-size:0.8rem; color:#444">кг</div>
+        </div>
+        
+        <div style="margin-top:15px; display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; font-size:0.75rem; color:#666">
+            <div>95%: <span id="rm-95" style="color:#fff">0</span></div>
+            <div>85%: <span id="rm-85" style="color:#fff">0</span></div>
+            <div>75%: <span id="rm-75" style="color:#fff">0</span></div>
+            <div>65%: <span id="rm-65" style="color:#fff">0</span></div>
+        </div>
+    </div>
+</div>
+    
 <datalist id="ex-bank"></datalist>
 <script>
     const Groups = ["Груди", "Спина", "Ноги", "Плечі", "Руки", "Прес", "Кардіо", "Інше"];
@@ -802,19 +836,19 @@ const App = {
                                 ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
                                 <div class="cardio-header">🏃 ${ex.n}</div>
                                 <div class="cardio-grid">
-                                    <div class="c-input-box"><span class="c-label">ХВ</span><input class="c-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'r',this.value)"></div>
-                                    <div class="c-input-box"><span class="c-label">КМ</span><input class="c-input" type="tel" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'w',this.value)"></div>
-                                    <div class="c-input-box"><span class="c-label">ККАЛ</span><input class="c-input" type="tel" value="${s.d||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'d',this.value)"></div>
-                                    <div class="c-input-box"><span class="c-label">BPM</span><input class="c-input" type="tel" value="${s.h||''}" placeholder="❤️" style="color:var(--danger) !important" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'h',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">ХВ</span><input class="c-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'r',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">КМ</span><input class="c-input" type="number" inputmode="decimal" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'w',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">ККАЛ</span><input class="c-input" type="number" inputmode="decimal" value="${s.d||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'d',this.value)"></div>
+                                    <div class="c-input-box"><span class="c-label">BPM</span><input class="c-input" type="number" inputmode="decimal" value="${s.h||''}" placeholder="❤️" style="color:var(--danger) !important" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},0,'h',this.value)"></div>
                                 </div>
                             </div>`;
                         }
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
-                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
+                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
                             }
-                            return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="tel" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-part"><input class="set-input" type="tel" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
+                            return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="number" inputmode="decimal" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
                         }).join('');
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
@@ -860,7 +894,7 @@ const App = {
                 return `<div id="week-${week.id}" class="${theme}">
                     <div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center">
                         <div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${week.num} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
-                        <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${realWIdx})">Видалити</span>
+                        <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${week.id})">Видалити</span>
                     </div>
                     <div class="days-list">${daysHtml}</div>
                 </div><hr style="border:0; border-top:1px dashed #333; margin:30px 0">`;
@@ -919,7 +953,26 @@ const App = {
         list.innerHTML = this.data.exBank.map(n => `<div class="bank-item"><span>${n}</span><span class="bank-del" onclick="App.deleteFromBank('${n}')">✕</span></div>`).join('');
         document.getElementById('bankModal').style.display = 'flex';
     },
-
+    
+    calc1RM() {
+        const w = parseFloat(document.getElementById('rm-w').value) || 0;
+        const r = parseFloat(document.getElementById('rm-r').value) || 0;
+        
+        if(w > 0 && r > 0) {
+            // Формула Еплі: Weight * (1 + Reps / 30)
+            const oneRm = Math.round(w * (1 + r / 30));
+            document.getElementById('rm-result').innerText = oneRm;
+            
+            // Відсотки
+            document.getElementById('rm-95').innerText = Math.round(oneRm * 0.95);
+            document.getElementById('rm-85').innerText = Math.round(oneRm * 0.85);
+            document.getElementById('rm-75').innerText = Math.round(oneRm * 0.75);
+            document.getElementById('rm-65').innerText = Math.round(oneRm * 0.65);
+        } else {
+            document.getElementById('rm-result').innerText = "0";
+        }
+    },
+    
     closeModal() {
         document.querySelectorAll('.modal').forEach(el => el.style.display = 'none');
         this.toggleFab(true);
@@ -970,11 +1023,16 @@ const App = {
         this.render();
     },
 
-    delWeek(idx) {
+    delWeek(id) {
         if(!confirm("Видалити тиждень?")) return;
         this.pushHistory();
-        this.data.weeks.splice(idx, 1);
-        this.save(); this.render();
+        // Знаходимо індекс за ID, це надійніше
+        const idx = this.data.weeks.findIndex(w => w.id === id);
+        if (idx !== -1) {
+            this.data.weeks.splice(idx, 1);
+            this.save(); 
+            this.render();
+        }
     },
 
     addEx(w, d, type) {
