@@ -16,6 +16,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
      /* --- 1. GLOBAL SETTINGS (FIXED) --- */
+     /* ВИДАЛЕННЯ СТРІЛОЧОК В INPUT NUMBER */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
         *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
@@ -507,7 +516,7 @@
         <div style="display:flex; gap:10px; margin-bottom:15px">
             <input type="text" class="guide-search" placeholder="🔍 Пошук..." onkeyup="App.filterGuide(this.value)">
             <button class="btn-icon" title="Керування Базою Вправ" onclick="App.openBank()" style="min-width:40px">📚</button>
-            <button class="btn-icon" title="1RM Калькулятор" onclick="document.getElementById('rmModal').style.display='flex'" style="min-width:40px; font-weight:800">1RM</button>
+            <button class="btn-icon" title="1RM Калькулятор" onclick="document.getElementById('rmModal').style.display='flex'" style="min-width:45px; font-weight:800; font-size:0.8rem">1RM</button>
         </div>
         <div class="guide-switcher">
             <div class="mode-btn mass active" id="btnG-mass" onclick="App.setGuideMode('mass')">MASS (МАСА)</div>
