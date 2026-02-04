@@ -421,10 +421,10 @@
         <input type="number" id="inpWeight" class="inp-main" placeholder="Вага (г) або шт" inputmode="decimal" oninput="App.recalcModal()">
 
         <div class="stats-grid">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input id="inpP"></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input id="inpF"></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input id="inpC"></div>
-            <div class="stat-box"><label>ККАЛ</label><input id="inpK"></div>
+            <div class="stat-box"><label class="color-p">БІЛ</label><input id="inpP" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-f">ЖИР</label><input id="inpF" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-c">ВУГ</label><input id="inpC" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label>ККАЛ</label><input id="inpK" type="number" inputmode="decimal"></div>
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
@@ -454,10 +454,10 @@
         <input id="bankInpName" class="inp-main" placeholder="Назва продукту">
         
         <div class="stats-grid">
-            <div class="stat-box"><label class="color-p">Б</label><input id="bankInpP" placeholder="0" inputmode="decimal"></div>
-            <div class="stat-box"><label class="color-f">Ж</label><input id="bankInpF" placeholder="0" inputmode="decimal"></div>
-            <div class="stat-box"><label class="color-c">В</label><input id="bankInpC" placeholder="0" inputmode="decimal"></div>
-            <div class="stat-box"><label>К</label><input id="bankInpK" placeholder="Auto" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-p">Б</label><input id="bankInpP" placeholder="0" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-f">Ж</label><input id="bankInpF" placeholder="0" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-c">В</label><input id="bankInpC" placeholder="0" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label>К</label><input id="bankInpK" placeholder="Auto" type="number" inputmode="decimal"></div>
         </div>
 
         <div class="chk-wrap">
@@ -477,10 +477,10 @@
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         <div class="stats-grid">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label>ККАЛ</label><input id="tgK" inputmode="numeric"></div>
+            <div class="stat-box"><label class="color-p">БІЛ</label><input id="tgP" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-f">ЖИР</label><input id="tgF" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-c">ВУГ</label><input id="tgC" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label>ККАЛ</label><input id="tgK" type="number" inputmode="decimal"></div>
         </div>
         <button class="btn-primary" onclick="App.saveTargets()">ОНОВИТИ</button>
     </div>
@@ -520,6 +520,7 @@
     
 </body>
 </html>
+
 
 
 
