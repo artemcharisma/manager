@@ -1453,9 +1453,9 @@ renderAnalytics(c) {
                     <small>PHASE ${idx + 1}</small>
                     
                     <span contenteditable="${isEd}" 
-                          onblur="App.updatePhaseTitle(${p.id}, this.innerText)"
-                          onclick="event.stopPropagation()"
-                          style="${isEd ? 'border-bottom:1px dashed #666; cursor:text' : ''}"
+                      onblur="App.updatePhaseTitle(${p.id}, this.innerText)"
+                      onclick="${isEd ? 'event.stopPropagation()' : ''}" 
+                      style="${isEd ? 'border-bottom:1px dashed #666; cursor:text' : 'pointer-events:none'}"
                     >${p.title}</span>
     
                     <div class="phase-ctrl">
