@@ -571,9 +571,9 @@
                     ${content}
                     <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
                     <div class="vitals-row">
-                        <input class="vital-input" placeholder="120/80" value="${v.bp||''}" onblur="App.saveVital(${this.state.week},${i},'bp',this.value)">
-                        <input class="vital-input" type="number" placeholder="Пульс" value="${v.hr||''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
-                        <input class="vital-input" type="number" placeholder="Вага" value="${v.w||''}" onblur="App.saveVital(${this.state.week},${i},'w',this.value)">
+                        <input class="vital-input" type="text" inputmode="decimal" placeholder="120/80" value="${v.bp||''}" onblur="App.saveVital(${this.state.week},${i},'bp',this.value)">
+                        <input class="vital-input" type="number" inputmode="decimal" placeholder="Пульс" value="${v.hr||''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
+                        <input class="vital-input" type="number" inputmode="decimal" placeholder="Вага" value="${v.w||''}" onblur="App.saveVital(${this.state.week},${i},'w',this.value)">
                     </div></div>`;
             }
             grid += '</div>';
