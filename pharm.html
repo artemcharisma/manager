@@ -759,7 +759,7 @@
         <span class="privacy-icon" id="privIcon">🔒</span>
         <h2 style="margin:0 0 10px 0; color:#fff; font-size:1.2rem">ACCESS LOCKED</h2>
         <p style="color:#666; font-size:0.8rem; margin-bottom:20px">ENTER PASSCODE</p>
-        <input type="password" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
+        <input type="password" inputmode="numeric" pattern="[0-9]*" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
         <button class="btn-privacy-unlock" id="unlockBtn" onclick="App.unlockPrivacy()">UNLOCK</button>
     </div>
 </div>
@@ -872,6 +872,7 @@
 
 </body>
 </html>
+
 
 
 
