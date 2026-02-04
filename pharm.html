@@ -678,34 +678,46 @@
         /* В Privacy Mode ховаємо Compare */
         body.privacy-mode .btn-compare { display: none !important; }
 
-        /* КНОПКА ВСТАВКИ ФАЗИ (МІЖ ФАЗАМИ) */
+        /* ВИПРАВЛЕННЯ: Центрування скролу */
+        .phase-scroll {
+            display: flex; 
+            gap: 12px; 
+            overflow-x: auto; 
+            padding: 10px 5px 20px 5px; /* Більше місця знизу для тіней */
+            margin-bottom: 15px; 
+            align-items: center; /* Центруємо картки і кнопки по вертикалі */
+        }
+        
+        /* ВИПРАВЛЕННЯ: Кнопка вставки */
         .insert-phase-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 30px;
-            height: 100%; /* Розтягуємо по висоті скролу */
+            width: 40px;       /* Фіксована ширина контейнера */
+            flex-shrink: 0;    /* ЗАБОРОНЯЄМО стискати кнопку */
+            height: 100%;
             cursor: pointer;
             transition: 0.2s;
-            opacity: 0.5;
+            opacity: 0.6;
         }
+        
         .insert-phase-btn span {
-            width: 24px; height: 24px;
+            width: 32px;       /* Фіксована ширина кружечка */
+            height: 32px;      /* Фіксована висота кружечка */
             border-radius: 50%;
-            background: #222;
+            background: #111;
             border: 1px dashed var(--green);
             color: var(--green);
-            display: flex; align-items: center; justify-content: center;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 18px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
+        
         .insert-phase-btn:hover { opacity: 1; transform: scale(1.1); }
-        
-        /* Зробити скрол фаз зручнішим для кнопок вставки */
-        .phase-scroll {
-            align-items: stretch; /* Щоб кнопки вставки були по центру висоти */
-        }
-        
+                
     </style>
 </head>
 <body id="appBody">
@@ -860,6 +872,7 @@
 
 </body>
 </html>
+
 
 
 
