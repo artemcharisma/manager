@@ -290,14 +290,19 @@
             text-align: center; 
             font-family: var(--font-mono); 
             font-weight: 700; 
-            font-size: 1rem; 
+            font-size: 1.1rem; /* Трохи збільшив шрифт, щоб було зручніше */
             
-            /* --- ВИПРАВЛЕННЯ ЗСУВУ ТЕКСТУ --- */
-            padding: 0; 
+            /* --- IOS FIX START --- */
+            padding: 0;
             margin: 0;
-            line-height: normal;       /* Вирівнює курсор і текст */
-            -webkit-appearance: none;  /* Вимикає стилі мобільного браузера */
-            border-radius: 0;          /* Фікс скруглення на iOS */
+            /* line-height: normal - це найважливіше для курсора */
+            line-height: normal; 
+            /* Забираємо внутрішні відступи браузера */
+            -webkit-appearance: none; 
+            border-radius: 0;
+            /* Явна висота допомагає стабілізувати стрибки */
+            min-height: 30px; 
+            /* --- IOS FIX END --- */
         }
 
         .btn-primary {
@@ -536,6 +541,7 @@
     
 </body>
 </html>
+
 
 
 
