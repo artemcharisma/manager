@@ -678,6 +678,34 @@
         /* В Privacy Mode ховаємо Compare */
         body.privacy-mode .btn-compare { display: none !important; }
 
+        /* КНОПКА ВСТАВКИ ФАЗИ (МІЖ ФАЗАМИ) */
+        .insert-phase-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 100%; /* Розтягуємо по висоті скролу */
+            cursor: pointer;
+            transition: 0.2s;
+            opacity: 0.5;
+        }
+        .insert-phase-btn span {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: #222;
+            border: 1px dashed var(--green);
+            color: var(--green);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .insert-phase-btn:hover { opacity: 1; transform: scale(1.1); }
+        
+        /* Зробити скрол фаз зручнішим для кнопок вставки */
+        .phase-scroll {
+            align-items: stretch; /* Щоб кнопки вставки були по центру висоти */
+        }
+        
     </style>
 </head>
 <body id="appBody">
@@ -832,6 +860,7 @@
 
 </body>
 </html>
+
 
 
 
