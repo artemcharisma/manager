@@ -1366,24 +1366,116 @@ renderAnalytics(c) {
             this.renderNav(); 
             this.renderView();
         },
+
+            updatePhaseTitle(id, newTitle) {
+            this.pushHistory();
+            const p = this.data.phases.find(x => x.id === id);
+            if(p) {
+                p.title = newTitle;
+                this.save();
+            }
+        },
+    
+        async insertPhase(index) {
+            this.pushHistory();
+            
+            // 1. Визначаємо, з якого тижня починаємо вставку
+            let startWeek = 1;
+            if (index > 0) {
+                const prevPhase = this.data.phases[index - 1];
+                startWeek = prevPhase.weeks[prevPhase.weeks.length - 1] + 1;
+            }
+    
+            const duration = 4; // Довжина нової фази (стандартно 4 тижні)
+            const maxW = Math.max(...Object.keys(this.data.schedule).map(Number), 0);
+    
+            // 2. Зсуваємо дані (розклад, нотатки, показники) ВПЕРЕД
+            // Йдемо з кінця, щоб не перезаписати дані
+            for (let w = maxW; w >= startWeek; w--) {
+                this.data.schedule[w + duration] = this.data.schedule[w];
+                this.data.notes[w + duration] = this.data.notes[w];
+                for(let d=0; d<7; d++) {
+                    if(this.data.vitals[`${w}-${d}`]) {
+                        this.data.vitals[`${w+duration}-${d}`] = this.data.vitals[`${w}-${d}`];
+                        delete this.data.vitals[`${w}-${d}`];
+                    }
+                }
+                delete this.data.schedule[w];
+                delete this.data.notes[w];
+            }
+    
+            // 3. Очищаємо нові тижні (створюємо пусті слоти)
+            for (let i = 0; i < duration; i++) {
+                this.data.schedule[startWeek + i] = [[],[],[],[],[],[],[]];
+            }
+    
+            // 4. Зсуваємо фото
+            await PhotoDB.shiftWeeks(startWeek, duration);
+    
+            // 5. Оновлюємо тижні у всіх наступних фазах
+            for (let i = index; i < this.data.phases.length; i++) {
+                this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + duration);
+            }
+    
+            // 6. Створюємо нову фазу
+            const maxId = this.data.phases.reduce((max, p) => Math.max(max, p.id), 0);
+            const newPhase = {
+                id: maxId + 1,
+                title: "New Phase",
+                weeks: Array.from({length: duration}, (_, i) => startWeek + i)
+            };
+    
+            // 7. Вставляємо фазу в масив у потрібне місце
+            this.data.phases.splice(index, 0, newPhase);
+    
+            // Якщо вставили на початок, оновлюємо дату старту (зсуваємо назад на 4 тижні, щоб "сьогодні" лишилось правильним, або просто лишаємо як є, тоді все зсунеться в майбутнє)
+            // Логічніше просто зсунути всі події в майбутнє, дату старту не чіпаємо.
+    
+            this.save();
+            this.refreshPhotos();
+            this.renderNav();
+            this.setPhase(newPhase.id);
+        },
         
-         renderNav() { 
+    renderNav() { 
             const nav = document.getElementById('phaseNav');
-            let html = this.data.phases.map((p, idx) => `
+            const isEd = this.state.editing;
+            let html = '';
+    
+            this.data.phases.forEach((p, idx) => {
+                // Кнопка вставки ПЕРЕД фазою (тільки в режимі редагування)
+                if (isEd) {
+                    html += `<div class="insert-phase-btn" onclick="App.insertPhase(${idx})"><span>+</span></div>`;
+                }
+    
+                html += `
                 <div class="phase-btn ${p.id===this.state.phaseId?'active':''}" onclick="App.setPhase(${p.id})">
-                    <small>PHASE ${p.id}</small><span>${p.title}</span>
+                    <small>PHASE ${idx + 1}</small>
+                    
+                    <span contenteditable="${isEd}" 
+                          onblur="App.updatePhaseTitle(${p.id}, this.innerText)"
+                          onclick="event.stopPropagation()"
+                          style="${isEd ? 'border-bottom:1px dashed #666; cursor:text' : ''}"
+                    >${p.title}</span>
+    
                     <div class="phase-ctrl">
                         <div class="ctrl-btn" onclick="event.stopPropagation(); App.removePhaseWeek(${p.id})">- W</div>
                         <div style="font-size:0.7rem; color:#666">${p.weeks.length}</div>
                         <div class="ctrl-btn" onclick="event.stopPropagation(); App.addPhaseWeek(${p.id})">+ W</div>
                     </div>
-                    ${idx === 0 ? `<div class="phase-ctrl" style="border-top:none; margin-top:2px"><div class="ctrl-btn" style="width:100%" onclick="event.stopPropagation(); App.prependPhaseWeek(${p.id})">⏪ Past Week</div></div>` : ''}
+                    
                     <div class="phase-del" onclick="event.stopPropagation(); App.deletePhase(${p.id})">✕</div>
-                </div>`).join('');
+                </div>`;
+            });
             
-            html += `<div class="new-phase-btn phase-btn" onclick="App.addNewPhase()">+</div>`; 
+            // Кнопка вставки в самому кінці
+            if (isEd) {
+                html += `<div class="insert-phase-btn" onclick="App.insertPhase(${this.data.phases.length})"><span>+</span></div>`;
+            } else {
+                // Стара кнопка додавання в кінець (для звичайного режиму, якщо треба, або можна прибрати)
+                // html += `<div class="new-phase-btn phase-btn" onclick="App.addNewPhase()">+</div>`; 
+            }
             
-            // КНОПКА ДАТИ ВИДАЛЕНА
             nav.innerHTML = html; 
         }
     };
