@@ -599,201 +599,217 @@
         },
 
 
-renderAnalytics(c) {
-            // 1. СТРУКТУРА: Додано клас chart-caption для Privacy Mode
-            c.innerHTML = `
-                <div class="chart-container" style="position:relative; height:350px;">
-                    <canvas id="mainChart"></canvas>
-                </div>
-                <div class="chart-caption" style="text-align:center; font-size:0.7rem; color:#666; margin-top:10px; font-family:'JetBrains Mono'">
-                    * GOLD (Test Base) vs PURPLE (Stack)
-                </div>`;
+            renderAnalytics(c) {
+                // 1. СТРУКТУРА
+                c.innerHTML = `
+                    <div class="chart-container" style="position:relative; height:350px;">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                    <div class="chart-caption" style="text-align:center; font-size:0.7rem; color:#666; margin-top:10px; font-family:'JetBrains Mono'">
+                        * GOLD (Test Base) vs PURPLE (Anabolics). Вага — біла лінія.
+                    </div>`;
+                
+                // 2. ПІДГОТОВКА ДАНИХ
+                const labels = []; 
+                const dataTest = [];    
+                const dataStack = []; 
+                const dataWeight = [];
+                
+                // Масив для зберігання детального складу курсу на кожен тиждень (для тултипа)
+                const weekDetails = []; 
             
-            // 2. ДАНІ
-            const labels = []; 
-            const dataTest = [];    
-            const dataStack = []; 
-            const dataWeight = [];
+                const weekKeys = Object.keys(this.data.schedule).map(Number);
+                const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
+                
+                // Змінні для авто-масштабування ваги
+                let minWeight = 200, maxWeight = 0;
             
-            const weekKeys = Object.keys(this.data.schedule).map(Number);
-            const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
+                for(let w=1; w<=maxW; w++) {
+                    labels.push(`W${w}`);
+                    let weekTest = 0;
+                    let weekOther = 0;
+                    let details = {}; // Сюди збираємо назви: { "Test E": "500mg", "HGH": "14 IU" }
             
-            for(let w=1; w<=maxW; w++) {
-                labels.push(`W${w}`);
-                let weekTest = 0;
-                let weekOther = 0;
-
-                if(this.data.schedule[w]) {
-                    this.data.schedule[w].forEach(day => day.forEach(pill => {
-                        const match = pill.dose.match(/(\d+([.,]\d+)?)/);
-                        if (match) {
-                            const val = parseFloat(match[0].replace(',', '.'));
-                            const name = pill.name.toLowerCase();
-                            const unit = pill.dose.toLowerCase();
-
-                            if (!isNaN(val) && unit.includes('mg') && ['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
-                                if(name.includes('test') || name.includes('sust') || name.includes('enan') || name.includes('cyp') || name.includes('prop')) {
-                                    weekTest += val;
-                                } else {
-                                    weekOther += val;
+                    if(this.data.schedule[w]) {
+                        this.data.schedule[w].forEach(day => day.forEach(pill => {
+                            const name = pill.name.trim();
+                            const dose = pill.dose.trim();
+                            
+                            // 1. Збираємо деталі для тултипа (сумуємо однакові препарати)
+                            if(!details[name]) details[name] = { val: 0, unit: '' };
+                            
+                            const match = dose.match(/(\d+([.,]\d+)?)/);
+                            if (match) {
+                                const val = parseFloat(match[0].replace(',', '.'));
+                                // Визначаємо одиниці виміру
+                                let unit = 'mg';
+                                if(dose.toLowerCase().includes('iu')) unit = 'IU';
+                                if(dose.toLowerCase().includes('mcg')) unit = 'mcg';
+                                if(dose.toLowerCase().includes('tab')) unit = 'tab';
+                                
+                                details[name].val += val;
+                                details[name].unit = unit;
+            
+                                // 2. Рахуємо навантаження на графік (ТІЛЬКИ mg)
+                                if (unit === 'mg' && ['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
+                                    const nLow = name.toLowerCase();
+                                    if(nLow.includes('test') || nLow.includes('sust') || nLow.includes('enan') || nLow.includes('cyp') || nLow.includes('prop')) {
+                                        weekTest += val;
+                                    } else {
+                                        weekOther += val;
+                                    }
                                 }
                             }
-                        }
-                    }));
-                }
-                dataTest.push(weekTest);
-                dataStack.push(weekOther);
-
-                let weightSum = 0; let weightCount = 0;
-                for(let d=0; d<7; d++) {
-                    const v = this.data.vitals[`${w}-${d}`];
-                    if(v && v.w) { weightSum += parseFloat(v.w.toString().replace(',','.')); weightCount++; }
-                }
-                dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
-            }
-            
-            if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
-            
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            
-            // 3. НОВІ КОЛЬОРИ (GOLD vs PURPLE)
-            
-            // TESTOSTERONE (GOLD - Primary Brand)
-            const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
-            gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.1)'); 
-            gradTest.addColorStop(1, 'rgba(212, 175, 55, 0.9)'); 
-            
-            // STACK (PURPLE - Secondary/Exotic)
-            const gradStack = ctx.createLinearGradient(0, 400, 0, 0);
-            gradStack.addColorStop(0, 'rgba(139, 92, 246, 0.1)'); 
-            gradStack.addColorStop(1, 'rgba(139, 92, 246, 0.9)'); 
-
-            Chart.defaults.font.family = "'JetBrains Mono', monospace";
-            Chart.defaults.color = "#666";
-
-            // 4. КОНФІГУРАЦІЯ
-            this.chartInstance = new Chart(ctx, {
-                type: 'bar',
-                // --- ПЛАГІН ДЛЯ КЛІКУ ПО ФОНУ (IPHONE FIX) ---
-                plugins: [{
-                    id: 'backgroundClick',
-                    beforeEvent: (chart, args, options) => {
-                        if (args.event.type === 'click' || args.event.type === 'touchstart') {
-                            const points = chart.getElementsAtEventForMode(args.event, 'nearest', { intersect: true }, true);
-                            if (!points.length) {
-                                chart.setActiveElements([], { x: 0, y: 0 });
-                                chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-                                chart.update();
-                            }
-                        }
+                        }));
                     }
-                }],
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { 
-                            label: 'Вага (kg)', 
-                            data: dataWeight, 
-                            type: 'line', 
-                            borderColor: '#ffffff', /* БІЛИЙ для контрасту */
-                            backgroundColor: '#ffffff', 
-                            borderWidth: 2, 
-                            yAxisID: 'y1', 
-                            pointRadius: 3,
-                            pointBackgroundColor: '#000',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            tension: 0.4,
-                            order: 0,
-                            shadowBlur: 10,
-                            shadowColor: '#ffffff'
-                        },
-                        { 
-                            label: 'Stack (mg)', 
-                            data: dataStack, 
-                            backgroundColor: gradStack, 
-                            yAxisID: 'y', 
-                            stack: 'total', 
-                            order: 1, 
-                            borderRadius: 4,
-                            borderSkipped: false
-                        },
-                        { 
-                            label: 'Test Base (mg)', 
-                            data: dataTest, 
-                            backgroundColor: gradTest, 
-                            yAxisID: 'y', 
-                            stack: 'total', 
-                            order: 2, 
-                            borderRadius: 4,
-                            borderSkipped: false
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 1500, 
-                        easing: 'easeOutQuart', 
-                        delay: (context) => {
-                            let delay = 0;
-                            if (context.type === 'data' && context.mode === 'default') {
-                                delay = context.dataIndex * 100 + context.datasetIndex * 100;
-                            }
-                            return delay;
-                        }
-                    },
-                    // Вмикаємо touch події
-                    events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'],
-                    interaction: { mode: 'index', intersect: false },
                     
-                    scales: {
-                        x: { 
-                            stacked: true, 
-                            grid: { display: false }, 
-                            ticks: { color: '#555', font: {size: 10} } 
-                        },
-                        y: { 
-                            stacked: true, 
-                            position: 'left', 
-                            grid: { color: '#222', borderDash: [5, 5] }, 
-                            title: { display: true, text: 'LOAD (mg)', color: '#444', font: {size: 9} },
-                            border: { display: false }
-                        },
-                        y1: { 
-                            display: true, 
-                            position: 'right', 
-                            grid: { display: false }, 
-                            title: { display: true, text: 'KG', color: '#fff', font: {size: 9} },
-                            border: { display: false }
+                    // Форматуємо деталі в строку для тултипа
+                    weekDetails.push(
+                        Object.entries(details)
+                        .map(([n, d]) => `${n}: ${parseFloat(d.val.toFixed(1))} ${d.unit}`)
+                    );
+            
+                    dataTest.push(weekTest);
+                    dataStack.push(weekOther);
+            
+                    // Вага
+                    let weightSum = 0; let weightCount = 0;
+                    for(let d=0; d<7; d++) {
+                        const v = this.data.vitals[`${w}-${d}`];
+                        if(v && v.w) { 
+                            const val = parseFloat(v.w.toString().replace(',','.'));
+                            weightSum += val; 
+                            weightCount++; 
+                            if(val < minWeight) minWeight = val;
+                            if(val > maxWeight) maxWeight = val;
                         }
+                    }
+                    dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
+                }
+                
+                // Відступи для графіку ваги (+- 2кг від реальних значень)
+                if(minWeight === 200) minWeight = 0; // Якщо ваги не було
+                const y1Min = Math.max(0, Math.floor(minWeight - 2));
+                const y1Max = Math.ceil(maxWeight + 2);
+            
+                if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
+                
+                const ctx = document.getElementById('mainChart').getContext('2d');
+                
+                const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
+                gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.1)'); 
+                gradTest.addColorStop(1, 'rgba(212, 175, 55, 0.9)'); 
+                
+                const gradStack = ctx.createLinearGradient(0, 400, 0, 0);
+                gradStack.addColorStop(0, 'rgba(139, 92, 246, 0.1)'); 
+                gradStack.addColorStop(1, 'rgba(139, 92, 246, 0.9)'); 
+            
+                Chart.defaults.font.family = "'JetBrains Mono', monospace";
+                Chart.defaults.color = "#666";
+            
+                this.chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    plugins: [{
+                        id: 'backgroundClick',
+                        beforeEvent: (chart, args, options) => {
+                            if (args.event.type === 'click' || args.event.type === 'touchstart') {
+                                const points = chart.getElementsAtEventForMode(args.event, 'nearest', { intersect: true }, true);
+                                if (!points.length) {
+                                    chart.setActiveElements([], { x: 0, y: 0 });
+                                    chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                                    chart.update();
+                                }
+                            }
+                        }
+                    }],
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { 
+                                label: 'Вага (kg)', 
+                                data: dataWeight, 
+                                type: 'line', 
+                                borderColor: '#ffffff', 
+                                backgroundColor: '#ffffff', 
+                                borderWidth: 2, 
+                                yAxisID: 'y1', 
+                                pointRadius: 3,
+                                pointBackgroundColor: '#000',
+                                pointBorderColor: '#ffffff',
+                                tension: 0.4,
+                                order: 0
+                            },
+                            { 
+                                label: 'Stack (mg)', 
+                                data: dataStack, 
+                                backgroundColor: gradStack, 
+                                yAxisID: 'y', 
+                                stack: 'total', 
+                                order: 1, 
+                                borderRadius: 4
+                            },
+                            { 
+                                label: 'Test Base (mg)', 
+                                data: dataTest, 
+                                backgroundColor: gradTest, 
+                                yAxisID: 'y', 
+                                stack: 'total', 
+                                order: 2, 
+                                borderRadius: 4
+                            }
+                        ]
                     },
-                    plugins: { 
-                        legend: { 
-                            labels: { color: '#999', boxWidth: 10, font: { size: 10 } },
-                            position: 'bottom'
+                    options: {
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: { stacked: true, grid: { display: false }, ticks: { color: '#555', font: {size: 10} } },
+                            y: { 
+                                stacked: true, position: 'left', 
+                                grid: { color: '#222', borderDash: [5, 5] }, 
+                                title: { display: true, text: 'LOAD (mg)', color: '#444', font: {size: 9} },
+                                border: { display: false }
+                            },
+                            y1: { 
+                                display: true, position: 'right', grid: { display: false }, 
+                                title: { display: true, text: 'KG', color: '#fff', font: {size: 9} },
+                                border: { display: false },
+                                // ДИНАМІЧНИЙ МАСШТАБ ВАГИ
+                                min: y1Min,
+                                max: y1Max
+                            }
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(18,18,18,0.95)',
-                            titleColor: '#d4af37', // Золотий заголовок
-                            bodyColor: '#fff',
-                            borderColor: '#333',
-                            borderWidth: 1,
-                            padding: 12,
-                            titleFont: { family: 'JetBrains Mono' },
-                            bodyFont: { family: 'JetBrains Mono' },
-                            callbacks: {
-                                footer: (items) => {
-                                    let total = 0; items.forEach(i => { if(i.dataset.yAxisID==='y') total += i.raw; });
-                                    return total > 0 ? `TOTAL: ${total} mg` : '';
+                        plugins: { 
+                            legend: { labels: { color: '#999', boxWidth: 10, font: { size: 10 } }, position: 'bottom' },
+                            tooltip: {
+                                backgroundColor: 'rgba(18,18,18,0.95)',
+                                titleColor: '#d4af37',
+                                bodyColor: '#fff',
+                                borderColor: '#333',
+                                borderWidth: 1,
+                                padding: 10,
+                                titleFont: { family: 'JetBrains Mono' },
+                                bodyFont: { family: 'JetBrains Mono', size: 11 },
+                                callbacks: {
+                                    // ГОЛОВНЕ ПОКРАЩЕННЯ: Показуємо склад тижня
+                                    afterBody: (items) => {
+                                        const idx = items[0].dataIndex;
+                                        if (weekDetails[idx] && weekDetails[idx].length > 0) {
+                                            return '\n📦 СКЛАД:\n' + weekDetails[idx].join('\n');
+                                        }
+                                        return '';
+                                    },
+                                    footer: (items) => {
+                                        let total = 0; items.forEach(i => { if(i.dataset.yAxisID==='y') total += i.raw; });
+                                        return total > 0 ? `\n💉 TOTAL MG: ${total}` : '';
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
-        },
+                });
+            },
         
         renderAnalysis(c) {
             let html = '<div class="med-grid">';
