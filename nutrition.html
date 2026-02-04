@@ -290,19 +290,19 @@
             text-align: center; 
             font-family: var(--font-mono); 
             font-weight: 700; 
-            font-size: 1.1rem; /* Трохи збільшив шрифт, щоб було зручніше */
+            font-size: 1.1rem;
             
-            /* --- IOS FIX START --- */
+            /* Скидання стилів iOS */
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 0;
+            
+            /* Жорстка фіксація висоти (це вирішує проблему стрибків) */
             padding: 0;
             margin: 0;
-            /* line-height: normal - це найважливіше для курсора */
-            line-height: normal; 
-            /* Забираємо внутрішні відступи браузера */
-            -webkit-appearance: none; 
-            border-radius: 0;
-            /* Явна висота допомагає стабілізувати стрибки */
-            min-height: 30px; 
-            /* --- IOS FIX END --- */
+            display: block;
+            height: 24px;      /* Фіксована висота */
+            line-height: 24px; /* Висота рядка = висоті блоку */
         }
 
         .btn-primary {
@@ -541,6 +541,7 @@
     
 </body>
 </html>
+
 
 
 
