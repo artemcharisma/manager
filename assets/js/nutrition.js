@@ -117,8 +117,7 @@ const App = {
                 {id: id+1, name:"Сніданок", foods:[]},
                 {id: id+2, name:"Обід", foods:[]},
                 {id: id+3, name:"Вечеря", foods:[]}
-            ],
-            water: 0
+            ]
         };
         this.data.days.push(newDay);
         this.state.currentDayId = id;
@@ -276,7 +275,6 @@ const App = {
             }
         };
         updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
-        this.renderWater();
     },
 
     searchFood(q) {
@@ -530,42 +528,7 @@ const App = {
         document.getElementById('targetsModal').style.display='none';
         this.closeModal();
     },
-    // --- ВОДА (WATER TRACKER) ---
-    renderWater() {
-        // Знаходимо поточний день
-        const d = this.getCurrentDay();
-        if(!d) return;
 
-        const count = d.water || 0; 
-        const max = 8;
-        
-        let html = '';
-        for (let i = 1; i <= max; i++) {
-            const isActive = i <= count ? 'active' : '';
-            html += `<div class="water-drop ${isActive}" onclick="App.setWater(${i})">💧</div>`;
-        }
-        
-        const el = document.getElementById('waterPanel');
-        if(el) el.innerHTML = html;
-    },
-
-    setWater(n) {
-        const d = this.getCurrentDay();
-        if(!d) return;
-        
-        const current = d.water || 0;
-        let newVal = n;
-        // Логіка скасування останньої краплі
-        if (current === n) newVal = n - 1;
-
-        d.water = newVal;
-        
-        // Вібрація
-        if(window.Haptics) Haptics.medium(); 
-        
-        this.save();
-        this.renderWater(); 
-    },
     exportData() {
         const a = document.createElement('a');
         a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
