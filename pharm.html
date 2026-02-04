@@ -572,7 +572,7 @@
         .privacy-modal-content { background: var(--bg-panel); padding: 40px 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; max-width: 300px; }
         .privacy-modal-content h2 { margin-top: 0; color: var(--red); font-size: 1.3rem; }
         .privacy-modal-content p { color: var(--text-muted); margin-bottom: 20px; }
-        .privacy-pwd-input { width: 100%; padding: 12px; background: #050505; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem; text-align: center; letter-spacing: 0.3em; margin-bottom: 15px; }
+        .privacy-pwd-input { width: 100%; padding: 12px; background: #050505; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem; text-align: center; letter-spacing: 0.3em; margin-bottom: 15px; caret-color: transparent; }
         .btn-privacy-unlock { width: 100%; padding: 12px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
         @media (max-width: 360px) {
@@ -737,7 +737,7 @@
         </div>
         <div class="input-group">
             <label>Дозування</label>
-            <input class="modal-input" id="pillDose" placeholder="Напр: 1000 IU" autocomplete="off">
+            <input class="modal-input" id="pillDose" placeholder="Напр: 1000 IU" autocomplete="off" inputmode="decimal">
             <div class="dose-presets">
                 <span onclick="App.setDose('0.5 tab')">0.5 tab</span>
                 <span onclick="App.setDose('1 tab')">1 tab</span>
@@ -832,6 +832,7 @@
 
 </body>
 </html>
+
 
 
 
