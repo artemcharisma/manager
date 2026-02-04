@@ -117,7 +117,8 @@ const App = {
                 {id: id+1, name:"Сніданок", foods:[]},
                 {id: id+2, name:"Обід", foods:[]},
                 {id: id+3, name:"Вечеря", foods:[]}
-            ]
+            ],
+            water: 0
         };
         this.data.days.push(newDay);
         this.state.currentDayId = id;
