@@ -1129,21 +1129,26 @@
         // --- КІНЕЦЬ НОВОГО КОДУ ---
 
 
+                // --- ЦЕ ВСТАВИТИ ПРАВИЛЬНО ---
         smartSave() {
             let report = `═══════════════════════════════════════\n`;
             report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
             report += `═══════════════════════════════════════\n\n`;
             
+            // 1. СТАТИСТИКА (З СОРТУВАННЯМ)
             const stats = this.calc(this.state.week);
-            if(Object.keys(stats).length > 0) {
+            const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
+
+            if(sortedStats.length > 0) {
                 report += `📊 ПРЕПАРАТИ:\n`;
                 report += `───────────────────────────────────────\n`;
-                Object.entries(stats).forEach(([k, v]) => {
+                sortedStats.forEach(([k, v]) => {
                     report += `${k.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
                 });
                 report += `\n`;
             }
             
+            // 2. ПО ДНЯХ
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
             report += `📅 ПО ДНЯХ:\n`;
             report += `───────────────────────────────────────\n`;
@@ -1163,6 +1168,7 @@
                 }
             }
             
+            // 3. НОТАТКИ
             if(this.data.notes[this.state.week]) {
                 report += `\n📝 НОТАТКИ:\n`;
                 report += `───────────────────────────────────────\n`;
@@ -1171,16 +1177,16 @@
             
             report += `\n═══════════════════════════════════════\n`;
             
+            // 4. КОПІЮВАННЯ ТА ЕКСПОРТ
             navigator.clipboard.writeText(report).then(() => {
                 alert('✅ Скопійовано!');
-                
-            if(confirm("Скачати JSON бекап?")) {
-                const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
-                // Ми просто кажемо менеджеру: "Експортуй ці дані з таким іменем"
-                this.stateManager.export(this.data, filename);
-            }
+                if(confirm("Скачати JSON бекап?")) {
+                    const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
+                    this.stateManager.export(this.data, filename);
+                }
             }).catch(e => alert('❌ Помилка'));
         },
+
 
         setView(v, btn) { 
             this.state.view = v; 
