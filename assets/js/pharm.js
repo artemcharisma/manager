@@ -943,6 +943,9 @@
             const medSet = new Set();
             const tagSet = new Set();
             
+            const defaults = ['Test Enanthate', 'Test Cypionate', 'Test Propionate', 'Tren Acetate', 'Tren Enanthate', 'Masteron', 'Primobolan', 'Anavar', 'Winstrol', 'HGH', 'hCG', 'Clenbuterol', 'T3', 'Anastrozole', 'Cabergoline'];
+            defaults.forEach(d => medSet.add(d));
+            
             this.data.pharmacy.forEach(c => c.items.forEach(i => medSet.add(i.n)));
             Object.values(this.data.schedule).forEach(w => w.forEach(d => d.forEach(p => {
                 if(p.name) medSet.add(p.name);
@@ -1034,9 +1037,40 @@
             this.pushHistory(); 
             this.data.schedule[w][d][i][k]=v; 
             this.save(); 
-            this.renderView();
+            this.updateStatsUI();
         },
 
+        // Нова функція для точкового оновлення статистики без мерехтіння
+        updateStatsUI() {
+             this.renderStatsPanel();
+        },
+
+        // Функція перемальовки верхньої панелі (із сортуванням доз)
+        renderStatsPanel() {
+            const container = document.getElementById('stats-container');
+            if(!container) return;
+            const stats = this.calc(this.state.week);
+            
+            // СОРТУВАННЯ: від найбільшої дози до найменшої
+            const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
+            
+            let statsHtml = sortedStats.map(([k,v]) => {
+                let color = 'yellow';
+                const key = k.toLowerCase();
+                if(key.includes('test')) color = 'blue'; 
+                else if(key.includes('tren')) color = 'red'; 
+                else if(key.includes('primo')) color = 'green'; 
+                else if(key.includes('hgh')) color = 'purple';
+                else if(key.includes('hcg')) color = 'pink';
+                else if(key.includes('clen')) color = 'yellow'; 
+                
+                return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
+            }).join('') || '';
+            
+            statsHtml += `<div class="stat-card" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
+            container.innerHTML = statsHtml;
+        },
+        
         saveNote(w,t) { 
             this.pushHistory(); 
             this.data.notes[w]=t; 
