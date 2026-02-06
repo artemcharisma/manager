@@ -555,7 +555,13 @@
                             <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)">${m.meta||""}</div>
                         </div>
                         <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)">${m.dose}</span>
-                        <span class="edit-ui" style="color:#ef4444; margin-left:8px; cursor:pointer;" onclick="App.delPillItem(${this.state.week},${i},${idx})">✕</span>
+                                                ${this.state.editing ? `
+                            <div style="display:flex; gap:10px; align-items:center; margin-left:10px;">
+                                <span class="edit-ui" style="color:var(--blue); cursor:pointer;" onclick="App.duplicatePillToPhase(${this.state.week},${i},${idx})" title="Дублювати на всю фазу">📑</span>
+                                <span class="edit-ui" style="color:#ef4444; cursor:pointer;" onclick="App.delPillItem(${this.state.week},${i},${idx})">✕</span>
+                            </div>
+                        ` : ''}
+
                     </div>`).join('');
                 
                 const copyBtn = this.state.editing ? `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📥' : '📋'}</span>` : '';
@@ -582,7 +588,7 @@
             const pHtml = photos.map(p=>`<div class="photo-card"><img src="${p.data}" onclick="document.getElementById('modalImg').src=this.src;document.getElementById('imgModal').style.display='flex'"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
             
             c.innerHTML = `
-                <div class="stats-grid">${statsHtml}</div>
+                <div class="stats-grid" id="stats-container">${statsHtml}</div>
                 <div class="week-bar">${wHtml}</div>
                 ${grid}
                 <div style="margin-top:20px">
@@ -1099,7 +1105,30 @@
                 } 
             }
         },
-        
+
+                // --- ПОЧАТОК НОВОГО КОДУ (КРОК 4) ---
+        duplicatePillToPhase(w, d, pillIdx) {
+            if(!confirm("Дублювати цей препарат до кінця фази?")) return;
+            this.pushHistory();
+            const sourcePill = this.data.schedule[w][d][pillIdx];
+            
+            // Знаходимо фазу
+            const phase = this.data.phases.find(p => p.weeks.includes(w));
+            if(!phase) return;
+
+            // Копіюємо на всі майбутні тижні цієї фази
+            phase.weeks.forEach(weekNum => {
+                if (weekNum > w) {
+                    this.data.schedule[weekNum][d].push({ ...sourcePill });
+                }
+            });
+            
+            this.save();
+            this.renderView(); 
+        },
+        // --- КІНЕЦЬ НОВОГО КОДУ ---
+
+
         smartSave() {
             let report = `═══════════════════════════════════════\n`;
             report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
