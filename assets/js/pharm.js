@@ -1171,7 +1171,7 @@
             // 3. НОТАТКИ
             if(this.data.notes[this.state.week]) {
                 report += `\n📝 НОТАТКИ:\n`;
-                report += `──────────────────────────────────────\n`;
+                report += `────────────────────────────────────\n`;
                 report += this.data.notes[this.state.week] + `\n`;
             }
             
