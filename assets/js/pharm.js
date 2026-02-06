@@ -1131,9 +1131,9 @@
 
                 // --- ЦЕ ВСТАВИТИ ПРАВИЛЬНО ---
         smartSave() {
-            let report = `═══════════════════════════════════════\n`;
+            let report = `══════════════════════════════════════\n`;
             report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
-            report += `═══════════════════════════════════════\n\n`;
+            report += `══════════════════════════════════════\n\n`;
             
             // 1. СТАТИСТИКА (З СОРТУВАННЯМ)
             const stats = this.calc(this.state.week);
@@ -1141,7 +1141,7 @@
 
             if(sortedStats.length > 0) {
                 report += `📊 ПРЕПАРАТИ:\n`;
-                report += `───────────────────────────────────────\n`;
+                report += `────────────────────────────────────\n`;
                 sortedStats.forEach(([k, v]) => {
                     report += `${k.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
                 });
@@ -1151,7 +1151,7 @@
             // 2. ПО ДНЯХ
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
             report += `📅 ПО ДНЯХ:\n`;
-            report += `───────────────────────────────────────\n`;
+            report += `────────────────────────────────────\n`;
             
             for(let i=0; i<7; i++) {
                 const pills = this.data.schedule[this.state.week]?.[i] || [];
@@ -1171,11 +1171,11 @@
             // 3. НОТАТКИ
             if(this.data.notes[this.state.week]) {
                 report += `\n📝 НОТАТКИ:\n`;
-                report += `───────────────────────────────────────\n`;
+                report += `──────────────────────────────────────\n`;
                 report += this.data.notes[this.state.week] + `\n`;
             }
             
-            report += `\n═══════════════════════════════════════\n`;
+            report += `\n══════════════════════════════════════\n`;
             
             // 4. КОПІЮВАННЯ ТА ЕКСПОРТ
             navigator.clipboard.writeText(report).then(() => {
