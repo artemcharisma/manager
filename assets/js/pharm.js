@@ -1129,20 +1129,23 @@
         // --- КІНЕЦЬ НОВОГО КОДУ ---
 
 
-        smartSave() {
-            let report = `═══════════════════════════════════════\n`;
-            report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
-            report += `═══════════════════════════════════════\n\n`;
-            
+                    // --- ПОЧАТОК ЗАМІНИ (КРОК 5) ---
             const stats = this.calc(this.state.week);
-            if(Object.keys(stats).length > 0) {
+            
+            // Сортуємо: від найбільшої дози до найменшої
+            const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
+
+            if(sortedStats.length > 0) {
                 report += `📊 ПРЕПАРАТИ:\n`;
                 report += `───────────────────────────────────────\n`;
-                Object.entries(stats).forEach(([k, v]) => {
+                
+                sortedStats.forEach(([k, v]) => {
                     report += `${k.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
                 });
                 report += `\n`;
             }
+            // --- КІНЕЦЬ ЗАМІНИ ---
+
             
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
             report += `📅 ПО ДНЯХ:\n`;
