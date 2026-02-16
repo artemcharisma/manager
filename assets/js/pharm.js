@@ -531,7 +531,7 @@
             document.getElementById('progText').innerText = `Week ${curW}/${maxW}`;
         },
 
-        async renderProtocol(c) {
+async renderProtocol(c) {
             const ph = this.data.phases.find(x => x.id === this.state.phaseId);
             const wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
 
@@ -544,6 +544,7 @@
                 const pills = this.data.schedule[this.state.week]?.[i] || [];
                 const v = this.data.vitals[`${this.state.week}-${i}`] || { bp: "", hr: "", w: "" };
 
+                // --- ВИПРАВЛЕНИЙ БЛОК content (Без сміття) ---
                 let content = pills.map((m, idx) => {
                     const pillId = `${this.state.week}-${i}-${idx}`;
                     return `
@@ -561,17 +562,17 @@
                         ` : ''}
                     </div>`;
                 }).join('');
+                // ------------------------------------------------
 
-                // --- ВИПРАВЛЕНІ КНОПКИ ---
                 let headerBtns = '';
                 if (this.state.editing) {
                     if (this.pillBuffer) {
-                        // Чиста кнопка, без фону, з stopPropagation щоб працював клік
-                        headerBtns += `<span style="font-size:1.3rem; cursor:pointer; margin-left:15px;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="Вставити">📥</span>`;
+                        // Кнопка вставки (біла, клікабельна)
+                        headerBtns += `<span style="font-size:1.4rem; cursor:pointer; margin-left:15px; color:#fff;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</span>`;
                     }
                     headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste' : '📋'}</span>`;
                 }
-                
+
                 grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 10px rgba(212,175,55,0.1)' : ''}">
                     <div class="day-header">
                         <div style="display:flex; flex-direction:column; line-height:1.2">
