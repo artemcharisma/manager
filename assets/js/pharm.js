@@ -1,7 +1,7 @@
     const PhotoDB = {
         db: null,
         init() {
-    return new Promise((r) =ещ> {
+    return new Promise((r) => {
         // Додано перевірку на наявність indexedDB
         if (!window.indexedDB) {
             console.warn("IndexedDB not supported");
@@ -536,10 +536,10 @@
                         
                         // Малюємо таблетки з новими кнопками
            // Малюємо таблетки з новими кнопками
+            // Малюємо таблетки
             let content = pills.map((m,idx) => {
-                const pillId = `${this.state.week}-${i}-${idx}`; // Унікальний ID для меню
-                const isMenuOpen = this.state.openMenu === pillId;
-
+                const pillId = `${this.state.week}-${i}-${idx}`;
+                
                 return `
                 <div class="pill ${m.color}">
                     <div style="flex:1">
@@ -549,8 +549,8 @@
                     <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)">${m.dose}</span>
                     
                     ${this.state.editing ? `
-                        <div id="menu-${this.state.week}-${i}-${idx}" data-name="${m.name}" style="margin-left:10px; position:relative;">
-                            ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === `${this.state.week}-${i}-${idx}`)}
+                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative;">
+                            ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === pillId)}
                         </div>
                     ` : ''}
                 </div>`;
