@@ -203,7 +203,7 @@
         // Підключаємо StateManager
         stateManager: new StateManager('gold_protocol', DefaultData),
         
-        state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null }, // Це твій внутрішній стан UI
+        state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null },
         chartInstance: null,
         dayBuffer: null,
         pillBuffer: null,
@@ -536,7 +536,11 @@
                         
                         // Малюємо таблетки з новими кнопками
            // Малюємо таблетки з новими кнопками
-            let content = pills.map((m,idx) => `
+            let content = pills.map((m,idx) => {
+                const pillId = `${this.state.week}-${i}-${idx}`; // Унікальний ID для меню
+                const isMenuOpen = this.state.openMenu === pillId;
+
+                return `
                 <div class="pill ${m.color}">
                     <div style="flex:1">
                         <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" style="font-weight:600">${m.name}</div>
@@ -545,14 +549,22 @@
                     <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)">${m.dose}</span>
                     
                     ${this.state.editing ? `
-                        <div style="display:flex; gap:5px; align-items:center; margin-left:10px;">
-                            <span class="edit-ui" style="color:var(--text); cursor:pointer; opacity:0.7" onclick="App.copyPill(${this.state.week},${i},${idx})" title="Копіювати">📋</span>
-                            <span class="edit-ui" style="color:var(--blue); cursor:pointer;" onclick="App.duplicatePillToPhase(${this.state.week},${i},${idx})" title="Дублювати далі">📑</span>
-                            <span class="edit-ui" style="color:#ef4444; cursor:pointer;" onclick="App.deletePillEverywhere('${m.name}')" title="Видалити з усіх тижнів">🌍</span>
-                            <span class="edit-ui" style="color:#ef4444; cursor:pointer;" onclick="App.delPillItem(${this.state.week},${i},${idx})">✕</span>
+                        <div style="margin-left:10px; position:relative;">
+                            ${isMenuOpen ? `
+                                <div style="display:flex; gap:12px; align-items:center; background:#222; padding:4px 8px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.5); position:absolute; right:0; top:-5px; z-index:10; border:1px solid #444;">
+                                    <span onclick="App.copyPill(${this.state.week},${i},${idx})" title="Копіювати" style="cursor:pointer;">📋</span>
+                                    <span onclick="App.duplicatePillToPhase(${this.state.week},${i},${idx})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
+                                    <span onclick="App.deletePillEverywhere('${m.name}')" title="Видалити всюди" style="cursor:pointer; color:#ef4444">🌍</span>
+                                    <span onclick="App.delPillItem(${this.state.week},${i},${idx})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
+                                    <span onclick="App.toggleMenu('${pillId}')" style="cursor:pointer; opacity:0.5; font-size:0.8rem">◀</span>
+                                </div>
+                            ` : `
+                                <span onclick="App.toggleMenu('${pillId}')" style="font-size:1.4rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.7">⋮</span>
+                            `}
                         </div>
                     ` : ''}
-                </div>`).join('');
+                </div>`;
+            }).join('');
             
             // Логіка кнопок заголовка дня (Вставка)
             let headerBtns = '';
@@ -949,8 +961,7 @@
             const defaults = [
                 'Test Enanthate', 'Test Cypionate', 'Test Propionate', 'Tren Acetate', 
                 'Tren Enanthate', 'Masteron', 'Primobolan', 'Anavar', 'Winstrol', 
-                'HGH', 'hCG', 'Clenbuterol', 'T3', 'Anastrozole', 'Cabergoline',
-                'mg', 'ml', 'IU', 'mcg', 'tab' 
+                'HGH', 'hCG', 'Clenbuterol', 'T3', 'Anastrozole', 'Cabergoline' 
             ];
 
             defaults.forEach(d => medSet.add(d));
@@ -1111,7 +1122,11 @@
             this.renderView(); 
         },
         // --- КІНЕЦЬ НОВОГО КОДУ ---
-        
+        toggleMenu(id) {
+            // Якщо це меню вже відкрите — закриваємо, інакше — відкриваємо нове
+            this.state.openMenu = this.state.openMenu === id ? null : id;
+            this.renderView();
+        },
         // Копіювати 1 препарат
         copyPill(w, d, i) {
             this.pillBuffer = { ...this.data.schedule[w][d][i] };
@@ -1227,6 +1242,7 @@
         delPillItem(w,d,i) {
             this.pushHistory();
             this.data.schedule[w][d].splice(i,1);
+            this.state.openMenu = null;
             this.save(); 
             this.renderView();
         },
