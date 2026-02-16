@@ -498,22 +498,31 @@
     },
 
         async renderView() {
-            // 1. Запам'ятовуємо, де ми були (скільки прокрутили вниз)
-            const scrollPos = window.scrollY;
+            // 1. Запам'ятовуємо позицію скролу
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
             
             const c = document.getElementById('mainView'); 
-            c.innerHTML = '';
+            // Не очищаємо c.innerHTML одразу, щоб уникнути білого спалаху
             
+            // 2. Спочатку готуємо всі дані (це важливо для плавності)
             this.renderTimeline();
-            if(this.state.view === 'protocol') await this.renderProtocol(c);
-            else if(this.state.view === 'analysis') this.renderAnalysis(c);
-            else if(this.state.view === 'pharmacy') this.renderPharm(c);
-            else if(this.state.view === 'analytics') this.renderAnalytics(c);
-
-            // 2. Відновлюємо позицію. setTimeout(..., 0) гарантує, що це станеться після малювання
-            if (scrollPos > 0) {
-                setTimeout(() => window.scrollTo(0, scrollPos), 0);
+            
+            // Якщо ми в протоколі, треба завантажити фото, це асинхронно
+            if(this.state.view === 'protocol') {
+                // Очищаємо перед малюванням протоколу
+                c.innerHTML = ''; 
+                await this.renderProtocol(c);
             }
+            else {
+                c.innerHTML = ''; // Для інших вкладок очищаємо як завжди
+                if(this.state.view === 'analysis') this.renderAnalysis(c);
+                else if(this.state.view === 'pharmacy') this.renderPharm(c);
+                else if(this.state.view === 'analytics') this.renderAnalytics(c);
+            }
+
+            // 3. Миттєво повертаємо скрол на місце
+            window.scrollTo(scrollX, scrollY);
         },
 
         renderTimeline() {
@@ -562,14 +571,16 @@
             }).join('');
             
             // Логіка кнопок заголовка дня (Вставка)
-            let headerBtns = '';
-            if (this.state.editing) {
-                // Якщо є щось у буфері таблеток, показуємо кнопку вставки
-                if (this.pillBuffer) {
-                    headerBtns += `<span style="font-size:0.9rem; cursor:pointer; margin-left:10px;" onclick="App.pastePill(${this.state.week}, ${i})" title="Вставити таблетку">📥</span>`;
+            // --- Знайдіть цей блок і замініть його ---
+                let headerBtns = '';
+                if (this.state.editing) {
+                    // Якщо скопійовано препарат - показуємо велику кнопку вставки
+                    if (this.pillBuffer) {
+                        headerBtns += `<span style="font-size:1.2rem; cursor:pointer; margin-left:15px; background:rgba(0,255,0,0.1); padding:2px 6px; border-radius:4px;" onclick="App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ СЮДИ">📥</span>`;
+                    }
+                    // Кнопка копіювання дня
+                    headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste Day' : '📋Day'}</span>`;
                 }
-                headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste Day' : '📋Day'}</span>`;
-            }
                         
                         grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 10px rgba(212,175,55,0.1)' : ''}">
                             <div class="day-header">
@@ -1095,16 +1106,17 @@
                 } 
             }
         },
-        // Копіювати 1 препарат
         copyPill(w, d, i) {
-            // Запам'ятовуємо таблетку
             this.pillBuffer = { ...this.data.schedule[w][d][i] };
-            // Закриваємо меню
-            this.state.openMenu = null;
-            // Показуємо повідомлення (опціонально)
-            // alert("Скопійовано! Натисніть 📥 біля ДНЯ тижня, щоб вставити.");
-            // Перемальовуємо, щоб з'явилися кнопки вставки
-            this.renderView(); 
+            this.state.openMenu = null; // Закриваємо меню
+            this.renderView(); // Оновлюємо інтерфейс, щоб з'явились кнопки 📥
+            
+            // Тимчасове повідомлення (тост), щоб ви знали, що спрацювало
+            const toast = document.createElement('div');
+            toast.innerText = "💊 Скопійовано! Натисніть 📥 біля потрібного дня";
+            toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 20px; border-radius:20px; z-index:1000; border:1px solid #d4af37;";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
         },
 
                 // --- ПОЧАТОК НОВОГО КОДУ (КРОК 4) ---
