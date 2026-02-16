@@ -498,7 +498,9 @@
     },
 
         async renderView() {
+            // 1. Запам'ятовуємо, де ми були (скільки прокрутили вниз)
             const scrollPos = window.scrollY;
+            
             const c = document.getElementById('mainView'); 
             c.innerHTML = '';
             
@@ -508,7 +510,10 @@
             else if(this.state.view === 'pharmacy') this.renderPharm(c);
             else if(this.state.view === 'analytics') this.renderAnalytics(c);
 
-            window.scrollTo(0, scrollPos);
+            // 2. Відновлюємо позицію. setTimeout(..., 0) гарантує, що це станеться після малювання
+            if (scrollPos > 0) {
+                setTimeout(() => window.scrollTo(0, scrollPos), 0);
+            }
         },
 
         renderTimeline() {
