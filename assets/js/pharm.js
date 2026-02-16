@@ -553,10 +553,6 @@
                             ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === `${this.state.week}-${i}-${idx}`)}
                         </div>
                     ` : ''}
-                                <span onclick="App.toggleMenu('${pillId}')" style="font-size:1.4rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.7">⋮</span>
-                            `}
-                        </div>
-                    ` : ''}
                 </div>`;
             }).join('');
             
