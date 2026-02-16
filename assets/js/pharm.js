@@ -1111,19 +1111,25 @@ async renderProtocol(c) {
             setTimeout(() => toast.remove(), 2500);
         },
 
+        // Вставити 1 препарат (з перевіркою на дублікати)
         pastePill(w, d) {
-            // Перевірка на всяк випадок
-            if(!this.pillBuffer) return;
-            
-            this.pushHistory();
-            
-            // Вставляємо копію
-            this.data.schedule[w][d].push({ ...this.pillBuffer });
-            
-            // Не очищаємо буфер (this.pillBuffer = null), щоб можна було вставити багато разів підряд
-            // Але якщо хочете, щоб кнопка зникала — розкоментуйте рядок нижче:
-            // this.pillBuffer = null; 
+            if (!this.pillBuffer) return;
 
+            // 1. Перевіряємо, чи вже є такий препарат у цьому дні
+            const targetDay = this.data.schedule[w][d];
+            const isDuplicate = targetDay.some(p => 
+                p.name.trim().toLowerCase() === this.pillBuffer.name.trim().toLowerCase()
+            );
+
+            // 2. Якщо є — показуємо помилку і виходимо
+            if (isDuplicate) {
+                alert(`⛔ Помилка: Препарат "${this.pillBuffer.name}" вже є в цьому дні!`);
+                return;
+            }
+
+            // 3. Якщо немає — вставляємо
+            this.pushHistory();
+            this.data.schedule[w][d].push({ ...this.pillBuffer });
             this.save();
             this.renderView();
         },
