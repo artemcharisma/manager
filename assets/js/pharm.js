@@ -1,7 +1,7 @@
     const PhotoDB = {
         db: null,
         init() {
-    return new Promise((r) => {
+    return new Promise((r) =ещ> {
         // Додано перевірку на наявність indexedDB
         if (!window.indexedDB) {
             console.warn("IndexedDB not supported");
@@ -549,16 +549,10 @@
                     <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)">${m.dose}</span>
                     
                     ${this.state.editing ? `
-                        <div style="margin-left:10px; position:relative;">
-                            ${isMenuOpen ? `
-                                <div style="display:flex; gap:12px; align-items:center; background:#222; padding:4px 8px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.5); position:absolute; right:0; top:-5px; z-index:10; border:1px solid #444;">
-                                    <span onclick="App.copyPill(${this.state.week},${i},${idx})" title="Копіювати" style="cursor:pointer;">📋</span>
-                                    <span onclick="App.duplicatePillToPhase(${this.state.week},${i},${idx})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
-                                    <span onclick="App.deletePillEverywhere('${m.name}')" title="Видалити всюди" style="cursor:pointer; color:#ef4444">🌍</span>
-                                    <span onclick="App.delPillItem(${this.state.week},${i},${idx})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
-                                    <span onclick="App.toggleMenu('${pillId}')" style="cursor:pointer; opacity:0.5; font-size:0.8rem">◀</span>
-                                </div>
-                            ` : `
+                        <div id="menu-${this.state.week}-${i}-${idx}" data-name="${m.name}" style="margin-left:10px; position:relative;">
+                            ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === `${this.state.week}-${i}-${idx}`)}
+                        </div>
+                    ` : ''}
                                 <span onclick="App.toggleMenu('${pillId}')" style="font-size:1.4rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.7">⋮</span>
                             `}
                         </div>
@@ -1121,27 +1115,52 @@
             this.save();
             this.renderView(); 
         },
+        // Генерує вигляд меню (щоб не дублювати код)
+        getMenuUI(w, d, i, name, isOpen) {
+            // Екрануємо лапки в назві, щоб не ламався код
+            const safeName = name.replace(/'/g, "\\'"); 
+            
+            if (isOpen) {
+                return `
+                <div style="display:flex; gap:12px; align-items:center; background:#222; padding:4px 8px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.5); position:absolute; right:0; top:-5px; z-index:10; border:1px solid #444;">
+                    <span onclick="App.copyPill(${w},${d},${i})" title="Копіювати" style="cursor:pointer;">📋</span>
+                    <span onclick="App.duplicatePillToPhase(${w},${d},${i})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
+                    <span onclick="App.deletePillEverywhere('${safeName}')" title="Видалити всюди" style="cursor:pointer; color:#ef4444">🌍</span>
+                    <span onclick="App.delPillItem(${w},${d},${i})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
+                    <span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="cursor:pointer; opacity:0.5; font-size:0.8rem">◀</span>
+                </div>`;
+            } else {
+                return `<span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="font-size:1.4rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.7">⋮</span>`;
+            }
+        },
         // --- КІНЕЦЬ НОВОГО КОДУ ---
-        toggleMenu(id) {
-            // Якщо це меню вже відкрите — закриваємо, інакше — відкриваємо нове
-            this.state.openMenu = this.state.openMenu === id ? null : id;
-            this.renderView();
-        },
-        // Копіювати 1 препарат
-        copyPill(w, d, i) {
-            this.pillBuffer = { ...this.data.schedule[w][d][i] };
-            this.renderView(); // Оновлюємо, щоб з'явилися кнопки вставки (📥)
-        },
+       toggleMenu(w, d, i, name) {
+            const id = `${w}-${d}-${i}`;
+            const lastId = this.state.openMenu;
 
-        // Вставити 1 препарат
-        pastePill(w, d) {
-            if(!this.pillBuffer) return;
-            this.pushHistory();
-            this.data.schedule[w][d].push({ ...this.pillBuffer });
-            this.save();
-            this.renderView();
-        },
+            // 1. Якщо було відкрите інше меню — закриваємо його "тихо"
+            if (lastId && lastId !== id) {
+                const oldEl = document.getElementById(`menu-${lastId}`);
+                if (oldEl) {
+                    const oldName = oldEl.getAttribute('data-name') || 'Item';
+                    // Розбираємо ID старого меню
+                    const parts = lastId.split('-');
+                    if(parts.length === 3) {
+                        oldEl.innerHTML = this.getMenuUI(parts[0], parts[1], parts[2], oldName, false);
+                    }
+                }
+            }
 
+            // 2. Перемикаємо стан поточного
+            this.state.openMenu = (this.state.openMenu === id) ? null : id;
+            const isOpen = (this.state.openMenu === id);
+
+            // 3. Оновлюємо ТІЛЬКИ цей елемент (без перезавантаження сторінки)
+            const el = document.getElementById(`menu-${id}`);
+            if (el) {
+                el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
+            }
+        },
         // Видалити з усіх тижнів
         deletePillEverywhere(name) {
             if(!confirm(`⚠️ ВИДАЛИТИ "${name}" З УСІХ ТИЖНІВ?\nЦе неможливо скасувати.`)) return;
