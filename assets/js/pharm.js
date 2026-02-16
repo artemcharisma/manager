@@ -568,7 +568,7 @@ async renderProtocol(c) {
                 if (this.state.editing) {
                     if (this.pillBuffer) {
                         // Кнопка вставки (біла, клікабельна)
-                        headerBtns += `<span style="font-size:1.4rem; cursor:pointer; margin-left:15px; color:#fff;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</span>`;
+                        headerBtns += `<span style="font-size:0.9rem; cursor:pointer; margin-left:15px; color:#fff;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</span>`;
                     }
                     headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste' : '📋'}</span>`;
                 }
@@ -1109,6 +1109,23 @@ async renderProtocol(c) {
             toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; border:1px solid #d4af37; font-family:sans-serif; font-size:0.9rem;";
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
+        },
+
+        pastePill(w, d) {
+            // Перевірка на всяк випадок
+            if(!this.pillBuffer) return;
+            
+            this.pushHistory();
+            
+            // Вставляємо копію
+            this.data.schedule[w][d].push({ ...this.pillBuffer });
+            
+            // Не очищаємо буфер (this.pillBuffer = null), щоб можна було вставити багато разів підряд
+            // Але якщо хочете, щоб кнопка зникала — розкоментуйте рядок нижче:
+            // this.pillBuffer = null; 
+
+            this.save();
+            this.renderView();
         },
 
                 // --- ПОЧАТОК НОВОГО КОДУ (КРОК 4) ---
