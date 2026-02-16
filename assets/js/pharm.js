@@ -1154,9 +1154,8 @@ async renderProtocol(c) {
             this.save();
             this.renderView(); 
         },
-        // Генерує вигляд меню (щоб не дублювати код)
+       // Генерує вигляд меню
         getMenuUI(w, d, i, name, isOpen) {
-            // Екрануємо лапки в назві, щоб не ламався код
             const safeName = name.replace(/'/g, "\\'"); 
             
             if (isOpen) {
@@ -1164,7 +1163,9 @@ async renderProtocol(c) {
                 <div style="display:flex; gap:12px; align-items:center; background:#222; padding:4px 8px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.5); position:absolute; right:0; top:-5px; z-index:10; border:1px solid #444;">
                     <span onclick="App.copyPill(${w},${d},${i})" title="Копіювати" style="cursor:pointer;">📋</span>
                     <span onclick="App.duplicatePillToPhase(${w},${d},${i})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
-                    <span onclick="App.deletePillEverywhere('${safeName}')" title="Видалити всюди" style="cursor:pointer; color:#ef4444">🌍</span>
+                    
+                    <span onclick="App.deletePillEverywhere('${safeName}', ${d})" title="Видалити з цього дня в усіх фазах" style="cursor:pointer; color:#ef4444">🌍</span>
+                    
                     <span onclick="App.delPillItem(${w},${d},${i})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
                     <span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="cursor:pointer; opacity:0.5; font-size:0.8rem">◀</span>
                 </div>`;
@@ -1172,7 +1173,6 @@ async renderProtocol(c) {
                 return `<span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="font-size:1.4rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.7">⋮</span>`;
             }
         },
-        // --- КІНЕЦЬ НОВОГО КОДУ ---
        toggleMenu(w, d, i, name) {
             const id = `${w}-${d}-${i}`;
             const lastId = this.state.openMenu;
@@ -1200,17 +1200,24 @@ async renderProtocol(c) {
                 el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
             }
         },
-        // Видалити з усіх тижнів
-        deletePillEverywhere(name) {
-            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" З УСІХ ТИЖНІВ?\nЦе неможливо скасувати.`)) return;
+       // Видалити з усіх тижнів (ТІЛЬКИ В ЦЕЙ ДЕНЬ ТИЖНЯ)
+        deletePillEverywhere(name, dayIndex) {
+            const dayNames = ["Понеділків", "Вівторків", "Серед", "Четвергів", "П'ятниць", "Субот", "Неділь"];
+            const dayName = dayNames[dayIndex] || "днів";
+
+            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" з усіх "${dayName}"?\nЦе торкнеться всіх фаз і тижнів.`)) return;
+            
             this.pushHistory();
             const weeks = Object.keys(this.data.schedule);
+            
             weeks.forEach(w => {
-                for(let d=0; d<7; d++) {
-                    // Залишаємо тільки ті, що НЕ мають такої назви
-                    this.data.schedule[w][d] = this.data.schedule[w][d].filter(p => p.name !== name);
+                // Перевіряємо, чи існує цей день у тижні (на всяк випадок)
+                if (this.data.schedule[w][dayIndex]) {
+                    // Видаляємо препарат тільки в ЦЕЙ день (dayIndex)
+                    this.data.schedule[w][dayIndex] = this.data.schedule[w][dayIndex].filter(p => p.name !== name);
                 }
             });
+            
             this.save();
             this.renderView();
         },
