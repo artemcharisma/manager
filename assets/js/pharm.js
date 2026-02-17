@@ -613,31 +613,37 @@ async renderProtocol(c) {
 
 
             renderAnalytics(c) {
-            // 1. СТРУКТУРА: Додали кастомну легенду HTML замість вбудованої
+            // 1. СТРУКТУРА
+            // Додали fade-in анімацію для всього блоку (opacity)
             c.innerHTML = `
-                <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
-                    <canvas id="mainChart"></canvas>
-                </div>
-                
-                <div style="display:flex; justify-content:center; gap:20px; margin-top:10px; font-family:'JetBrains Mono'; font-size:0.7rem; color:#888;">
+                <div style="animation: fadeEffect 0.6s ease-out;">
+                    <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
+                        <canvas id="mainChart"></canvas>
+                    </div>
                     
-                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; opacity:0.8" onclick="App.toggleDataset(0, this)">
-                        <div style="width:8px; height:8px; border:2px solid #fff; border-radius:50%; box-sizing:border-box;"></div>
-                        <span style="color:#fff">ВАГА</span>
-                    </div>
+                    <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
+                        
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(0, this)">
+                            <div style="width:10px; height:10px; border:2px solid #fff; border-radius:50%; box-sizing:border-box;"></div>
+                            <span style="color:#fff; font-weight:600; letter-spacing:0.5px; text-shadow:none; -webkit-font-smoothing: antialiased;">ВАГА</span>
+                        </div>
 
-                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; opacity:0.8" onclick="App.toggleDataset(1, this)">
-                        <div style="width:8px; height:8px; background:#8b5cf6; border-radius:50%;"></div>
-                        <span>STACK</span>
-                    </div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(1, this)">
+                            <div style="width:10px; height:10px; background:#8b5cf6; border-radius:50%; box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);"></div>
+                            <span style="color:#aaa; font-weight:500;">STACK</span>
+                        </div>
 
-                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; opacity:0.8" onclick="App.toggleDataset(2, this)">
-                        <div style="width:8px; height:8px; background:#ffd700; border-radius:50%;"></div>
-                        <span>TEST BASE</span>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(2, this)">
+                            <div style="width:10px; height:10px; background:#ffd700; border-radius:50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"></div>
+                            <span style="color:#aaa; font-weight:500;">TEST BASE</span>
+                        </div>
                     </div>
+                    <style>
+                        @keyframes fadeEffect { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                    </style>
                 </div>`;
             
-            // 2. ПІДГОТОВКА ДАНИХ (Без змін)
+            // 2. ПІДГОТОВКА ДАНИХ
             const labels = []; 
             const dataTest = [];    
             const dataStack = []; 
@@ -718,11 +724,11 @@ async renderProtocol(c) {
             
             const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
             gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.2)'); 
-            gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.9)');
+            gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.8)');
             
             const gradStack = ctx.createLinearGradient(0, 400, 0, 0);
             gradStack.addColorStop(0, 'rgba(139, 92, 246, 0.2)'); 
-            gradStack.addColorStop(1, 'rgba(167, 139, 250, 0.9)');
+            gradStack.addColorStop(1, 'rgba(167, 139, 250, 0.8)');
         
             Chart.defaults.font.family = "'JetBrains Mono', monospace";
             Chart.defaults.color = "#888";
@@ -745,7 +751,7 @@ async renderProtocol(c) {
                             pointBackgroundColor: '#121212',
                             pointBorderColor: '#ffffff',
                             pointBorderWidth: 2,
-                            tension: 0.4,
+                            tension: 0.3, // Трохи плавніша лінія
                             order: 0
                         },
                         { 
@@ -775,9 +781,17 @@ async renderProtocol(c) {
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
+                    // АНІМАЦІЯ ГРАФІКА
                     animation: {
-                        duration: 1000,
-                        easing: 'easeOutQuart'
+                        duration: 1200, // 1.2 секунди
+                        easing: 'easeOutQuart', // Плавне сповільнення в кінці
+                        delay: (context) => {
+                            let delay = 0;
+                            if (context.type === 'data' && context.mode === 'default') {
+                                delay = context.dataIndex * 50; // Ефект "хвилі" для стовпчиків
+                            }
+                            return delay;
+                        }
                     },
                     interaction: { mode: 'index', intersect: false },
                     layout: { padding: { top: 10, left: 5, right: 5, bottom: 5 } },
@@ -802,8 +816,7 @@ async renderProtocol(c) {
                         }
                     },
                     plugins: { 
-                        // ВИМКНУЛИ СТАНДАРТНУ ЛЕГЕНДУ
-                        legend: { display: false },
+                        legend: { display: false }, // Використовуємо кастомну
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)',
                             titleColor: '#d4af37',
