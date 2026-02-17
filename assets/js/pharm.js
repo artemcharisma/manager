@@ -1067,8 +1067,32 @@ async renderProtocol(c) {
         renderStatsPanel() {
             const container = document.getElementById('stats-container');
             if(!container) return;
-            this.renderStatsPanel(); // Запускаємо оновлення статистики окремо
-            },
+            
+            // 1. Рахуємо статистику
+            const stats = this.calc(this.state.week);
+            
+            // 2. Сортуємо: від найбільшої дози до найменшої
+            const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
+            
+            // 3. Генеруємо HTML для дозувань
+            let statsHtml = sortedStats.map(([k,v]) => {
+                let color = 'yellow';
+                const key = k.toLowerCase();
+                if(key.includes('test')) color = 'blue'; 
+                else if(key.includes('tren')) color = 'red'; 
+                else if(key.includes('primo')) color = 'green'; 
+                else if(key.includes('hgh')) color = 'purple';
+                else if(key.includes('hcg')) color = 'pink';
+                else if(key.includes('clen')) color = 'yellow'; 
+                
+                return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
+            }).join('') || '';
+            
+            // 4. Додаємо кнопку карти (MAP) в кінці
+            statsHtml += `<div class="stat-card" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
+            
+            container.innerHTML = statsHtml;
+        },
         
         saveNote(w,t) { 
             this.pushHistory(); 
