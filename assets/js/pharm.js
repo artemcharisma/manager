@@ -622,22 +622,22 @@ async renderProtocol(c) {
                     </div>
                     
                     <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
-                        
-                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(0, this)">
-                            <div style="width:10px; height:10px; border:2px solid #fff; border-radius:50%; box-sizing:border-box;"></div>
-                            <span style="color:#fff; font-weight:600; letter-spacing:0.5px; text-shadow:none; -webkit-font-smoothing: antialiased;">ВАГА</span>
-                        </div>
-
-                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(1, this)">
-                            <div style="width:10px; height:10px; background:#8b5cf6; border-radius:50%; box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);"></div>
-                            <span style="color:#aaa; font-weight:500;">STACK</span>
-                        </div>
-
-                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(2, this)">
-                            <div style="width:10px; height:10px; background:#ffd700; border-radius:50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"></div>
-                            <span style="color:#aaa; font-weight:500;">TEST BASE</span>
-                        </div>
+                    
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(0, this)">
+                        <div style="width:10px; height:10px; border:2px solid #fff; border-radius:50%; box-sizing:border-box;"></div>
+                        <span style="color:#aaa; font-weight:500; letter-spacing:0.5px;">ВАГА</span>
                     </div>
+
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(1, this)">
+                        <div style="width:10px; height:10px; background:#8b5cf6; border-radius:50%; box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);"></div>
+                        <span style="color:#aaa; font-weight:500;">STACK</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(2, this)">
+                        <div style="width:10px; height:10px; background:#ffd700; border-radius:50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"></div>
+                        <span style="color:#aaa; font-weight:500;">TEST BASE</span>
+                    </div>
+                </div>
                     <style>
                         @keyframes fadeEffect { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                     </style>
