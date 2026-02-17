@@ -613,10 +613,28 @@ async renderProtocol(c) {
 
 
             renderAnalytics(c) {
-            // 1. СТРУКТУРА (Прибрали статичний текст знизу, бо буде жива легенда)
+            // 1. СТРУКТУРА: Додали кастомну легенду HTML замість вбудованої
             c.innerHTML = `
                 <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
                     <canvas id="mainChart"></canvas>
+                </div>
+                
+                <div style="display:flex; justify-content:center; gap:20px; margin-top:10px; font-family:'JetBrains Mono'; font-size:0.7rem; color:#888;">
+                    
+                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; opacity:0.8" onclick="App.toggleDataset(0, this)">
+                        <div style="width:8px; height:8px; border:2px solid #fff; border-radius:50%; box-sizing:border-box;"></div>
+                        <span style="color:#fff">ВАГА</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; opacity:0.8" onclick="App.toggleDataset(1, this)">
+                        <div style="width:8px; height:8px; background:#8b5cf6; border-radius:50%;"></div>
+                        <span>STACK</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; opacity:0.8" onclick="App.toggleDataset(2, this)">
+                        <div style="width:8px; height:8px; background:#ffd700; border-radius:50%;"></div>
+                        <span>TEST BASE</span>
+                    </div>
                 </div>`;
             
             // 2. ПІДГОТОВКА ДАНИХ (Без змін)
@@ -698,7 +716,6 @@ async renderProtocol(c) {
             
             const ctx = document.getElementById('mainChart').getContext('2d');
             
-            // Градієнти
             const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
             gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.2)'); 
             gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.9)');
@@ -716,7 +733,7 @@ async renderProtocol(c) {
                     labels: labels,
                     datasets: [
                         { 
-                            label: 'ВАГА (kg)', // Щоб було зрозуміло в легенді
+                            label: 'ВАГА (kg)',
                             data: dataWeight, 
                             type: 'line', 
                             borderColor: '#ffffff', 
@@ -758,7 +775,6 @@ async renderProtocol(c) {
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // АНІМАЦІЯ ВКЛЮЧЕНА
                     animation: {
                         duration: 1000,
                         easing: 'easeOutQuart'
@@ -774,7 +790,7 @@ async renderProtocol(c) {
                         y: { 
                             stacked: true, position: 'left', 
                             grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, 
-                            display: false, // Ховаємо цифри зліва для чистоти
+                            display: false, 
                         },
                         y1: { 
                             display: true, position: 'right', 
@@ -786,18 +802,8 @@ async renderProtocol(c) {
                         }
                     },
                     plugins: { 
-                        // ЛЕГЕНДА ПОВЕРНУЛАСЬ
-                        legend: { 
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                                color: '#999',
-                                usePointStyle: true, // Кружечки замість квадратів
-                                pointStyle: 'circle',
-                                padding: 20,
-                                font: { size: 11, family: 'JetBrains Mono' }
-                            }
-                        },
+                        // ВИМКНУЛИ СТАНДАРТНУ ЛЕГЕНДУ
+                        legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)',
                             titleColor: '#d4af37',
@@ -809,7 +815,7 @@ async renderProtocol(c) {
                             titleFont: { family: 'JetBrains Mono', size: 13 },
                             bodyFont: { family: 'JetBrains Mono', size: 12 },
                             cornerRadius: 8,
-                            displayColors: true, // Кольори в тултипі теж корисні
+                            displayColors: true,
                             callbacks: {
                                 afterBody: (items) => {
                                     const idx = items[0].dataIndex;
@@ -827,6 +833,23 @@ async renderProtocol(c) {
                     }
                 }
             });
+        },
+        
+        // Додаткова функція для кліку по кастомній легенді
+        toggleDataset(index, el) {
+            const meta = this.chartInstance.getDatasetMeta(index);
+            meta.hidden = meta.hidden === null ? !this.chartInstance.data.datasets[index].hidden : null;
+            
+            // Змінюємо прозорість кнопки, щоб видно було, що вимкнено
+            if (meta.hidden) {
+                el.style.opacity = '0.3';
+                el.style.textDecoration = 'line-through';
+            } else {
+                el.style.opacity = '1';
+                el.style.textDecoration = 'none';
+            }
+            
+            this.chartInstance.update();
         },
         
         renderAnalysis(c) {
