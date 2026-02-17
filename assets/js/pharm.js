@@ -613,23 +613,17 @@ async renderProtocol(c) {
 
 
             renderAnalytics(c) {
-            // 1. СТРУКТУРА
+            // 1. СТРУКТУРА (Прибрали статичний текст знизу, бо буде жива легенда)
             c.innerHTML = `
                 <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
                     <canvas id="mainChart"></canvas>
-                </div>
-                <div class="chart-caption" style="text-align:center; font-size:0.75rem; color:#888; margin-top:15px; font-family:'JetBrains Mono'; opacity:0.8">
-                    <span style="color:#d4af37">● TEST BASE</span> &nbsp;|&nbsp; 
-                    <span style="color:#8b5cf6">● STACK</span> &nbsp;|&nbsp; 
-                    <span style="color:#fff">⚪ ВАГА</span>
                 </div>`;
             
-            // 2. ПІДГОТОВКА ДАНИХ
+            // 2. ПІДГОТОВКА ДАНИХ (Без змін)
             const labels = []; 
             const dataTest = [];    
             const dataStack = []; 
             const dataWeight = [];
-            
             const weekDetails = []; 
         
             const weekKeys = Object.keys(this.data.schedule).map(Number);
@@ -638,7 +632,7 @@ async renderProtocol(c) {
             let minWeight = 200, maxWeight = 0;
         
             for(let w=1; w<=maxW; w++) {
-                labels.push(w); // Просто номер тижня для чистоти
+                labels.push(`W${w}`);
                 let weekTest = 0;
                 let weekOther = 0;
                 let details = {}; 
@@ -704,46 +698,30 @@ async renderProtocol(c) {
             
             const ctx = document.getElementById('mainChart').getContext('2d');
             
-            // --- ПОКРАЩЕНІ ГРАДІЄНТИ ---
+            // Градієнти
             const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
             gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.2)'); 
-            gradTest.addColorStop(0.5, 'rgba(212, 175, 55, 0.6)'); 
-            gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.9)'); // Яскравіше золото зверху
+            gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.9)');
             
             const gradStack = ctx.createLinearGradient(0, 400, 0, 0);
             gradStack.addColorStop(0, 'rgba(139, 92, 246, 0.2)'); 
-            gradStack.addColorStop(0.5, 'rgba(139, 92, 246, 0.6)'); 
-            gradStack.addColorStop(1, 'rgba(167, 139, 250, 0.9)'); // Яскравіший фіолетовий
+            gradStack.addColorStop(1, 'rgba(167, 139, 250, 0.9)');
         
             Chart.defaults.font.family = "'JetBrains Mono', monospace";
             Chart.defaults.color = "#888";
         
             this.chartInstance = new Chart(ctx, {
                 type: 'bar',
-                plugins: [{
-                    id: 'backgroundClick',
-                    beforeEvent: (chart, args, options) => {
-                        if (args.event.type === 'click' || args.event.type === 'touchstart') {
-                            const points = chart.getElementsAtEventForMode(args.event, 'nearest', { intersect: true }, true);
-                            if (!points.length) {
-                                chart.setActiveElements([], { x: 0, y: 0 });
-                                chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-                                chart.update();
-                            }
-                        }
-                    }
-                }],
                 data: {
                     labels: labels,
                     datasets: [
                         { 
-                            label: 'Вага (kg)', 
+                            label: 'ВАГА (kg)', // Щоб було зрозуміло в легенді
                             data: dataWeight, 
                             type: 'line', 
                             borderColor: '#ffffff', 
                             backgroundColor: '#ffffff', 
-                            borderWidth: 3, // Жирніша лінія
-                            borderShadowColor: 'rgba(0,0,0,0.5)', // Тінь (не працює стандартно, але візуально товщина допомагає)
+                            borderWidth: 3, 
                             yAxisID: 'y1', 
                             pointRadius: 4,
                             pointHoverRadius: 6,
@@ -754,7 +732,7 @@ async renderProtocol(c) {
                             order: 0
                         },
                         { 
-                            label: 'Stack (mg)', 
+                            label: 'STACK (mg)', 
                             data: dataStack, 
                             backgroundColor: gradStack, 
                             hoverBackgroundColor: '#a78bfa',
@@ -765,7 +743,7 @@ async renderProtocol(c) {
                             borderSkipped: false
                         },
                         { 
-                            label: 'Test Base (mg)', 
+                            label: 'TEST BASE (mg)', 
                             data: dataTest, 
                             backgroundColor: gradTest, 
                             hoverBackgroundColor: '#ffd700',
@@ -780,8 +758,13 @@ async renderProtocol(c) {
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
+                    // АНІМАЦІЯ ВКЛЮЧЕНА
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
                     interaction: { mode: 'index', intersect: false },
-                    layout: { padding: { top: 20, left: 5, right: 5, bottom: 5 } },
+                    layout: { padding: { top: 10, left: 5, right: 5, bottom: 5 } },
                     scales: {
                         x: { 
                             stacked: true, 
@@ -790,23 +773,31 @@ async renderProtocol(c) {
                         },
                         y: { 
                             stacked: true, position: 'left', 
-                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, // Тонка пунктирна сітка
-                            title: { display: false }, // Прибрали підпис осі для чистоти
-                            border: { display: false },
-                            ticks: { color: '#555', font: {size: 10} }
+                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, 
+                            display: false, // Ховаємо цифри зліва для чистоти
                         },
                         y1: { 
                             display: true, position: 'right', 
                             grid: { display: false }, 
-                            title: { display: false },
                             border: { display: false },
-                            ticks: { color: '#fff', font: {size: 11, weight:'bold'} }, // Вага виділена білим
+                            ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, 
                             min: y1Min,
                             max: y1Max
                         }
                     },
                     plugins: { 
-                        legend: { display: false }, // Легенду перенесли в HTML вище
+                        // ЛЕГЕНДА ПОВЕРНУЛАСЬ
+                        legend: { 
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#999',
+                                usePointStyle: true, // Кружечки замість квадратів
+                                pointStyle: 'circle',
+                                padding: 20,
+                                font: { size: 11, family: 'JetBrains Mono' }
+                            }
+                        },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)',
                             titleColor: '#d4af37',
@@ -818,18 +809,8 @@ async renderProtocol(c) {
                             titleFont: { family: 'JetBrains Mono', size: 13 },
                             bodyFont: { family: 'JetBrains Mono', size: 12 },
                             cornerRadius: 8,
-                            displayColors: false, // Прибрали квадратики кольорів у тултипі
+                            displayColors: true, // Кольори в тултипі теж корисні
                             callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += context.parsed.y;
-                                    }
-                                    return label;
-                                },
                                 afterBody: (items) => {
                                     const idx = items[0].dataIndex;
                                     if (weekDetails[idx] && weekDetails[idx].length > 0) {
