@@ -37,3 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Реєстрація Service Worker для PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW зареєстровано!', reg))
+            .catch(err => console.error('Помилка реєстрації SW', err));
+    });
+}
