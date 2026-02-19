@@ -353,17 +353,23 @@ const App = {
         let editItem = { ...f }; // копія поточного запису
         
         if (ref) {
-            // Якщо є в базі - зберігаємо базу в tempFood
             this.state.tempFood = ref;
-            // Перераховуємо БЖВ для поточної ваги (про всяк випадок, щоб цифри були актуальні)
             const ratio = ref.unit ? f.w : f.w / 100;
             editItem.p = Math.round(ref.p * ratio);
             editItem.f = Math.round(ref.f * ratio);
             editItem.c = Math.round(ref.c * ratio);
             editItem.k = Math.round(ref.k * ratio);
         } else {
-            // Якщо це ручний запис - tempFood пустий, динаміка не працює
-            this.state.tempFood = null;
+            // ФІКС: Якщо продукту немає в базі, вираховуємо його базові БЖВ 
+            // на основі поточної ваги, щоб динамічний перерахунок працював
+            const wRatio = f.unit ? f.w : f.w / 100;
+            this.state.tempFood = {
+                p: f.p / wRatio,
+                f: f.f / wRatio,
+                c: f.c / wRatio,
+                k: f.k / wRatio,
+                unit: f.unit || true
+            };
         }
 
         this.openModal('РЕДАГУВАТИ', editItem, true);
