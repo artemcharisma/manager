@@ -680,4 +680,4 @@ const App = {
     }
 };
 
-window.onload = () => App.init();
+document.addEventListener('DOMContentLoaded', () => App.init());
