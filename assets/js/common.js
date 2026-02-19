@@ -1,4 +1,25 @@
 // assets/common.js
+// Автоматичне додавання глобального меню
+document.addEventListener('DOMContentLoaded', () => {
+    const menuHTML = `
+    <div id="sys-fab" onclick="SysSwitch.toggle()">✦</div>
+    <div id="sys-overlay" onclick="SysSwitch.close()">
+        <div class="sys-panel" onclick="event.stopPropagation()">
+            <div class="sys-header">
+                <span>MANAGER OS</span>
+                <div class="sys-close" onclick="SysSwitch.close()">✕</div>
+            </div>
+            <div class="sys-grid">
+                <a href="index.html" class="sys-card"><div class="sys-icon" style="color:#fff">🏠</div><span>HUB</span></a>
+                <a href="pharm.html" class="sys-card"><div class="sys-icon" style="color:#d4af37">🏆</div><span>PHARM</span></a>
+                <a href="training.html" class="sys-card"><div class="sys-icon" style="color:#3b82f6">⚖️</div><span>TRAIN</span></a>
+                <a href="nutrition.html" class="sys-card"><div class="sys-icon" style="color:#10b981">🥑</div><span>FOOD</span></a>
+            </div>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', menuHTML);
+});
+
 const SysSwitch = {
     el: document.getElementById('sys-overlay'),
     toggle() { 
@@ -46,3 +67,4 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.error('Помилка реєстрації SW', err));
     });
 }
+
