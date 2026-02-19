@@ -361,8 +361,8 @@ const App = {
             editItem.k = Math.round(ref.k * ratio);
         } else {
             // ФІКС: Якщо продукту немає в базі, вираховуємо його базові БЖВ 
-            // на основі поточної ваги, щоб динамічний перерахунок працював
-            const wRatio = f.unit ? f.w : f.w / 100;
+            // Додано || 1 для захисту від ділення на нуль
+            const wRatio = (f.unit ? f.w : f.w / 100) || 1;
             this.state.tempFood = {
                 p: f.p / wRatio,
                 f: f.f / wRatio,
@@ -371,7 +371,7 @@ const App = {
                 unit: f.unit || true
             };
         }
-
+        
         this.openModal('РЕДАГУВАТИ', editItem, true);
     },
 
