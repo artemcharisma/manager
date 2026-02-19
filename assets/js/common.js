@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const SysSwitch = {
-    el: document.getElementById('sys-overlay'),
+    get el() { return document.getElementById('sys-overlay'); },
     toggle() { 
         if(this.el.classList.contains('open')) this.close();
         else this.open();
@@ -67,4 +67,5 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.error('Помилка реєстрації SW', err));
     });
 }
+
 
