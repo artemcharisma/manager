@@ -161,7 +161,7 @@ const App = {
         this.save(); this.render();
     },
 
-    render() {
+render() {
         this.renderDaysBar();
         const day = this.getCurrentDay();
         if(!day) return;
@@ -170,7 +170,7 @@ const App = {
         if(titleEl) titleEl.innerText = day.name;
         
         const list = document.getElementById('mealList');
-        list.innerHTML = '';
+        let mealsHtml = ''; // Створюємо змінну замість миттєвого очищення HTML
         
         day.meals.forEach(m => {
             let mCal = 0, mP = 0, mF = 0, mC = 0;
@@ -203,7 +203,8 @@ const App = {
                 </div>`;
             }).join('');
 
-            list.innerHTML += `
+            // Записуємо у змінну, а не в DOM
+            mealsHtml += `
             <div class="meal-block">
                 <div class="meal-header">
                     <div>
@@ -219,6 +220,9 @@ const App = {
                 <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
             </div>`;
         });
+
+        // Вставляємо готовий код ОДНИМ РАЗОМ (це фіксить стрибок екрану)
+        list.innerHTML = mealsHtml;
         this.updateStats();
     },
 
@@ -377,6 +381,7 @@ const App = {
 
     openModal(title, f, del) {
         this.toggleFab(false); // ХОВАЄМО ЗІРКУ
+        document.body.style.overflow = 'hidden';
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -391,9 +396,9 @@ const App = {
     
     closeModal() { 
         document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none');
-        this.toggleFab(true); // ПОВЕРТАЄМО ЗІРКУ
+        this.toggleFab(true); 
+        document.body.style.overflow = ''; // Повертаємо скрол фону при закритті
     },
-
     saveFood() {
         const n = document.getElementById('inpName').value;
         const w = parseFloat(document.getElementById('inpWeight').value);
