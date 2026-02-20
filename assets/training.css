@@ -1,0 +1,457 @@
+  <style>
+     /* --- 1. GLOBAL SETTINGS (FIXED) --- */
+     /* ВИДАЛЕННЯ СТРІЛОЧОК В INPUT NUMBER */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        *, *::before, *::after {
+            -webkit-tap-highlight-color: transparent !important;
+            box-sizing: border-box; outline: none;
+        }
+
+        /* 1. БАЗА: Звичайна стрілка */
+        body, html, .app-container, .day-card, .exercise { 
+            cursor: default; 
+        }
+
+        /* 2. ТЕКСТ: Курсор тексту */
+        input, textarea, [contenteditable] { 
+            cursor: text !important;
+        }
+
+        /* 3. ПАЛЕЦЬ: Тільки на кнопках */
+        button, select, label, .btn-icon, .edit-toggle, 
+        .week-btn, .prog-opt, .mode-btn, .btn-add, .set-btn,
+        .scroll-top, .sys-card, .sys-close, #sys-fab,
+        .ex-del, .bank-del, .modal-close, .nav-item, 
+        .day-header, /* Заголовок дня тепер клікається */
+        .bank-item span, .prog-tab, [onclick] 
+        {
+            cursor: pointer !important;
+        }
+
+        /* --- Вклдаки програм (Збалансована/Руки) --- */
+        .program-selector {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            background: #0a0a0a; padding: 5px; border-radius: 12px; border: 1px solid #222;
+        }
+        .prog-tab {
+            flex: 1; text-align: center; padding: 10px; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 700; color: #666; transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .prog-tab.active { background: var(--theme); color: #000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
+        /* --- Фікс вкладок тижнів (щоб не плющило) --- */
+        .week-scroll { 
+            display: flex; gap: 8px; overflow-x: auto; 
+            padding: 5px 10px 15px 10px; margin: 0 -10px 15px -10px; scrollbar-width: none; 
+        }
+        .week-btn { 
+            flex: 0 0 auto; /* ЗАБОРОНА СТИСКАННЯ */
+            min-width: 75px; padding: 12px 0; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 12px; cursor: pointer; color: #555; border: 1px solid var(--border); 
+            background: var(--bg-panel); position: relative; transition: 0.2s;
+        }
+        .week-btn.active { border-color: var(--theme); color: #fff; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .week-btn.is-arms {
+            border-color: #8b5cf6 !important; /* Фіолетовий бордюр */
+        }
+        .week-btn.is-arms small {
+            color: #8b5cf6 !important; /* Фіолетовий текст */
+            font-weight: 900;
+        }
+        /* Активний стан для рук */
+        .week-btn.is-arms.active {
+            background: #8b5cf6 !important;
+            color: #000 !important;
+        }
+        .week-btn.is-arms.active small {
+            color: #000 !important;
+        }
+
+        /* --- Акордеон (Згортання) --- */
+        .day-card { transition: opacity 0.2s; }
+        .day-card.collapsed .ex-list { display: none; }
+        .day-card.collapsed .day-header { border-bottom: none; }
+        .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
+        .day-card.collapsed { opacity: 0.7; }
+        
+        .day-chevron {
+            display: inline-block; margin-right: 12px; font-size: 0.8rem;
+            color: var(--theme); transition: transform 0.3s ease;
+        }
+      
+        :root {
+            /* Scrollbar */
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
+            ::-webkit-scrollbar-track { background: #000; }
+            ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+            --bg-app: #000000;
+            --bg-panel: #121212; /* Трохи світліший чорний для блоків */
+            --border: #2a2a2a;
+            
+            /* GOLD THEME (PHARM STYLE) */
+            --theme: #d4af37; 
+            --primary: #d4af37;
+            
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            
+            --danger: #ef4444;
+            --success: #10b981; /* Emerald Green виглядає краще з золотом */
+            --cardio: #eab308;
+            
+            /* Для сумісності зі старим кодом */
+            --mass: #d4af37; 
+            --cut: #3b82f6; /* Синій для сушки, гарний контраст */
+        }
+
+        body.prog-arms { --theme: #8b5cf6; --mass: #8b5cf6; } /* Purple override */
+
+       body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            /* Стандартний системний шрифт, як у Protocol */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 15px; min-height: 100vh;
+            padding-bottom: 100px;
+        }
+        .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
+
+            /* --- 2. HEADER & CONTROLS --- */
+           header {
+            /* Сам хедер тепер просто контейнер */
+            display: flex; flex-direction: column; gap: 15px; 
+            margin-bottom: 25px; padding-bottom: 15px; 
+            border-bottom: 1px solid var(--border);
+        }
+    
+        .header-top { 
+            /* А ось це відповідає за розкидання Лого і Кнопок по краях */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 100%;
+        }
+    
+       /* Зменшив gap з 12px до 10px, прибрав cursor: pointer з батьківського блоку */
+        .brand { display: flex; align-items: center; gap: 10px; } 
+        
+        .brand-icon {
+            width: 44px; height: 44px; 
+            background: linear-gradient(135deg, var(--theme), #fcd34d);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
+            
+            cursor: pointer; /* <--- ПАЛЕЦЬ ТЕПЕР ТІЛЬКИ ТУТ */
+            transition: transform 0.2s ease; /* Додав плавність для натискання */
+        }
+        
+        /* Прибрав letter-spacing, щоб відповідало Protocol */
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
+        
+        /* Збільшив шрифт з 0.65rem до 0.7rem */
+        .brand span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
+       /* --- HEADER BUTTONS FIX --- */
+    .controls { display: flex; gap: 8px; align-items: center; }
+
+    .btn-icon, .edit-toggle {
+        width: 42px; height: 42px; /* Трохи більші для пальця */
+        border-radius: 12px; 
+        border: 1px solid #333; /* Темна рамка */
+        background: #121212;    /* Темний фон */
+        color: #888;            /* Сіра іконка */
+        
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;      /* Розмір смайлика */
+        cursor: pointer; 
+        transition: all 0.2s ease;
+        padding: 0; margin: 0;
+        
+        /* Важливо: прибирає стандартний вигляд кнопок iOS/Android */
+        -webkit-appearance: none; 
+        appearance: none;
+    }
+
+    /* Активний стан (коли натискаєш) */
+    .btn-icon:active, .edit-toggle:active {
+        transform: scale(0.95);
+        background: #000;
+        border-color: #555;
+        color: #fff;
+    }
+
+    /* Кнопка редагування активна */
+    .edit-toggle.active { 
+        background: var(--theme); 
+        color: #000; 
+        border-color: var(--theme); 
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
+        /* --- 3. SCHEDULE UI (DIARY) --- */
+        .program-selector {
+            background: #111; padding: 4px; border-radius: 14px; border: 1px solid #333; margin-bottom: 25px;
+            display: flex;
+        }
+        .prog-opt {
+            flex: 1; padding: 12px; text-align: center; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: 0.3s; color: #666; border-radius: 10px; text-transform: uppercase;
+        }
+        .prog-opt.active { color: #000; background: var(--theme); box-shadow: 0 2px 15px rgba(0,0,0,0.3); }
+
+        .week-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .week-btn { 
+            min-width: 75px; padding: 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 12px; cursor: pointer; color: #555; border: 1px solid var(--border); 
+            background: var(--bg-panel); position: relative; transition: 0.2s;
+        }
+        .week-btn span { font-weight: 800; font-size: 1.1rem; }
+        .week-btn small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 3px; }
+        
+        .week-btn.active { border-color: var(--theme); color: #fff; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .week-btn.active small { color: var(--theme); }
+
+        .day-card { 
+            background: var(--bg-panel); border: 1px solid var(--border); 
+            border-radius: 14px; overflow: hidden; margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* Додає об'єму */
+        }
+        .day-header { 
+            padding: 12px 15px; border-bottom: 1px solid var(--border); 
+            background: linear-gradient(to right, rgba(255,255,255,0.03), transparent);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .day-title { font-weight: 800; font-size: 1rem; color: #fff; }
+        .day-group { 
+            font-size: 0.65rem; font-family: 'JetBrains Mono'; padding: 4px 8px; border-radius: 6px; 
+            background: #000; text-transform: uppercase; font-weight: 700; color: var(--theme); border: 1px solid #333;
+        }
+
+        .ex-list { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        .exercise { 
+            padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); 
+            position: relative; /* Додайте це, щоб хрестик видалення не злітав */
+        }
+        .exercise:last-of-type { border-bottom: none; padding-bottom: 0; }
+        
+        .ex-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; padding-right: 35px; }
+        .ex-name-row { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .ex-name-input { background: transparent; border: none; color: #fff; font-weight: 700; width: 100%; font-size: 0.95rem; }
+        .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; line-height: 1.4; display: block; }
+        .ex-badge { font-size: 0.6rem; color: var(--text-muted); background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222; width: fit-content; }
+
+        /* --- ВИПРАВЛЕННЯ СІТКИ СЕТІВ (GRID) --- */
+        .sets-wrapper { 
+            display: grid; 
+            /* Це робить рівні колонки, які не розтягуються на всю ширину дарма */
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 8px; 
+            margin-top: 8px;
+        }
+        .set-row { 
+            display: flex; align-items: center; 
+            background: #0a0a0a; border: 1px solid #333; 
+            border-radius: 8px; overflow: hidden; height: 38px;
+        }
+        .set-num { 
+            background: #18181b; color: #555; font-size: 0.7rem; font-weight: 800; 
+            width: 30px; /* Фіксована ширина */
+            height: 100%; display: flex; align-items: center; justify-content: center;
+            border-right: 1px solid #333; flex-shrink: 0;
+        }
+        .set-part { display: flex; align-items: center; justify-content: center; flex: 1; }
+        .set-input { 
+            width: 40px; background: transparent; border: none; padding: 0;
+            text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
+        }
+        .set-unit { font-size: 0.6rem; color: #444; font-weight: 700; margin-left: 3px; margin-top: 3px; }
+
+              /* --- CARDIO STYLE (ВСТАВ ЦЕ В CSS) --- */
+        .cardio-block { 
+            background: rgba(234, 179, 8, 0.05); 
+            border: 1px solid rgba(234, 179, 8, 0.15); 
+            border-radius: 12px; padding: 15px; margin-bottom: 10px;
+        }
+        .cardio-header { 
+            display: flex; align-items: center; gap: 8px; 
+            color: var(--cardio); font-weight: 800; font-size: 0.9rem; 
+            margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .cardio-grid { 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
+        }
+        .c-input-box { 
+            background: #000; border: 1px solid #333; border-radius: 8px; 
+            padding: 6px 4px; display: flex; flex-direction: column; align-items: center;
+            transition: 0.3s;
+        }
+        .c-input-box:focus-within { border-color: var(--cardio); }
+        .c-label { font-size: 0.55rem; color: #666; font-weight: 700; margin-bottom: 2px; }
+        .c-input { 
+            width: 100%; background: transparent !important; border: none !important; 
+            color: #fff !important; font-family: 'JetBrains Mono'; font-weight: 700; 
+            font-size: 1rem; text-align: center; padding: 0;
+        }
+
+        /* --- 4. STATS (Gold Edition) --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .stat-box { 
+            background: var(--bg-panel); border: 1px solid var(--border); 
+            padding: 15px; border-radius: 12px; display: flex; flex-direction: column; 
+        }
+        .stat-header-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .stat-target-input { width: 30px; background: #000; border: 1px solid #333; color: #888; font-size: 0.7rem; text-align: center; border-radius: 4px; }
+        .stat-bar-bg { height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-top: auto; }
+        .stat-bar-fill { height: 100%; background: var(--theme); border-radius: 3px; transition: width 0.5s; }
+        .stat-val { font-size: 1.4rem; font-weight: 800; font-family: 'JetBrains Mono'; color: #fff; }
+
+        /* --- 5. GUIDE (Gold Edition) --- */
+        .guide-search { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 15px; }
+        .guide-switcher { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-btn { flex: 1; padding: 10px; border-radius: 8px; text-align: center; font-weight: 700; cursor: pointer; border: 1px solid #333; background: #111; color: #666; transition: 0.2s; }
+        .mode-btn.mass.active { background: var(--theme); color: #000; border-color: var(--theme); }
+        .mode-btn.cut.active { background: var(--cut); color: #fff; border-color: var(--cut); }
+
+        .guide-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .guide-table th { text-align: left; padding: 10px; color: #666; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid #333; }
+        .guide-table td { padding: 12px 10px; border-bottom: 1px solid #222; color: #ddd; vertical-align: top; }
+        .tag-warm { display: inline-block; font-size: 0.7rem; color: #aaa; background: #1a1a1a; padding: 3px 6px; border-radius: 4px; margin: 2px 2px 2px 0; border: 1px solid #333; font-family: 'JetBrains Mono'; }
+        .row-note { font-size: 0.8rem; color: #777; font-style: italic; display: block; line-height: 1.3; margin-top: 6px; }
+                       /* --- CARDIO STYLE (Sleek Dark) --- */
+        .cardio-block { 
+            background: rgba(234, 179, 8, 0.05); 
+            border: 1px solid rgba(234, 179, 8, 0.15); 
+            border-radius: 12px; padding: 15px; 
+        }
+        .cardio-header { 
+            display: flex; align-items: center; gap: 8px; 
+            color: var(--cardio); font-weight: 800; font-size: 0.9rem; 
+            margin-bottom: 12px; text-transform: uppercase;
+        }
+        .cardio-grid { 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; 
+        }
+        .c-input-box { 
+            background: #000; border: 1px solid #333; border-radius: 8px; 
+            padding: 6px 4px; display: flex; flex-direction: column; align-items: center;
+        }
+        .c-label { font-size: 0.55rem; color: #666; font-weight: 700; margin-bottom: 2px; }
+        .c-input { 
+            width: 100%; background: transparent !important; border: none !important; 
+            color: #fff !important; font-family: 'JetBrains Mono'; font-weight: 700; 
+            font-size: 1rem; text-align: center; padding: 0;
+        }
+        /* UI ELEMENTS */
+        .edit-ui { display: none !important; }
+        body.editing .edit-ui { display: flex !important; }
+        
+        .ex-del { position: absolute; right: 0; top: 0; color: var(--danger); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10; opacity: 0.6; border-radius: 50%; }
+        .set-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #333; background: #111; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; }
+        .add-controls { display: flex; gap: 10px; margin-top: 15px; border-top: 1px dashed #333; padding-top: 12px; }
+        .btn-add { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; color: #888; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; background: #111; }
+        .group-select { background: #000; color: #fff; border: 1px solid #333; font-size: 0.7rem; padding: 2px; border-radius: 4px; }
+        .notes-area { 
+            width: 100%; background: #000; border: none; border-top: 1px solid var(--border); padding: 15px; color: #aaa; font-family: inherit; font-size: 0.85rem; resize: vertical; min-height: 50px; display: block; 
+            
+            cursor: text !important; /* <--- ДОДАЙ ЦЕ, щоб повернути паличку замість руки */
+        }
+        body.editing [contenteditable] { border-bottom: 1px dashed #555; cursor: text; padding: 0 2px; background: rgba(255,255,255,0.05); }
+        body.editing [contenteditable]:focus { border-bottom: 1px solid #fff; color: #fff; outline: none; background: #000; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-panel); width: 90%; max-width: 500px; max-height: 80vh; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .bank-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
+        .modal-input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(15,15,15,0.95); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; backdrop-filter: blur(10px); padding-bottom: 10px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; font-size: 0.7rem; font-weight: 600; cursor: pointer; width: 33%; height: 100%; transition: 0.2s; }
+        .nav-item.active { color: var(--theme); }
+        .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
+        .nav-item.active .nav-icon { transform: scale(1.1); transition: 0.2s; }
+
+        /* --- STICKY BUTTONS FIX (Оновлено) --- */
+        .scroll-top { 
+            position: fixed; 
+            bottom: 150px; /* <--- ПІДНЯВ ВИЩЕ, щоб не перекривала зірка */
+            right: 20px; 
+            width: 45px; height: 45px; 
+            background: rgba(30,30,30,0.9); 
+            border: 1px solid var(--theme); 
+            border-radius: 50%; 
+            color: var(--theme); 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; z-index: 101; 
+            font-size: 1.5rem; 
+            
+            /* Анімація */
+            opacity: 0; 
+            transform: translateY(20px); 
+            pointer-events: none; 
+            transition: all 0.3s ease;
+        }
+        .scroll-top.visible { 
+            opacity: 1; 
+            transform: translateY(0); 
+            pointer-events: auto; 
+        }
+
+        /* --- КУРСОР ДЛЯ РЕДАГУВАННЯ (Оновлено) --- */
+        /* Коли увімкнено режим редагування, заголовок групи має курсор тексту */
+        body.editing .day-group {
+            cursor: text !important;
+            pointer-events: auto; /* Дозволяємо взаємодію */
+        }
+        
+        /* Заголовок дня (Понеділок) залишається клікабельним для згортання */
+        body.editing .day-header {
+            cursor: pointer !important;
+        }
+        #fileInput { display: none; }
+        /* --- ANIMATION: SECRET HINT (HARD RESET) --- */
+            @keyframes secret-hint {
+                0% { transform: scale(1); filter: none; }
+                50% { 
+                    transform: scale(1.15) rotate(5deg); 
+                    background: linear-gradient(135deg, #ef4444, #991b1b); /* Red Warning */
+                    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+                    color: #fff;
+                    border-color: #ef4444;
+                }
+                100% { transform: scale(1); filter: none; }
+            }
+            .brand-icon.hint-active {
+                animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+              /* --- ACCORDION / DROPDOWN TABS --- */
+            .day-header { 
+                cursor: pointer !important; /* Робимо курсор пальцем */
+                transition: background 0.2s;
+            }
+            .day-header:active { background: rgba(255,255,255,0.1); }
+        
+            .day-chevron {
+                display: inline-block;
+                margin-right: 10px;
+                transition: transform 0.3s ease;
+                color: var(--theme);
+                font-size: 0.8rem;
+                width: 15px; text-align: center;
+            }
+        
+            /* Логіка згорнутого стану */
+            .day-card { transition: all 0.2s ease; }
+            .day-card.collapsed .ex-list { display: none !important; }
+            .day-card.collapsed .day-header { border-bottom: none; opacity: 0.8; }
+            .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
+    </style>
