@@ -267,7 +267,6 @@
 
 async init() {
             // --- ВИПРАВЛЕННЯ СТРІЛОЧКИ ДЛЯ ТЕЛЕФОНУ ---
-            // Додаємо CSS стиль прямо через JS, щоб стрілочка була завжди видимою
             const style = document.createElement('style');
             style.innerHTML = `
                 input[list]::-webkit-calendar-picker-indicator {
@@ -328,7 +327,7 @@ async init() {
                     location.reload();
                 }
             };
-        },
+        }, 
 
 
         load() {
