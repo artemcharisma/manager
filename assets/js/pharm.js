@@ -266,35 +266,6 @@
         },
 
 async init() {
-            // --- ВИПРАВЛЕННЯ СТРІЛОЧКИ (БЕЗ КОЛХОЗУ) ---
-            const style = document.createElement('style');
-            style.innerHTML = `
-                /* Стилізуємо безпосередньо сам клікабельний елемент браузера */
-                input[list]::-webkit-calendar-picker-indicator {
-                    display: block !important;
-                    opacity: 1 !important;
-                    color: transparent !important;
-                    /* Малюємо стрілку прямо в індикаторі */
-                    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23666666" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>') !important;
-                    background-repeat: no-repeat !important;
-                    background-position: center !important;
-                    background-size: 16px !important; /* Розмір самої іконки (зробив більшою) */
-                    
-                    /* Чітка зона для кліку та появи курсору */
-                    width: 22px !important; 
-                    height: 22px !important;
-                    cursor: pointer !important;
-                    margin-left: 8px !important;
-                }
-                
-                /* Прибираємо сірий квадратик при наведенні, який Chrome любить додавати */
-                input[list]::-webkit-calendar-picker-indicator:hover {
-                    background-color: transparent !important;
-                }
-            `;
-            document.head.appendChild(style);
-            // ------------------------------------------
-
             await PhotoDB.init();
             this.load();
             await this.refreshPhotos();
@@ -568,9 +539,32 @@ async init() {
             const maxW = weekNumbers.length > 0 ? Math.max(...weekNumbers) : 1;
             const curW = this.state.week;
             const pct = Math.min(100, (curW / maxW) * 100);
-            document.getElementById('progBar').style.width = pct + '%';
-            document.getElementById('progText').innerText = `Week ${curW}/${maxW}`;
+            
+            const progBar = document.getElementById('progBar');
+            const progText = document.getElementById('progText');
+
+            if (!progBar) return;
+
+            // Гарантуємо, що лінія має стиль плавності (красива "преміальна" крива сповільнення)
+            progBar.style.transition = 'width 1s cubic-bezier(0.25, 1, 0.5, 1)';
+
+            // Якщо лінія малюється вперше, ставимо її на 0%, щоб було звідки рости
+            if (!progBar.style.width) {
+                progBar.style.width = '0%';
+            }
+
+            // Використовуємо setTimeout, щоб дати браузеру частку секунди на "усвідомлення" 0%, 
+            // і тільки після цього даємо команду заповнитись до потрібного відсотка. 
+            // Це змушує айфон програти анімацію.
+            setTimeout(() => {
+                progBar.style.width = pct + '%';
+            }, 50);
+
+            if (progText) {
+                progText.innerText = `Week ${curW}/${maxW}`;
+            }
         },
+
 
 async renderProtocol(c) {
             const ph = this.data.phases.find(x => x.id === this.state.phaseId);
