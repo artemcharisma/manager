@@ -768,16 +768,16 @@
     <div class="modal-content">
         <span class="modal-close" onclick="App.closeModal()">✕</span>
         <h3 class="modal-title">Додати препарат</h3>
-          <div class="input-group">
+                  <div class="input-group">
             <label>Назва</label>
             <div style="position: relative; display: flex; align-items: center;">
                 
                 <input class="modal-input" id="pillName" placeholder="Напр: hCG" list="med-suggestions" autocomplete="off" style="padding-right: 45px; width: 100%; box-sizing: border-box;">
                 
-                <div onclick="const i = document.getElementById('pillName'); try { i.showPicker(); } catch(e) { i.focus(); }" 
-                     style="position: absolute; right: 0; top: 0; bottom: 0; width: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; z-index: 2;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
-                </div>
+                <button type="button" onclick="const i = document.getElementById('pillName'); try { i.showPicker(); } catch(e) { i.focus(); }" 
+                     style="position: absolute; right: 0; top: 0; bottom: 0; width: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; z-index: 2; background: transparent; border: none; outline: none; padding: 0;">
+                    <svg style="pointer-events: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
+                </button>
                 
             </div>
             <datalist id="med-suggestions"></datalist>
@@ -863,6 +863,7 @@
 
 </body>
 </html>
+
 
 
 
