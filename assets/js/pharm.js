@@ -1081,11 +1081,11 @@ async renderProtocol(c) {
         },
         
         // --- CALC FIX (REGEX) ---
-        calc(week) {
+calc(week) {
             const stats = {};
             if(!this.data.schedule[week]) return stats;
+            
             this.data.schedule[week].forEach(d => d.forEach(p => {
-                // ШУКАЄМО ЧИСЛО ЗА ДОПОМОГОЮ REGEX
                 const match = p.dose.match(/(\d+([.,]\d+)?)/);
                 
                 if (match) {
@@ -1094,10 +1094,19 @@ async renderProtocol(c) {
 
                     if(!isNaN(n)) { 
                         let k = p.name.trim(); 
-                        let u = p.dose.toLowerCase().includes("iu") ? "IU" : "mg"; 
-                        if(k.toLowerCase().includes("clen")) u = "mcg";
+                        let u = "mg"; 
+                        const dLow = p.dose.toLowerCase();
+                        if(dLow.includes("iu")) u = "IU"; 
+                        else if(dLow.includes("mcg")) u = "mcg";
+                        else if(dLow.includes("ml")) u = "ml";
+                        else if(dLow.includes("tab")) u = "tab";
 
-                        if(!stats[k]) stats[k] = {v:0, u:u}; 
+                        if(!stats[k]) {
+                            // БЕРЕМО КОЛІР САМЕ З ПРЕПАРАТУ (наприклад 'c-green' -> 'green')
+                            let colorName = (p.color || 'c-yellow').replace('c-', '');
+                            stats[k] = { v: 0, u: u, c: colorName }; 
+                        }
+                        
                         stats[k].v += n; 
                     }
                 }
@@ -1117,12 +1126,11 @@ async renderProtocol(c) {
              this.renderStatsPanel();
         },
 
-        // Функція перемальовки верхньої панелі (із сортуванням доз)
-        renderStatsPanel() {
+renderStatsPanel() {
             const container = document.getElementById('stats-container');
             if(!container) return;
             
-            // 1. Рахуємо статистику
+            // 1. Рахуємо статистику (тепер calc повертає і правильний колір)
             const stats = this.calc(this.state.week);
             
             // 2. Сортуємо: від найбільшої дози до найменшої
@@ -1130,14 +1138,8 @@ async renderProtocol(c) {
             
             // 3. Генеруємо HTML для дозувань
             let statsHtml = sortedStats.map(([k,v]) => {
-                let color = 'yellow';
-                const key = k.toLowerCase();
-                if(key.includes('test')) color = 'blue'; 
-                else if(key.includes('tren')) color = 'red'; 
-                else if(key.includes('primo')) color = 'green'; 
-                else if(key.includes('hgh')) color = 'purple';
-                else if(key.includes('hcg')) color = 'pink';
-                else if(key.includes('clen')) color = 'yellow'; 
+                // Використовуємо колір, який ми зберегли у функції calc (v.c)
+                let color = v.c || 'yellow'; 
                 
                 return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
             }).join('') || '';
