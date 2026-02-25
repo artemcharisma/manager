@@ -313,7 +313,7 @@ async init() {
                     location.reload();
                 }
             };
-        },,
+        },
 
 
         load() {
