@@ -626,9 +626,8 @@ async renderProtocol(c) {
         },
 
 
-                    renderAnalytics(c) {
+       renderAnalytics(c) {
             // 1. СТРУКТУРА
-            // Додали fade-in анімацію для всього блоку (opacity)
             c.innerHTML = `
                 <div style="animation: fadeEffect 0.6s ease-out;">
                     <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
@@ -638,7 +637,7 @@ async renderProtocol(c) {
                     <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
                     
                     <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(0, this)">
-                        <div style="width:10px; height:10px; border:2px solid #fff; border-radius:50%; box-sizing:border-box;"></div>
+                        <div style="width:10px; height:10px; background:#ffffff; border-radius:50%; box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);"></div>
                         <span style="color:#aaa; font-weight:500; letter-spacing:0.5px;">ВАГА</span>
                     </div>
 
@@ -653,7 +652,6 @@ async renderProtocol(c) {
                     </div>
                 </div>
                     <style>
-                        /* Зробили появу трохи з більшої глибини (30px) */
                         @keyframes fadeEffect { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
                     </style>
                 </div>`;
@@ -763,10 +761,11 @@ async renderProtocol(c) {
                             yAxisID: 'y1', 
                             pointRadius: 4,
                             pointHoverRadius: 6,
-                            pointBackgroundColor: '#121212',
+                            // ЗМІНА ТУТ: Робимо точки на лінії суцільними білими (були чорні всередині)
+                            pointBackgroundColor: '#ffffff',
                             pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            tension: 0.3, 
+                            pointBorderWidth: 0,
+                            tension: 0.4, // Більш плавні, красиві вигини лінії
                             order: 0
                         },
                         { 
@@ -796,14 +795,12 @@ async renderProtocol(c) {
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // ПОКРАЩЕНА АНІМАЦІЯ (PREMIUM FEEL)
                     animation: {
-                        duration: 2000, // 2 секунди
-                        easing: 'easeOutExpo', // Різкий старт, плавний кінець
+                        duration: 2000, 
+                        easing: 'easeOutExpo', 
                         delay: (context) => {
                             let delay = 0;
                             if (context.type === 'data' && context.mode === 'default') {
-                                // Додали затримку по шарах і збільшили інтервал між стовпчиками
                                 delay = context.dataIndex * 100 + context.datasetIndex * 200; 
                             }
                             return delay;
