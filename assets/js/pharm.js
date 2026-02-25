@@ -266,25 +266,40 @@
         },
 
 async init() {
+            // --- ВИПРАВЛЕННЯ СТРІЛОЧКИ ДЛЯ ТЕЛЕФОНУ ---
+            // Додаємо CSS стиль прямо через JS, щоб стрілочка була завжди видимою
+            const style = document.createElement('style');
+            style.innerHTML = `
+                input[list]::-webkit-calendar-picker-indicator {
+                    display: block !important;
+                    opacity: 1 !important;
+                    color: transparent;
+                    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23d4af37" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>') !important;
+                    background-repeat: no-repeat;
+                    background-position: right center;
+                    cursor: pointer;
+                }
+            `;
+            document.head.appendChild(style);
+            // ------------------------------------------
+
             await PhotoDB.init();
             this.load();
             await this.refreshPhotos();
             
-            // --- НОВИЙ БЛОК: АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
+            // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
             const now = new Date();
             const start = this.getMondayOfStartWeek();
             const diffTime = now.getTime() - start.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            let currentWeek = Math.floor(diffDays / 7) + 1; // Рахуємо, який зараз тиждень
+            let currentWeek = Math.floor(diffDays / 7) + 1; 
             
-            // Обмежуємо, щоб не вилізти за межі курсу
             const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
             if (currentWeek < 1) currentWeek = 1;
             if (currentWeek > maxW) currentWeek = maxW;
             
-            this.state.week = currentWeek; // Встановлюємо цей тиждень при запуску
+            this.state.week = currentWeek; 
             
-            // Знаходимо, до якої фази належить цей тиждень, і відкриваємо її
             const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
             if (currentPhase) this.state.phaseId = currentPhase.id;
             // -----------------------------------------------------------
@@ -988,8 +1003,18 @@ async renderProtocol(c) {
             this.renderBodyMap();
         },
 
-        openAddPillModal(week, dayIndex) {
+openAddPillModal(week, dayIndex) {
             this.state.tempPill = { w: week, d: dayIndex, color: 'c-blue' };
+            
+            // --- ВИПРАВЛЕННЯ ВВОДУ ДОЗУВАННЯ ---
+            // Примусово знімаємо обмеження на "тільки цифри"
+            const doseInput = document.getElementById('pillDose');
+            if(doseInput) {
+                doseInput.type = 'text'; // Дозволяє вводити букви
+                doseInput.removeAttribute('inputmode'); // Забирає примусову цифрову клавіатуру
+            }
+            // -----------------------------------
+
             document.getElementById('pillName').value = ''; 
             document.getElementById('pillDose').value = ''; 
             document.getElementById('pillMeta').value = '';
