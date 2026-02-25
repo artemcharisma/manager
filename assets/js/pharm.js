@@ -265,30 +265,10 @@
             document.getElementById('fileInput').click();
         },
 
-async init() {
+                async init() {
             await PhotoDB.init();
             this.load();
             await this.refreshPhotos();
-            
-            // --- НОВИЙ БЛОК: АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
-            const now = new Date();
-            const start = this.getMondayOfStartWeek();
-            const diffTime = now.getTime() - start.getTime();
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            let currentWeek = Math.floor(diffDays / 7) + 1; // Рахуємо, який зараз тиждень
-            
-            // Обмежуємо, щоб не вилізти за межі курсу
-            const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
-            if (currentWeek < 1) currentWeek = 1;
-            if (currentWeek > maxW) currentWeek = maxW;
-            
-            this.state.week = currentWeek; // Встановлюємо цей тиждень при запуску
-            
-            // Знаходимо, до якої фази належить цей тиждень, і відкриваємо її
-            const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
-            if (currentPhase) this.state.phaseId = currentPhase.id;
-            // -----------------------------------------------------------
-
             this.renderNav(); 
             this.renderView();
             
@@ -298,22 +278,16 @@ async init() {
             const brandBlock = document.querySelector('.brand');
             const brandIcon = document.querySelector('.brand-icon');
 
+            // 1. ОДИНОЧНИЙ КЛІК: Анімація "Натяк" (Червоний спалах)
             brandBlock.onclick = () => {
+                // В приватному режимі не працює
                 if (document.body.classList.contains('privacy-mode')) return;
+                
+                // Перезапуск анімації CSS
                 brandIcon.classList.remove('hint-active');
-                void brandIcon.offsetWidth; 
+                void brandIcon.offsetWidth; // Магія для перезапуску анімації (reflow)
                 brandIcon.classList.add('hint-active');
             };
-            
-            brandBlock.ondblclick = () => {
-                if (document.body.classList.contains('privacy-mode')) return;
-                if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
-                    localStorage.removeItem('gold_protocol');
-                    try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
-                    location.reload();
-                }
-            };
-        },
             
             // 2. ПОДВІЙНИЙ КЛІК: Reset (Без змін логіки)
             brandBlock.ondblclick = () => {
