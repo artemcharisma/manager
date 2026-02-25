@@ -266,23 +266,30 @@
         },
 
 async init() {
-            // --- ВИПРАВЛЕННЯ СТРІЛОЧКИ ДЛЯ IPHONE/ANDROID ---
+            // --- ВИПРАВЛЕННЯ СТРІЛОЧКИ (БЕЗ КОЛХОЗУ) ---
             const style = document.createElement('style');
             style.innerHTML = `
-                /* Малюємо стрілочку прямо на фоні інпуту (темно-сіра #666, як у вашому дизайні) */
-                input[list] {
+                /* Стилізуємо безпосередньо сам клікабельний елемент браузера */
+                input[list]::-webkit-calendar-picker-indicator {
+                    display: block !important;
+                    opacity: 1 !important;
+                    color: transparent !important;
+                    /* Малюємо стрілку прямо в індикаторі */
                     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23666666" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>') !important;
                     background-repeat: no-repeat !important;
-                    background-position: calc(100% - 12px) center !important;
-                    background-size: 12px !important;
-                    padding-right: 30px !important;
-                }
-                /* Ховаємо системну стрілочку, але залишаємо її клікабельною поверх нашої */
-                input[list]::-webkit-calendar-picker-indicator {
-                    opacity: 0 !important;
+                    background-position: center !important;
+                    background-size: 16px !important; /* Розмір самої іконки (зробив більшою) */
+                    
+                    /* Чітка зона для кліку та появи курсору */
+                    width: 22px !important; 
+                    height: 22px !important;
                     cursor: pointer !important;
-                    width: 25px !important;
-                    height: 100% !important;
+                    margin-left: 8px !important;
+                }
+                
+                /* Прибираємо сірий квадратик при наведенні, який Chrome любить додавати */
+                input[list]::-webkit-calendar-picker-indicator:hover {
+                    background-color: transparent !important;
                 }
             `;
             document.head.appendChild(style);
