@@ -626,7 +626,7 @@ async renderProtocol(c) {
         },
 
 
-            renderAnalytics(c) {
+                    renderAnalytics(c) {
             // 1. СТРУКТУРА
             // Додали fade-in анімацію для всього блоку (opacity)
             c.innerHTML = `
@@ -653,7 +653,8 @@ async renderProtocol(c) {
                     </div>
                 </div>
                     <style>
-                        @keyframes fadeEffect { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                        /* Зробили появу трохи з більшої глибини (30px) */
+                        @keyframes fadeEffect { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
                     </style>
                 </div>`;
             
@@ -765,7 +766,7 @@ async renderProtocol(c) {
                             pointBackgroundColor: '#121212',
                             pointBorderColor: '#ffffff',
                             pointBorderWidth: 2,
-                            tension: 0.3, // Трохи плавніша лінія
+                            tension: 0.3, 
                             order: 0
                         },
                         { 
@@ -795,14 +796,15 @@ async renderProtocol(c) {
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // АНІМАЦІЯ ГРАФІКА
+                    // ПОКРАЩЕНА АНІМАЦІЯ (PREMIUM FEEL)
                     animation: {
-                        duration: 1200, // 1.2 секунди
-                        easing: 'easeOutQuart', // Плавне сповільнення в кінці
+                        duration: 2000, // 2 секунди
+                        easing: 'easeOutExpo', // Різкий старт, плавний кінець
                         delay: (context) => {
                             let delay = 0;
                             if (context.type === 'data' && context.mode === 'default') {
-                                delay = context.dataIndex * 50; // Ефект "хвилі" для стовпчиків
+                                // Додали затримку по шарах і збільшили інтервал між стовпчиками
+                                delay = context.dataIndex * 100 + context.datasetIndex * 200; 
                             }
                             return delay;
                         }
@@ -830,7 +832,7 @@ async renderProtocol(c) {
                         }
                     },
                     plugins: { 
-                        legend: { display: false }, // Використовуємо кастомну
+                        legend: { display: false }, 
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)',
                             titleColor: '#d4af37',
@@ -861,7 +863,7 @@ async renderProtocol(c) {
                 }
             });
         },
-        
+
         // Додаткова функція для кліку по кастомній легенді
         toggleDataset(index, el) {
             const meta = this.chartInstance.getDatasetMeta(index);
