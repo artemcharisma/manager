@@ -1219,7 +1219,7 @@ async renderProtocol(c) {
             this.save();
             this.renderView(); 
         },
-       // Генерує вигляд меню
+// Генерує вигляд меню
         getMenuUI(w, d, i, name, isOpen) {
             const safeName = name.replace(/'/g, "\\'"); 
             
@@ -1229,7 +1229,7 @@ async renderProtocol(c) {
                     <span onclick="App.copyPill(${w},${d},${i})" title="Копіювати" style="cursor:pointer;">📋</span>
                     <span onclick="App.duplicatePillToPhase(${w},${d},${i})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
                     
-                    <span onclick="App.deletePillEverywhere('${safeName}', ${d})" title="Видалити з цього дня в усіх фазах" style="cursor:pointer; color:#ef4444">🌍</span>
+                    <span onclick="App.deletePillInPhase('${safeName}', ${d})" title="Видалити з цього дня у поточній ФАЗІ" style="cursor:pointer; color:#ef4444">🌍</span>
                     
                     <span onclick="App.delPillItem(${w},${d},${i})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
                     <span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="cursor:pointer; opacity:0.5; font-size:0.8rem">◀</span>
@@ -1265,20 +1265,23 @@ async renderProtocol(c) {
                 el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
             }
         },
-       // Видалити з усіх тижнів (ТІЛЬКИ В ЦЕЙ ДЕНЬ ТИЖНЯ)
-        deletePillEverywhere(name, dayIndex) {
+// Видалити препарат з цього дня ТІЛЬКИ в поточній фазі
+        deletePillInPhase(name, dayIndex) {
             const dayNames = ["Понеділків", "Вівторків", "Серед", "Четвергів", "П'ятниць", "Субот", "Неділь"];
             const dayName = dayNames[dayIndex] || "днів";
 
-            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" з усіх "${dayName}"?\nЦе торкнеться всіх фаз і тижнів.`)) return;
+            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" з усіх "${dayName}" у ЦІЙ ФАЗІ?`)) return;
             
             this.pushHistory();
-            const weeks = Object.keys(this.data.schedule);
             
-            weeks.forEach(w => {
-                // Перевіряємо, чи існує цей день у тижні (на всяк випадок)
-                if (this.data.schedule[w][dayIndex]) {
-                    // Видаляємо препарат тільки в ЦЕЙ день (dayIndex)
+            // Знаходимо поточну фазу (в якій ми зараз знаходимось)
+            const phase = this.data.phases.find(p => p.id === this.state.phaseId);
+            if (!phase) return;
+            
+            // Проходимось ТІЛЬКИ по тижнях поточної фази
+            phase.weeks.forEach(w => {
+                if (this.data.schedule[w] && this.data.schedule[w][dayIndex]) {
+                    // Видаляємо препарат
                     this.data.schedule[w][dayIndex] = this.data.schedule[w][dayIndex].filter(p => p.name !== name);
                 }
             });
