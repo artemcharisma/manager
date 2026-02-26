@@ -265,27 +265,34 @@
             document.getElementById('fileInput').click();
         },
 
-        async init() {
-            // --- ДОДАЄМО СТИЛІ ДЛЯ ПЕРЕЛИВАННЯ ТА ХОВАЄМО ФАНТОМНУ СТРІЛКУ ---
+async init() {
+            // --- СТИЛІ ДЛЯ СТРІЛОЧКИ (IOS FIX) ТА АНІМАЦІЇ ПЕРЕЛИВАННЯ ---
             const extraStyles = document.createElement('style');
             extraStyles.innerHTML = `
-                /* 1. Анімація дорогого золотого переливання для смуги прогресу */
+                /* 1. РОБИМО СИСТЕМНУ СТРІЛКУ IPHONE ВЕЛИКОЮ І НЕВИДИМОЮ */
+                /* Вона буде ідеально лежати поверх нашої намальованої SVG */
+                input[list]::-webkit-calendar-picker-indicator {
+                    opacity: 0 !important;
+                    width: 45px !important;
+                    height: 100% !important;
+                    cursor: pointer !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: transparent !important;
+                    position: absolute !important;
+                    right: 0 !important;
+                    z-index: 3 !important;
+                }
+
+                /* 2. ДОРОГЕ ЗОЛОТЕ ПЕРЕЛИВАННЯ ЛІНІЇ ПРОГРЕСУ */
                 @keyframes goldShimmer {
                     0% { background-position: 200% center; }
                     100% { background-position: -200% center; }
                 }
                 #progBar {
-                    /* Робимо градієнт з яскравим відблиском посередині */
                     background: linear-gradient(90deg, var(--primary) 25%, #fff2a8 50%, var(--primary) 75%) !important;
                     background-size: 200% auto !important;
                     animation: goldShimmer 2.5s linear infinite !important;
-                }
-
-                /* 2. Повністю вимикаємо і ховаємо криву системну стрілку Apple */
-                input[list]::-webkit-calendar-picker-indicator {
-                    display: none !important;
-                    opacity: 0 !important;
-                    pointer-events: none !important;
                 }
             `;
             document.head.appendChild(extraStyles);
@@ -298,7 +305,6 @@
             // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
             const now = new Date();
             const start = this.getMondayOfStartWeek();
-            // ... (решта коду вашої функції init залишається без змін) ...
             const diffTime = now.getTime() - start.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             let currentWeek = Math.floor(diffDays / 7) + 1; 
