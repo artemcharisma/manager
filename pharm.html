@@ -770,8 +770,15 @@
         <h3 class="modal-title">Додати препарат</h3>
 <div class="input-group">
             <label>Назва</label>
-            <input class="modal-input" id="pillName" placeholder="Напр: hCG" list="med-suggestions" autocomplete="off">
-            <datalist id="med-suggestions"></datalist>
+            <div style="position: relative;">
+                <input class="modal-input" id="pillName" placeholder="Напр: hCG" autocomplete="off" style="margin-bottom:0; padding-right:45px; width:100%; box-sizing:border-box;" oninput="App.filterPills(this.value)" onclick="App.filterPills(this.value)">
+                
+                <div onclick="App.togglePillList()" style="position: absolute; right: 0; top: 0; bottom: 0; width: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; z-index: 2;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
+                </div>
+                
+                <div id="pill-sugg-list" style="display:none; position:absolute; top:calc(100% + 5px); left:0; width:100%; background:#1a1a1a; border:1px solid #333; border-radius:12px; max-height:220px; overflow-y:auto; z-index:100; box-shadow:0 10px 30px rgba(0,0,0,0.8);"></div>
+            </div>
         </div>
 
         <div class="input-group">
@@ -854,6 +861,7 @@
 
 </body>
 </html>
+
 
 
 
