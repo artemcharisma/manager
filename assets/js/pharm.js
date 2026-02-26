@@ -268,7 +268,24 @@
 async init() {
             const extraStyles = document.createElement('style');
             extraStyles.innerHTML = `
-                /* ЗОЛОТЕ ПЕРЕЛИВАННЯ ЛІНІЇ ПРОГРЕСУ */
+                /* 1. СТРІЛКА ЯК ФОН (Працює всюди, виглядає ідеально, не конфліктує з кліками) */
+                #pillName {
+                    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzY2NjY2NiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBkPSJNNy4yNDcgMTEuMTQgMi40NTEgNS42NThDMS44ODUgNS4wMTMgMi4zNDUgNCAzLjIwNCA0aDkuNTkyYTEgMSAwIDAgMSAuNzUzIDEuNjU5bC00Ljc5NiA1LjQ4YTEgMSAwIDAgMS0xLjUwNiAweiIvPjwvc3ZnPg==') !important;
+                    background-repeat: no-repeat !important;
+                    background-position: calc(100% - 15px) center !important;
+                    background-size: 14px !important;
+                    padding-right: 40px !important;
+                    cursor: pointer !important;
+                }
+
+                /* 2. ПОВНІСТЮ ХОВАЄМО СИСТЕМНУ СТРІЛКУ (Щоб вона не перехоплювала кліки криво) */
+                #pillName::-webkit-calendar-picker-indicator {
+                    display: none !important;
+                    opacity: 0 !important;
+                    width: 0 !important;
+                }
+
+                /* 3. ЗОЛОТЕ ПЕРЕЛИВАННЯ ЛІНІЇ ПРОГРЕСУ */
                 @keyframes goldShimmer {
                     0% { background-position: 200% center; }
                     100% { background-position: -200% center; }
@@ -281,15 +298,19 @@ async init() {
             `;
             document.head.appendChild(extraStyles);
 
-            // Глобальний слухач: ховає список, якщо клікнути повз нього
-            document.addEventListener('click', (e) => {
-                const list = document.getElementById('pill-sugg-list');
-                if (list && list.style.display === 'block') {
-                    if (!e.target.closest('.input-group')) {
-                        list.style.display = 'none';
+            // 4. ДОДАЄМО МАГІЮ КЛІКУ: Натискання в будь-яке місце поля миттєво відкриває список
+            const pillInput = document.getElementById('pillName');
+            if (pillInput) {
+                pillInput.addEventListener('click', function() {
+                    try { 
+                        this.showPicker(); 
+                    } catch(e) {
+                        // Якщо браузер не підтримує showPicker (деякі версії iOS), 
+                        // фокус автоматично покаже список над клавіатурою.
+                        this.focus();
                     }
-                }
-            });
+                });
+            }
 
             await PhotoDB.init();
             this.load();
@@ -1061,68 +1082,32 @@ openAddPillModal(week, dayIndex) {
             document.getElementById('pillDose').value = val; 
         },
         
-// 1. Отримує всі препарати
-        getAllPills() {
+        updateSuggestions() {
             const medSet = new Set();
+            const tagSet = new Set();
+            
             const defaults = [
                 'Test Enanthate', 'Test Cypionate', 'Test Propionate', 'Tren Acetate', 
                 'Tren Enanthate', 'Masteron', 'Primobolan', 'Anavar', 'Winstrol', 
                 'HGH', 'hCG', 'Clenbuterol', 'T3', 'Anastrozole', 'Cabergoline' 
             ];
+
             defaults.forEach(d => medSet.add(d));
+            
             this.data.pharmacy.forEach(c => c.items.forEach(i => medSet.add(i.n)));
             Object.values(this.data.schedule).forEach(w => w.forEach(d => d.forEach(p => {
                 if(p.name) medSet.add(p.name);
-            })));
-            return Array.from(medSet).sort();
-        },
-
-        // 2. Фільтрує список при вводі тексту
-        filterPills(q = '') {
-            const list = document.getElementById('pill-sugg-list');
-            if(!list) return;
-            const all = this.getAllPills();
-            const matches = q ? all.filter(k => k.toLowerCase().includes(q.toLowerCase())) : all;
-            
-            if (matches.length > 0) {
-                // Стильний дизайн кожного елемента
-                list.innerHTML = matches.map(m => `
-                    <div style="padding: 14px 15px; border-bottom: 1px solid #2a2a2a; color: #ddd; font-size: 0.95rem; cursor: pointer; font-weight: 600;" 
-                         onclick="App.selectPill('${m.replace(/'/g, "\\'")}')"
-                         onmouseover="this.style.background='#333'; this.style.color='#fff'"
-                         onmouseout="this.style.background='transparent'; this.style.color='#ddd'">
-                        ${m}
-                    </div>`).join('');
-                list.style.display = 'block';
-            } else {
-                list.style.display = 'none';
-            }
-        },
-
-        // 3. Відкриває/закриває список по кліку на стрілку
-        togglePillList() {
-            const list = document.getElementById('pill-sugg-list');
-            if(!list) return;
-            if (list.style.display === 'block') {
-                list.style.display = 'none';
-            } else {
-                this.filterPills(''); // Показати всі
-            }
-        },
-
-        // 4. Дія при виборі препарату зі списку
-        selectPill(name) {
-            document.getElementById('pillName').value = name;
-            document.getElementById('pill-sugg-list').style.display = 'none';
-            document.getElementById('pillDose').focus(); // Автоматично перекидає на дозу
-        },
-
-        // 5. Оновлює тільки теги
-        updateTagPresets() {
-            const tagSet = new Set();
-            Object.values(this.data.schedule).forEach(w => w.forEach(d => d.forEach(p => {
                 if(p.meta) tagSet.add(p.meta);
             })));
+
+            const dl = document.getElementById('med-suggestions'); 
+            dl.innerHTML = '';
+            Array.from(medSet).sort().forEach(m => { 
+                const opt = document.createElement('option'); 
+                opt.value = m; 
+                dl.appendChild(opt); 
+            });
+
             const tagContainer = document.getElementById('tagPresets');
             tagContainer.innerHTML = '';
             Array.from(tagSet).sort().forEach(t => {
