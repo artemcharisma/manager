@@ -214,7 +214,75 @@
             }
             this.smartSave();
         },
-        
+availablePills: [], // Змінна для нашого крутого списку
+
+        initCustomDropdown() {
+            const input = document.getElementById('pillName');
+            const arrow = document.getElementById('pillNameArrow');
+            const list = document.getElementById('custom-pill-list');
+            
+            if(!input || !arrow || !list) return;
+
+            const renderList = (filterText = '') => {
+                const matches = this.availablePills.filter(p => p.toLowerCase().includes(filterText.toLowerCase()));
+                if(matches.length === 0) {
+                    list.innerHTML = `<div style="padding:12px 15px; color:#666; font-size:0.85rem; text-align:center;">Немає збігів</div>`;
+                } else {
+                    list.innerHTML = matches.map(m => `
+                        <div style="padding: 12px 15px; border-bottom: 1px solid #222; color: #fff; font-size: 0.95rem; cursor: pointer; transition: 0.2s;" 
+                             onclick="App.selectCustomPill('${m.replace(/'/g, "\\'")}')"
+                             onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
+                            ${m}
+                        </div>
+                    `).join('');
+                }
+            };
+
+            // ЛОГІКА СТРІЛКИ: ВІДКРИВАЄ І ЗГОРТАЄ
+            arrow.onclick = (e) => {
+                e.stopPropagation();
+                if(list.style.display === 'block') {
+                    this.closeCustomDropdown();
+                } else {
+                    renderList(''); // Показати всі
+                    list.style.display = 'block';
+                    arrow.querySelector('svg').style.transform = 'rotate(180deg)';
+                    arrow.style.color = 'var(--primary)';
+                }
+            };
+
+            // ЛОГІКА ПОЛЯ: Тільки фільтрує при вводі тексту (не відкривається від простого кліку)
+            input.oninput = () => {
+                renderList(input.value);
+                list.style.display = 'block';
+                arrow.querySelector('svg').style.transform = 'rotate(180deg)';
+                arrow.style.color = 'var(--primary)';
+            };
+
+            // Закриваємо список, якщо клікнути будь-де на екрані
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#pillNameGroup')) {
+                    this.closeCustomDropdown();
+                }
+            });
+        },
+
+        closeCustomDropdown() {
+            const list = document.getElementById('custom-pill-list');
+            const arrow = document.getElementById('pillNameArrow');
+            if(list && arrow) {
+                list.style.display = 'none';
+                const svg = arrow.querySelector('svg');
+                if(svg) svg.style.transform = 'rotate(0deg)';
+                arrow.style.color = '#666';
+            }
+        },
+
+        selectCustomPill(val) {
+            document.getElementById('pillName').value = val;
+            this.closeCustomDropdown();
+            document.getElementById('pillDose').focus(); // Автоматом переходимо на дозу
+        },
 // 1. ОНОВЛЕНА ФУНКЦІЯ ВІДКРИТТЯ
         async openCompareModal() {
             document.getElementById('compareModal').style.display = 'flex';
@@ -1057,14 +1125,11 @@ async renderProtocol(c) {
 openAddPillModal(week, dayIndex) {
             this.state.tempPill = { w: week, d: dayIndex, color: 'c-blue' };
             
-            // --- ВИПРАВЛЕННЯ ВВОДУ ДОЗУВАННЯ ---
-            // Примусово знімаємо обмеження на "тільки цифри"
             const doseInput = document.getElementById('pillDose');
             if(doseInput) {
-                doseInput.type = 'text'; // Дозволяє вводити букви
-                doseInput.removeAttribute('inputmode'); // Забирає примусову цифрову клавіатуру
+                doseInput.type = 'text'; 
+                doseInput.removeAttribute('inputmode');
             }
-            // -----------------------------------
 
             document.getElementById('pillName').value = ''; 
             document.getElementById('pillDose').value = ''; 
@@ -1073,6 +1138,7 @@ openAddPillModal(week, dayIndex) {
             document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
             document.querySelector('.color-opt').classList.add('selected'); 
             
+            this.closeCustomDropdown(); // Примусово закриваємо список перед новим відкриттям
             this.updateSuggestions();
             document.getElementById('addPillModal').style.display = 'flex';
             setTimeout(() => document.getElementById('pillName').focus(), 100);
@@ -1082,7 +1148,7 @@ openAddPillModal(week, dayIndex) {
             document.getElementById('pillDose').value = val; 
         },
         
-        updateSuggestions() {
+updateSuggestions() {
             const medSet = new Set();
             const tagSet = new Set();
             
@@ -1100,25 +1166,22 @@ openAddPillModal(week, dayIndex) {
                 if(p.meta) tagSet.add(p.meta);
             })));
 
-            const dl = document.getElementById('med-suggestions'); 
-            dl.innerHTML = '';
-            Array.from(medSet).sort().forEach(m => { 
-                const opt = document.createElement('option'); 
-                opt.value = m; 
-                dl.appendChild(opt); 
-            });
+            // Заповнюємо масив для нашого нового списку
+            this.availablePills = Array.from(medSet).sort();
 
             const tagContainer = document.getElementById('tagPresets');
-            tagContainer.innerHTML = '';
-            Array.from(tagSet).sort().forEach(t => {
-                if(t.length > 0) {
-                    const chip = document.createElement('div');
-                    chip.className = 'tag-chip';
-                    chip.innerText = t;
-                    chip.onclick = () => document.getElementById('pillMeta').value = t;
-                    tagContainer.appendChild(chip);
-                }
-            });
+            if(tagContainer) {
+                tagContainer.innerHTML = '';
+                Array.from(tagSet).sort().forEach(t => {
+                    if(t.length > 0) {
+                        const chip = document.createElement('div');
+                        chip.className = 'tag-chip';
+                        chip.innerText = t;
+                        chip.onclick = () => document.getElementById('pillMeta').value = t;
+                        tagContainer.appendChild(chip);
+                    }
+                });
+            }
         },
 
         selectColor(colorClass, el) { 
