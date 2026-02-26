@@ -214,12 +214,13 @@
             }
             this.smartSave();
         },
-availablePills: [], // Змінна для нашого крутого списку
+availablePills: [], 
 
         initCustomDropdown() {
             const input = document.getElementById('pillName');
             const arrow = document.getElementById('pillNameArrow');
             const list = document.getElementById('custom-pill-list');
+            const group = document.getElementById('pillNameGroup');
             
             if(!input || !arrow || !list) return;
 
@@ -229,39 +230,41 @@ availablePills: [], // Змінна для нашого крутого спис�
                     list.innerHTML = `<div style="padding:12px 15px; color:#666; font-size:0.85rem; text-align:center;">Немає збігів</div>`;
                 } else {
                     list.innerHTML = matches.map(m => `
-                        <div style="padding: 12px 15px; border-bottom: 1px solid #222; color: #fff; font-size: 0.95rem; cursor: pointer; transition: 0.2s;" 
-                             onclick="App.selectCustomPill('${m.replace(/'/g, "\\'")}')"
-                             onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
+                        <div class="custom-pill-option" style="padding: 12px 15px; border-bottom: 1px solid #222; color: #fff; font-size: 0.95rem; cursor: pointer; transition: 0.2s;" 
+                             onclick="App.selectCustomPill('${m.replace(/'/g, "\\'")}')">
                             ${m}
                         </div>
                     `).join('');
                 }
             };
 
-            // ЛОГІКА СТРІЛКИ: ВІДКРИВАЄ І ЗГОРТАЄ
-            arrow.onclick = (e) => {
+            // 1. КЛІК НА СТРІЛКУ: Тільки вона відкриває/закриває список.
+            // e.preventDefault() гарантує, що айфон не проігнорує клік!
+            arrow.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if(list.style.display === 'block') {
                     this.closeCustomDropdown();
                 } else {
-                    renderList(''); // Показати всі
+                    renderList(''); // Показуємо всі варіанти
                     list.style.display = 'block';
                     arrow.querySelector('svg').style.transform = 'rotate(180deg)';
                     arrow.style.color = 'var(--primary)';
                 }
-            };
+            });
 
-            // ЛОГІКА ПОЛЯ: Тільки фільтрує при вводі тексту (не відкривається від простого кліку)
-            input.oninput = () => {
+            // 2. ВВІД ТЕКСТУ В ПОЛЕ: Відкриває список і фільтрує його.
+            // Клік по полю нічого не робить, тільки ввід тексту!
+            input.addEventListener('input', () => {
                 renderList(input.value);
                 list.style.display = 'block';
                 arrow.querySelector('svg').style.transform = 'rotate(180deg)';
                 arrow.style.color = 'var(--primary)';
-            };
+            });
 
-            // Закриваємо список, якщо клікнути будь-де на екрані
+            // 3. ЗАКРИТТЯ ПРИ КЛІКУ ПОВЗ
             document.addEventListener('click', (e) => {
-                if(!e.target.closest('#pillNameGroup')) {
+                if(group && !group.contains(e.target)) {
                     this.closeCustomDropdown();
                 }
             });
@@ -281,79 +284,36 @@ availablePills: [], // Змінна для нашого крутого спис�
         selectCustomPill(val) {
             document.getElementById('pillName').value = val;
             this.closeCustomDropdown();
-            document.getElementById('pillDose').focus(); // Автоматом переходимо на дозу
-        },
-// 1. ОНОВЛЕНА ФУНКЦІЯ ВІДКРИТТЯ
-        async openCompareModal() {
-            document.getElementById('compareModal').style.display = 'flex';
-            
-            // Отримуємо всі тижні, де є записи або фото
-            const weeks = Object.keys(this.data.schedule).map(Number).sort((a,b)=>a-b);
-            const maxW = Math.max(...weeks);
-            
-            // Заповнюємо селекти
-            const selL = document.getElementById('compSelectL');
-            const selR = document.getElementById('compSelectR');
-            
-            const createOpts = () => weeks.map(w => `<option value="${w}">WEEK ${w}</option>`).join('');
-            
-            selL.innerHTML = createOpts();
-            selR.innerHTML = createOpts();
-            
-            // Встановлюємо дефолтні значення (W1 vs Current)
-            selL.value = 1; 
-            selR.value = this.state.week;
-
-            // Завантажуємо картинки
-            await this.loadCompareImage('L', 1);
-            await this.loadCompareImage('R', this.state.week);
+            document.getElementById('pillDose').focus(); 
         },
 
-        // 2. НОВА ФУНКЦІЯ ЗАВАНТАЖЕННЯ ФОТО
-        async loadCompareImage(side, week) {
-            const box = document.getElementById(`imgBox${side}`);
-            box.innerHTML = '<span style="opacity:0.5; font-size:0.8rem">Searching...</span>';
+        openAddPillModal(week, dayIndex) {
+            this.state.tempPill = { w: week, d: dayIndex, color: 'c-blue' };
             
-            const photos = await PhotoDB.get(parseInt(week));
-            
-            if(photos && photos.length > 0) {
-                // Показуємо перше фото (можна додати карусель, але поки так)
-                box.innerHTML = `<img src="${photos[0].data}" style="width:100%; height:100%; object-fit:contain;">`;
-            } else {
-                box.innerHTML = `<div style="text-align:center; opacity:0.3"><div style="font-size:2rem">🚫</div><small>No Photo</small></div>`;
+            const doseInput = document.getElementById('pillDose');
+            if(doseInput) {
+                doseInput.type = 'text'; 
+                doseInput.removeAttribute('inputmode');
             }
+
+            document.getElementById('pillName').value = ''; 
+            document.getElementById('pillDose').value = ''; 
+            document.getElementById('pillMeta').value = '';
+            document.getElementById('fillPhase').checked = false; 
+            document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
+            document.querySelector('.color-opt').classList.add('selected'); 
+            
+            this.closeCustomDropdown(); // Ховаємо список
+            this.updateSuggestions();
+            document.getElementById('addPillModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('pillName').focus(), 100);
         },
 
-
-        safeLoad() {
-            if(document.body.classList.contains('privacy-mode')) {
-                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
-                return;
-            }
-            document.getElementById('fileInput').click();
-        },
-
-async init() {
+        async init() {
+            // ОЧИЩЕНИЙ CSS. Немає фантомних стрілок, немає старих хаків.
+            // Тільки красиве переливання і ховер-ефекти.
             const extraStyles = document.createElement('style');
             extraStyles.innerHTML = `
-                /* 1. СТРІЛКА ЯК ФОН (Працює всюди, виглядає ідеально, не конфліктує з кліками) */
-                #pillName {
-                    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzY2NjY2NiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBkPSJNNy4yNDcgMTEuMTQgMi40NTEgNS42NThDMS44ODUgNS4wMTMgMi4zNDUgNCAzLjIwNCA0aDkuNTkyYTEgMSAwIDAgMSAuNzUzIDEuNjU5bC00Ljc5NiA1LjQ4YTEgMSAwIDAgMS0xLjUwNiAweiIvPjwvc3ZnPg==') !important;
-                    background-repeat: no-repeat !important;
-                    background-position: calc(100% - 15px) center !important;
-                    background-size: 14px !important;
-                    padding-right: 40px !important;
-                    cursor: pointer !important;
-                }
-
-                /* 2. ПОВНІСТЮ ХОВАЄМО СИСТЕМНУ СТРІЛКУ (Щоб вона не перехоплювала кліки криво) */
-                #pillName::-webkit-calendar-picker-indicator {
-                    display: none !important;
-                    opacity: 0 !important;
-                    width: 0 !important;
-                }
-
-                /* 3. ЗОЛОТЕ ПЕРЕЛИВАННЯ ЛІНІЇ ПРОГРЕСУ */
                 @keyframes goldShimmer {
                     0% { background-position: 200% center; }
                     100% { background-position: -200% center; }
@@ -363,26 +323,20 @@ async init() {
                     background-size: 200% auto !important;
                     animation: goldShimmer 2.5s linear infinite !important;
                 }
+                @media (hover: hover) {
+                    .custom-pill-option:hover { background: #333 !important; }
+                }
+                /* Про всяк випадок ховаємо нативну стрілку, якщо вона десь вилізе */
+                input::-webkit-calendar-picker-indicator { display: none !important; }
             `;
             document.head.appendChild(extraStyles);
-
-            // 4. ДОДАЄМО МАГІЮ КЛІКУ: Натискання в будь-яке місце поля миттєво відкриває список
-            const pillInput = document.getElementById('pillName');
-            if (pillInput) {
-                pillInput.addEventListener('click', function() {
-                    try { 
-                        this.showPicker(); 
-                    } catch(e) {
-                        // Якщо браузер не підтримує showPicker (деякі версії iOS), 
-                        // фокус автоматично покаже список над клавіатурою.
-                        this.focus();
-                    }
-                });
-            }
 
             await PhotoDB.init();
             this.load();
             await this.refreshPhotos();
+            
+            // ВАЖЛИВО: Запускаємо наш чистий список!
+            this.initCustomDropdown();
             
             // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
             const now = new Date();
@@ -404,7 +358,6 @@ async init() {
             this.renderNav(); 
             this.renderView();
             
-            // Вмикаємо Privacy Mode на старті
             document.body.classList.add('privacy-mode', 'privacy-locked');
             
             const brandBlock = document.querySelector('.brand');
@@ -426,7 +379,6 @@ async init() {
                 }
             };
         },
-
         load() {
             // 2. ЗАВАНТАЖУЄМО ЧЕРЕЗ МЕНЕДЖЕР
             this.data = this.stateManager.init();
