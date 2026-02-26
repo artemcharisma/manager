@@ -266,25 +266,32 @@
         },
 
 async init() {
-            // --- СТИЛІ ДЛЯ СТРІЛОЧКИ (IOS FIX) ТА АНІМАЦІЇ ПЕРЕЛИВАННЯ ---
             const extraStyles = document.createElement('style');
             extraStyles.innerHTML = `
-                /* 1. РОБИМО СИСТЕМНУ СТРІЛКУ IPHONE ВЕЛИКОЮ І НЕВИДИМОЮ */
-                /* Вона буде ідеально лежати поверх нашої намальованої SVG */
-                input[list]::-webkit-calendar-picker-indicator {
-                    opacity: 0 !important;
-                    width: 45px !important;
-                    height: 100% !important;
-                    cursor: pointer !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    background: transparent !important;
-                    position: absolute !important;
-                    right: 0 !important;
-                    z-index: 3 !important;
+                /* 1. РОБИМО СТРІЛКУ ФОНОМ ПОЛЯ ВВОДУ (Працює всюди) */
+                #pillName {
+                    padding-right: 45px !important;
+                    box-sizing: border-box !important;
+                    /* Використовуємо Base64, щоб айфон точно відобразив іконку */
+                    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iIzY2NjY2NiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBkPSJNNy4yNDcgMTEuMTQgMi40NTEgNS42NThDMS44ODUgNS4wMTMgMi4zNDUgNCAzLjIwNCA0aDkuNTkyYTEgMSAwIDAgMSAuNzUzIDEuNjU5bC00Ljc5NiA1LjQ4YTEgMSAwIDAgMS0xLjUwNiAweiIvPjwvc3ZnPg==') !important;
+                    background-repeat: no-repeat !important;
+                    background-position: calc(100% - 15px) center !important; /* Відступ стрілки від правого краю */
+                    background-size: 16px !important;
                 }
 
-                /* 2. ДОРОГЕ ЗОЛОТЕ ПЕРЕЛИВАННЯ ЛІНІЇ ПРОГРЕСУ */
+                /* 2. РОБИМО СИСТЕМНУ ЗОНУ КЛІКУ ВЕЛИКОЮ І ЦЕНТРУЄМО ЇЇ */
+                #pillName::-webkit-calendar-picker-indicator {
+                    opacity: 0 !important;
+                    color: transparent !important;
+                    background: transparent !important;
+                    width: 45px !important; /* Ідеально накриває зону в 45 пікселів */
+                    height: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    cursor: pointer !important;
+                }
+
+                /* 3. ЗОЛОТЕ ПЕРЕЛИВАННЯ ЛІНІЇ ПРОГРЕСУ */
                 @keyframes goldShimmer {
                     0% { background-position: 200% center; }
                     100% { background-position: -200% center; }
@@ -296,7 +303,6 @@ async init() {
                 }
             `;
             document.head.appendChild(extraStyles);
-            // -----------------------------------------------------------------
 
             await PhotoDB.init();
             this.load();
@@ -344,7 +350,6 @@ async init() {
                 }
             };
         },
-
 
         load() {
             // 2. ЗАВАНТАЖУЄМО ЧЕРЕЗ МЕНЕДЖЕР
