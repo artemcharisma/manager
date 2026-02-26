@@ -162,6 +162,9 @@ const App = {
     },
 
 render() {
+        // 1. ЗАПАМ'ЯТОВУЄМО ПОЗИЦІЮ СКРОЛУ
+        const scrollY = window.scrollY;
+
         this.renderDaysBar();
         const day = this.getCurrentDay();
         if(!day) return;
@@ -170,7 +173,7 @@ render() {
         if(titleEl) titleEl.innerText = day.name;
         
         const list = document.getElementById('mealList');
-        let mealsHtml = ''; // Створюємо змінну замість миттєвого очищення HTML
+        let mealsHtml = ''; 
         
         day.meals.forEach(m => {
             let mCal = 0, mP = 0, mF = 0, mC = 0;
@@ -203,7 +206,6 @@ render() {
                 </div>`;
             }).join('');
 
-            // Записуємо у змінну, а не в DOM
             mealsHtml += `
             <div class="meal-block">
                 <div class="meal-header">
@@ -221,9 +223,13 @@ render() {
             </div>`;
         });
 
-        // Вставляємо готовий код ОДНИМ РАЗОМ (це фіксить стрибок екрану)
         list.innerHTML = mealsHtml;
         this.updateStats();
+
+        // 2. ЖОРСТКО ПОВЕРТАЄМО ЕКРАН НА МІСЦЕ
+        if (scrollY > 0) {
+            window.scrollTo(0, scrollY);
+        }
     },
 
     renderDaysBar() {
@@ -399,7 +405,7 @@ render() {
         this.toggleFab(true); 
         document.body.style.overflow = ''; // Повертаємо скрол фону при закритті
     },
-    saveFood() {
+saveFood() {
         const n = document.getElementById('inpName').value;
         const w = parseFloat(document.getElementById('inpWeight').value);
         if(!n || isNaN(w)) return;
@@ -417,13 +423,21 @@ render() {
         this.pushHistory();
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
-        this.save(); this.render(); this.closeModal();
+        
+        // ВАЖЛИВО: Спочатку закриваємо модалку, потім рендеримо!
+        this.closeModal(); 
+        this.save(); 
+        this.render(); 
     },
 
     deleteFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
-        this.save(); this.render(); this.closeModal();
+        
+        // Спочатку закриваємо модалку, потім рендеримо
+        this.closeModal(); 
+        this.save(); 
+        this.render(); 
     },
 
     addMealBlock() {
@@ -486,7 +500,7 @@ render() {
         }
         document.getElementById('bankEditModal').style.display='flex';
     },
-    saveBankItem() {
+saveBankItem() {
         const n = document.getElementById('bankInpName').value;
         const p = parseFloat(document.getElementById('bankInpP').value)||0;
         const f = parseFloat(document.getElementById('bankInpF').value)||0;
@@ -497,10 +511,14 @@ render() {
 
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
-        this.save(); this.renderBank();
+        
+        // Спочатку закриваємо вікна
         document.getElementById('bankEditModal').style.display='none';
-        this.render();
         this.closeModal(); 
+
+        this.save(); 
+        this.renderBank();
+        this.render();
     },
     delFromBank() {
         if(confirm('Видалити з бази назавжди?')) {
