@@ -162,8 +162,7 @@ const App = {
     },
 
 render() {
-        // 1. ЗАПАМ'ЯТОВУЄМО ПОЗИЦІЮ СКРОЛУ
-        const scrollY = window.scrollY;
+        const scrollY = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
 
         this.renderDaysBar();
         const day = this.getCurrentDay();
@@ -226,10 +225,8 @@ render() {
         list.innerHTML = mealsHtml;
         this.updateStats();
 
-        // 2. ЖОРСТКО ПОВЕРТАЄМО ЕКРАН НА МІСЦЕ
-        if (scrollY > 0) {
-            window.scrollTo(0, scrollY);
-        }
+        // ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ (запобігає стрибкам)
+        if (scrollY > 0) window.scrollTo(0, scrollY);
     },
 
     renderDaysBar() {
@@ -424,7 +421,7 @@ saveFood() {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        // ВАЖЛИВО: Спочатку закриваємо модалку, потім рендеримо!
+        // ВАЖЛИВО: правильний порядок
         this.closeModal(); 
         this.save(); 
         this.render(); 
@@ -434,7 +431,7 @@ saveFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
         
-        // Спочатку закриваємо модалку, потім рендеримо
+        // ВАЖЛИВО: правильний порядок
         this.closeModal(); 
         this.save(); 
         this.render(); 
@@ -512,10 +509,9 @@ saveBankItem() {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
-        // Спочатку закриваємо вікна
         document.getElementById('bankEditModal').style.display='none';
         this.closeModal(); 
-
+        
         this.save(); 
         this.renderBank();
         this.render();
