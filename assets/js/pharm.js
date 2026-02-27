@@ -1047,7 +1047,7 @@ async renderProtocol(c) {
             this.renderBodyMap(); 
         },
 
-        renderBodyMap() {
+renderBodyMap() {
             const muscles = [
                 {id:'delt_l', d:'M85,60 Q70,60 65,80 L70,110 Q85,100 85,60', cx:75, cy:85},
                 {id:'delt_r', d:'M215,60 Q230,60 235,80 L230,110 Q215,100 215,60', cx:225, cy:85},
@@ -1056,20 +1056,54 @@ async renderProtocol(c) {
                 {id:'quad_l', d:'M100,280 Q85,350 90,400 L140,400 Q145,350 150,280 Z', cx:120, cy:340},
                 {id:'quad_r', d:'M200,280 Q215,350 210,400 L160,400 Q155,350 150,280 Z', cx:180, cy:340}
             ];
+            
+            // Автоматична міграція старих даних (якщо у вас була збережена тільки 1 точка)
+            if (this.data.bodyMap && this.data.bodyMap.last && !this.data.bodyMap.active) {
+                this.data.bodyMap.active = [this.data.bodyMap.last];
+            }
+            const activeSites = this.data.bodyMap?.active || [];
+
             let svg = `<svg viewBox="0 0 300 500" class="body-svg"><path d="M150,20 Q110,20 110,50 L100,60 L100,180 L80,250 L80,450 L140,450 L140,280 L160,280 L160,450 L220,450 L220,250 L200,180 L200,60 L190,50 Q190,20 150,20" fill="#1a1a1a" stroke="none"/>`;
+            
             muscles.forEach(m => {
-                const isActive = this.data.bodyMap?.last === m.id;
+                const isActive = activeSites.includes(m.id);
                 svg += `<path d="${m.d}" class="muscle-group ${isActive?'active':''}" onclick="App.setInjectionSite('${m.id}')" />`;
-                if(isActive) svg += `<text x="${m.cx}" y="${m.cy}" fill="#000" font-size="10" text-anchor="middle" dominant-baseline="middle">💉</text>`;
+                
+                if(isActive) {
+                    // Професійний SVG-маркер ін'єкції (Мішень). pointer-events:none дозволяє клікати крізь нього.
+                    svg += `
+                    <g style="pointer-events: none;">
+                        <circle cx="${m.cx}" cy="${m.cy + 2}" r="9" fill="rgba(0,0,0,0.6)" />
+                        <circle cx="${m.cx}" cy="${m.cy}" r="9" fill="#ef4444" stroke="#ffffff" stroke-width="2" />
+                        <circle cx="${m.cx}" cy="${m.cy}" r="3" fill="#ffffff" />
+                    </g>`;
+                }
             });
             svg += `</svg>`;
             document.getElementById('svgContainer').innerHTML = svg;
         },
 
         setInjectionSite(id) {
-            if(!this.data.bodyMap) this.data.bodyMap = { history: [] };
-            this.data.bodyMap.last = id;
-            this.data.bodyMap.history.push({ date: new Date().toISOString(), id: id });
+            this.pushHistory(); // Зберігаємо в історію, щоб можна було відмінити дію кнопкою ↩
+            
+            // Створюємо структуру, якщо її ще немає
+            if(!this.data.bodyMap) this.data.bodyMap = { active: [], history: [] };
+            if(!this.data.bodyMap.active) {
+                this.data.bodyMap.active = this.data.bodyMap.last ? [this.data.bodyMap.last] : [];
+            }
+            
+            const idx = this.data.bodyMap.active.indexOf(id);
+            
+            if (idx > -1) {
+                // Якщо точка ВЖЕ вибрана — видаляємо її зі списку (Toggle OFF)
+                this.data.bodyMap.active.splice(idx, 1);
+            } else {
+                // Якщо точка НЕ вибрана — додаємо її (Toggle ON)
+                this.data.bodyMap.active.push(id);
+                if(!this.data.bodyMap.history) this.data.bodyMap.history = [];
+                this.data.bodyMap.history.push({ date: new Date().toISOString(), id: id });
+            }
+            
             this.save(); 
             this.renderBodyMap();
         },
