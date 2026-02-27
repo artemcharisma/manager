@@ -401,7 +401,7 @@ openModal(title, f, del) {
         this.toggleFab(true); 
     },
 
-    saveFood() {
+saveFood() {
         const n = document.getElementById('inpName').value;
         const w = parseFloat(document.getElementById('inpWeight').value);
         if(!n || isNaN(w)) return;
@@ -420,17 +420,21 @@ openModal(title, f, del) {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        this.closeModal(); // Викличе blur() і природну анімацію iOS
         this.save(); 
-        this.render(); 
+        this.closeModal(); // Закриваємо модалку і знімаємо фокус (клавіатура їде вниз)
+        
+        // Даємо iOS 300мс, щоб плавно опустити екран, і тільки потім оновлюємо дані
+        setTimeout(() => { this.render(); }, 300);
     },
 
     deleteFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
-        this.closeModal(); 
+        
         this.save(); 
-        this.render(); 
+        this.closeModal(); 
+        
+        setTimeout(() => { this.render(); }, 300);
     },
 
     addMealBlock() {
@@ -505,11 +509,14 @@ saveBankItem() {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
+        this.save(); 
         document.getElementById('bankEditModal').style.display='none';
         this.closeModal(); 
-        this.save(); 
-        this.renderBank();
-        this.render();
+        
+        setTimeout(() => {
+            this.renderBank();
+            this.render();
+        }, 300);
     },
     delFromBank() {
         if(confirm('Видалити з бази назавжди?')) {
