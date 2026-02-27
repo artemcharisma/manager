@@ -354,7 +354,6 @@ render() {
         // ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ (Екран не буде стрибати!)
         if (scrollY > 0) window.scrollTo(0, scrollY);
     },
-
     save() { this.state.save(this.data); },
     
     undo() {
