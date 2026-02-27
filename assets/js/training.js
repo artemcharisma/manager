@@ -178,12 +178,9 @@ const App = {
         this.save();
     },
 
-    toggleDay(uid) {
+toggleDay(uid, el) {
         if(!this.data.opened) this.data.opened = {};
         
-        // Логіка перемикача: 
-        // Якщо є в списку відкритих -> видаляємо (закриваємо)
-        // Якщо немає -> додаємо (відкриваємо)
         if(this.data.opened[uid]) {
             delete this.data.opened[uid];
         } else {
@@ -191,14 +188,22 @@ const App = {
         }
         
         this.save();
-        this.render(); 
+        
+        // Замість this.render() просто перемикаємо клас локально! 
+        // Це миттєво і без стрибків екрану.
+        if (el) {
+            const card = el.closest('.day-card');
+            if(card) card.classList.toggle('collapsed');
+        }
     },
 
-    render() {
+render() {
+        const scrollY = window.scrollY; // 1. ЗАПАМ'ЯТОВУЄМО СКРОЛ
+
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
         const isEd = document.body.classList.contains('editing');
-        const prog = this.data.currentProgram;
+        const prog = this.data.currentProgram;;
 
         // Кнопки програм
         document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
@@ -278,7 +283,7 @@ const App = {
 
                     return `
                     <div class="day-card ${isOpen ? '' : 'collapsed'}">
-                        <div class="day-header" onclick="App.toggleDay('${uid}')">
+                        <div class="day-header" onclick="App.toggleDay('${uid}', this)">
                             <div style="display:flex; align-items:center">
                                 <span class="day-chevron">▼</span>
                                 <span class="day-title">${day.day}</span>
@@ -307,8 +312,10 @@ const App = {
         }
         
         this.renderGuide();
-    },
 
+        // 2. ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ
+        if (scrollY > 0) window.scrollTo(0, scrollY);
+    },
     save() { this.state.save(this.data); },
     
     undo() {
