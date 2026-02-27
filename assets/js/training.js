@@ -130,19 +130,14 @@ const App = {
     // 1. Підключаємо StateManager (ключ 'training_protocol', дефолтні дані InitialData)
     state: new StateManager('training_protocol', InitialData), 
 
-    init() {
-        // 2. Завантажуємо дані через менеджер (він сам перевірить localStorage і дефолтні дані)
+init() {
         this.data = this.state.init();
 
-        // Перевірка цілісності даних (на всяк випадок, якщо це старий сейв)
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
         if(!this.data.guidelines) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
         if(!this.data.exBank) this.data.exBank = [];
-        if(!this.data.opened) this.data.opened = {}; // Важливо: opened тепер частина data
+        if(!this.data.opened) this.data.opened = {}; 
         
-        // --- EVENT LISTENERS (Тепер всередині init) ---
-        
-        // 1. Слухач скролу
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('scrollTopBtn');
             if(btn) {
@@ -151,19 +146,23 @@ const App = {
             }
         });
 
-      // 2. Hard Reset & Animation
+        // НОВЕ: Закриття кастомних списків при кліку повз
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.ex-name-input') && !e.target.closest('.custom-dropdown')) {
+                document.querySelectorAll('.custom-dropdown').forEach(el => el.style.display = 'none');
+            }
+        });
+
         const brandBlock = document.getElementById('brandBlock');
         const brandIcon = brandBlock.querySelector('.brand-icon');
 
-        // Окремо клік по іконці (Анімація)
         brandIcon.onclick = (e) => {
-            e.stopPropagation(); // Щоб клік не пішов вище
+            e.stopPropagation(); 
             brandIcon.classList.remove('hint-active');
             void brandIcon.offsetWidth; 
             brandIcon.classList.add('hint-active');
         };
 
-        // Окремо подвійний клік по шапці (Скидання)
         brandBlock.ondblclick = () => {
             if(confirm("⚠ HARD RESET?")) {
                 localStorage.removeItem('training_protocol');
@@ -177,6 +176,44 @@ const App = {
         this.render();
         this.save();
     },
+ // --- КАСТОМНІ СПИСКИ ВПРАВ ---
+    openExList(w, d, e) {
+        const inp = document.getElementById(`ex-${w}-${d}-${e}`);
+        if(inp) this.filterExList(inp.value, w, d, e);
+    },
+    
+    filterExList(q, w, d, e) {
+        // Ховаємо всі інші відкриті списки на екрані
+        document.querySelectorAll('.custom-dropdown').forEach(el => el.style.display = 'none');
+        
+        const list = document.getElementById(`list-${w}-${d}-${e}`);
+        if (!list) return;
+        
+        const matches = this.data.exBank.filter(x => x.toLowerCase().includes(q.toLowerCase()));
+        
+        if (matches.length === 0) {
+            list.innerHTML = `<div style="padding:10px; color:#666; font-size:0.8rem; text-align:center;">Немає збігів</div>`;
+        } else {
+            list.innerHTML = matches.map(m => `
+                <div style="padding: 12px 15px; border-bottom: 1px solid #222; color: #fff; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" 
+                     onclick="App.selectEx('${m.replace(/'/g, "\\'")}', ${w}, ${d}, ${e})"
+                     onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
+                    ${m}
+                </div>
+            `).join('');
+        }
+        list.style.display = 'block';
+    },
+    
+    selectEx(val, w, d, e) {
+        const inp = document.getElementById(`ex-${w}-${d}-${e}`);
+        if (inp) {
+            inp.value = val;
+            this.updateEx(w, d, e, 'n', val); // Одразу зберігаємо
+        }
+        document.getElementById(`list-${w}-${d}-${e}`).style.display = 'none';
+    },
+    // --------------------------------
 
 toggleDay(uid, el) {
         if(!this.data.opened) this.data.opened = {};
@@ -198,34 +235,27 @@ toggleDay(uid, el) {
     },
 
 render() {
-        const scrollY = window.scrollY; // 1. ЗАПАМ'ЯТОВУЄМО СКРОЛ
+        const scrollY = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
 
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
         const isEd = document.body.classList.contains('editing');
-        const prog = this.data.currentProgram;;
+        const prog = this.data.currentProgram;
 
-        // Кнопки програм
         document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
         const progBtn = document.getElementById(`prog-${prog}`);
         if(progBtn) progBtn.classList.add('active');
 
-        // Фільтруємо тижні по поточній програмі
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
-        // Навігація
         nav.innerHTML = filteredWeeks.map((w) => {
-            // Додаємо клас 'is-arms', якщо це програма рук
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
-            
             return `<div class="week-btn ${w.type} ${specialClass}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
                 <span>${w.num}</span>
                 <small>${w.type}</small>
             </div>`;
         }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5">+</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444; opacity:0.5">+</div>`;
 
-        // ... далі код render без змін (список днів, карток тощо) ...
-        // (скопіюй ту частину з попереднього коду, там де if (filteredWeeks.length === 0) ...)
         if (filteredWeeks.length === 0) {
             c.innerHTML = `<div style="text-align:center; padding:40px; color:#666">Програма порожня.</div>`;
         } else {
@@ -267,7 +297,15 @@ render() {
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
                             <div class="ex-info">
                                 <div class="ex-name-row">
-                                    ${isEd ? `<input class="ex-name-input" list="ex-bank" value="${ex.n}" onblur="App.updateEx(${realWIdx},${dIdx},${eIdx},'n',this.value)">` : `<span class="ex-name">${ex.n || ''}</span>`}
+                                    ${isEd ? `
+                                    <div style="position:relative; flex:1; margin-right:10px;">
+                                        <input class="ex-name-input" id="ex-${realWIdx}-${dIdx}-${eIdx}" autocomplete="off" value="${ex.n}" 
+                                               onfocus="App.openExList(${realWIdx}, ${dIdx}, ${eIdx})" 
+                                               oninput="App.filterExList(this.value, ${realWIdx}, ${dIdx}, ${eIdx})" 
+                                               onblur="setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n',document.getElementById('ex-${realWIdx}-${dIdx}-${eIdx}').value), 200)">
+                                        <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
+                                    </div>
+                                    ` : `<span class="ex-name">${ex.n || ''}</span>`}
                                     ${groupSelect}
                                 </div>
                                 <div class="edit-ui">
@@ -313,9 +351,10 @@ render() {
         
         this.renderGuide();
 
-        // 2. ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ
+        // ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ (Екран не буде стрибати!)
         if (scrollY > 0) window.scrollTo(0, scrollY);
     },
+
     save() { this.state.save(this.data); },
     
     undo() {
