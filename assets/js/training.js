@@ -232,8 +232,6 @@ const App = {
     },
 
     render() {
-        const scrollY = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
-
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
         const isEd = document.body.classList.contains('editing');
@@ -351,8 +349,6 @@ const App = {
         
         this.renderGuide();
 
-        // ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ
-        if (scrollY > 0) window.scrollTo(0, scrollY);
     },
 
     save() { this.state.save(this.data); },
