@@ -1086,11 +1086,15 @@ openAddPillModal(week, dayIndex) {
             document.getElementById('pillName').value = ''; 
             document.getElementById('pillDose').value = ''; 
             document.getElementById('pillMeta').value = '';
-            document.getElementById('fillPhase').checked = false; 
+            
+            // Скидаємо вибір частоти на дефолтний при кожному відкритті
+            const freqSelect = document.getElementById('pillFreq');
+            if (freqSelect) freqSelect.value = 'once';
+            
             document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
             document.querySelector('.color-opt').classList.add('selected'); 
             
-            this.closeCustomDropdown(); // Примусово закриваємо список перед новим відкриттям
+            this.closeCustomDropdown(); 
             this.updateSuggestions();
             document.getElementById('addPillModal').style.display = 'flex';
             setTimeout(() => document.getElementById('pillName').focus(), 100);
@@ -1142,26 +1146,59 @@ updateSuggestions() {
             el.classList.add('selected'); 
         },
         
-        confirmAddPill() {
+confirmAddPill() {
             const name = document.getElementById('pillName').value || "New"; 
             const dose = document.getElementById('pillDose').value || "-"; 
             const meta = document.getElementById('pillMeta').value || "";
-            const fillPhase = document.getElementById('fillPhase').checked;
+            const freq = document.getElementById('pillFreq') ? document.getElementById('pillFreq').value : 'once';
+            
             this.pushHistory();
             
-            if(fillPhase) {
-                const phase = this.data.phases.find(p => p.weeks.includes(this.state.tempPill.w));
-                if(phase) {
-                    const futureWeeks = phase.weeks.filter(w => w >= this.state.tempPill.w);
-                    futureWeeks.forEach(w => {
-                        this.data.schedule[w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
-                    });
-                } else {
-                    this.data.schedule[this.state.tempPill.w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
+            const startW = this.state.tempPill.w;
+            const startD = this.state.tempPill.d;
+            const pillData = { name, dose, meta, color: this.state.tempPill.color };
+            
+            // Знаходимо фазу, до якої належить поточний тиждень
+            const phase = this.data.phases.find(p => p.weeks.includes(startW));
+            
+            if (!phase || freq === 'once') {
+                // 1. Тільки сьогодні (або якщо фаза чомусь не знайдена)
+                this.data.schedule[startW][startD].push({ ...pillData });
+            } 
+            else if (freq === 'weekly') {
+                // 2. Кожного тижня в цей самий день до кінця фази
+                phase.weeks.filter(w => w >= startW).forEach(w => {
+                    this.data.schedule[w][startD].push({ ...pillData });
+                });
+            } 
+            else {
+                // 3. Розумна логіка: Щодня / Через день / Кожні 3 дні
+                let step = 1; // Щодня
+                if (freq === 'eod') step = 2; // Через день
+                if (freq === 'e3d') step = 3; // Кожні 3 дні
+                
+                const lastW = Math.max(...phase.weeks);
+                let curW = startW;
+                let curD = startD;
+                
+                // Крокуємо циклом до кінця останнього тижня фази
+                while (curW <= lastW) {
+                    // Додаємо препарат у поточний розрахований день
+                    if (this.data.schedule[curW] && phase.weeks.includes(curW)) {
+                        this.data.schedule[curW][curD].push({ ...pillData });
+                    }
+                    
+                    // Робимо крок вперед
+                    curD += step;
+                    
+                    // Якщо перевалили за неділю (індекс 6) — перемикаємо на наступний тиждень
+                    while (curD > 6) {
+                        curD -= 7;
+                        curW += 1;
+                    }
                 }
-            } else {
-                this.data.schedule[this.state.tempPill.w][this.state.tempPill.d].push({ name, dose, meta, color: this.state.tempPill.color });
             }
+            
             this.save(); 
             this.closeModal(); 
             this.renderView();
