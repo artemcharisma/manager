@@ -575,9 +575,6 @@ availablePills: [],
     },
 
        async renderView() {
-            // 1. Запам'ятовуємо позицію
-            const scrollX = window.scrollX;
-            const scrollY = window.scrollY;
             
             const c = document.getElementById('mainView'); 
             // ВАЖЛИВО: Ми НЕ очищаємо c.innerHTML тут, щоб уникнути "миготіння" і стрибка вгору
@@ -595,8 +592,6 @@ availablePills: [],
                 else if(this.state.view === 'analytics') this.renderAnalytics(c);
             }
 
-            // 2. Жорстко повертаємо екран на місце
-            if(scrollY > 0) window.scrollTo(scrollX, scrollY);
         },
 
         renderTimeline() {
