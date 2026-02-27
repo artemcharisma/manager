@@ -382,8 +382,12 @@ render() {
         this.openModal('РЕДАГУВАТИ', editItem, true);
     },
 
-    openModal(title, f, del) {
-        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
+openModal(title, f, del) {
+        this.toggleFab(false); 
+        
+        // 1. ЗАПАМ'ЯТОВУЄМО СКРОЛ ДО ПОЯВИ КЛАВІАТУРИ
+        this.state.savedScroll = window.scrollY; 
+        
         document.body.style.overflow = 'hidden';
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
@@ -399,10 +403,19 @@ render() {
     
     closeModal() { 
         document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none');
+        document.querySelectorAll('.modal').forEach(el => el.style.display='none'); // надійне закриття
         this.toggleFab(true); 
-        document.body.style.overflow = ''; // Повертаємо скрол фону при закритті
+        document.body.style.overflow = ''; 
+        
+        // 2. ПОВЕРТАЄМО ЕКРАН НА МІСЦЕ ПІСЛЯ ЗАКРИТТЯ
+        if (this.state.savedScroll !== undefined) {
+            window.scrollTo(0, this.state.savedScroll);
+        }
     },
 saveFood() {
+        // ПРИМУСОВО ХОВАЄМО КЛАВІАТУРУ
+        if (document.activeElement) document.activeElement.blur();
+
         const n = document.getElementById('inpName').value;
         const w = parseFloat(document.getElementById('inpWeight').value);
         if(!n || isNaN(w)) return;
@@ -421,20 +434,24 @@ saveFood() {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        // ВАЖЛИВО: правильний порядок
-        this.closeModal(); 
-        this.save(); 
-        this.render(); 
+        // ЧЕКАЄМО 150мс, ПОКИ СХОВАЄТЬСЯ КЛАВІАТУРА, ПОТІМ ЗАКРИВАЄМО І МАЛЮЄМО
+        setTimeout(() => {
+            this.closeModal(); 
+            this.save(); 
+            this.render(); 
+        }, 150);
     },
 
     deleteFood() {
+        if (document.activeElement) document.activeElement.blur();
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
         
-        // ВАЖЛИВО: правильний порядок
-        this.closeModal(); 
-        this.save(); 
-        this.render(); 
+        setTimeout(() => {
+            this.closeModal(); 
+            this.save(); 
+            this.render(); 
+        }, 150);
     },
 
     addMealBlock() {
@@ -498,6 +515,8 @@ saveFood() {
         document.getElementById('bankEditModal').style.display='flex';
     },
 saveBankItem() {
+        if (document.activeElement) document.activeElement.blur();
+        
         const n = document.getElementById('bankInpName').value;
         const p = parseFloat(document.getElementById('bankInpP').value)||0;
         const f = parseFloat(document.getElementById('bankInpF').value)||0;
@@ -509,12 +528,13 @@ saveBankItem() {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
-        document.getElementById('bankEditModal').style.display='none';
-        this.closeModal(); 
-        
-        this.save(); 
-        this.renderBank();
-        this.render();
+        setTimeout(() => {
+            document.getElementById('bankEditModal').style.display='none';
+            this.closeModal(); 
+            this.save(); 
+            this.renderBank();
+            this.render();
+        }, 150);
     },
     delFromBank() {
         if(confirm('Видалити з бази назавжди?')) {
