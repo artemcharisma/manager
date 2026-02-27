@@ -379,9 +379,10 @@ render() {
     },
 
 openModal(title, f, del) {
-        if(document.activeElement) document.activeElement.blur(); // Скидаємо фокус перед відкриттям
+        if(document.activeElement) document.activeElement.blur(); 
+        this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО ДО ПОЯВИ КЛАВІАТУРИ
+        
         this.toggleFab(false); 
-        // Прибрали document.body.style.overflow = 'hidden' - воно ламало скрол на iOS!
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -393,15 +394,28 @@ openModal(title, f, del) {
         document.getElementById('foodModal').style.display = 'flex';
         document.getElementById('sugg-list').style.display = 'none';
     },
-    
-    closeModal() { 
-        if(document.activeElement) document.activeElement.blur(); // Це змусить клавіатуру ПЛАВНО опуститися разом зі сторінкою!
-        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none');
-        document.querySelectorAll('.modal').forEach(el => el.style.display='none');
-        this.toggleFab(true); 
+
+    openBank() {
+        if(document.activeElement) document.activeElement.blur();
+        this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
+        this.toggleFab(false);
+        this.renderBank();
+        document.getElementById('bankModal').style.display='flex';
     },
 
-saveFood() {
+    openTargets() {
+        if(document.activeElement) document.activeElement.blur();
+        this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
+        this.toggleFab(false); 
+        const t = this.data.targets;
+        document.getElementById('tgP').value = t.p;
+        document.getElementById('tgF').value = t.f;
+        document.getElementById('tgC').value = t.c;
+        document.getElementById('tgK').value = t.k;
+        document.getElementById('targetsModal').style.display='flex';
+    },
+
+    saveFood() {
         const n = document.getElementById('inpName').value;
         const w = parseFloat(document.getElementById('inpWeight').value);
         if(!n || isNaN(w)) return;
@@ -420,21 +434,22 @@ saveFood() {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
+        if(document.activeElement) document.activeElement.blur(); // ХОВАЄМО КЛАВІАТУРУ
         this.save(); 
-        this.closeModal(); // Закриваємо модалку і знімаємо фокус (клавіатура їде вниз)
-        
-        // Даємо iOS 300мс, щоб плавно опустити екран, і тільки потім оновлюємо дані
-        setTimeout(() => { this.render(); }, 300);
+        this.render(); 
+        this.closeModal(); 
+        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' }); // ПЛАВНО ОПУСКАЄМО
     },
 
     deleteFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
         
+        if(document.activeElement) document.activeElement.blur();
         this.save(); 
+        this.render(); 
         this.closeModal(); 
-        
-        setTimeout(() => { this.render(); }, 300);
+        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
     },
 
     addMealBlock() {
@@ -509,21 +524,26 @@ saveBankItem() {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
+        if(document.activeElement) document.activeElement.blur();
         this.save(); 
+        this.renderBank();
+        this.render();
         document.getElementById('bankEditModal').style.display='none';
         this.closeModal(); 
-        
-        setTimeout(() => {
-            this.renderBank();
-            this.render();
-        }, 300);
+        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
     },
+
     delFromBank() {
         if(confirm('Видалити з бази назавжди?')) {
             delete this.data.bank[this.state.editName];
-            this.save(); this.renderBank();
+            
+            if(document.activeElement) document.activeElement.blur();
+            this.save(); 
+            this.renderBank();
+            this.render();
             document.getElementById('bankEditModal').style.display='none';
             this.closeModal();
+            window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
         }
     },
 
@@ -551,9 +571,13 @@ saveBankItem() {
             c: parseFloat(document.getElementById('tgC').value)||0,
             k: parseFloat(document.getElementById('tgK').value)||0
         };
-        this.save(); this.updateStats();
+        
+        if(document.activeElement) document.activeElement.blur();
+        this.save(); 
+        this.updateStats();
         document.getElementById('targetsModal').style.display='none';
         this.closeModal();
+        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
     },
 
     exportData() {
