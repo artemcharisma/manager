@@ -248,6 +248,7 @@ render() {
 
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
+        // ПОВЕРНУЛИ ЯК БУЛО: Кнопки + видно завжди
         nav.innerHTML = filteredWeeks.map((w) => {
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
             return `<div class="week-btn ${w.type} ${specialClass}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
@@ -257,6 +258,7 @@ render() {
         }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5">+</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444; opacity:0.5">+</div>`;
 
         if (filteredWeeks.length === 0) {
+            // ПОВЕРНУЛИ ЯК БУЛО
             c.innerHTML = `<div style="text-align:center; padding:40px; color:#666">Програма порожня.</div>`;
         } else {
             c.innerHTML = filteredWeeks.map((week) => {
@@ -305,7 +307,9 @@ render() {
                                                onblur="setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n',document.getElementById('ex-${realWIdx}-${dIdx}-${eIdx}').value), 200)">
                                         <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
                                     </div>
-                                    ` : `<span class="ex-name">${ex.n || ''}</span>`}
+                                    ` : 
+                                    // ПОВЕРНУЛИ ЯК БУЛО (без заглушок)
+                                    `<span class="ex-name">${ex.n || ''}</span>`}
                                     ${groupSelect}
                                 </div>
                                 <div class="edit-ui">
