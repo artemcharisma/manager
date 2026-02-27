@@ -1057,7 +1057,7 @@ renderBodyMap() {
                 {id:'quad_r', d:'M200,280 Q215,350 210,400 L160,400 Q155,350 150,280 Z', cx:180, cy:340}
             ];
             
-            // Автоматична міграція старих даних (якщо у вас була збережена тільки 1 точка)
+            // Автоматична підтримка старих даних, щоб нічого не зникло
             if (this.data.bodyMap && this.data.bodyMap.last && !this.data.bodyMap.active) {
                 this.data.bodyMap.active = [this.data.bodyMap.last];
             }
@@ -1070,13 +1070,10 @@ renderBodyMap() {
                 svg += `<path d="${m.d}" class="muscle-group ${isActive?'active':''}" onclick="App.setInjectionSite('${m.id}')" />`;
                 
                 if(isActive) {
-                    // Професійний SVG-маркер ін'єкції (Мішень). pointer-events:none дозволяє клікати крізь нього.
-                    svg += `
-                    <g style="pointer-events: none;">
-                        <circle cx="${m.cx}" cy="${m.cy + 2}" r="9" fill="rgba(0,0,0,0.6)" />
-                        <circle cx="${m.cx}" cy="${m.cy}" r="9" fill="#ef4444" stroke="#ffffff" stroke-width="2" />
-                        <circle cx="${m.cx}" cy="${m.cy}" r="3" fill="#ffffff" />
-                    </g>`;
+                    // Повертаємо шприц! 
+                    // Додали font-size="16" і тінь (drop-shadow), щоб на айфоні він виглядав чітко.
+                    // pointer-events:none дозволяє клікати прямо по шприцу для відміни.
+                    svg += `<text x="${m.cx}" y="${m.cy}" font-size="16" text-anchor="middle" dominant-baseline="middle" style="pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">💉</text>`;
                 }
             });
             svg += `</svg>`;
@@ -1084,9 +1081,8 @@ renderBodyMap() {
         },
 
         setInjectionSite(id) {
-            this.pushHistory(); // Зберігаємо в історію, щоб можна було відмінити дію кнопкою ↩
+            this.pushHistory();
             
-            // Створюємо структуру, якщо її ще немає
             if(!this.data.bodyMap) this.data.bodyMap = { active: [], history: [] };
             if(!this.data.bodyMap.active) {
                 this.data.bodyMap.active = this.data.bodyMap.last ? [this.data.bodyMap.last] : [];
@@ -1095,10 +1091,10 @@ renderBodyMap() {
             const idx = this.data.bodyMap.active.indexOf(id);
             
             if (idx > -1) {
-                // Якщо точка ВЖЕ вибрана — видаляємо її зі списку (Toggle OFF)
+                // Якщо зона ВЖЕ вибрана — знімаємо відмітку
                 this.data.bodyMap.active.splice(idx, 1);
             } else {
-                // Якщо точка НЕ вибрана — додаємо її (Toggle ON)
+                // Якщо зона НЕ вибрана — ставимо шприц
                 this.data.bodyMap.active.push(id);
                 if(!this.data.bodyMap.history) this.data.bodyMap.history = [];
                 this.data.bodyMap.history.push({ date: new Date().toISOString(), id: id });
