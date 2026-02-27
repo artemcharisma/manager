@@ -162,8 +162,7 @@ const App = {
     },
 
 render() {
-        const scrollY = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
-
+        // ПОВНІСТЮ ПРИБРАЛИ РЯДКИ З window.scrollY!
         this.renderDaysBar();
         const day = this.getCurrentDay();
         if(!day) return;
@@ -224,9 +223,6 @@ render() {
 
         list.innerHTML = mealsHtml;
         this.updateStats();
-
-        // ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ (запобігає стрибкам)
-        if (scrollY > 0) window.scrollTo(0, scrollY);
     },
 
     renderDaysBar() {
@@ -383,12 +379,9 @@ render() {
     },
 
 openModal(title, f, del) {
+        if(document.activeElement) document.activeElement.blur(); // Скидаємо фокус перед відкриттям
         this.toggleFab(false); 
-        
-        // 1. ЗАПАМ'ЯТОВУЄМО СКРОЛ ДО ПОЯВИ КЛАВІАТУРИ
-        this.state.savedScroll = window.scrollY; 
-        
-        document.body.style.overflow = 'hidden';
+        // Прибрали document.body.style.overflow = 'hidden' - воно ламало скрол на iOS!
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -402,20 +395,13 @@ openModal(title, f, del) {
     },
     
     closeModal() { 
+        if(document.activeElement) document.activeElement.blur(); // Це змусить клавіатуру ПЛАВНО опуститися разом зі сторінкою!
         document.querySelectorAll('.modal-overlay').forEach(el => el.style.display='none');
-        document.querySelectorAll('.modal').forEach(el => el.style.display='none'); // надійне закриття
+        document.querySelectorAll('.modal').forEach(el => el.style.display='none');
         this.toggleFab(true); 
-        document.body.style.overflow = ''; 
-        
-        // 2. ПОВЕРТАЄМО ЕКРАН НА МІСЦЕ ПІСЛЯ ЗАКРИТТЯ
-        if (this.state.savedScroll !== undefined) {
-            window.scrollTo(0, this.state.savedScroll);
-        }
     },
-saveFood() {
-        // ПРИМУСОВО ХОВАЄМО КЛАВІАТУРУ
-        if (document.activeElement) document.activeElement.blur();
 
+    saveFood() {
         const n = document.getElementById('inpName').value;
         const w = parseFloat(document.getElementById('inpWeight').value);
         if(!n || isNaN(w)) return;
@@ -434,24 +420,17 @@ saveFood() {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        // ЧЕКАЄМО 150мс, ПОКИ СХОВАЄТЬСЯ КЛАВІАТУРА, ПОТІМ ЗАКРИВАЄМО І МАЛЮЄМО
-        setTimeout(() => {
-            this.closeModal(); 
-            this.save(); 
-            this.render(); 
-        }, 150);
+        this.closeModal(); // Викличе blur() і природну анімацію iOS
+        this.save(); 
+        this.render(); 
     },
 
     deleteFood() {
-        if (document.activeElement) document.activeElement.blur();
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
-        
-        setTimeout(() => {
-            this.closeModal(); 
-            this.save(); 
-            this.render(); 
-        }, 150);
+        this.closeModal(); 
+        this.save(); 
+        this.render(); 
     },
 
     addMealBlock() {
@@ -515,8 +494,6 @@ saveFood() {
         document.getElementById('bankEditModal').style.display='flex';
     },
 saveBankItem() {
-        if (document.activeElement) document.activeElement.blur();
-        
         const n = document.getElementById('bankInpName').value;
         const p = parseFloat(document.getElementById('bankInpP').value)||0;
         const f = parseFloat(document.getElementById('bankInpF').value)||0;
@@ -528,13 +505,11 @@ saveBankItem() {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
-        setTimeout(() => {
-            document.getElementById('bankEditModal').style.display='none';
-            this.closeModal(); 
-            this.save(); 
-            this.renderBank();
-            this.render();
-        }, 150);
+        document.getElementById('bankEditModal').style.display='none';
+        this.closeModal(); 
+        this.save(); 
+        this.renderBank();
+        this.render();
     },
     delFromBank() {
         if(confirm('Видалити з бази назавжди?')) {
