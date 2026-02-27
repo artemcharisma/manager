@@ -814,7 +814,16 @@
                 <div class="color-opt" style="background:#ec4899" onclick="App.selectColor('c-pink', this)"></div>
             </div>
         </div>
-        <div class="checkbox-wrapper"><input type="checkbox" id="fillPhase"><label for="fillPhase">Дублювати на цей і майбутні тижні</label></div>
+<div class="input-group" style="margin-top: 15px;">
+            <label>Повторення (до кінця фази)</label>
+            <select class="modal-input" id="pillFreq" style="cursor:pointer; appearance: auto; background-color: #050505;">
+                <option value="once">📍 Тільки в цей день</option>
+                <option value="weekly">📅 Кожного тижня (у цей день)</option>
+                <option value="daily">🔄 Щодня</option>
+                <option value="eod">⚡ Через день</option>
+                <option value="e3d">⏳ Кожні 3 дні</option>
+            </select>
+        </div>
         <button class="btn-save" onclick="App.confirmAddPill()">ДОДАТИ</button>
     </div>
 </div>
@@ -862,6 +871,7 @@
 
 </body>
 </html>
+
 
 
 
