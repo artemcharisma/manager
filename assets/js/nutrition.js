@@ -26,7 +26,6 @@ const App = {
         targets: {p:200, f:80, c:300, k:2700}, 
         days: [] 
     },
-    // Додано tempFood для зберігання базового продукту (на 100г/1шт) під час редагування
     state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null },
     history: [],
 
@@ -72,7 +71,6 @@ const App = {
         };
     },
 
-    // --- ЛОГІКА ЗНИКНЕННЯ ЗІРКИ (FAB) ---
     toggleFab(show) {
         const fab = document.getElementById('sys-fab');
         if(fab) fab.style.display = show ? 'flex' : 'none';
@@ -161,8 +159,7 @@ const App = {
         this.save(); this.render();
     },
 
-render() {
-        // ПОВНІСТЮ ПРИБРАЛИ РЯДКИ З window.scrollY!
+    render() {
         this.renderDaysBar();
         const day = this.getCurrentDay();
         if(!day) return;
@@ -298,17 +295,15 @@ render() {
         } else { list.style.display='none'; }
     },
 
-    // --- НОВА ФУНКЦІЯ: ДИНАМІЧНИЙ ПЕРЕРАХУНОК ---
     recalcModal() {
-        if (!this.state.tempFood) return; // Якщо немає бази, не рахуємо
+        if (!this.state.tempFood) return; 
 
         const val = document.getElementById('inpWeight').value;
-        if(val === '') return; // Даємо користувачу стерти все
+        if(val === '') return; 
         
         const w = parseFloat(val) || 0;
         const ref = this.state.tempFood;
 
-        // Коефіцієнт: для штук = w, для грам = w/100
         const ratio = ref.unit ? w : w / 100;
 
         document.getElementById('inpP').value = Math.round((ref.p || 0) * ratio);
@@ -320,7 +315,6 @@ render() {
     selectSuggestion(name) {
         const f = this.data.bank[name];
         
-        // ЗБЕРІГАЄМО БАЗУ для перерахунку
         this.state.tempFood = { ...f };
 
         document.getElementById('inpName').value = name;
@@ -331,7 +325,6 @@ render() {
         document.getElementById('sugg-list').style.display='none';
         document.getElementById('inpWeight').placeholder = f.unit ? "Кількість (шт)" : "Вага (г)";
         
-        // Ставимо дефолтну вагу (100г або 1шт) і відразу рахуємо
         const defW = f.unit ? 1 : 100;
         document.getElementById('inpWeight').value = defW;
         this.recalcModal();
@@ -341,7 +334,7 @@ render() {
 
     addFood(mid) {
         this.state.mid = mid; this.state.fidx = -1;
-        this.state.tempFood = null; // Очищаємо, бо новий продукт
+        this.state.tempFood = null; 
         this.openModal('ДОДАТИ', {}, false);
         setTimeout(() => document.getElementById('inpName').focus(), 100);
     },
@@ -350,10 +343,8 @@ render() {
         this.state.mid = mid; this.state.fidx = idx;
         const f = this.getCurrentDay().meals.find(m=>m.id===mid).foods[idx];
         
-        // Логіка для редагування:
-        // 1. Дивимось, чи є такий продукт в базі.
         const ref = this.data.bank[f.n];
-        let editItem = { ...f }; // копія поточного запису
+        let editItem = { ...f }; 
         
         if (ref) {
             this.state.tempFood = ref;
@@ -363,8 +354,6 @@ render() {
             editItem.c = Math.round(ref.c * ratio);
             editItem.k = Math.round(ref.k * ratio);
         } else {
-            // ФІКС: Якщо продукту немає в базі, вираховуємо його базові БЖВ 
-            // Додано || 1 для захисту від ділення на нуль
             const wRatio = (f.unit ? f.w : f.w / 100) || 1;
             this.state.tempFood = {
                 p: f.p / wRatio,
@@ -378,11 +367,12 @@ render() {
         this.openModal('РЕДАГУВАТИ', editItem, true);
     },
 
-openModal(title, f, del) {
+    // --- ФІКС ЗАКРИТТЯ ВІКОН І СКРОЛУ ---
+    openModal(title, f, del) {
         if(document.activeElement) document.activeElement.blur(); 
-        this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО ДО ПОЯВИ КЛАВІАТУРИ
-        
         this.toggleFab(false); 
+        document.body.style.overflow = ''; // Ніяких блокувань екрану, які ламають iOS
+        
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -394,25 +384,22 @@ openModal(title, f, del) {
         document.getElementById('foodModal').style.display = 'flex';
         document.getElementById('sugg-list').style.display = 'none';
     },
+    
+    closeModal() { 
+        if(document.activeElement) document.activeElement.blur(); // Змушуємо айфон сховати клавіатуру і опустити екран
+        
+        // Гарантовано ховаємо вікна по їх унікальним ID
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal'];
+        modalIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
 
-    openBank() {
-        if(document.activeElement) document.activeElement.blur();
-        this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
-        this.toggleFab(false);
-        this.renderBank();
-        document.getElementById('bankModal').style.display='flex';
-    },
-
-    openTargets() {
-        if(document.activeElement) document.activeElement.blur();
-        this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ
-        this.toggleFab(false); 
-        const t = this.data.targets;
-        document.getElementById('tgP').value = t.p;
-        document.getElementById('tgF').value = t.f;
-        document.getElementById('tgC').value = t.c;
-        document.getElementById('tgK').value = t.k;
-        document.getElementById('targetsModal').style.display='flex';
+        // І на всяк випадок по класах
+        document.querySelectorAll('.modal-overlay, .modal').forEach(el => el.style.display='none');
+        
+        this.toggleFab(true); 
+        document.body.style.overflow = ''; 
     },
 
     saveFood() {
@@ -434,22 +421,19 @@ openModal(title, f, del) {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        if(document.activeElement) document.activeElement.blur(); // ХОВАЄМО КЛАВІАТУРУ
+        // Порядок змінено на найбезпечніший: 1. Закриваємо модалку, 2. Зберігаємо, 3. Малюємо
+        this.closeModal(); 
         this.save(); 
         this.render(); 
-        this.closeModal(); 
-        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' }); // ПЛАВНО ОПУСКАЄМО
     },
 
     deleteFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
         
-        if(document.activeElement) document.activeElement.blur();
+        this.closeModal(); 
         this.save(); 
         this.render(); 
-        this.closeModal(); 
-        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
     },
 
     addMealBlock() {
@@ -458,6 +442,7 @@ openModal(title, f, del) {
         this.getCurrentDay().meals.push({id, name:"Прийом їжі", foods:[]});
         this.save(); this.render();
     },
+    
     deleteMealBlock(id) {
         if(!confirm("Видалити цей блок?")) return;
         this.pushHistory();
@@ -465,6 +450,7 @@ openModal(title, f, del) {
         day.meals = day.meals.filter(m=>m.id!==id);
         this.save(); this.render();
     },
+    
     renameMeal(id, val) {
         this.getCurrentDay().meals.find(m=>m.id===id).name = val;
         this.save();
@@ -484,13 +470,17 @@ openModal(title, f, del) {
                 <div class="edit-icon">✎</div>
             </div>`).join('');
     },
+    
     openBank() {
-        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
+        if(document.activeElement) document.activeElement.blur();
+        this.toggleFab(false); 
         this.renderBank();
         document.getElementById('bankModal').style.display='flex';
     },
+    
     openBankEdit(name) {
-        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
+        if(document.activeElement) document.activeElement.blur();
+        this.toggleFab(false); 
         this.state.editName = name;
         if(name) {
             const d = this.data.bank[name];
@@ -512,7 +502,8 @@ openModal(title, f, del) {
         }
         document.getElementById('bankEditModal').style.display='flex';
     },
-saveBankItem() {
+    
+    saveBankItem() {
         const n = document.getElementById('bankInpName').value;
         const p = parseFloat(document.getElementById('bankInpP').value)||0;
         const f = parseFloat(document.getElementById('bankInpF').value)||0;
@@ -524,31 +515,25 @@ saveBankItem() {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
-        if(document.activeElement) document.activeElement.blur();
+        this.closeModal(); 
         this.save(); 
         this.renderBank();
         this.render();
-        document.getElementById('bankEditModal').style.display='none';
-        this.closeModal(); 
-        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
     },
-
+    
     delFromBank() {
         if(confirm('Видалити з бази назавжди?')) {
             delete this.data.bank[this.state.editName];
-            
-            if(document.activeElement) document.activeElement.blur();
+            this.closeModal();
             this.save(); 
             this.renderBank();
             this.render();
-            document.getElementById('bankEditModal').style.display='none';
-            this.closeModal();
-            window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
         }
     },
 
     openTargets() {
-        this.toggleFab(false); // ХОВАЄМО ЗІРКУ
+        if(document.activeElement) document.activeElement.blur();
+        this.toggleFab(false); 
         const t = this.data.targets;
         document.getElementById('tgP').value = t.p;
         document.getElementById('tgF').value = t.f;
@@ -571,13 +556,9 @@ saveBankItem() {
             c: parseFloat(document.getElementById('tgC').value)||0,
             k: parseFloat(document.getElementById('tgK').value)||0
         };
-        
-        if(document.activeElement) document.activeElement.blur();
+        this.closeModal();
         this.save(); 
         this.updateStats();
-        document.getElementById('targetsModal').style.display='none';
-        this.closeModal();
-        window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
     },
 
     exportData() {
@@ -585,6 +566,7 @@ saveBankItem() {
         a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
         a.download = "protocol_nutrition.json"; a.click();
     },
+    
     importData(inp) {
         const r = new FileReader();
         r.onload = e => { 
