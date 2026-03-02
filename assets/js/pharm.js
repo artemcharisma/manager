@@ -674,8 +674,13 @@ renderTimeline() {
             }, 50);
 
             if (progText) {
+                // Перевіряємо, чи зараз ми знаходимося на вкладці Protocol
+                const activeTab = document.querySelector('.nav-tab.active');
+                const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
+                
+                // Якщо так - малюємо календар, якщо ні - ховаємо (display: none)
                 progText.innerHTML = `Week ${curW}/${maxW} 
-                <span class="date-picker-wrapper" title="Змінити дату старту курсу">
+                <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
                     <span style="font-size:1.2rem; pointer-events:none;">📅</span>
                     <input type="date" class="date-hidden-input" value="${this.data.startDate}" onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }">
                 </span>`;
@@ -1573,6 +1578,11 @@ renderStatsPanel() {
             document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active')); 
             btn.classList.add('active'); 
             document.getElementById('phaseNav').style.display = v==='protocol'?'flex':'none'; 
+            
+            // НОВИЙ РЯДОК: Ховаємо або показуємо календар залежно від вкладки
+            const picker = document.querySelector('.date-picker-wrapper');
+            if (picker) picker.style.display = (v === 'protocol') ? 'inline-flex' : 'none';
+
             this.renderView(); 
         },
 
