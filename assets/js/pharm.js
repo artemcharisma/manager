@@ -314,9 +314,7 @@ openAddPillModal(week, dayIndex) {
             document.getElementById('addPillModal').style.display = 'flex';
             setTimeout(() => document.getElementById('pillName').focus(), 100);
         },
-        async init() {
-            // ОЧИЩЕНИЙ CSS. Немає фантомних стрілок, немає старих хаків.
-            // Тільки красиве переливання і ховер-ефекти.
+async init() {
             const extraStyles = document.createElement('style');
             extraStyles.innerHTML = `
                 @keyframes goldShimmer {
@@ -331,8 +329,29 @@ openAddPillModal(week, dayIndex) {
                 @media (hover: hover) {
                     .custom-pill-option:hover { background: #333 !important; }
                 }
-                /* Про всяк випадок ховаємо нативну стрілку, якщо вона десь вилізе */
-                input::-webkit-calendar-picker-indicator { display: none !important; }
+                
+                /* Ховаємо стрілку ТІЛЬКИ в інпуті назви препарату, щоб не зламати календар! */
+                #pillName::-webkit-calendar-picker-indicator { display: none !important; }
+                
+                /* --- ІДЕАЛЬНИЙ КАЛЕНДАР (PC + iOS) --- */
+                .date-picker-wrapper { 
+                    position: relative; display: inline-flex; align-items: center; 
+                    justify-content: center; margin-left: 6px; vertical-align: middle; 
+                    width: 28px; height: 28px; cursor: pointer; 
+                }
+                /* Залізобетонне блокування кліків у Privacy Mode */
+                body.privacy-mode .date-picker-wrapper { 
+                    pointer-events: none !important; 
+                }
+                .date-hidden-input { 
+                    position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                    opacity: 0; cursor: pointer; z-index: 10; border: none; background: transparent; color: transparent; 
+                }
+                /* Секрет для ПК: розтягуємо тригер календаря на весь невидимий інпут */
+                .date-hidden-input::-webkit-calendar-picker-indicator { 
+                    position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                    opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
+                }
             `;
             document.head.appendChild(extraStyles);
 
@@ -340,7 +359,6 @@ openAddPillModal(week, dayIndex) {
             this.load();
             await this.refreshPhotos();
             
-            // ВАЖЛИВО: Запускаємо наш чистий список!
             this.initCustomDropdown();
             
             // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
@@ -358,7 +376,6 @@ openAddPillModal(week, dayIndex) {
             
             const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
             if (currentPhase) this.state.phaseId = currentPhase.id;
-            // -----------------------------------------------------------
 
             this.renderNav(); 
             this.renderView();
@@ -657,11 +674,10 @@ renderTimeline() {
             }, 50);
 
             if (progText) {
-                // ІДЕАЛЬНИЙ ФІКС ДЛЯ iOS: Невидимий інпут лежить прямо поверх іконки!
                 progText.innerHTML = `Week ${curW}/${maxW} 
-                <span style="position:relative; display:inline-flex; align-items:center; justify-content:center; margin-left:6px; vertical-align:middle; width:28px; height:28px; cursor:pointer;">
+                <span class="date-picker-wrapper" title="Змінити дату старту курсу">
                     <span style="font-size:1.2rem; pointer-events:none;">📅</span>
-                    <input type="date" value="${this.data.startDate}" onchange="App.setStartDate(this.value)" onclick="if(document.body.classList.contains('privacy-mode')) { event.preventDefault(); return false; }" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:10; margin:0; padding:0; border:none;">
+                    <input type="date" class="date-hidden-input" value="${this.data.startDate}" onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }">
                 </span>`;
             }
         },
