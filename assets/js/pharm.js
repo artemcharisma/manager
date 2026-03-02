@@ -539,14 +539,50 @@ openAddPillModal(week, dayIndex) {
             return d.getTime() === now.getTime();
         },
         
-        changeStartDate() {
-            const newDate = prompt("Введи дату початку курсу (YYYY-MM-DD):", this.data.startDate);
-            if(newDate && newDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                this.pushHistory();
-                this.data.startDate = newDate;
-                this.save();
-                this.renderView();
+changeStartDate() {
+            if(document.body.classList.contains('privacy-mode')) return; // Блокуємо в Privacy Mode
+            
+            const inp = document.getElementById('startDateInput');
+            if (inp) {
+                inp.value = this.data.startDate;
+                try { 
+                    inp.showPicker(); 
+                } catch(e) { 
+                    inp.focus(); 
+                    inp.click(); 
+                }
+            } else {
+                const newDate = prompt("Введи дату початку курсу (YYYY-MM-DD):", this.data.startDate);
+                if(newDate && newDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    this.setStartDate(newDate);
+                }
             }
+        },
+    setStartDate(newDate) {
+            if (!newDate) return;
+            this.pushHistory();
+            this.data.startDate = newDate;
+            this.save();
+            
+            // Заново вираховуємо, який зараз тиждень відносно нової дати
+            const now = new Date();
+            const start = this.getMondayOfStartWeek();
+            const diffTime = now.getTime() - start.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            let currentWeek = Math.floor(diffDays / 7) + 1; 
+            
+            const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
+            if (currentWeek < 1) currentWeek = 1;
+            if (currentWeek > maxW) currentWeek = maxW;
+            
+            // Встановлюємо правильний тиждень і фазу
+            this.state.week = currentWeek; 
+            const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
+            if (currentPhase) this.state.phaseId = currentPhase.id;
+            
+            // Оновлюємо екран
+            this.renderNav();
+            this.renderView();
         },
 
         pushHistory() {
@@ -599,7 +635,7 @@ openAddPillModal(week, dayIndex) {
 
         },
 
-        renderTimeline() {
+renderTimeline() {
             const weekNumbers = Object.keys(this.data.schedule).map(Number);
             const maxW = weekNumbers.length > 0 ? Math.max(...weekNumbers) : 1;
             const curW = this.state.week;
@@ -610,26 +646,21 @@ openAddPillModal(week, dayIndex) {
 
             if (!progBar) return;
 
-            // Гарантуємо, що лінія має стиль плавності (красива "преміальна" крива сповільнення)
             progBar.style.transition = 'width 1s cubic-bezier(0.25, 1, 0.5, 1)';
 
-            // Якщо лінія малюється вперше, ставимо її на 0%, щоб було звідки рости
             if (!progBar.style.width) {
                 progBar.style.width = '0%';
             }
 
-            // Використовуємо setTimeout, щоб дати браузеру частку секунди на "усвідомлення" 0%, 
-            // і тільки після цього даємо команду заповнитись до потрібного відсотка. 
-            // Це змушує айфон програти анімацію.
             setTimeout(() => {
                 progBar.style.width = pct + '%';
             }, 50);
 
             if (progText) {
-                progText.innerText = `Week ${curW}/${maxW}`;
+                // ДОДАНО ІКОНКУ КАЛЕНДАРЯ
+                progText.innerHTML = `Week ${curW}/${maxW} <span style="cursor:pointer; margin-left:6px; font-size:1.1rem; vertical-align:middle; display:inline-block;" onclick="App.changeStartDate()" title="Змінити дату старту курсу">📅</span>`;
             }
         },
-
 
 async renderProtocol(c) {
             const ph = this.data.phases.find(x => x.id === this.state.phaseId);
