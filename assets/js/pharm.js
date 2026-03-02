@@ -652,7 +652,7 @@ changeStartDate() {
 
         },
 
-renderTimeline() {
+    renderTimeline() {
             const weekNumbers = Object.keys(this.data.schedule).map(Number);
             const maxW = weekNumbers.length > 0 ? Math.max(...weekNumbers) : 1;
             const curW = this.state.week;
@@ -674,11 +674,11 @@ renderTimeline() {
             }, 50);
 
             if (progText) {
-                // Перевіряємо, чи зараз ми знаходимося на вкладці Protocol
+                // Перевіряємо, чи ми на вкладці Protocol
                 const activeTab = document.querySelector('.nav-tab.active');
                 const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
-                
-                // Якщо так - малюємо календар, якщо ні - ховаємо (display: none)
+
+                // Додаємо іконку з умовою display
                 progText.innerHTML = `Week ${curW}/${maxW} 
                 <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
                     <span style="font-size:1.2rem; pointer-events:none;">📅</span>
