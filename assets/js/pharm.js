@@ -1852,6 +1852,48 @@ renderStatsPanel() {
             this.renderNav(); 
             this.renderView();
         },
+        async openCompareModal() {
+            // Отримуємо всі тижні, для яких є збережені фото
+            const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
+            
+            if (keys.length === 0) {
+                alert("Немає завантажених фото для порівняння.");
+                return;
+            }
+            
+            const selL = document.getElementById('compSelectL');
+            const selR = document.getElementById('compSelectR');
+            
+            // Створюємо список опцій (Тільки ті тижні, де є фото)
+            let options = keys.map(k => `<option value="${k}">Week ${k}</option>`).join('');
+            selL.innerHTML = options;
+            selR.innerHTML = options;
+            
+            // За замовчуванням: зліва найперший тиждень (Week 1), справа - поточний (або останній наявний)
+            selL.value = keys[0];
+            selR.value = keys.includes(this.state.week) ? this.state.week : keys[keys.length - 1];
+            
+            document.getElementById('compareModal').style.display = 'flex';
+            
+            // Завантажуємо фотографії для вибраних тижнів
+            await this.loadCompareImage('L', selL.value);
+            await this.loadCompareImage('R', selR.value);
+        },
+
+        async loadCompareImage(side, week) {
+            const box = document.getElementById('imgBox' + side);
+            box.innerHTML = '<span style="opacity:0.3">Loading...</span>';
+            
+            // Дістаємо фото з бази даних для конкретного тижня
+            const photos = await PhotoDB.get(Number(week));
+            
+            if (photos && photos.length > 0) {
+                // Беремо найперше фото за цей тиждень і малюємо його
+                box.innerHTML = `<img src="${photos[0].data}" style="width:100%; height:100%; object-fit:cover;" onclick="document.getElementById('modalImg').src=this.src; document.getElementById('imgModal').style.display='flex'">`;
+            } else {
+                box.innerHTML = '<span style="opacity:0.3">Немає фото</span>';
+            }
+        },
 
             updatePhaseTitle(id, newTitle) {
             this.pushHistory();
