@@ -1884,13 +1884,33 @@ renderStatsPanel() {
             const box = document.getElementById('imgBox' + side);
             box.innerHTML = '<span style="opacity:0.3">Loading...</span>';
             
-            // Дістаємо фото з бази даних для конкретного тижня
+            // Дістаємо ВСІ фото з бази даних для цього тижня
             const photos = await PhotoDB.get(Number(week));
             
             if (photos && photos.length > 0) {
-                // Беремо найперше фото за цей тиждень і малюємо його
-                box.innerHTML = `<img src="${photos[0].data}" style="width:100%; height:100%; object-fit:cover;" onclick="document.getElementById('modalImg').src=this.src; document.getElementById('imgModal').style.display='flex'">`;
+                // Налаштовуємо колонку під кілька фотографій (робимо її скроленою)
+                box.style.aspectRatio = 'auto';
+                box.style.display = 'flex';
+                box.style.flexDirection = 'column';
+                box.style.gap = '10px';
+                box.style.maxHeight = '65vh'; // Обмеження висоти, щоб не вилазило за екран
+                box.style.overflowY = 'auto'; // Вмикаємо вертикальний скрол
+                box.style.padding = '0 5px 0 0';
+                box.style.background = 'transparent';
+                box.style.border = 'none';
+
+                // Малюємо ВСІ фотографії, які є в цьому тижні
+                box.innerHTML = photos.map(p => 
+                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="document.getElementById('modalImg').src=this.src; document.getElementById('imgModal').style.display='flex'">`
+                ).join('');
             } else {
+                // Якщо фото немає - повертаємо стандартний вигляд порожнього блоку
+                box.style.aspectRatio = '3/4';
+                box.style.display = 'flex';
+                box.style.maxHeight = 'none';
+                box.style.overflowY = 'hidden';
+                box.style.background = '#000';
+                box.style.border = '1px dashed #333';
                 box.innerHTML = '<span style="opacity:0.3">Немає фото</span>';
             }
         },
