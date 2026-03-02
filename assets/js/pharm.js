@@ -657,8 +657,12 @@ renderTimeline() {
             }, 50);
 
             if (progText) {
-                // ДОДАНО ІКОНКУ КАЛЕНДАРЯ
-                progText.innerHTML = `Week ${curW}/${maxW} <span style="cursor:pointer; margin-left:6px; font-size:1.1rem; vertical-align:middle; display:inline-block;" onclick="App.changeStartDate()" title="Змінити дату старту курсу">📅</span>`;
+                // ІДЕАЛЬНИЙ ФІКС ДЛЯ iOS: Невидимий інпут лежить прямо поверх іконки!
+                progText.innerHTML = `Week ${curW}/${maxW} 
+                <span style="position:relative; display:inline-flex; align-items:center; justify-content:center; margin-left:6px; vertical-align:middle; width:28px; height:28px; cursor:pointer;">
+                    <span style="font-size:1.2rem; pointer-events:none;">📅</span>
+                    <input type="date" value="${this.data.startDate}" onchange="App.setStartDate(this.value)" onclick="if(document.body.classList.contains('privacy-mode')) { event.preventDefault(); return false; }" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:10; margin:0; padding:0; border:none;">
+                </span>`;
             }
         },
 
