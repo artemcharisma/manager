@@ -214,7 +214,16 @@
             }
             this.smartSave();
         },
-availablePills: [], 
+        safeLoad() {
+            if(document.body.classList.contains('privacy-mode')) {
+                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                return;
+            }
+            document.getElementById('fileInput').click();
+        },
+        // -------------------------
+
+        availablePills: [],
 
         initCustomDropdown() {
             const input = document.getElementById('pillName');
