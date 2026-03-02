@@ -732,6 +732,7 @@
             <div class="controls">
                 <button class="btn-icon btn-panic" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
                 <button class="btn-icon" onclick="App.safeSave()" title="Save">💾</button> <button class="btn-icon" onclick="App.safeLoad()" title="Load">📂</button> <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
+                <input type="date" id="startDateInput" style="display:none" onchange="App.setStartDate(this.value)">
                 <button class="edit-toggle" id="editBtn" onclick="App.toggleEdit()" title="Edit">✎</button>
             </div>
         </div>
@@ -871,6 +872,7 @@
 
 </body>
 </html>
+
 
 
 
