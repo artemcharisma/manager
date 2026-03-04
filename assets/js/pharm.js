@@ -749,7 +749,7 @@ async renderProtocol(c) {
                     ${content}
                     <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
                     <div class="vitals-row">
-                        <input class="vital-input" type="text" inputmode="decimal" placeholder="120/80" value="${v.bp || ''}" onblur="App.saveVital(${this.state.week},${i},'bp',this.value)">
+                        <input class="vital-input" type="text" inputmode="decimal" placeholder="120/80" value="${v.bp || ''}" onblur="App.saveVital(${this.state.week},${i},'bp',this.value, this)">
                         <input class="vital-input" type="number" inputmode="decimal" placeholder="Пульс" value="${v.hr || ''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
                         <input class="vital-input" type="number" inputmode="decimal" placeholder="Вага" value="${v.w || ''}" onblur="App.saveVital(${this.state.week},${i},'w',this.value)">
                     </div></div>`;
@@ -1374,8 +1374,25 @@ renderStatsPanel() {
             this.save(); 
         },
         
-        saveVital(w,d,k,v) { 
+        saveVital(w,d,k,v, el) { 
             this.pushHistory();
+            
+            // --- Смарт-форматування для тиску ---
+            if (k === 'bp' && v) {
+                // 1. Якщо ввели крапку, кому, тире або пробіл - міняємо на слеш
+                v = v.replace(/[.,\-\s]/g, '/'); 
+                
+                // 2. Якщо ввели просто числа підряд (без роздільника)
+                if (!v.includes('/') && v.length >= 4) {
+                    if (v.length === 4) v = v.substring(0,2) + '/' + v.substring(2); // 9060 -> 90/60
+                    else if (v.length >= 5) v = v.substring(0,3) + '/' + v.substring(3); // 12080 -> 120/80
+                }
+                
+                // Одразу оновлюємо текст в інпуті на красивий
+                if (el) el.value = v; 
+            }
+            // ------------------------------------
+
             const key = `${w}-${d}`; 
             if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""}; 
             this.data.vitals[key][k] = v; 
