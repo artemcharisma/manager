@@ -697,6 +697,11 @@ changeStartDate() {
         },
 
 async renderProtocol(c) {
+            // 1. ЗАПАМ'ЯТОВУЄМО СКРОЛ ТИЖНІВ ДО ПЕРЕМАЛЬОВКИ
+            let weekScrollPos = 0;
+            const oldWeekBar = document.querySelector('.week-bar');
+            if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
+
             const ph = this.data.phases.find(x => x.id === this.state.phaseId);
             const wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
 
@@ -732,7 +737,6 @@ async renderProtocol(c) {
                 let headerBtns = '';
                 if (this.state.editing) {
                     if (this.pillBuffer) {
-                        // Кнопка вставки (біла, клікабельна)
                         headerBtns += `<span style="font-size:0.9rem; cursor:pointer; margin-left:15px; color:#fff;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</span>`;
                     }
                     headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste' : '📋'}</span>`;
@@ -773,9 +777,12 @@ async renderProtocol(c) {
                     <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
                 </div>`;
 
+            // 2. ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ
+            const newWeekBar = document.querySelector('.week-bar');
+            if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
+
             this.renderStatsPanel();
         },
-
 
        renderAnalytics(c) {
             // 1. СТРУКТУРА
