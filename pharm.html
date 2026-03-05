@@ -845,8 +845,11 @@
     </div>
 </div>
 
-<div class="modal" id="imgModal" onclick="this.style.display='none'"><img id="modalImg" src="" style="max-width:90%; max-height:90%;"></div>
-
+<div class="modal" id="imgModal" style="touch-action: none; z-index: 4000;">
+    <span class="modal-close" style="position:absolute; top:20px; right:20px; color:#fff; font-size:2rem; cursor:pointer; z-index:4001; width:40px; height:40px; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); border-radius:50%;" onclick="App.closeImgModal()">✕</span>
+    <img id="modalImg" src="" style="max-width:100%; max-height:100%; transition: transform 0.1s ease-out; cursor: grab;">
+</div>
+    
 <div class="modal" id="compareModal" style="z-index: 3000;">
     <div class="modal-content" style="max-width: 900px; width: 95%;">
         <span class="modal-close" onclick="document.getElementById('compareModal').style.display='none'">✕</span>
@@ -879,6 +882,7 @@
 
 </body>
 </html>
+
 
 
 
