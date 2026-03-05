@@ -200,6 +200,99 @@
     const App = {
         data: null,
         photoKeys: new Set(),
+        // --- ЛОГІКА ЗУМУ ДЛЯ ФОТО ---
+        imgZoom: { scale: 1, x: 0, y: 0, startX: 0, startY: 0, isDragging: false, initDist: 0, initScale: 1 },
+
+        closeImgModal() {
+            document.getElementById('imgModal').style.display = 'none';
+            // Скидаємо зум при закритті
+            this.imgZoom.scale = 1; this.imgZoom.x = 0; this.imgZoom.y = 0;
+            document.getElementById('modalImg').style.transform = `translate(0px, 0px) scale(1)`;
+        },
+
+        initPhotoZoom() {
+            const modal = document.getElementById('imgModal');
+            const img = document.getElementById('modalImg');
+            if(!modal || !img) return;
+
+            const update = () => { img.style.transform = `translate(${this.imgZoom.x}px, ${this.imgZoom.y}px) scale(${this.imgZoom.scale})`; };
+
+            // 1. Скрол коліщатком миші (для ПК)
+            modal.addEventListener('wheel', e => {
+                e.preventDefault();
+                const delta = Math.sign(e.deltaY) * -0.15;
+                this.imgZoom.scale = Math.min(Math.max(1, this.imgZoom.scale + delta), 5);
+                if(this.imgZoom.scale === 1) { this.imgZoom.x = 0; this.imgZoom.y = 0; }
+                update();
+            }, {passive: false});
+
+            // 2. Жести пальцями (для смартфонів)
+            modal.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) {
+                    this.imgZoom.initDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    this.imgZoom.initScale = this.imgZoom.scale;
+                } else if (e.touches.length === 1) {
+                    this.imgZoom.isDragging = true;
+                    this.imgZoom.startX = e.touches[0].clientX - this.imgZoom.x;
+                    this.imgZoom.startY = e.touches[0].clientY - this.imgZoom.y;
+                }
+            }, {passive: false});
+
+            modal.addEventListener('touchmove', e => {
+                e.preventDefault(); // Блокуємо скрол всієї сторінки
+                if (e.touches.length === 2) {
+                    // Зум двома пальцями
+                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    const scale = this.imgZoom.initScale * (dist / this.imgZoom.initDist);
+                    this.imgZoom.scale = Math.min(Math.max(1, scale), 5);
+                    if(this.imgZoom.scale === 1) { this.imgZoom.x = 0; this.imgZoom.y = 0; }
+                    update();
+                } else if (e.touches.length === 1 && this.imgZoom.isDragging && this.imgZoom.scale > 1) {
+                    // Переміщення наближеного фото (Pan)
+                    this.imgZoom.x = e.touches[0].clientX - this.imgZoom.startX;
+                    this.imgZoom.y = e.touches[0].clientY - this.imgZoom.startY;
+                    update();
+                }
+            }, {passive: false});
+
+            modal.addEventListener('touchend', e => {
+                if (e.touches.length < 2) this.imgZoom.initDist = 0;
+                if (e.touches.length === 0) this.imgZoom.isDragging = false;
+            });
+            
+            // 3. Подвійний тап для швидкого зуму
+            let lastTap = 0;
+            img.addEventListener('touchend', e => {
+                const now = new Date().getTime();
+                if (now - lastTap < 300) { // Якщо між тапами менше 300мс
+                    this.imgZoom.scale = this.imgZoom.scale > 1 ? 1 : 2.5; // Наближаємо або віддаляємо
+                    this.imgZoom.x = 0; this.imgZoom.y = 0;
+                    update();
+                    e.preventDefault();
+                }
+                lastTap = now;
+            });
+            
+            // 4. Перетягування мишкою (для ПК)
+            img.addEventListener('mousedown', e => {
+                e.preventDefault();
+                if (this.imgZoom.scale > 1) {
+                    this.imgZoom.isDragging = true;
+                    this.imgZoom.startX = e.clientX - this.imgZoom.x;
+                    this.imgZoom.startY = e.clientY - this.imgZoom.y;
+                    img.style.cursor = 'grabbing';
+                }
+            });
+            window.addEventListener('mouseup', () => { this.imgZoom.isDragging = false; img.style.cursor = 'grab'; });
+            window.addEventListener('mousemove', e => {
+                if (this.imgZoom.isDragging && this.imgZoom.scale > 1) {
+                    this.imgZoom.x = e.clientX - this.imgZoom.startX;
+                    this.imgZoom.y = e.clientY - this.imgZoom.startY;
+                    update();
+                }
+            });
+        },
+        // ------------------------------------
         // Підключаємо StateManager
         stateManager: new StateManager('gold_protocol', DefaultData),
         
@@ -369,6 +462,7 @@ async init() {
             await this.refreshPhotos();
             
             this.initCustomDropdown();
+            this.initPhotoZoom();
             
             // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
             const now = new Date();
