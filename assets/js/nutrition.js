@@ -76,6 +76,33 @@ const App = {
         if(fab) fab.style.display = show ? 'flex' : 'none';
     },
 
+// --- МАГІЯ ДЛЯ iOS: ПОВНЕ БЛОКУВАННЯ ФОНУ ---
+    lockScroll() {
+        // Якщо вже заблоковано - ігноруємо
+        if (document.body.style.position === 'fixed') return; 
+        
+        // Запам'ятовуємо, де ми були
+        this.state.lockedScrollY = window.scrollY; 
+        
+        // "Прибиваємо" сторінку до екрану, щоб клавіатура її не тягнула
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${this.state.lockedScrollY}px`;
+        document.body.style.width = '100%';
+    },
+
+    unlockScroll() {
+        if (document.body.style.position !== 'fixed') return;
+        
+        // Відпускаємо сторінку
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        
+        // Миттєво повертаємо туди, де стояли (без анімацій і ривків)
+        window.scrollTo(0, this.state.lockedScrollY || 0);
+    },
+    // ---------------------------------------------
+    
     save() {
         Utils.save(DB_KEY, this.data);
         this.updateStats();
@@ -367,12 +394,12 @@ const App = {
         this.openModal('РЕДАГУВАТИ', editItem, true);
     },
 
-    // --- ФІКС ЗАКРИТТЯ ВІКОН І СКРОЛУ ---
     openModal(title, f, del) {
         if(document.activeElement) document.activeElement.blur(); 
-        this.toggleFab(false); 
-        document.body.style.overflow = ''; // Ніяких блокувань екрану, які ламають iOS
         
+        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
+        
+        this.toggleFab(false); 
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -386,7 +413,7 @@ const App = {
     },
     
     closeModal() { 
-        if(document.activeElement) document.activeElement.blur(); // Змушуємо айфон сховати клавіатуру і опустити екран
+        if(document.activeElement) document.activeElement.blur(); 
         
         // Гарантовано ховаємо вікна по їх унікальним ID
         const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal'];
@@ -395,11 +422,11 @@ const App = {
             if (el) el.style.display = 'none';
         });
 
-        // І на всяк випадок по класах
         document.querySelectorAll('.modal-overlay, .modal').forEach(el => el.style.display='none');
         
         this.toggleFab(true); 
-        document.body.style.overflow = ''; 
+        
+        this.unlockScroll(); // 🔓 ВІДПУСКАЄМО ФОН
     },
 
     saveFood() {
@@ -471,8 +498,9 @@ const App = {
             </div>`).join('');
     },
     
-    openBank() {
+openBank() {
         if(document.activeElement) document.activeElement.blur();
+        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
         this.toggleFab(false); 
         this.renderBank();
         document.getElementById('bankModal').style.display='flex';
@@ -480,6 +508,7 @@ const App = {
     
     openBankEdit(name) {
         if(document.activeElement) document.activeElement.blur();
+        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
         this.toggleFab(false); 
         this.state.editName = name;
         if(name) {
@@ -533,6 +562,7 @@ const App = {
 
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
+        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
         this.toggleFab(false); 
         const t = this.data.targets;
         document.getElementById('tgP').value = t.p;
