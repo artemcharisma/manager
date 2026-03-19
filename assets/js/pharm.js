@@ -1474,43 +1474,26 @@ renderStatsPanel() {
             this.data.notes[w]=t; 
             this.save(); 
         },
-
-        // --- ПРОФЕСІЙНІ МАСКИ ВВОДУ В РЕАЛЬНОМУ ЧАСІ ---
-        formatBP(el, event) {
-            // Якщо користувач стирає текст бекспейсом - не заважаємо йому
-            if (event && event.inputType && event.inputType.includes('delete')) return;
-            
-            let val = el.value.replace(/[^\d/]/g, ''); // Дозволяємо тільки цифри і слеш
-            let digits = val.replace(/\D/g, '');
-            
-            // Розумна автопідстановка слеша під час набору
-            if (!val.includes('/') && digits.length > 2) {
-                // Якщо починається на 1 або 2 (напр. 120...) -> верхній тиск 3-значний
-                if (digits[0] === '1' || digits[0] === '2') {
-                    if (digits.length > 3) val = digits.substring(0, 3) + '/' + digits.substring(3, 5);
-                } 
-                // Якщо починається на 7, 8, 9 (напр. 90...) -> верхній тиск 2-значний
-                else {
-                    val = digits.substring(0, 2) + '/' + digits.substring(2, 4);
-                }
-            }
-            el.value = val;
-        },
-
-        formatWeight(el) {
-            // Миттєво міняємо кому на крапку і вбиваємо всі літери
-            let val = el.value.replace(',', '.').replace(/[^\d.]/g, '');
-            
-            // Забороняємо ставити більше однієї крапки
-            const parts = val.split('.');
-            if (parts.length > 2) {
-                val = parts[0] + '.' + parts.slice(1).join('');
-            }
-            el.value = val;
-        },
         
-        saveVital(w,d,k,v) { 
+        saveVital(w,d,k,v, el) { 
             this.pushHistory();
+            
+            // --- Смарт-форматування для тиску ---
+            if (k === 'bp' && v) {
+                // 1. Якщо ввели крапку, кому, тире або пробіл - міняємо на слеш
+                v = v.replace(/[.,\-\s]/g, '/'); 
+                
+                // 2. Якщо ввели просто числа підряд (без роздільника)
+                if (!v.includes('/') && v.length >= 4) {
+                    if (v.length === 4) v = v.substring(0,2) + '/' + v.substring(2); // 9060 -> 90/60
+                    else if (v.length >= 5) v = v.substring(0,3) + '/' + v.substring(3); // 12080 -> 120/80
+                }
+                
+                // Одразу оновлюємо текст в інпуті на красивий
+                if (el) el.value = v; 
+            }
+            // ------------------------------------
+
             const key = `${w}-${d}`; 
             if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""}; 
             this.data.vitals[key][k] = v; 
