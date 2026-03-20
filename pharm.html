@@ -16,7 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-    <script src="https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     
     <style>
@@ -858,11 +859,6 @@
         <p style="color:#666; font-size:0.8rem; margin-bottom:15px">Натисніть на зону, щоб відмітити укол.</p>
         <div class="body-map-container" id="svgContainer"></div>
     </div>
-</div>
-
-<div class="modal" id="imgModal" style="touch-action: none; z-index: 4000;">
-    <span class="modal-close" style="z-index: 9999; padding: 20px; right: 10px; top: 10px;" onclick="App.closeImgModal()" ontouchend="App.closeImgModal(); event.preventDefault(); event.stopPropagation();">✕</span>
-    <img id="modalImg" src="" style="max-width:100%; max-height:100%; transition: transform 0.1s ease-out; cursor: grab;">
 </div>
     
 <div class="modal" id="compareModal" style="z-index: 3000;">
