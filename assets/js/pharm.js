@@ -857,9 +857,14 @@ async renderProtocol(c) {
                     
                     <div class="vitals-row">
                         <div class="bp-wrapper" title="Тиск (Систолічний / Діастолічний)">
-                            <input class="bp-input" type="number" inputmode="numeric" placeholder="120" value="${sys}" onblur="App.saveBP(${this.state.week},${i},'sys',this.value)">
+                            <input class="bp-input" type="number" inputmode="numeric" placeholder="120" value="${sys}" 
+                                id="sys-${this.state.week}-${i}"
+                                oninput="if(this.value.length >= 3) document.getElementById('dia-${this.state.week}-${i}').focus()" 
+                                onblur="App.saveBP(${this.state.week},${i},'sys',this.value)">
                             <span class="bp-separator">/</span>
-                            <input class="bp-input" type="number" inputmode="numeric" placeholder="80" value="${dia}" onblur="App.saveBP(${this.state.week},${i},'dia',this.value)">
+                            <input class="bp-input" type="number" inputmode="numeric" placeholder="80" value="${dia}" 
+                                id="dia-${this.state.week}-${i}"
+                                onblur="App.saveBP(${this.state.week},${i},'dia',this.value)">
                         </div>
                         <input class="vital-input" type="number" inputmode="numeric" placeholder="Пульс" value="${v.hr || ''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
                         <input class="vital-input" type="text" inputmode="decimal" placeholder="Вага" value="${v.w || ''}" 
