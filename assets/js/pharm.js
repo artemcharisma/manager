@@ -200,14 +200,29 @@
     const App = {
         data: null,
         photoKeys: new Set(),
+        // --- БЛОКУВАННЯ ФОНУ (SCROLL LOCK) ---
+        lockScroll() {
+            if (document.body.style.position === 'fixed') return; 
+            this.state.lockedScrollY = window.scrollY; 
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${this.state.lockedScrollY}px`;
+            document.body.style.width = '100%';
+        },
+        unlockScroll() {
+            if (document.body.style.position !== 'fixed') return;
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            window.scrollTo(0, this.state.lockedScrollY || 0);
+        },
         // --- ЛОГІКА ЗУМУ ДЛЯ ФОТО ---
         imgZoom: { scale: 1, x: 0, y: 0, startX: 0, startY: 0, isDragging: false, initDist: 0, initScale: 1 },
 
         closeImgModal() {
             document.getElementById('imgModal').style.display = 'none';
-            // Скидаємо зум при закритті
             this.imgZoom.scale = 1; this.imgZoom.x = 0; this.imgZoom.y = 0;
             document.getElementById('modalImg').style.transform = `translate(0px, 0px) scale(1)`;
+            this.unlockScroll(); // Відпускаємо фон
         },
 
         initPhotoZoom() {
@@ -390,6 +405,7 @@
         },
 
 openAddPillModal(week, dayIndex) {
+            this.lockScroll(); // Блокуємо фон
             if(document.activeElement) document.activeElement.blur();
             this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ ДО КЛАВІАТУРИ
 
@@ -517,8 +533,8 @@ async init() {
             if(!this.data.pharmacy) this.data.pharmacy = JSON.parse(JSON.stringify(DefaultData.pharmacy));
             if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
             if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
+            if(!this.data.measurements) this.data.measurements = {};
             
-            // save() тут можна не викликати
         },
 
         save() { 
@@ -883,8 +899,23 @@ async renderProtocol(c) {
                 <div class="stats-grid" id="stats-container"></div>
                 <div class="week-bar">${wHtml}</div>
                 ${grid}
-                <div style="margin-top:20px">
-                    <textarea class="note-input" placeholder="Звіт за тиждень..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week] || ""}</textarea>
+                // Готуємо дані замірів
+                const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
+
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
+                        <span style="color:#fff; font-size:0.9rem; font-weight:800; letter-spacing:1px;">📏 ЗАМІРИ ТІЛА (см)</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px;">
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГРУДИ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.chest}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'chest', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ТАЛІЯ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.waist}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'waist', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">БІЦЕПС</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.arm}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'arm', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">СТЕГНО</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.leg}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'leg', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГОМІЛКА</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.calf}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'calf', this.value)" style="padding:6px 2px;"></div>
+                    </div>
+
+                    <textarea class="note-input" style="margin-top:0; border-color:#222; background:#0a0a0a;" placeholder="Звіт за тиждень, самопочуття, нотатки..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week] || ""}</textarea>
                 </div>
                 <div class="photo-area">
                     <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
@@ -1231,6 +1262,7 @@ async renderProtocol(c) {
         },
 
         openBodyMap() { 
+            this.lockScroll(); // Блокуємо фон
             document.getElementById('bodyMapModal').style.display='flex'; 
             this.renderBodyMap(); 
         },
@@ -1419,6 +1451,7 @@ confirmAddPill() {
 
         closeModal() { 
             document.getElementById('addPillModal').style.display = 'none'; 
+            this.unlockScroll(); // Відпускаємо фон
         },
         
         // --- CALC FIX (REGEX) ---
@@ -1531,6 +1564,18 @@ renderStatsPanel() {
 
             this.data.vitals[key][k] = v; 
             this.save(); 
+        },
+
+        saveMeas(w, k, v) {
+            this.pushHistory();
+            if(!this.data.measurements) this.data.measurements = {};
+            if(!this.data.measurements[w]) this.data.measurements[w] = { chest: '', waist: '', arm: '', leg: '', calf: '' };
+            
+            // Якщо є кома, міняємо на крапку
+            if (v) v = v.replace(',', '.');
+            
+            this.data.measurements[w][k] = v;
+            this.save();
         },
         
         copyDay(w, d) {
@@ -1712,7 +1757,19 @@ renderStatsPanel() {
                     });
                 }
             }
-            
+            // ЗАМІРИ
+            const meas = this.data.measurements ? this.data.measurements[this.state.week] : null;
+            if (meas && (meas.chest || meas.waist || meas.arm || meas.leg || meas.calf)) {
+                report += `\n📏 ЗАМІРИ (см):\n`;
+                report += `────────────────────────────────────\n`;
+                let mArr = [];
+                if(meas.chest) mArr.push(`Груди: ${meas.chest}`);
+                if(meas.waist) mArr.push(`Талія: ${meas.waist}`);
+                if(meas.arm)   mArr.push(`Біцепс: ${meas.arm}`);
+                if(meas.leg)   mArr.push(`Стегно: ${meas.leg}`);
+                if(meas.calf)  mArr.push(`Гомілка: ${meas.calf}`);
+                report += mArr.join(' | ') + `\n`;
+            }
             // 3. НОТАТКИ
             if(this.data.notes[this.state.week]) {
                 report += `\n📝 НОТАТКИ:\n`;
@@ -2004,7 +2061,7 @@ renderStatsPanel() {
             this.renderView();
         },
         async openCompareModal() {
-            // Отримуємо всі тижні, для яких є збережені фото
+            this.lockScroll(); // Блокуємо фон
             const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
             
             if (keys.length === 0) {
