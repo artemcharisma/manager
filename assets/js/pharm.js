@@ -895,13 +895,15 @@ async renderProtocol(c) {
             const photos = await PhotoDB.get(this.state.week);
             const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="document.getElementById('modalImg').src=this.src;document.getElementById('imgModal').style.display='flex'"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
+            // ГОТУЄМО ДАНІ ЗАМІРІВ ТУТ (в JS, ПЕРЕД генерацією HTML)
+            const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
+
+            // ТЕПЕР ФОРМУЄМО ВЕСЬ БЛОК РАЗОМ
             c.innerHTML = `
                 <div class="stats-grid" id="stats-container"></div>
                 <div class="week-bar">${wHtml}</div>
                 ${grid}
-                // Готуємо дані замірів
-                const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
-
+                
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
                         <span style="color:#fff; font-size:0.9rem; font-weight:800; letter-spacing:1px;">📏 ЗАМІРИ ТІЛА (см)</span>
@@ -917,6 +919,7 @@ async renderProtocol(c) {
 
                     <textarea class="note-input" style="margin-top:0; border-color:#222; background:#0a0a0a;" placeholder="Звіт за тиждень, самопочуття, нотатки..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week] || ""}</textarea>
                 </div>
+
                 <div class="photo-area">
                     <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
                     <button class="btn-compare" onclick="App.openCompareModal()">⚔️ ПОРІВНЯТИ (W1 vs W${this.state.week})</button>
