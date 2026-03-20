@@ -1058,7 +1058,7 @@ async renderProtocol(c) {
             grid += '</div>';
 
             const photos = await PhotoDB.get(this.state.week);
-            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(this.src)">...`).join('');
+            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(this.src)"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
             // ГОТУЄМО ДАНІ ЗАМІРІВ ТУТ (в JS, ПЕРЕД генерацією HTML)
             const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
@@ -2236,8 +2236,9 @@ renderStatsPanel() {
 
                 // Малюємо ВСІ фотографії, які є в цьому тижні
                 box.innerHTML = photos.map(p => 
-                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="document.getElementById('modalImg').src=this.src; document.getElementById('imgModal').style.display='flex'">`
+                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="App.openPhotoModal(this.src)">`
                 ).join('');
+
             } else {
                 // Якщо фото немає - повертаємо стандартний вигляд порожнього блоку
                 box.style.aspectRatio = '3/4';
