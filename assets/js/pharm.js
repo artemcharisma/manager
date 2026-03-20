@@ -808,7 +808,15 @@ async renderProtocol(c) {
                 const pills = this.data.schedule[this.state.week]?.[i] || [];
                 const v = this.data.vitals[`${this.state.week}-${i}`] || { bp: "", hr: "", w: "" };
 
-                // --- ВИПРАВЛЕНИЙ БЛОК content (Без сміття) ---
+                // ГОТУЄМО ДАНІ ТИСКУ (тепер правильно, ПЕРЕД генерацією HTML)
+                let sys = "", dia = "";
+                if (v.bp && v.bp.includes('/')) {
+                    const parts = v.bp.split('/');
+                    sys = parts[0]; dia = parts[1];
+                } else if (v.bp) {
+                    sys = v.bp; 
+                }
+
                 let content = pills.map((m, idx) => {
                     const pillId = `${this.state.week}-${i}-${idx}`;
                     return `
@@ -826,7 +834,6 @@ async renderProtocol(c) {
                         ` : ''}
                     </div>`;
                 }).join('');
-                // ------------------------------------------------
 
                 let headerBtns = '';
                 if (this.state.editing) {
@@ -836,6 +843,7 @@ async renderProtocol(c) {
                     headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste' : '📋'}</span>`;
                 }
 
+                // А ось тепер формуємо HTML
                 grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 10px rgba(212,175,55,0.1)' : ''}">
                     <div class="day-header">
                         <div style="display:flex; flex-direction:column; line-height:1.2">
@@ -846,14 +854,7 @@ async renderProtocol(c) {
                     </div>
                     ${content}
                     <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
-                    let sys = "", dia = "";
-                    if (v.bp && v.bp.includes('/')) {
-                        const parts = v.bp.split('/');
-                        sys = parts[0]; dia = parts[1];
-                    } else if (v.bp) {
-                        sys = v.bp; // Запобіжник для старих даних
-                    }
-
+                    
                     <div class="vitals-row">
                         <div class="bp-wrapper" title="Тиск (Систолічний / Діастолічний)">
                             <input class="bp-input" type="number" inputmode="numeric" placeholder="120" value="${sys}" onblur="App.saveBP(${this.state.week},${i},'sys',this.value)">
@@ -864,7 +865,8 @@ async renderProtocol(c) {
                         <input class="vital-input" type="text" inputmode="decimal" placeholder="Вага" value="${v.w || ''}" 
                             oninput="this.value = this.value.replace(',', '.').replace(/[^0-9.]/g, '')" 
                             onblur="App.saveVital(${this.state.week},${i},'w',this.value)">
-                    </div></div>`;
+                    </div>
+                </div>`;
             }
             grid += '</div>';
 
