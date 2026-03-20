@@ -219,21 +219,21 @@
         imgZoom: { scale: 1, x: 0, y: 0, startX: 0, startY: 0, isDragging: false, initDist: 0, initScale: 1 },
 
         openNativeViewer(imgEl) {
-            if (this.viewerInstance) this.viewerInstance.destroy(); // Очищаємо попередній, якщо був
+            if (this.viewerInstance) this.viewerInstance.destroy();
             
             this.viewerInstance = new Viewer(imgEl, {
                 inline: false,
-                button: true,       // Хрестик закриття (спрацьовує ідеально на iOS)
-                navbar: false,      // Вимикаємо зайві мініатюри знизу
-                title: false,       // Вимикаємо підпис файлу
-                toolbar: false,     // Вимикаємо зайві кнопки зуму (все робиться жестами)
-                tooltip: false,     // Вимикаємо відсотки зуму
-                movable: true,      // Дозволяємо рухати
-                zoomable: true,     // Дозволяємо зумити
-                transition: true,   // Плавні анімації
-                minZoomRatio: 1,    // Не даємо віддалити менше ніж початковий розмір
-                maxZoomRatio: 5,    // Максимальний зум х5
-                hidden: () => {     // Коли вікно закривається - чистимо пам'ять
+                button: true, 
+                navbar: false,
+                title: false,
+                toolbar: false,
+                tooltip: false,
+                movable: true,
+                zoomable: true,
+                transition: true,
+                // minZoomRatio: 1, // ВИДАЛЕНО! Тепер Viewer.js сам визначить мінімальний масштаб, щоб фото влізло в екран
+                maxZoomRatio: 3,    // ОБМЕЖЕНО ДО 3! Для Full HD фото цього більш ніж достатньо, х5 було забагато
+                hidden: () => {
                     this.viewerInstance.destroy();
                     this.viewerInstance = null;
                 }
