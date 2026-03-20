@@ -488,21 +488,6 @@
             img.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${s})`;
         },
         // ------------------------------------
-        // Підключаємо StateManager
-        stateManager: new StateManager('gold_protocol', DefaultData),
-        
-        state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null },
-        chartInstance: null,
-        measChartInstance: null,
-        dayBuffer: null,
-        pillBuffer: null,
-        safeSave() {
-            if(document.body.classList.contains('privacy-mode')) {
-                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
-                return;
-            }
-            this.smartSave();
-        },
         safeLoad() {
             if(document.body.classList.contains('privacy-mode')) {
                 alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
