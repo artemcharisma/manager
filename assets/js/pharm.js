@@ -413,7 +413,6 @@ async init() {
             await this.refreshPhotos();
             
             this.initCustomDropdown();
-            this.initPhotoZoom();
             
             // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
             const now = new Date();
@@ -1246,31 +1245,6 @@ renderBodyMap() {
             this.renderBodyMap();
         },
 
-openAddPillModal(week, dayIndex) {
-            this.state.tempPill = { w: week, d: dayIndex, color: 'c-blue' };
-            
-            const doseInput = document.getElementById('pillDose');
-            if(doseInput) {
-                doseInput.type = 'text'; 
-                doseInput.removeAttribute('inputmode');
-            }
-
-            document.getElementById('pillName').value = ''; 
-            document.getElementById('pillDose').value = ''; 
-            document.getElementById('pillMeta').value = '';
-            
-            // Скидаємо вибір частоти на дефолтний при кожному відкритті
-            const freqSelect = document.getElementById('pillFreq');
-            if (freqSelect) freqSelect.value = 'once';
-            
-            document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
-            document.querySelector('.color-opt').classList.add('selected'); 
-            
-            this.closeCustomDropdown(); 
-            this.updateSuggestions();
-            document.getElementById('addPillModal').style.display = 'flex';
-            setTimeout(() => document.getElementById('pillName').focus(), 100);
-        },
 
         setDose(val) { 
             document.getElementById('pillDose').value = val; 
