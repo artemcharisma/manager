@@ -200,6 +200,7 @@
     const App = {
         data: null,
         photoKeys: new Set(),
+        
         // --- БЛОКУВАННЯ ФОНУ (SCROLL LOCK) ---
         lockScroll() {
             if (document.body.style.position === 'fixed') return; 
@@ -215,30 +216,276 @@
             document.body.style.width = '';
             window.scrollTo(0, this.state.lockedScrollY || 0);
         },
-        // --- ЛОГІКА ЗУМУ ДЛЯ ФОТО ---
-        imgZoom: { scale: 1, x: 0, y: 0, startX: 0, startY: 0, isDragging: false, initDist: 0, initScale: 1 },
 
-        openNativeViewer(imgEl) {
-            if (this.viewerInstance) this.viewerInstance.destroy();
+        // Підключаємо StateManager
+        stateManager: new StateManager('gold_protocol', DefaultData),
+        
+        state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0 },
+        
+        chartInstance: null,
+        measChartInstance: null,
+        
+        // --- НОВІ, ІДЕАЛЬНІ ЗМІННІ СТАНУ ФОТО (from scratch) ---
+        photoModalScale: 1,
+        photoModalTranslate: { x: 0, y: 0 },
+        photoModalIsZooming: false,
+        photoModalIsPanning: false,
+        photoModalTouchStart: { x: 0, y: 0, scale: 1, dist: 0 },
+        photoModalBoundary: { minX: 0, maxX: 0, minY: 0, maxY: 0 },
+        photoModalSize: { iw: 0, ih: 0, sw: 0, sh: 0 },
+
+        dayBuffer: null,
+        pillBuffer: null,
+
+        safeSave() {
+            if(document.body.classList.contains('privacy-mode')) {
+                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                return;
+            }
+            this.smartSave();
+        },
+
+       // =========================================================================
+        // --- ІДЕАЛЬНИЙ ФОТО-ПЕРЕГЛЯДАЧ З НУЛЯ (Step-by-Step Native Experience) ---
+        // =========================================================================
+
+        openPhotoModal(imgUrl) {
+            this.lockScroll();
             
-            this.viewerInstance = new Viewer(imgEl, {
-                inline: false,
-                button: true, 
-                navbar: false,
-                title: false,
-                toolbar: false,
-                tooltip: false,
-                movable: true,
-                zoomable: true,
-                transition: true,
-                // minZoomRatio: 1, // ВИДАЛЕНО! Тепер Viewer.js сам визначить мінімальний масштаб, щоб фото влізло в екран
-                maxZoomRatio: 3,    // ОБМЕЖЕНО ДО 3! Для Full HD фото цього більш ніж достатньо, х5 було забагато
-                hidden: () => {
-                    this.viewerInstance.destroy();
-                    this.viewerInstance = null;
+            const modal = document.getElementById('customPhotoModal');
+            const img = document.getElementById('customPhotoImg');
+            if(!modal || !img) return;
+
+            // Скидаємо стан у стандарт
+            this.state.photoModalScale = 1;
+            this.state.photoModalTranslate = { x: 0, y: 0 };
+            this.state.photoModalIsZooming = false;
+            this.state.photoModalIsPanning = false;
+
+            img.src = imgUrl;
+            modal.classList.add('active');
+            
+            // Жорстко забороняємо браузеру втручатися в touch-події
+            img.style.touchAction = 'none';
+
+            // Нам треба почекати, поки фото завантажиться, щоб порахувати його розміри
+            img.onload = () => {
+                this.calculatePhotoBoundary(img);
+                this.updatePhotoTransform();
+            };
+
+            // Ініціалізуємо обробники дотиків
+            this.initPhotoGestures(modal, img);
+        },
+
+        closePhotoModal() {
+            const modal = document.getElementById('customPhotoModal');
+            if(!modal) return;
+            
+            modal.classList.remove('active');
+            this.unlockScroll();
+        },
+
+        // 1. ГОЛОВНИЙ ОБРОБНИК ЖЕСТІВ
+        initPhotoGestures(modal, img) {
+            // Щоб уникнути дублікатів обробників, ми їх очистимо (через заміну на клони)
+            const newModal = modal.cloneNode(true);
+            modal.parentNode.replaceChild(newModal, modal);
+            const newImg = newModal.querySelector('img');
+
+            // --- Touch START ---
+            newModal.addEventListener('touchstart', (e) => {
+                // event.preventDefault(); // Нам не потрібно, бо touch-action: none на img
+                
+                // Якщо 1 палець - початок перетягування (pan)
+                if (e.touches.length === 1) {
+                    this.state.photoModalIsPanning = true;
+                    this.state.photoModalTouchStart.x = e.touches[0].clientX - this.state.photoModalTranslate.x;
+                    this.state.photoModalTouchStart.y = e.touches[0].clientY - this.state.photoModalTranslate.y;
+                    newModal.classList.add('is-pan');
+                }
+                // Якщо 2 пальці - початок щипка (zoom)
+                else if (e.touches.length === 2) {
+                    this.state.photoModalIsZooming = true;
+                    this.state.photoModalIsPanning = false; // Zoom пріоритетніший
+                    this.state.photoModalTouchStart.dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    this.state.photoModalTouchStart.scale = this.state.photoModalScale;
+                    newModal.classList.add('is-zoom');
+                    newModal.classList.remove('is-pan');
+                }
+            }, { passive: false });
+
+            // --- Touch MOVE (Найкапризніша частина) ---
+            newModal.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Жорстко забороняємо скрол фону
+
+                // --- ЛОГІКА ЗУМУ (2 пальці) ---
+                if (this.state.photoModalIsZooming && e.touches.length === 2) {
+                    const dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    
+                    const newScale = this.state.photoModalTouchStart.scale * (dist / this.state.photoModalTouchStart.dist);
+                    
+                    // Обмежуємо зум (min х1, max x4)
+                    this.state.photoModalScale = Math.min(Math.max(1, newScale), 4);
+                    
+                    // Після зміни зуму треба перерахувати межі для pan
+                    this.calculatePhotoBoundary(newImg);
+                    
+                    // Жорстко enforce межі під час зуму (щоб не "вилітало")
+                    this.enforcePhotoBoundary();
+                    
+                    this.updatePhotoTransform();
+                }
+                // --- ЛОГІКА ПАНУВАННЯ (1 палець) ---
+                else if (this.state.photoModalIsPanning && e.touches.length === 1 && !this.state.photoModalIsZooming) {
+                    let newX = e.touches[0].clientX - this.state.photoModalTouchStart.x;
+                    let newY = e.touches[0].clientY - this.state.photoModalTouchStart.y;
+                    
+                    // ЛОГІКА SNAP-BACK (головна фішка): 
+                    // Якщо фото НЕ зближене, ми дозволяємо йому рухатись, але з "опором" (х0.3), 
+                    // щоб на END воно відскочило назад.
+                    if (this.state.photoModalScale <= 1.05) {
+                        newX *= 0.3; // Опір
+                        newY *= 0.3;
+                    } 
+                    // Якщо фото зближене, ми дозволяємо йому вільно рухатись в межах!
+                    else {
+                        // Потрібно enforce межі в реальному часі (з легким rubber-banding)
+                        newX = Math.min(Math.max(newX, this.state.photoModalBoundary.minX - 30), this.state.photoModalBoundary.maxX + 30);
+                        newY = Math.min(Math.max(newY, this.state.photoModalBoundary.minY - 30), this.state.photoModalBoundary.maxY + 30);
+                    }
+
+                    this.state.photoModalTranslate.x = newX;
+                    this.state.photoModalTranslate.y = newY;
+                    this.updatePhotoTransform();
+                }
+            }, { passive: false });
+
+            // --- Touch END ---
+            newModal.addEventListener('touchend', (e) => {
+                this.state.photoModalIsZooming = false;
+                this.state.photoModalIsPanning = false;
+                newModal.classList.remove('is-zoom', 'is-pan');
+                
+                // ГОЛОВНЕ: SNAP-BACK
+                // Якщо фото не зближене (або майже не зближене), при END жорстко вертаємо в 0,0
+                if (this.state.photoModalScale <= 1.05) {
+                    this.state.photoModalScale = 1;
+                    this.state.photoModalTranslate = { x: 0, y: 0 };
+                    // Жорстко enforce межі після END (щоб прибрати гумові 30px)
+                    this.calculatePhotoBoundary(newImg); 
+                    this.enforcePhotoBoundary();
+                } 
+                // Якщо зближене, при END жорстко вертаємо до меж (з пружинистих 30px)
+                else {
+                    this.calculatePhotoBoundary(newImg);
+                    this.enforcePhotoBoundary();
+                }
+                
+                this.updatePhotoTransform();
+            });
+
+            // --- ДОДАТКОВІ ФІШКИ ---
+            // 2. Подвійний тап для швидкого зуму
+            let lastTap = 0;
+            newImg.addEventListener('touchend', (e) => {
+                const now = new Date().getTime();
+                if (now - lastTap < 300) {
+                    // event.preventDefault();
+                    if (this.state.photoModalScale > 1) {
+                        // Віддалити в 1
+                        this.state.photoModalScale = 1;
+                        this.state.photoModalTranslate = { x: 0, y: 0 };
+                    } else {
+                        // Наблизити в х2.5 (оптимально для Full HD)
+                        this.state.photoModalScale = 2.5;
+                        this.state.photoModalTranslate = { x: 0, y: 0 }; // Для простоти центровано
+                    }
+                    this.calculatePhotoBoundary(newImg);
+                    this.updatePhotoTransform();
+                }
+                lastTap = now;
+            });
+
+            // 3. Тап по фону для закриття (native experience)
+            newModal.addEventListener('click', (e) => {
+                if (e.target === newModal) {
+                    this.closePhotoModal();
                 }
             });
-            this.viewerInstance.show();
+        },
+
+        // 2. ДОПОМІЖНІ МАТЕМАТИЧНІ ФУНКЦІЇ
+        
+        // Перераховує межі в залежності від поточного масштабу
+        calculatePhotoBoundary(img) {
+            this.state.photoModalSize.iw = img.naturalWidth;
+            this.state.photoModalSize.ih = img.naturalHeight;
+            this.state.photoModalSize.sw = window.innerWidth;
+            this.state.photoModalSize.sh = window.innerHeight;
+
+            const scale = this.state.photoModalScale;
+            const iw = this.state.photoModalSize.iw;
+            const ih = this.state.photoModalSize.ih;
+            const sw = this.state.photoModalSize.sw;
+            const sh = this.state.photoModalSize.sh;
+
+            // Логіка CSS: max-width: 100%; max-height: 100%. Viewer.js рахує складніше. 
+            // Ми порахуємо так: 
+            const ratio = iw / ih;
+            let finalW, finalH;
+            
+            // Визначаємо, як фото вписалося в екран (по ширині чи по висоті)
+            if (sw / sh > ratio) {
+                // Фото вписалося по висоті, ширина менша екрану
+                finalH = sh; finalW = sh * ratio;
+            } else {
+                // Фото вписалося по ширині, висота менша екрану
+                finalW = sw; finalH = sw / ratio;
+            }
+
+            // Поточний розмір фото з урахуванням зуму
+            const curW = finalW * scale;
+            const curH = finalH * scale;
+
+            // МАТЕМАТИКА меж (відносного центру 0,0):
+            // Якщо поточний розмір більше екрану, ми дозволяємо рухати в діапазоні [(curW - sw)/2]
+            this.state.photoModalBoundary.maxX = curW > sw ? (curW - sw) / 2 : 0;
+            this.state.photoModalBoundary.minX = -this.state.photoModalBoundary.maxX;
+            
+            this.state.photoModalBoundary.maxY = curH > sh ? (curH - sh) / 2 : 0;
+            this.state.photoModalBoundary.minY = -this.state.photoModalBoundary.maxY;
+        },
+
+        // Жорстко притискає фото до меж (enforce)
+        enforcePhotoBoundary() {
+            let x = this.state.photoModalTranslate.x;
+            let y = this.state.photoModalTranslate.y;
+            
+            x = Math.min(Math.max(x, this.state.photoModalBoundary.minX), this.state.photoModalBoundary.maxX);
+            y = Math.min(Math.max(y, this.state.photoModalBoundary.minY), this.state.photoModalBoundary.maxY);
+            
+            this.state.photoModalTranslate.x = x;
+            this.state.photoModalTranslate.y = y;
+        },
+
+        // Застосовує трансформацію до елементу
+        updatePhotoTransform() {
+            const img = document.getElementById('customPhotoImg');
+            if(!img) return;
+            
+            const x = this.state.photoModalTranslate.x;
+            const y = this.state.photoModalTranslate.y;
+            const s = this.state.photoModalScale;
+            
+            // translate3d для апаратного прискорення
+            img.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${s})`;
         },
         // ------------------------------------
         // Підключаємо StateManager
@@ -247,7 +494,6 @@
         state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null },
         chartInstance: null,
         measChartInstance: null,
-        viewerInstance: null,
         dayBuffer: null,
         pillBuffer: null,
         safeSave() {
@@ -827,7 +1073,7 @@ async renderProtocol(c) {
             grid += '</div>';
 
             const photos = await PhotoDB.get(this.state.week);
-            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="App.openNativeViewer(this)"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
+            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(this.src)">...`).join('');
 
             // ГОТУЄМО ДАНІ ЗАМІРІВ ТУТ (в JS, ПЕРЕД генерацією HTML)
             const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
