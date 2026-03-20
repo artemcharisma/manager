@@ -220,88 +220,30 @@
 
         closeImgModal() {
             document.getElementById('imgModal').style.display = 'none';
-            this.imgZoom.scale = 1; this.imgZoom.x = 0; this.imgZoom.y = 0;
-            document.getElementById('modalImg').style.transform = `translate(0px, 0px) scale(1)`;
-            this.unlockScroll(); // Відпускаємо фон
+            // Скидаємо зум та позицію фото при закритті
+            if (this.pzInstance) {
+                this.pzInstance.zoomAbs(0, 0, 1);
+                this.pzInstance.moveTo(0, 0);
+            }
+            this.unlockScroll();
         },
 
         initPhotoZoom() {
-            const modal = document.getElementById('imgModal');
             const img = document.getElementById('modalImg');
-            if(!modal || !img) return;
-
-            let scale = 1, currentX = 0, currentY = 0;
-            let startX = 0, startY = 0, initialDistance = 0, initialScale = 1;
-            let isDragging = false;
-
-            const update = () => {
-                img.style.transform = `translate(${currentX}px, ${currentY}px) scale(${scale})`;
-            };
-
-            const reset = () => { scale = 1; currentX = 0; currentY = 0; update(); };
-
-            // Додаємо плавний перехід тільки для подвійного тапу, щоб не "лагав" щипок
-            img.style.transition = 'transform 0.1s ease-out';
-
-            modal.addEventListener('touchstart', e => {
-                img.style.transition = 'none'; // Вимикаємо анімацію при ручному зумі
-                if (e.touches.length === 2) {
-                    isDragging = false;
-                    initialDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    initialScale = scale;
-                } else if (e.touches.length === 1) {
-                    isDragging = true;
-                    startX = e.touches[0].clientX - currentX;
-                    startY = e.touches[0].clientY - currentY;
-                }
-            }, {passive: false});
-
-            modal.addEventListener('touchmove', e => {
-                e.preventDefault();
-                if (e.touches.length === 2) {
-                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    scale = Math.min(Math.max(1, initialScale * (dist / initialDistance)), 4); // Макс зум х4
-                    if (scale === 1) reset(); else update();
-                } else if (e.touches.length === 1 && isDragging && scale > 1) {
-                    currentX = e.touches[0].clientX - startX;
-                    currentY = e.touches[0].clientY - startY;
-                    update();
-                }
-            }, {passive: false});
-
-            modal.addEventListener('touchend', e => {
-                if (e.touches.length < 2) initialDistance = 0;
-                if (e.touches.length === 0) isDragging = false;
-                img.style.transition = 'transform 0.1s ease-out'; // Повертаємо анімацію
-            });
-
-            // Подвійний тап
-            let lastTap = 0;
-            img.addEventListener('touchend', e => {
-                const now = new Date().getTime();
-                if (now - lastTap < 300) {
-                    if (scale > 1) reset();
-                    else { scale = 2.5; update(); }
-                    e.preventDefault();
-                }
-                lastTap = now;
-            });
-
-            // ПК миша
-            modal.addEventListener('wheel', e => {
-                e.preventDefault();
-                img.style.transition = 'none';
-                scale = Math.min(Math.max(1, scale + (e.deltaY < 0 ? 0.2 : -0.2)), 4);
-                if (scale === 1) reset(); else update();
-            }, {passive: false});
-
-            img.addEventListener('mousedown', e => {
-                e.preventDefault();
-                if (scale > 1) { isDragging = true; startX = e.clientX - currentX; startY = e.clientY - currentY; img.style.cursor = 'grabbing'; }
-            });
-            window.addEventListener('mouseup', () => { isDragging = false; img.style.cursor = 'grab'; });
-            window.addEventListener('mousemove', e => {
-                if (isDragging && scale > 1) { currentX = e.clientX - startX; currentY = e.clientY - startY; update(); }
+            if(!img) return;
+            
+            // Якщо зум вже був ініціалізований, очищаємо його
+            if (this.pzInstance) {
+                this.pzInstance.dispose();
+            }
+            
+            // Вмикаємо ідеальний зум
+            this.pzInstance = panzoom(img, {
+                maxZoom: 5,
+                minZoom: 1,
+                bounds: true, // Не дає витягнути фото за межі екрану
+                boundsPadding: 0.1,
+                smoothScroll: false // Вимикаємо інерцію для більшого контролю на iOS
             });
         },
         // ------------------------------------
@@ -311,6 +253,7 @@
         state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null },
         chartInstance: null,
         measChartInstance: null,
+        pzInstance: null,
         dayBuffer: null,
         pillBuffer: null,
         safeSave() {
@@ -940,9 +883,9 @@ renderAnalytics(c) {
                         <canvas id="mainChart"></canvas>
                     </div>
                     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
-                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 0, this)"><div style="width:10px; height:10px; background:#ffffff; border-radius:50%; box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);"></div><span style="color:#aaa; font-weight:500;">ВАГА</span></div>
-                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 1, this)"><div style="width:10px; height:10px; background:#8b5cf6; border-radius:50%; box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);"></div><span style="color:#aaa; font-weight:500;">STACK</span></div>
-                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 2, this)"><div style="width:10px; height:10px; background:#ffd700; border-radius:50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"></div><span style="color:#aaa; font-weight:500;">TEST BASE</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 0, this)"><div style="width:12px; height:12px; background:#ffffff; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">ВАГА</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 1, this)"><div style="width:12px; height:12px; background:#8b5cf6; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">STACK</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 2, this)"><div style="width:12px; height:12px; background:#ffd700; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">TEST BASE</span></div>
                     </div>
 
                     <h3 style="color:#fff; font-size:1rem; margin: 40px 0 10px 0; text-align:center; letter-spacing:1px; font-weight:800;">📏 ДИНАМІКА ЗАМІРІВ (см)</h3>
@@ -950,11 +893,11 @@ renderAnalytics(c) {
                         <canvas id="measChart"></canvas>
                     </div>
                     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
-                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 0, this)"><div style="width:10px; height:10px; background:#3b82f6; border-radius:50%;"></div><span style="color:#aaa;">ГРУДИ</span></div>
-                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 1, this)"><div style="width:10px; height:10px; background:#10b981; border-radius:50%;"></div><span style="color:#aaa;">ТАЛІЯ</span></div>
-                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 2, this)"><div style="width:10px; height:10px; background:#ef4444; border-radius:50%;"></div><span style="color:#aaa;">БІЦЕПС</span></div>
-                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 3, this)"><div style="width:10px; height:10px; background:#f59e0b; border-radius:50%;"></div><span style="color:#aaa;">СТЕГНО</span></div>
-                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 4, this)"><div style="width:10px; height:10px; background:#ec4899; border-radius:50%;"></div><span style="color:#aaa;">ГОМІЛКА</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 0, this)"><div style="width:12px; height:12px; background:#3b82f6; border-radius:50%;"></div><span style="color:#aaa;">ГРУДИ</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 1, this)"><div style="width:12px; height:12px; background:#10b981; border-radius:50%;"></div><span style="color:#aaa;">ТАЛІЯ</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 2, this)"><div style="width:12px; height:12px; background:#ef4444; border-radius:50%;"></div><span style="color:#aaa;">БІЦЕПС</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 3, this)"><div style="width:12px; height:12px; background:#f59e0b; border-radius:50%;"></div><span style="color:#aaa;">СТЕГНО</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 4, this)"><div style="width:12px; height:12px; background:#ec4899; border-radius:50%;"></div><span style="color:#aaa;">ГОМІЛКА</span></div>
                     </div>
 
                     <style>
@@ -1082,8 +1025,9 @@ renderAnalytics(c) {
                     plugins: { 
                         legend: { display: false },
                         zoom: {
-                            pan: { enabled: true, mode: 'x' },
-                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+                            pan: { enabled: true, mode: 'x', threshold: 15 }, // threshold: 15 запобігає скачкам при випадкових рухах
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                            limits: { x: { min: 'original', max: 'original' } } // не дає відзумити далі початкового стану
                         },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#d4af37', bodyColor: '#e5e5e5', borderColor: 'rgba(212,175,55,0.3)', borderWidth: 1, padding: 12, cornerRadius: 8,
@@ -1125,8 +1069,9 @@ renderAnalytics(c) {
                     plugins: { 
                         legend: { display: false },
                         zoom: {
-                            pan: { enabled: true, mode: 'x' },
-                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+                            pan: { enabled: true, mode: 'x', threshold: 15 }, // threshold: 15 запобігає скачкам при випадкових рухах
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                            limits: { x: { min: 'original', max: 'original' } } // не дає відзумити далі початкового стану
                         },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#fff', bodyColor: '#e5e5e5', borderColor: '#333', borderWidth: 1, padding: 12, cornerRadius: 8
