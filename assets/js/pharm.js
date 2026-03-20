@@ -313,6 +313,7 @@
         
         state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null },
         chartInstance: null,
+        measChartInstance: null,
         dayBuffer: null,
         pillBuffer: null,
         safeSave() {
@@ -934,31 +935,31 @@ async renderProtocol(c) {
             this.renderStatsPanel();
         },
 
-       renderAnalytics(c) {
-            // 1. СТРУКТУРА
+renderAnalytics(c) {
+            // 1. СТРУКТУРА (ДВА ГРАФІКИ)
             c.innerHTML = `
-                <div style="animation: fadeEffect 0.6s ease-out;">
+                <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
                     <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
                         <canvas id="mainChart"></canvas>
                     </div>
-                    
-                    <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
-                    
-                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(0, this)">
-                        <div style="width:10px; height:10px; background:#ffffff; border-radius:50%; box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);"></div>
-                        <span style="color:#aaa; font-weight:500; letter-spacing:0.5px;">ВАГА</span>
+                    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 0, this)"><div style="width:10px; height:10px; background:#ffffff; border-radius:50%; box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);"></div><span style="color:#aaa; font-weight:500;">ВАГА</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 1, this)"><div style="width:10px; height:10px; background:#8b5cf6; border-radius:50%; box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);"></div><span style="color:#aaa; font-weight:500;">STACK</span></div>
+                        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 2, this)"><div style="width:10px; height:10px; background:#ffd700; border-radius:50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"></div><span style="color:#aaa; font-weight:500;">TEST BASE</span></div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(1, this)">
-                        <div style="width:10px; height:10px; background:#8b5cf6; border-radius:50%; box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);"></div>
-                        <span style="color:#aaa; font-weight:500;">STACK</span>
+                    <h3 style="color:#fff; font-size:1rem; margin: 40px 0 10px 0; text-align:center; letter-spacing:1px; font-weight:800;">📏 ДИНАМІКА ЗАМІРІВ (см)</h3>
+                    <div class="chart-container" style="position:relative; height:300px; margin: 10px 0;">
+                        <canvas id="measChart"></canvas>
+                    </div>
+                    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
+                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 0, this)"><div style="width:10px; height:10px; background:#3b82f6; border-radius:50%;"></div><span style="color:#aaa;">ГРУДИ</span></div>
+                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 1, this)"><div style="width:10px; height:10px; background:#10b981; border-radius:50%;"></div><span style="color:#aaa;">ТАЛІЯ</span></div>
+                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 2, this)"><div style="width:10px; height:10px; background:#ef4444; border-radius:50%;"></div><span style="color:#aaa;">БІЦЕПС</span></div>
+                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 3, this)"><div style="width:10px; height:10px; background:#f59e0b; border-radius:50%;"></div><span style="color:#aaa;">СТЕГНО</span></div>
+                        <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 4, this)"><div style="width:10px; height:10px; background:#ec4899; border-radius:50%;"></div><span style="color:#aaa;">ГОМІЛКА</span></div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; opacity:1; transition:0.2s" onclick="App.toggleDataset(2, this)">
-                        <div style="width:10px; height:10px; background:#ffd700; border-radius:50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"></div>
-                        <span style="color:#aaa; font-weight:500;">TEST BASE</span>
-                    </div>
-                </div>
                     <style>
                         @keyframes fadeEffect { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
                     </style>
@@ -970,6 +971,9 @@ async renderProtocol(c) {
             const dataStack = []; 
             const dataWeight = [];
             const weekDetails = []; 
+
+            // Масиви для замірів
+            const dataChest = [], dataWaist = [], dataArm = [], dataLeg = [], dataCalf = [];
         
             const weekKeys = Object.keys(this.data.schedule).map(Number);
             const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
@@ -1012,11 +1016,7 @@ async renderProtocol(c) {
                     }));
                 }
                 
-                weekDetails.push(
-                    Object.entries(details)
-                    .map(([n, d]) => `${n}: ${parseFloat(d.val.toFixed(1))} ${d.unit}`)
-                );
-        
+                weekDetails.push(Object.entries(details).map(([n, d]) => `${n}: ${parseFloat(d.val.toFixed(1))} ${d.unit}`));
                 dataTest.push(weekTest);
                 dataStack.push(weekOther);
         
@@ -1033,14 +1033,22 @@ async renderProtocol(c) {
                     }
                 }
                 dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
+
+                // ЗАМІРИ
+                const meas = (this.data.measurements && this.data.measurements[w]) || {};
+                dataChest.push(meas.chest ? parseFloat(meas.chest) : null);
+                dataWaist.push(meas.waist ? parseFloat(meas.waist) : null);
+                dataArm.push(meas.arm ? parseFloat(meas.arm) : null);
+                dataLeg.push(meas.leg ? parseFloat(meas.leg) : null);
+                dataCalf.push(meas.calf ? parseFloat(meas.calf) : null);
             }
             
             if(minWeight === 200) minWeight = 0;
             const y1Min = Math.max(0, Math.floor(minWeight - 2));
             const y1Max = Math.ceil(maxWeight + 2);
         
+            // 3. МАЛЮЄМО ПЕРШИЙ ГРАФІК (ВАГА ТА ФАРМА)
             if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
-            
             const ctx = document.getElementById('mainChart').getContext('2d');
             
             const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
@@ -1059,104 +1067,29 @@ async renderProtocol(c) {
                 data: {
                     labels: labels,
                     datasets: [
-                        { 
-                            label: 'ВАГА (kg)',
-                            data: dataWeight, 
-                            type: 'line', 
-                            borderColor: '#ffffff', 
-                            backgroundColor: '#ffffff', 
-                            borderWidth: 3, 
-                            yAxisID: 'y1', 
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            // ЗМІНА ТУТ: Робимо точки на лінії суцільними білими (були чорні всередині)
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 0,
-                            tension: 0.4, // Більш плавні, красиві вигини лінії
-                            order: 0
-                        },
-                        { 
-                            label: 'STACK (mg)', 
-                            data: dataStack, 
-                            backgroundColor: gradStack, 
-                            hoverBackgroundColor: '#a78bfa',
-                            yAxisID: 'y', 
-                            stack: 'total', 
-                            order: 1, 
-                            borderRadius: 4,
-                            borderSkipped: false
-                        },
-                        { 
-                            label: 'TEST BASE (mg)', 
-                            data: dataTest, 
-                            backgroundColor: gradTest, 
-                            hoverBackgroundColor: '#ffd700',
-                            yAxisID: 'y', 
-                            stack: 'total', 
-                            order: 2, 
-                            borderRadius: 4,
-                            borderSkipped: false
-                        }
+                        { label: 'ВАГА (kg)', data: dataWeight, type: 'line', borderColor: '#ffffff', backgroundColor: '#ffffff', borderWidth: 3, yAxisID: 'y1', pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#ffffff', pointBorderWidth: 0, tension: 0.4, order: 0, spanGaps: true },
+                        { label: 'STACK (mg)', data: dataStack, backgroundColor: gradStack, hoverBackgroundColor: '#a78bfa', yAxisID: 'y', stack: 'total', order: 1, borderRadius: 4, borderSkipped: false },
+                        { label: 'TEST BASE (mg)', data: dataTest, backgroundColor: gradTest, hoverBackgroundColor: '#ffd700', yAxisID: 'y', stack: 'total', order: 2, borderRadius: 4, borderSkipped: false }
                     ]
                 },
                 options: {
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 2000, 
-                        easing: 'easeOutExpo', 
-                        delay: (context) => {
-                            let delay = 0;
-                            if (context.type === 'data' && context.mode === 'default') {
-                                delay = context.dataIndex * 100 + context.datasetIndex * 200; 
-                            }
-                            return delay;
-                        }
-                    },
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 1500, easing: 'easeOutExpo' },
                     interaction: { mode: 'index', intersect: false },
                     layout: { padding: { top: 10, left: 5, right: 5, bottom: 5 } },
                     scales: {
-                        x: { 
-                            stacked: true, 
-                            grid: { display: false }, 
-                            ticks: { color: '#666', font: {size: 11} } 
-                        },
-                        y: { 
-                            stacked: true, position: 'left', 
-                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, 
-                            display: false, 
-                        },
-                        y1: { 
-                            display: true, position: 'right', 
-                            grid: { display: false }, 
-                            border: { display: false },
-                            ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, 
-                            min: y1Min,
-                            max: y1Max
-                        }
+                        x: { stacked: true, grid: { display: false }, ticks: { color: '#666', font: {size: 11} } },
+                        y: { stacked: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, display: false },
+                        y1: { display: true, position: 'right', grid: { display: false }, border: { display: false }, ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, min: y1Min, max: y1Max }
                     },
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: {
-                            backgroundColor: 'rgba(20,20,20,0.95)',
-                            titleColor: '#d4af37',
-                            bodyColor: '#e5e5e5',
-                            borderColor: 'rgba(212,175,55,0.3)',
-                            borderWidth: 1,
-                            padding: 12,
-                            boxPadding: 4,
-                            titleFont: { family: 'JetBrains Mono', size: 13 },
-                            bodyFont: { family: 'JetBrains Mono', size: 12 },
-                            cornerRadius: 8,
-                            displayColors: true,
+                            backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#d4af37', bodyColor: '#e5e5e5', borderColor: 'rgba(212,175,55,0.3)', borderWidth: 1, padding: 12, cornerRadius: 8,
                             callbacks: {
                                 afterBody: (items) => {
                                     const idx = items[0].dataIndex;
-                                    if (weekDetails[idx] && weekDetails[idx].length > 0) {
-                                        return '\n📦 СКЛАД:\n' + weekDetails[idx].join('\n');
-                                    }
-                                    return '';
+                                    return (weekDetails[idx] && weekDetails[idx].length > 0) ? '\n📦 СКЛАД:\n' + weekDetails[idx].join('\n') : '';
                                 },
                                 footer: (items) => {
                                     let total = 0; items.forEach(i => { if(i.dataset.yAxisID==='y') total += i.raw; });
@@ -1167,14 +1100,48 @@ async renderProtocol(c) {
                     }
                 }
             });
+
+            // 4. МАЛЮЄМО ДРУГИЙ ГРАФІК (ЗАМІРИ)
+            if (this.measChartInstance) { this.measChartInstance.destroy(); this.measChartInstance = null; }
+            const ctxMeas = document.getElementById('measChart').getContext('2d');
+            
+            this.measChartInstance = new Chart(ctxMeas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'ГРУДИ', data: dataChest, borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.3, spanGaps: true, borderWidth: 3, pointRadius: 4 },
+                        { label: 'ТАЛІЯ', data: dataWaist, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, spanGaps: true, borderWidth: 3, pointRadius: 4 },
+                        { label: 'БІЦЕПС', data: dataArm, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3, spanGaps: true, borderWidth: 3, pointRadius: 4 },
+                        { label: 'СТЕГНО', data: dataLeg, borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.3, spanGaps: true, borderWidth: 3, pointRadius: 4 },
+                        { label: 'ГОМІЛКА', data: dataCalf, borderColor: '#ec4899', backgroundColor: '#ec4899', tension: 0.3, spanGaps: true, borderWidth: 3, pointRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 1500, easing: 'easeOutExpo', delay: 200 }, // Легка затримка після першого
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#fff', bodyColor: '#e5e5e5', borderColor: '#333', borderWidth: 1, padding: 12, cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#666', font: {size: 11} } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, ticks: { color: '#888', font: {size: 10} } }
+                    }
+                }
+            });
         },
 
         // Додаткова функція для кліку по кастомній легенді
-        toggleDataset(index, el) {
-            const meta = this.chartInstance.getDatasetMeta(index);
-            meta.hidden = meta.hidden === null ? !this.chartInstance.data.datasets[index].hidden : null;
+        toggleDataset(chartType, index, el) {
+            const chart = chartType === 'main' ? this.chartInstance : this.measChartInstance;
+            if (!chart) return;
+            const meta = chart.getDatasetMeta(index);
+            meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
             
-            // Змінюємо прозорість кнопки, щоб видно було, що вимкнено
             if (meta.hidden) {
                 el.style.opacity = '0.3';
                 el.style.textDecoration = 'line-through';
@@ -1183,7 +1150,7 @@ async renderProtocol(c) {
                 el.style.textDecoration = 'none';
             }
             
-            this.chartInstance.update();
+            chart.update();
         },
         
         renderAnalysis(c) {
