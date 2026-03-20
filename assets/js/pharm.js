@@ -218,48 +218,27 @@
         // --- ЛОГІКА ЗУМУ ДЛЯ ФОТО ---
         imgZoom: { scale: 1, x: 0, y: 0, startX: 0, startY: 0, isDragging: false, initDist: 0, initScale: 1 },
 
-        closeImgModal() {
-            document.getElementById('imgModal').style.display = 'none';
-            // Скидаємо зум та позицію фото при закритті
-            if (this.pzInstance) {
-                this.pzInstance.zoomAbs(0, 0, 1);
-                this.pzInstance.moveTo(0, 0);
-            }
-            this.unlockScroll();
-        },
-
-        initPhotoZoom() {
-            const img = document.getElementById('modalImg');
-            if(!img) return;
+        openNativeViewer(imgEl) {
+            if (this.viewerInstance) this.viewerInstance.destroy(); // Очищаємо попередній, якщо був
             
-            if (this.pzInstance) {
-                this.pzInstance.dispose();
-            }
-            
-            img.style.touchAction = 'none';
-
-            this.pzInstance = panzoom(img, {
-                maxZoom: 5,
-                minZoom: 1,
-                bounds: true,
-                boundsPadding: 0, // ЖОРСТКА СТІНА: забороняє витягувати фото за екран
-                smoothScroll: true
-            });
-
-            // Центруємо фото, якщо віддалили
-            this.pzInstance.on('zoom', (e) => {
-                if (e.getTransform().scale <= 1.05) {
-                    e.zoomAbs(0, 0, 1);
-                    e.moveTo(0, 0);
+            this.viewerInstance = new Viewer(imgEl, {
+                inline: false,
+                button: true,       // Хрестик закриття (спрацьовує ідеально на iOS)
+                navbar: false,      // Вимикаємо зайві мініатюри знизу
+                title: false,       // Вимикаємо підпис файлу
+                toolbar: false,     // Вимикаємо зайві кнопки зуму (все робиться жестами)
+                tooltip: false,     // Вимикаємо відсотки зуму
+                movable: true,      // Дозволяємо рухати
+                zoomable: true,     // Дозволяємо зумити
+                transition: true,   // Плавні анімації
+                minZoomRatio: 1,    // Не даємо віддалити менше ніж початковий розмір
+                maxZoomRatio: 5,    // Максимальний зум х5
+                hidden: () => {     // Коли вікно закривається - чистимо пам'ять
+                    this.viewerInstance.destroy();
+                    this.viewerInstance = null;
                 }
             });
-
-            // ЗАПОБІЖНИК: якщо фото НЕ зближене, жорстко блокуємо його перетягування
-            this.pzInstance.on('pan', (e) => {
-                if (e.getTransform().scale <= 1.05) {
-                    e.moveTo(0, 0); // Прибиваємо до центру
-                }
-            });
+            this.viewerInstance.show();
         },
         // ------------------------------------
         // Підключаємо StateManager
@@ -268,7 +247,7 @@
         state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null },
         chartInstance: null,
         measChartInstance: null,
-        pzInstance: null,
+        viewerInstance: null,
         dayBuffer: null,
         pillBuffer: null,
         safeSave() {
@@ -849,7 +828,7 @@ async renderProtocol(c) {
             grid += '</div>';
 
             const photos = await PhotoDB.get(this.state.week);
-            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="document.getElementById('modalImg').src=this.src;document.getElementById('imgModal').style.display='flex'"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
+            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="App.openNativeViewer(this)"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
             // ГОТУЄМО ДАНІ ЗАМІРІВ ТУТ (в JS, ПЕРЕД генерацією HTML)
             const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
@@ -1040,9 +1019,13 @@ renderAnalytics(c) {
                     plugins: { 
                         legend: { display: false }, 
                         zoom: {
-                            pan: { enabled: true, mode: 'x', threshold: 5 }, // Зменшено поріг для легшого скролу
-                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                            limits: { x: { min: 'original', max: 'original', minRange: 3 } } // ДОДАНО ЛІМІТ: не ближче 3 тижнів
+                            pan: { enabled: true, mode: 'x' },
+                            zoom: { 
+                                wheel: { enabled: true, speed: 0.1 }, 
+                                pinch: { enabled: true }, 
+                                mode: 'x' 
+                            },
+                            limits: { x: { min: 'original', max: 'original' } }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#d4af37', bodyColor: '#e5e5e5', borderColor: 'rgba(212,175,55,0.3)', borderWidth: 1, padding: 12, cornerRadius: 8,
@@ -1088,9 +1071,13 @@ renderAnalytics(c) {
                     plugins: { 
                         legend: { display: false },
                         zoom: {
-                            pan: { enabled: true, mode: 'x', threshold: 5 },
-                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                            limits: { x: { min: 'original', max: 'original', minRange: 3 } } // ДОДАНО ЛІМІТ
+                            pan: { enabled: true, mode: 'x' },
+                            zoom: { 
+                                wheel: { enabled: true, speed: 0.1 }, 
+                                pinch: { enabled: true }, 
+                                mode: 'x' 
+                            },
+                            limits: { x: { min: 'original', max: 'original' } }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#fff', bodyColor: '#e5e5e5', borderColor: '#333', borderWidth: 1, padding: 12, cornerRadius: 8
