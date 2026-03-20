@@ -790,21 +790,19 @@
 
 <div class="modal" id="addPillModal">
     <div class="modal-content">
-        <span class="modal-close" onclick="document.getElementById('bodyMapModal').style.display='none'; App.unlockScroll();">✕</span>
+        <span class="modal-close" onclick="App.closeModal()">✕</span>
         <h3 class="modal-title">Додати препарат</h3>
-<div class="input-group" id="pillNameGroup" style="position:relative;">
+        
+        <div class="input-group" id="pillNameGroup" style="position:relative;">
             <label>Назва</label>
             <div style="position: relative; display: flex; align-items: center;">
                 <input class="modal-input" id="pillName" placeholder="Напр: hCG" autocomplete="off" style="padding-right: 45px; width: 100%; box-sizing: border-box;">
-                
                 <div id="pillNameArrow" style="position: absolute; right: 0; top: 0; bottom: 0; width: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: 0.2s; z-index: 2;">
                     <svg style="pointer-events:none; transition: transform 0.3s;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
                 </div>
             </div>
-            
             <div id="custom-pill-list" style="display: none; position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #121212; border: 1px solid #333; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.9);"></div>
         </div>
-
 
         <div class="input-group">
             <label>Дозування</label>
@@ -838,7 +836,7 @@
                 <div class="color-opt" style="background:#ec4899" onclick="App.selectColor('c-pink', this)"></div>
             </div>
         </div>
-<div class="input-group" style="margin-top: 15px;">
+        <div class="input-group" style="margin-top: 15px;">
             <label>Повторення (до кінця фази)</label>
             <select class="modal-input" id="pillFreq" style="cursor:pointer; appearance: auto; background-color: #050505;">
                 <option value="once">📍 Тільки в цей день</option>
@@ -854,7 +852,7 @@
 
 <div class="modal" id="bodyMapModal">
     <div class="modal-content" style="max-width:350px">
-        <span class="modal-close" onclick="document.getElementById('bodyMapModal').style.display='none'">✕</span>
+        <span class="modal-close" onclick="document.getElementById('bodyMapModal').style.display='none'; App.unlockScroll();">✕</span>
         <h3 class="modal-title">Карта ін'єкцій</h3>
         <p style="color:#666; font-size:0.8rem; margin-bottom:15px">Натисніть на зону, щоб відмітити укол.</p>
         <div class="body-map-container" id="svgContainer"></div>
@@ -887,9 +885,6 @@
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/pharm.js"></script>
 <script src="assets/js/common.js"></script>
-
-</body>
-</html>
 
 </body>
 </html>
