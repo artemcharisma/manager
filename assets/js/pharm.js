@@ -236,21 +236,28 @@
                 this.pzInstance.dispose();
             }
             
-            // Жорстко забороняємо браузеру намагатися скролити сторінку під фото
             img.style.touchAction = 'none';
 
             this.pzInstance = panzoom(img, {
                 maxZoom: 5,
                 minZoom: 1,
                 bounds: true,
-                boundsPadding: 0.05, // Повертаємо легку "пружинність" краям для природності
-                smoothScroll: true   // Вмикаємо плавну інерцію, як на iOS!
+                boundsPadding: 0, // ЖОРСТКА СТІНА: забороняє витягувати фото за екран
+                smoothScroll: true
             });
 
+            // Центруємо фото, якщо віддалили
             this.pzInstance.on('zoom', (e) => {
                 if (e.getTransform().scale <= 1.05) {
                     e.zoomAbs(0, 0, 1);
                     e.moveTo(0, 0);
+                }
+            });
+
+            // ЗАПОБІЖНИК: якщо фото НЕ зближене, жорстко блокуємо його перетягування
+            this.pzInstance.on('pan', (e) => {
+                if (e.getTransform().scale <= 1.05) {
+                    e.moveTo(0, 0); // Прибиваємо до центру
                 }
             });
         },
@@ -1026,16 +1033,16 @@ renderAnalytics(c) {
                     interaction: { mode: 'index', intersect: false },
                     layout: { padding: { top: 10, left: 5, right: 5, bottom: 5 } },
                     scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { color: '#666', font: {size: 11} } },
+                        x: { stacked: true, grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, // ДОДАНО offset: true
                         y: { stacked: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, display: false },
                         y1: { display: true, position: 'right', grid: { display: false }, border: { display: false }, ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, min: y1Min, max: y1Max }
                     },
                     plugins: { 
-                        legend: { display: false },
+                        legend: { display: false }, 
                         zoom: {
-                            pan: { enabled: true, mode: 'x', threshold: 15 }, // threshold: 15 запобігає скачкам при випадкових рухах
+                            pan: { enabled: true, mode: 'x', threshold: 5 }, // Зменшено поріг для легшого скролу
                             zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                            limits: { x: { min: 'original', max: 'original' } } // не дає відзумити далі початкового стану
+                            limits: { x: { min: 'original', max: 'original', minRange: 3 } } // ДОДАНО ЛІМІТ: не ближче 3 тижнів
                         },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#d4af37', bodyColor: '#e5e5e5', borderColor: 'rgba(212,175,55,0.3)', borderWidth: 1, padding: 12, cornerRadius: 8,
@@ -1072,24 +1079,21 @@ renderAnalytics(c) {
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 1500, easing: 'easeOutExpo', delay: 200 }, // Легка затримка після першого
+                    animation: { duration: 1500, easing: 'easeOutExpo', delay: 200 }, 
                     interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, // ДОДАНО offset: true
+                        y: { grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, ticks: { color: '#fff', font: {size: 10, weight: 'bold'} } }
+                    },
                     plugins: { 
                         legend: { display: false },
                         zoom: {
-                            pan: { enabled: true, mode: 'x', threshold: 15 }, // threshold: 15 запобігає скачкам при випадкових рухах
+                            pan: { enabled: true, mode: 'x', threshold: 5 },
                             zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                            limits: { x: { min: 'original', max: 'original' } } // не дає відзумити далі початкового стану
+                            limits: { x: { min: 'original', max: 'original', minRange: 3 } } // ДОДАНО ЛІМІТ
                         },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#fff', bodyColor: '#e5e5e5', borderColor: '#333', borderWidth: 1, padding: 12, cornerRadius: 8
-                        }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { color: '#666', font: {size: 11} } },
-                        y: { 
-                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, 
-                            ticks: { color: '#fff', font: {size: 10, weight: 'bold'} } // Зробили білим і жирним!
                         }
                     }
                 }
