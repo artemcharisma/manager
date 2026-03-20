@@ -387,7 +387,19 @@
         .vitals-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 15px; border-top: 1px solid #27272a; }
         .vital-input { background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 8px; font-size: 0.75rem; width: 100%; text-align: center; }
 
-      /* --- VISUAL UPGRADE: LABS & PHARMACY --- */
+        /* НОВЕ ДЛЯ ТИСКУ */
+        .bp-wrapper {
+            display: flex; align-items: center; background: #000; border: 1px solid #333; border-radius: 6px; overflow: hidden; transition: 0.2s;
+        }
+        .bp-wrapper:focus-within { border-color: var(--primary); }
+        .bp-input {
+            background: transparent; border: none; color: #fff; width: 100%; text-align: center; font-size: 0.75rem; padding: 8px 2px;
+            -moz-appearance: textfield; /* Прибирає стрілочки в Firefox */
+        }
+        .bp-input::-webkit-outer-spin-button, .bp-input::-webkit-inner-spin-button { 
+            -webkit-appearance: none; margin: 0; /* Прибирає стрілочки в Chrome/Safari */
+        }
+        .bp-separator { color: #555; font-size: 0.8rem; font-weight: bold; user-select: none; }
         
         /* 1. СІТКА КАРТОК */
         .med-grid, .pharma-grid { 
