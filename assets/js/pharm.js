@@ -846,10 +846,25 @@ async renderProtocol(c) {
                     </div>
                     ${content}
                     <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
+                    // Готуємо дані для нового поля тиску
+                    let sys = "", dia = "";
+                    if (v.bp && v.bp.includes('/')) {
+                        const parts = v.bp.split('/');
+                        sys = parts[0]; dia = parts[1];
+                    } else if (v.bp) {
+                        sys = v.bp; // Запобіжник для старих даних
+                    }
+
                     <div class="vitals-row">
-                        <input class="vital-input" type="text" inputmode="decimal" placeholder="120/80" value="${v.bp || ''}" onblur="App.saveVital(${this.state.week},${i},'bp',this.value, this)">
-                        <input class="vital-input" type="number" inputmode="decimal" placeholder="Пульс" value="${v.hr || ''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
-                        <input class="vital-input" type="number" inputmode="decimal" placeholder="Вага" value="${v.w || ''}" onblur="App.saveVital(${this.state.week},${i},'w',this.value)">
+                        <div class="bp-wrapper" title="Тиск (Систолічний / Діастолічний)">
+                            <input class="bp-input" type="number" inputmode="numeric" placeholder="120" value="${sys}" onblur="App.saveBP(${this.state.week},${i},'sys',this.value)">
+                            <span class="bp-separator">/</span>
+                            <input class="bp-input" type="number" inputmode="numeric" placeholder="80" value="${dia}" onblur="App.saveBP(${this.state.week},${i},'dia',this.value)">
+                        </div>
+                        <input class="vital-input" type="number" inputmode="numeric" placeholder="Пульс" value="${v.hr || ''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
+                        <input class="vital-input" type="text" inputmode="decimal" placeholder="Вага" value="${v.w || ''}" 
+                            oninput="this.value = this.value.replace(',', '.').replace(/[^0-9.]/g, '')" 
+                            onblur="App.saveVital(${this.state.week},${i},'w',this.value)">
                     </div></div>`;
             }
             grid += '</div>';
@@ -1475,27 +1490,38 @@ renderStatsPanel() {
             this.save(); 
         },
         
-        saveVital(w,d,k,v, el) { 
+// Нова функція спеціально для тиску (збирає 2 поля в одне значення)
+        saveBP(w, d, type, val) {
             this.pushHistory();
-            
-            // --- Смарт-форматування для тиску ---
-            if (k === 'bp' && v) {
-                // 1. Якщо ввели крапку, кому, тире або пробіл - міняємо на слеш
-                v = v.replace(/[.,\-\s]/g, '/'); 
-                
-                // 2. Якщо ввели просто числа підряд (без роздільника)
-                if (!v.includes('/') && v.length >= 4) {
-                    if (v.length === 4) v = v.substring(0,2) + '/' + v.substring(2); // 9060 -> 90/60
-                    else if (v.length >= 5) v = v.substring(0,3) + '/' + v.substring(3); // 12080 -> 120/80
-                }
-                
-                // Одразу оновлюємо текст в інпуті на красивий
-                if (el) el.value = v; 
-            }
-            // ------------------------------------
+            const key = `${w}-${d}`;
+            if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""};
 
+            let currentBP = this.data.vitals[key].bp || "/";
+            let parts = currentBP.split('/');
+            if (parts.length !== 2) parts = ["", ""];
+
+            if (type === 'sys') parts[0] = val;
+            if (type === 'dia') parts[1] = val;
+
+            // Зберігаємо лише якщо хоча б одне поле заповнене
+            if (parts[0] === "" && parts[1] === "") {
+                this.data.vitals[key].bp = "";
+            } else {
+                this.data.vitals[key].bp = `${parts[0]}/${parts[1]}`;
+            }
+
+            this.save();
+        },
+        
+        // Оновлена, чиста функція для пульсу та ваги
+        saveVital(w,d,k,v) { 
+            this.pushHistory();
             const key = `${w}-${d}`; 
             if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""}; 
+            
+            // Якщо це вага, переконуємось перед збереженням, що там крапка
+            if (k === 'w' && v) v = v.replace(',', '.'); 
+
             this.data.vitals[key][k] = v; 
             this.save(); 
         },
