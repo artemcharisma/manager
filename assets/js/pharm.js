@@ -236,19 +236,21 @@
                 this.pzInstance.dispose();
             }
             
+            // Жорстко забороняємо браузеру намагатися скролити сторінку під фото
+            img.style.touchAction = 'none';
+
             this.pzInstance = panzoom(img, {
                 maxZoom: 5,
                 minZoom: 1,
                 bounds: true,
-                boundsPadding: 0, // Змінено на 0: не дозволяє "відривати" фото від країв при масштабі 1
-                smoothScroll: false
+                boundsPadding: 0.05, // Повертаємо легку "пружинність" краям для природності
+                smoothScroll: true   // Вмикаємо плавну інерцію, як на iOS!
             });
 
-            // МАГІЯ ТУТ: Як тільки масштаб падає майже до 1, жорстко центруємо фото
             this.pzInstance.on('zoom', (e) => {
                 if (e.getTransform().scale <= 1.05) {
-                    e.zoomAbs(0, 0, 1); // Скидаємо масштаб рівно на 1
-                    e.moveTo(0, 0);     // Повертаємо рівно по центру
+                    e.zoomAbs(0, 0, 1);
+                    e.moveTo(0, 0);
                 }
             });
         },
@@ -886,7 +888,7 @@ renderAnalytics(c) {
             c.innerHTML = `
                 <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
                     <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
-                        <canvas id="mainChart"></canvas>
+                        <canvas id="mainChart" style="touch-action: pan-y;"></canvas>
                     </div>
                     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
                         <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 0, this)"><div style="width:12px; height:12px; background:#ffffff; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">ВАГА</span></div>
@@ -896,7 +898,7 @@ renderAnalytics(c) {
 
                     <h3 style="color:#fff; font-size:1rem; margin: 40px 0 10px 0; text-align:center; letter-spacing:1px; font-weight:800;">📏 ДИНАМІКА ЗАМІРІВ (см)</h3>
                     <div class="chart-container" style="position:relative; height:300px; margin: 10px 0;">
-                        <canvas id="measChart"></canvas>
+                        <canvas id="measChart" style="touch-action: pan-y;"></canvas>
                     </div>
                     <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
                         <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 0, this)"><div style="width:12px; height:12px; background:#3b82f6; border-radius:50%;"></div><span style="color:#aaa;">ГРУДИ</span></div>
@@ -1085,7 +1087,10 @@ renderAnalytics(c) {
                     },
                     scales: {
                         x: { grid: { display: false }, ticks: { color: '#666', font: {size: 11} } },
-                        y: { grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, ticks: { color: '#888', font: {size: 10} } }
+                        y: { 
+                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, 
+                            ticks: { color: '#fff', font: {size: 10, weight: 'bold'} } // Зробили білим і жирним!
+                        }
                     }
                 }
             });
