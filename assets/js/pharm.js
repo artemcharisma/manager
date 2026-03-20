@@ -232,18 +232,24 @@
             const img = document.getElementById('modalImg');
             if(!img) return;
             
-            // Якщо зум вже був ініціалізований, очищаємо його
             if (this.pzInstance) {
                 this.pzInstance.dispose();
             }
             
-            // Вмикаємо ідеальний зум
             this.pzInstance = panzoom(img, {
                 maxZoom: 5,
                 minZoom: 1,
-                bounds: true, // Не дає витягнути фото за межі екрану
-                boundsPadding: 0.1,
-                smoothScroll: false // Вимикаємо інерцію для більшого контролю на iOS
+                bounds: true,
+                boundsPadding: 0, // Змінено на 0: не дозволяє "відривати" фото від країв при масштабі 1
+                smoothScroll: false
+            });
+
+            // МАГІЯ ТУТ: Як тільки масштаб падає майже до 1, жорстко центруємо фото
+            this.pzInstance.on('zoom', (e) => {
+                if (e.getTransform().scale <= 1.05) {
+                    e.zoomAbs(0, 0, 1); // Скидаємо масштаб рівно на 1
+                    e.moveTo(0, 0);     // Повертаємо рівно по центру
+                }
             });
         },
         // ------------------------------------
