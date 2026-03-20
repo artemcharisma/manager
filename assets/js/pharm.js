@@ -864,6 +864,7 @@ async renderProtocol(c) {
                             <span class="bp-separator">/</span>
                             <input class="bp-input" type="number" inputmode="numeric" placeholder="80" value="${dia}" 
                                 id="dia-${this.state.week}-${i}"
+                                onkeydown="if(event.key === 'Backspace' && this.value === '') document.getElementById('sys-${this.state.week}-${i}').focus()"
                                 onblur="App.saveBP(${this.state.week},${i},'dia',this.value)">
                         </div>
                         <input class="vital-input" type="number" inputmode="numeric" placeholder="Пульс" value="${v.hr || ''}" onblur="App.saveVital(${this.state.week},${i},'hr',this.value)">
