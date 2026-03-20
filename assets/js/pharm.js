@@ -170,7 +170,7 @@
         notes: {}
     };
     // --- HELPER: IMAGE COMPRESSOR ---
-    const compressImage = (file, maxWidth = 1024, quality = 0.7) => {
+    const compressImage = (file, maxWidth = 1920, quality = 0.85) => {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -230,81 +230,78 @@
             const img = document.getElementById('modalImg');
             if(!modal || !img) return;
 
-            const update = () => { img.style.transform = `translate(${this.imgZoom.x}px, ${this.imgZoom.y}px) scale(${this.imgZoom.scale})`; };
+            let scale = 1, currentX = 0, currentY = 0;
+            let startX = 0, startY = 0, initialDistance = 0, initialScale = 1;
+            let isDragging = false;
 
-            // 1. Скрол коліщатком миші (для ПК)
-            modal.addEventListener('wheel', e => {
-                e.preventDefault();
-                const delta = Math.sign(e.deltaY) * -0.15;
-                this.imgZoom.scale = Math.min(Math.max(1, this.imgZoom.scale + delta), 5);
-                if(this.imgZoom.scale === 1) { this.imgZoom.x = 0; this.imgZoom.y = 0; }
-                update();
-            }, {passive: false});
+            const update = () => {
+                img.style.transform = `translate(${currentX}px, ${currentY}px) scale(${scale})`;
+            };
 
-            // 2. Жести пальцями (для смартфонів)
+            const reset = () => { scale = 1; currentX = 0; currentY = 0; update(); };
+
+            // Додаємо плавний перехід тільки для подвійного тапу, щоб не "лагав" щипок
+            img.style.transition = 'transform 0.1s ease-out';
+
             modal.addEventListener('touchstart', e => {
+                img.style.transition = 'none'; // Вимикаємо анімацію при ручному зумі
                 if (e.touches.length === 2) {
-                    this.imgZoom.initDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    this.imgZoom.initScale = this.imgZoom.scale;
+                    isDragging = false;
+                    initialDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    initialScale = scale;
                 } else if (e.touches.length === 1) {
-                    this.imgZoom.isDragging = true;
-                    this.imgZoom.startX = e.touches[0].clientX - this.imgZoom.x;
-                    this.imgZoom.startY = e.touches[0].clientY - this.imgZoom.y;
+                    isDragging = true;
+                    startX = e.touches[0].clientX - currentX;
+                    startY = e.touches[0].clientY - currentY;
                 }
             }, {passive: false});
 
             modal.addEventListener('touchmove', e => {
-                e.preventDefault(); // Блокуємо скрол всієї сторінки
+                e.preventDefault();
                 if (e.touches.length === 2) {
-                    // Зум двома пальцями
                     const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    const scale = this.imgZoom.initScale * (dist / this.imgZoom.initDist);
-                    this.imgZoom.scale = Math.min(Math.max(1, scale), 5);
-                    if(this.imgZoom.scale === 1) { this.imgZoom.x = 0; this.imgZoom.y = 0; }
-                    update();
-                } else if (e.touches.length === 1 && this.imgZoom.isDragging && this.imgZoom.scale > 1) {
-                    // Переміщення наближеного фото (Pan)
-                    this.imgZoom.x = e.touches[0].clientX - this.imgZoom.startX;
-                    this.imgZoom.y = e.touches[0].clientY - this.imgZoom.startY;
+                    scale = Math.min(Math.max(1, initialScale * (dist / initialDistance)), 4); // Макс зум х4
+                    if (scale === 1) reset(); else update();
+                } else if (e.touches.length === 1 && isDragging && scale > 1) {
+                    currentX = e.touches[0].clientX - startX;
+                    currentY = e.touches[0].clientY - startY;
                     update();
                 }
             }, {passive: false});
 
             modal.addEventListener('touchend', e => {
-                if (e.touches.length < 2) this.imgZoom.initDist = 0;
-                if (e.touches.length === 0) this.imgZoom.isDragging = false;
+                if (e.touches.length < 2) initialDistance = 0;
+                if (e.touches.length === 0) isDragging = false;
+                img.style.transition = 'transform 0.1s ease-out'; // Повертаємо анімацію
             });
-            
-            // 3. Подвійний тап для швидкого зуму
+
+            // Подвійний тап
             let lastTap = 0;
             img.addEventListener('touchend', e => {
                 const now = new Date().getTime();
-                if (now - lastTap < 300) { // Якщо між тапами менше 300мс
-                    this.imgZoom.scale = this.imgZoom.scale > 1 ? 1 : 2.5; // Наближаємо або віддаляємо
-                    this.imgZoom.x = 0; this.imgZoom.y = 0;
-                    update();
+                if (now - lastTap < 300) {
+                    if (scale > 1) reset();
+                    else { scale = 2.5; update(); }
                     e.preventDefault();
                 }
                 lastTap = now;
             });
-            
-            // 4. Перетягування мишкою (для ПК)
+
+            // ПК миша
+            modal.addEventListener('wheel', e => {
+                e.preventDefault();
+                img.style.transition = 'none';
+                scale = Math.min(Math.max(1, scale + (e.deltaY < 0 ? 0.2 : -0.2)), 4);
+                if (scale === 1) reset(); else update();
+            }, {passive: false});
+
             img.addEventListener('mousedown', e => {
                 e.preventDefault();
-                if (this.imgZoom.scale > 1) {
-                    this.imgZoom.isDragging = true;
-                    this.imgZoom.startX = e.clientX - this.imgZoom.x;
-                    this.imgZoom.startY = e.clientY - this.imgZoom.y;
-                    img.style.cursor = 'grabbing';
-                }
+                if (scale > 1) { isDragging = true; startX = e.clientX - currentX; startY = e.clientY - currentY; img.style.cursor = 'grabbing'; }
             });
-            window.addEventListener('mouseup', () => { this.imgZoom.isDragging = false; img.style.cursor = 'grab'; });
+            window.addEventListener('mouseup', () => { isDragging = false; img.style.cursor = 'grab'; });
             window.addEventListener('mousemove', e => {
-                if (this.imgZoom.isDragging && this.imgZoom.scale > 1) {
-                    this.imgZoom.x = e.clientX - this.imgZoom.startX;
-                    this.imgZoom.y = e.clientY - this.imgZoom.startY;
-                    update();
-                }
+                if (isDragging && scale > 1) { currentX = e.clientX - startX; currentY = e.clientY - startY; update(); }
             });
         },
         // ------------------------------------
@@ -1083,7 +1080,11 @@ renderAnalytics(c) {
                         y1: { display: true, position: 'right', grid: { display: false }, border: { display: false }, ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, min: y1Min, max: y1Max }
                     },
                     plugins: { 
-                        legend: { display: false }, 
+                        legend: { display: false },
+                        zoom: {
+                            pan: { enabled: true, mode: 'x' },
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+                        },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#d4af37', bodyColor: '#e5e5e5', borderColor: 'rgba(212,175,55,0.3)', borderWidth: 1, padding: 12, cornerRadius: 8,
                             callbacks: {
@@ -1123,6 +1124,10 @@ renderAnalytics(c) {
                     interaction: { mode: 'index', intersect: false },
                     plugins: { 
                         legend: { display: false },
+                        zoom: {
+                            pan: { enabled: true, mode: 'x' },
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+                        },
                         tooltip: {
                             backgroundColor: 'rgba(20,20,20,0.95)', titleColor: '#fff', bodyColor: '#e5e5e5', borderColor: '#333', borderWidth: 1, padding: 12, cornerRadius: 8
                         }
