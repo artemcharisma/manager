@@ -245,39 +245,70 @@
             this.smartSave();
         },
 
-       // =========================================================================
+        // =========================================================================
         // --- ІДЕАЛЬНИЙ ФОТО-ПЕРЕГЛЯДАЧ З НУЛЯ (Step-by-Step Native Experience) ---
         // =========================================================================
 
-        openPhotoModal(imgUrl) {
+        openPhotoModal(imgUrl, altUrl = null, labelMain = '', labelAlt = '') {
             this.lockScroll();
             
             const modal = document.getElementById('customPhotoModal');
             const img = document.getElementById('customPhotoImg');
+            
+            // Елементи перемикача
+            const swapWrapper = document.getElementById('photoSwapWrapper');
+            const btnMain = document.getElementById('btnSwapMain');
+            const btnAlt = document.getElementById('btnSwapAlt');
+
             if(!modal || !img) return;
 
-            // Скидаємо стан у стандарт
             this.state.photoModalScale = 1;
             this.state.photoModalTranslate = { x: 0, y: 0 };
             this.state.photoModalIsZooming = false;
             this.state.photoModalIsPanning = false;
 
             img.src = imgUrl;
-            modal.classList.add('active');
-            
-            // Жорстко забороняємо браузеру втручатися в touch-події
             img.style.touchAction = 'none';
+            
+            // Логіка перемикача
+            if (altUrl && swapWrapper) {
+                img.setAttribute('data-main-src', imgUrl);
+                img.setAttribute('data-alt-src', altUrl);
+                
+                btnMain.innerText = labelMain;
+                btnAlt.innerText = labelAlt;
+                
+                btnMain.classList.add('active');
+                btnAlt.classList.remove('active');
+                
+                swapWrapper.style.display = 'flex';
+                
+                // Миттєва зміна фото без закриття вікна
+                btnMain.onclick = (e) => {
+                    e.stopPropagation();
+                    img.src = img.getAttribute('data-main-src');
+                    btnMain.classList.add('active');
+                    btnAlt.classList.remove('active');
+                };
+                btnAlt.onclick = (e) => {
+                    e.stopPropagation();
+                    img.src = img.getAttribute('data-alt-src');
+                    btnAlt.classList.add('active');
+                    btnMain.classList.remove('active');
+                };
+            } else if (swapWrapper) {
+                swapWrapper.style.display = 'none';
+            }
 
-            // Нам треба почекати, поки фото завантажиться, щоб порахувати його розміри
+            modal.classList.add('active');
+
             img.onload = () => {
                 this.calculatePhotoBoundary(img);
                 this.updatePhotoTransform();
             };
 
-            // Ініціалізуємо обробники дотиків
             this.initPhotoGestures(modal, img);
         },
-
         closePhotoModal() {
             const modal = document.getElementById('customPhotoModal');
             if(!modal) return;
@@ -2219,28 +2250,29 @@ renderStatsPanel() {
             const box = document.getElementById('imgBox' + side);
             box.innerHTML = '<span style="opacity:0.3">Loading...</span>';
             
-            // Дістаємо ВСІ фото з бази даних для цього тижня
             const photos = await PhotoDB.get(Number(week));
             
+            // Зберігаємо завантажені фото для швидкого перемикання
+            if (!this.compareData) this.compareData = { L: [], R: [], wL: '', wR: '' };
+            this.compareData[side] = photos || [];
+            this.compareData['w' + side] = week;
+            
             if (photos && photos.length > 0) {
-                // Налаштовуємо колонку під кілька фотографій (робимо її скроленою)
                 box.style.aspectRatio = 'auto';
                 box.style.display = 'flex';
                 box.style.flexDirection = 'column';
                 box.style.gap = '10px';
-                box.style.maxHeight = '65vh'; // Обмеження висоти, щоб не вилазило за екран
-                box.style.overflowY = 'auto'; // Вмикаємо вертикальний скрол
+                box.style.maxHeight = '65vh'; 
+                box.style.overflowY = 'auto'; 
                 box.style.padding = '0 5px 0 0';
                 box.style.background = 'transparent';
                 box.style.border = 'none';
 
-                // Малюємо ВСІ фотографії, які є в цьому тижні
-                box.innerHTML = photos.map(p => 
-                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="App.openPhotoModal(this.src)">`
+                // ЗАМІНЕНО: тепер викликаємо спеціальну функцію openCompareFullscreen
+                box.innerHTML = photos.map((p, idx) => 
+                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="App.openCompareFullscreen('${side}', ${idx})">`
                 ).join('');
-
             } else {
-                // Якщо фото немає - повертаємо стандартний вигляд порожнього блоку
                 box.style.aspectRatio = '3/4';
                 box.style.display = 'flex';
                 box.style.maxHeight = 'none';
@@ -2249,6 +2281,22 @@ renderStatsPanel() {
                 box.style.border = '1px dashed #333';
                 box.innerHTML = '<span style="opacity:0.3">Немає фото</span>';
             }
+        },
+        // НОВА ФУНКЦІЯ: Підготовка двох фото для швидкого перемикання
+        openCompareFullscreen(side, idx) {
+            const otherSide = side === 'L' ? 'R' : 'L';
+            const photoMain = this.compareData[side][idx];
+            const photoAlt = this.compareData[otherSide][idx]; // Шукаємо фото з таким же індексом по той бік
+
+            if (!photoMain) return;
+
+            const urlMain = photoMain.data;
+            const urlAlt = photoAlt ? photoAlt.data : null;
+            const labelMain = `W${this.compareData['w' + side]}`;
+            const labelAlt = photoAlt ? `W${this.compareData['w' + otherSide]}` : null;
+
+            // Передаємо обидва фото у наш переглядач
+            this.openPhotoModal(urlMain, urlAlt, labelMain, labelAlt);
         },
 
             updatePhaseTitle(id, newTitle) {
