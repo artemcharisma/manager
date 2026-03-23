@@ -776,6 +776,32 @@
             pointer-events: none !important;
             transition: opacity 0.2s ease;
         }
+    /* --- УНІВЕРСАЛЬНИЙ ПЕРЕГЛЯДАЧ ФОТО --- */
+        .photo-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%;
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; cursor: pointer; z-index: 5002; backdrop-filter: blur(5px);
+            transition: 0.2s; user-select: none; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .photo-nav-btn:active { background: var(--primary); color: #000; }
+        #photoNavLeft { left: 15px; }
+        #photoNavRight { right: 15px; }
+
+        .photo-week-bar {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(10,10,10,0.85); border: 1px solid #333; border-radius: 30px;
+            padding: 6px; z-index: 5002; display: flex; gap: 5px; backdrop-filter: blur(10px);
+            max-width: 90vw; overflow-x: auto;
+        }
+        .photo-week-bar::-webkit-scrollbar { display: none; } /* Ховаємо скролбар */
+        .photo-week-bar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .p-week {
+            padding: 8px 20px; border-radius: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; color: #888; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0;
+        }
+        .p-week.active { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(212,175,55,0.4); }
     </style>
 </head>
 <body id="appBody">
@@ -922,12 +948,14 @@
 <script src="assets/js/common.js"></script>
 <div id="customPhotoModal">
     <span class="custom-close-btn" onclick="App.closePhotoModal()" ontouchend="App.closePhotoModal(); event.preventDefault(); event.stopPropagation();">✕</span>
+    
+    <div id="photoNavLeft" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(-1)">◀</div>
+    
     <img id="customPhotoImg" src="" alt="Full view">
+    
+    <div id="photoNavRight" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(1)">▶</div>
 
-    <div id="photoSwapWrapper" style="display:none; position:absolute; bottom:40px; left:50%; transform:translateX(-50%); background:rgba(10,10,10,0.85); border:1px solid #333; border-radius:30px; padding:6px; z-index:5002; align-items:center; backdrop-filter:blur(10px);">
-        <div id="btnSwapMain" class="swap-btn active">W1</div>
-        <div id="btnSwapAlt" class="swap-btn">W2</div>
-    </div>
+    <div id="photoWeekSelector" class="photo-week-bar"></div>
 </div>
 </body>
 </html>
