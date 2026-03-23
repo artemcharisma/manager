@@ -67,7 +67,7 @@
         }
         
         /* --- ВИНЯТОК: Дозволяємо виділяти там, де треба писати --- */
-        input, textarea, [contenteditable] {
+        input, textarea, [contenteditable="true"] {
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
@@ -185,33 +185,19 @@
         body.privacy-mode .brand span { display: none; }
 
         /* 4. ГОЛОВНА ФІШКА: ДІАГОНАЛЬНІ СМУЖКИ (ЛАТАЄМО ВСІ ДІРКИ) */
-        body.privacy-mode .pill div, 
-        body.privacy-mode .pill span,
-        body.privacy-mode .stat-val, 
-        body.privacy-mode .stat-label,
-        body.privacy-mode .med-name, 
-        body.privacy-mode .med-dose,
-        body.privacy-mode .med-desc,
-        body.privacy-mode .pharm-stock,
-        body.privacy-mode .check-name,
-        body.privacy-mode .phase-btn span, 
-        body.privacy-mode .phase-btn small,
-        body.privacy-mode .day-header span,
-        body.privacy-mode .category-header span, 
-        body.privacy-mode .med-title,
-        body.privacy-mode .med-timing,
-        body.privacy-mode .note-input,
-        body.privacy-mode .modal-title,
-        body.privacy-mode .modal-content p {
-            color: transparent !important;
-            background-color: transparent;
-            border-radius: 4px;
-            background-image: repeating-linear-gradient(135deg, #1c1c1c, #1c1c1c 10px, #2a2a2a 10px, #2a2a2a 20px);
-            background-size: 28px 28px; 
-            animation: stripes-move 3s linear infinite; 
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
-            display: inline-block; min-height: 14px; margin-bottom: 2px; pointer-events: none;
+        body.privacy-mode .pill div, body.privacy-mode .pill span, body.privacy-mode .stat-val, 
+        body.privacy-mode .stat-label, body.privacy-mode .med-name, body.privacy-mode .med-dose,
+        body.privacy-mode .med-desc, body.privacy-mode .pharm-stock, body.privacy-mode .check-name,
+        body.privacy-mode .phase-btn span, body.privacy-mode .phase-btn small, body.privacy-mode .day-header span,
+        body.privacy-mode .category-header span, body.privacy-mode .med-title, body.privacy-mode .med-timing,
+        body.privacy-mode .note-input, body.privacy-mode .modal-title, body.privacy-mode .modal-content p,
+        body.privacy-mode .vital-input, body.privacy-mode .bp-input, body.privacy-mode .bp-separator {
+            color: transparent !important; background-color: transparent !important; border-color: #333 !important;
+            background-image: repeating-linear-gradient(135deg, #1c1c1c, #1c1c1c 10px, #2a2a2a 10px, #2a2a2a 20px) !important;
+            background-size: 28px 28px !important; animation: stripes-move 3s linear infinite !important; 
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.8); border-radius: 4px; display: inline-block; min-height: 14px; pointer-events: none !important;
         }
+        body.privacy-mode input::placeholder, body.privacy-mode textarea::placeholder { color: transparent !important; }
         
         /* Вирівнювання блоків, щоб виглядало гарно */
         body.privacy-mode .pill div:first-child div:first-child { width: 80%; height: 18px; margin-bottom: 4px; } /* Назва */
