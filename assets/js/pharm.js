@@ -246,12 +246,17 @@
             this.smartSave();
         },
 
-        openPhotoModal(imgUrl, altUrl = null, labelMain = '', labelAlt = '') {
+        // =========================================================================
+        // --- УНІВЕРСАЛЬНИЙ ФОТО-ХАБ (Пози + Тижні) ---
+        // =========================================================================
+        
+        viewerState: { week: null, idx: 0, photos: [] },
+
+        async openPhotoModal(week, idx) {
             this.lockScroll();
             
             let modal = document.getElementById('customPhotoModal');
             let img = document.getElementById('customPhotoImg');
-
             if(!modal || !img) return;
 
             this.state.photoModalScale = 1;
@@ -259,57 +264,77 @@
             this.state.photoModalIsZooming = false;
             this.state.photoModalIsPanning = false;
 
-            img.src = imgUrl;
             img.style.touchAction = 'none';
             modal.classList.add('active');
 
-            // 1. Клонуємо модалку і вішаємо жести ПЕРЕД кнопками (щоб не вбити кліки)
+            // Клонуємо модалку для очищення старих жестів
             this.initPhotoGestures(modal, img);
+            
+            // Задаємо початковий стан
+            this.viewerState.week = Number(week);
+            this.viewerState.idx = Number(idx);
+            
+            await this.loadViewerData();
+        },
 
-            // 2. ОНОВЛЮЄМО ПОСИЛАННЯ НА ЕЛЕМЕНТИ (бо старі вмерли при клонуванні)
-            modal = document.getElementById('customPhotoModal');
-            img = document.getElementById('customPhotoImg');
-            const swapWrapper = document.getElementById('photoSwapWrapper');
-            const btnMain = document.getElementById('btnSwapMain');
-            const btnAlt = document.getElementById('btnSwapAlt');
-
-            // Оновлюємо розміри для НОВОЇ картинки
+        async loadViewerData() {
+            const img = document.getElementById('customPhotoImg');
+            this.viewerState.photos = await PhotoDB.get(this.viewerState.week);
+            
+            // Якщо для цього тижня менше фотографій, скидаємо індекс
+            if (this.viewerState.idx >= this.viewerState.photos.length) {
+                this.viewerState.idx = Math.max(0, this.viewerState.photos.length - 1);
+            }
+            
+            if (this.viewerState.photos.length > 0) {
+                img.src = this.viewerState.photos[this.viewerState.idx].data;
+            } else {
+                img.src = '';
+            }
+            
             img.onload = () => {
                 this.calculatePhotoBoundary(img);
                 this.updatePhotoTransform();
             };
 
-            // 3. Вішаємо залізобетонні події на нові кнопки
-            if (altUrl && swapWrapper && btnMain && btnAlt) {
-                img.setAttribute('data-main-src', imgUrl);
-                img.setAttribute('data-alt-src', altUrl);
-                
-                btnMain.innerText = labelMain;
-                btnAlt.innerText = labelAlt;
-                
-                btnMain.classList.add('active');
-                btnAlt.classList.remove('active');
-                swapWrapper.style.display = 'flex';
-                
-                // Функції миттєвого перемикання
-                const swapToMain = (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    img.src = img.getAttribute('data-main-src');
-                    btnMain.classList.add('active'); btnAlt.classList.remove('active');
-                };
-                const swapToAlt = (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    img.src = img.getAttribute('data-alt-src');
-                    btnAlt.classList.add('active'); btnMain.classList.remove('active');
-                };
+            this.updateViewerUI();
+        },
 
-                // Дублюємо для ідеальної роботи на iOS та Android
-                btnMain.onclick = swapToMain; btnMain.ontouchend = swapToMain;
-                btnAlt.onclick = swapToAlt; btnAlt.ontouchend = swapToAlt;
+        updateViewerUI() {
+            const leftBtn = document.getElementById('photoNavLeft');
+            const rightBtn = document.getElementById('photoNavRight');
+            const bar = document.getElementById('photoWeekSelector');
+
+            // Відображаємо стрілочки тільки якщо є куди гортати
+            if (leftBtn) leftBtn.style.display = this.viewerState.idx > 0 ? 'flex' : 'none';
+            if (rightBtn) rightBtn.style.display = this.viewerState.idx < this.viewerState.photos.length - 1 ? 'flex' : 'none';
+
+            // Генеруємо нижній таймлайн тижнів
+            if (bar) {
+                const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
+                bar.innerHTML = keys.map(k => 
+                    `<div class="p-week ${k === this.viewerState.week ? 'active' : ''}" onclick="event.stopPropagation(); App.changeViewerWeek(${k})">W${k}</div>`
+                ).join('');
                 
-            } else if (swapWrapper) {
-                swapWrapper.style.display = 'none';
+                bar.style.display = keys.length > 0 ? 'flex' : 'none';
             }
+        },
+
+        navViewerPose(dir) {
+            this.viewerState.idx += dir;
+            this.state.photoModalScale = 1;
+            this.state.photoModalTranslate = { x: 0, y: 0 };
+            this.updatePhotoTransform();
+            this.loadViewerData();
+        },
+
+        changeViewerWeek(newWeek) {
+            if (this.viewerState.week === newWeek) return;
+            this.viewerState.week = newWeek;
+            this.state.photoModalScale = 1;
+            this.state.photoModalTranslate = { x: 0, y: 0 };
+            this.updatePhotoTransform();
+            this.loadViewerData();
         },
         closePhotoModal() {
             const modal = document.getElementById('customPhotoModal');
@@ -1091,7 +1116,7 @@ async renderProtocol(c) {
             grid += '</div>';
 
             const photos = await PhotoDB.get(this.state.week);
-            const pHtml = photos.map(p => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(this.src)"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
+            const pHtml = photos.map((p, idx) => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${idx})"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
             // ГОТУЄМО ДАНІ ЗАМІРІВ ТУТ (в JS, ПЕРЕД генерацією HTML)
             const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
@@ -2272,7 +2297,7 @@ renderStatsPanel() {
 
                 // ЗАМІНЕНО: тепер викликаємо спеціальну функцію openCompareFullscreen
                 box.innerHTML = photos.map((p, idx) => 
-                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="App.openCompareFullscreen('${side}', ${idx})">`
+                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="App.openPhotoModal(${week}, ${idx})">`
                 ).join('');
             } else {
                 box.style.aspectRatio = '3/4';
@@ -2284,23 +2309,7 @@ renderStatsPanel() {
                 box.innerHTML = '<span style="opacity:0.3">Немає фото</span>';
             }
         },
-        // НОВА ФУНКЦІЯ: Підготовка двох фото для швидкого перемикання
-        openCompareFullscreen(side, idx) {
-            const otherSide = side === 'L' ? 'R' : 'L';
-            const photoMain = this.compareData[side][idx];
-            const photoAlt = this.compareData[otherSide][idx]; // Шукаємо фото з таким же індексом по той бік
-
-            if (!photoMain) return;
-
-            const urlMain = photoMain.data;
-            const urlAlt = photoAlt ? photoAlt.data : null;
-            const labelMain = `W${this.compareData['w' + side]}`;
-            const labelAlt = photoAlt ? `W${this.compareData['w' + otherSide]}` : null;
-
-            // Передаємо обидва фото у наш переглядач
-            this.openPhotoModal(urlMain, urlAlt, labelMain, labelAlt);
-        },
-
+        
             updatePhaseTitle(id, newTitle) {
             this.pushHistory();
             const p = this.data.phases.find(x => x.id === id);
