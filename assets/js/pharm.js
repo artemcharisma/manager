@@ -1112,7 +1112,6 @@ const PhotoDB = {
             const newWeekBar = document.querySelector('.week-bar');
             if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
         },
-        },
 
         renderAnalytics(c) {
             c.innerHTML = `
@@ -1405,9 +1404,6 @@ const PhotoDB = {
                     
                     <div class="med-list">
                         ${cat.items.map((item, j) => {
-                            // Логіка залишків (Stock)
-                            let stockNum = parseInt(item.stock);
-                            let isLow = (!isNaN(stockNum) && stockNum <= 10) ? 'low' : '';
                             // Логіка залишків (Stock) з мікро-очисткою
                             let stockNum = parseInt(item.stock);
                             let isLow = (!isNaN(stockNum) && stockNum <= 10) ? 'low' : '';
