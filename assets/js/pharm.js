@@ -898,12 +898,12 @@ const PhotoDB = {
             }
         },
 
-        renderView() {
+        async renderView() {
             const c = document.getElementById('mainView'); 
             this.renderTimeline();
             
             if(this.state.view === 'protocol') {
-                this.renderProtocol(c); 
+                await this.renderProtocol(c); 
             }
             else {
                 c.innerHTML = ''; 
