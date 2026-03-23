@@ -1,4 +1,3 @@
-  <style>
      /* --- 1. GLOBAL SETTINGS (FIXED) --- */
      /* ВИДАЛЕННЯ СТРІЛОЧОК В INPUT NUMBER */
         input::-webkit-outer-spin-button,
@@ -454,4 +453,3 @@
             .day-card.collapsed .ex-list { display: none !important; }
             .day-card.collapsed .day-header { border-bottom: none; opacity: 0.8; }
             .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
-    </style>
