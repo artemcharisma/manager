@@ -777,15 +777,17 @@
             font-size: 0.9rem; color: #888; cursor: pointer; transition: 0.2s; user-select: none;
         }
         .swap-btn.active { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(212,175,55,0.4); }
-        /* --- СИНХРОНІЗАЦІЯ ІНТЕРФЕЙСУ З МОДАЛКАМИ --- */
-        body.modal-active header,
-        body.modal-active #undoFloat,
-        body.modal-active .floating-menu /* Якщо в тебе є ще якісь плаваючі кнопки хабу */ {
+        /* --- СИНХРОНІЗАЦІЯ ІНТЕРФЕЙСУ З МОДАЛКАМИ (Ховаємо все зайве) --- */
+        body.modal-active .nav-tabs,
+        body.modal-active .brand,
+        body.modal-active .controls,
+        body.modal-active #sys-fab,
+        body.modal-active #undoFloat {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
-            transform: translateY(-10px) scale(0.95) !important; /* Легке зменшення і зсув */
-            transition: all 0.3s ease !important;
+            transform: translateY(-10px) scale(0.95) !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         }
     /* --- УНІВЕРСАЛЬНИЙ ПЕРЕГЛЯДАЧ ФОТО --- */
         .photo-nav-btn {
