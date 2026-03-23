@@ -978,22 +978,26 @@ const PhotoDB = {
                 let content = pills.map((m, idx) => {
                     const pillId = `${this.state.week}-${i}-${idx}`;
                     
-                    // ІДЕЯ 1: Трекінг "Випито"
-                    const isDone = m.done ? 'opacity: 0.5; filter: grayscale(1); transform: scale(0.98);' : '';
-                    const checkIcon = m.done ? `<div style="position:absolute; right:-6px; top:-6px; background:var(--green); color:#000; border-radius:50%; width:20px; height:20px; font-size:12px; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 5px rgba(0,0,0,0.5);">✓</div>` : '';
+                    // Більш виражений ефект "випито" (картка стає прозорішою)
+                    const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
+                    const checkIcon = m.done ? `<div style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>` : '';
+                    
+                    // ВИПРАВЛЕННЯ: Блокуємо кліки по тексту, коли НЕ редагуємо, щоб клікалась вся картка 100%
+                    const textPointer = this.state.editing ? 'auto' : 'none';
+                    const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
                     const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
 
                     return `
                     <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1);" ${clickAction}>
                         ${checkIcon}
-                        <div style="flex:1">
-                            <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" onclick="event.stopPropagation()" style="font-weight:600">${m.name}</div>
-                            <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" onclick="event.stopPropagation()">${m.meta || ""}</div>
+                        <div style="flex:1; pointer-events:${textPointer};">
+                            <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600">${m.name}</div>
+                            <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop}>${m.meta || ""}</div>
                         </div>
-                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" onclick="event.stopPropagation()">${m.dose}</span>
+                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer};" ${innerStop}>${m.dose}</span>
                         
                         ${this.state.editing ? `
-                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative;">
+                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative; pointer-events:auto;">
                                 ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === pillId)}
                             </div>
                         ` : ''}
