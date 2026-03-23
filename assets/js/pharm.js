@@ -973,13 +973,20 @@ const PhotoDB = {
 
                 let content = pills.map((m, idx) => {
                     const pillId = `${this.state.week}-${i}-${idx}`;
+                    
+                    // ІДЕЯ 1: Трекінг "Випито"
+                    const isDone = m.done ? 'opacity: 0.5; filter: grayscale(1); transform: scale(0.98);' : '';
+                    const checkIcon = m.done ? `<div style="position:absolute; right:-6px; top:-6px; background:var(--green); color:#000; border-radius:50%; width:20px; height:20px; font-size:12px; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 5px rgba(0,0,0,0.5);">✓</div>` : '';
+                    const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
+
                     return `
-                    <div class="pill ${m.color}">
+                    <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1);" ${clickAction}>
+                        ${checkIcon}
                         <div style="flex:1">
-                            <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" style="font-weight:600">${m.name}</div>
-                            <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)">${m.meta || ""}</div>
+                            <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" onclick="event.stopPropagation()" style="font-weight:600">${m.name}</div>
+                            <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" onclick="event.stopPropagation()">${m.meta || ""}</div>
                         </div>
-                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)">${m.dose}</span>
+                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" onclick="event.stopPropagation()">${m.dose}</span>
                         
                         ${this.state.editing ? `
                             <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative;">
@@ -988,7 +995,7 @@ const PhotoDB = {
                         ` : ''}
                     </div>`;
                 }).join('');
-
+                    
                 let headerBtns = '';
                 if (this.state.editing) {
                     if (this.pillBuffer) {
@@ -1339,40 +1346,63 @@ const PhotoDB = {
             let html = '<div class="med-grid">'; 
             
             this.data.pharmacy.forEach((cat, i) => {
+                // Визначаємо колір світіння для категорії
+                let catColor = '#555';
+                if(cat.style === 'heart') catColor = '#3b82f6';
+                if(cat.style === 'liver') catColor = '#10b981';
+                if(cat.style === 'sleep') catColor = '#8b5cf6';
+                if(cat.style === 'sos') catColor = '#ef4444';
+
                 html += `
-                <div class="category-block">
-                    <div class="category-header ${cat.style}">
-                        <span>${cat.title}</span>
+                <div class="pharm-card" style="--cat-color: ${catColor}">
+                    <div class="category-header ${cat.style}" style="border:none; padding:0 0 15px 0; background:transparent;">
+                        <span style="font-size:1.1rem; text-shadow: 0 2px 10px ${catColor}40;">${cat.title}</span>
                         ${this.state.editing ? `<span style="cursor:pointer;opacity:0.5" onclick="alert('Видалення категорій поки недоступне, видаліть вміст')">⚙️</span>` : ''}
                     </div>
                     
                     <div class="med-list">
-                        ${cat.items.map((item, j) => `
-                            <div class="med-item">
-                                <div class="med-row-top">
+                        ${cat.items.map((item, j) => {
+                            // Логіка залишків (Stock)
+                            let stockNum = parseInt(item.stock);
+                            let isLow = (!isNaN(stockNum) && stockNum <= 10) ? 'low' : '';
+                            let stockHtml = '';
+                            
+                            // Показуємо інпут залишку, якщо ми в режимі редагування АБО якщо залишок вже вписано
+                            // Якщо порожньо і ми не редагуємо - він просто зникає!
+                            if (this.state.editing || item.stock) {
+                                stockHtml = `<span class="pharm-stock ${isLow}" contenteditable="${this.state.editing}" 
+                                    onblur="App.data.pharmacy[${i}].items[${j}].stock=this.innerText; App.save()">${item.stock || ''}</span>`;
+                            }
+
+                            return `
+                            <div class="pharm-item">
+                                <div class="pharm-item-top">
                                     <span class="med-name" contenteditable="${this.state.editing}" 
-                                        onblur="App.data.pharmacy[${i}].items[${j}].n=this.innerText; App.save()">${item.n}</span>
+                                        onblur="App.data.pharmacy[${i}].items[${j}].n=this.innerText; App.save()" style="font-size:1.05rem;">${item.n}</span>
                                     
                                     <div style="display:flex; align-items:center; gap:8px;">
                                         <span class="med-dose" contenteditable="${this.state.editing}" 
-                                            onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()">${item.d}</span>
-                                        ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;font-size:0.8rem" onclick="App.delMed(${i},${j})">✕</span>` : ''}
+                                            onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()" style="background:#000; border-color:${catColor}40;">${item.d}</span>
+                                        ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;font-size:0.8rem; background:rgba(239,68,68,0.1); width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;" onclick="App.delMed(${i},${j})">✕</span>` : ''}
                                     </div>
                                 </div>
-                                <div class="med-desc" contenteditable="${this.state.editing}" 
-                                    onblur="App.data.pharmacy[${i}].items[${j}].i=this.innerText; App.save()">${item.i}</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                    <div class="med-desc" contenteditable="${this.state.editing}" 
+                                        onblur="App.data.pharmacy[${i}].items[${j}].i=this.innerText; App.save()" style="font-size:0.75rem;">${item.i}</div>
+                                    ${stockHtml}
+                                </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                     
-                    ${this.state.editing ? `<button class="btn-ghost" onclick="App.addMed(${i})">+ Add Item</button>` : ''}
+                    ${this.state.editing ? `<button class="btn-ghost" style="margin-top:10px; border-radius:8px; border:1px dashed #444;" onclick="App.addMed(${i})">+ Додати препарат</button>` : ''}
                 </div>`;
             });
             
             html += '</div>';
             c.innerHTML = html;
         },
-
+            
         openBodyMap() { 
             this.lockScroll(); 
             document.getElementById('bodyMapModal').style.display='flex'; 
@@ -1833,6 +1863,17 @@ renderStatsPanel() {
             }).catch(e => alert('❌ Помилка'));
         },
 
+        togglePillDone(w, d, i) {
+            if (this.state.editing) return; // У режимі редагування не відмічаємо
+            this.pushHistory();
+            const pill = this.data.schedule[w][d][i];
+            pill.done = !pill.done; // Перемикаємо статус
+            this.save();
+            this.renderView();
+            // Вібрація для iOS/Android
+            if (pill.done && window.Haptics) window.Haptics.success();
+            else if (window.Haptics) window.Haptics.light();
+        },
 
         setView(v, btn) { 
             this.state.view = v; 
