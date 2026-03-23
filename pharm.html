@@ -184,41 +184,33 @@
         }
         body.privacy-mode .brand span { display: none; }
 
-        /* 4. ГОЛОВНА ФІШКА: ДІАГОНАЛЬНІ СМУЖКИ (ANIMATED REDACTED STYLE) */
+        /* 4. ГОЛОВНА ФІШКА: ДІАГОНАЛЬНІ СМУЖКИ (ЛАТАЄМО ВСІ ДІРКИ) */
         body.privacy-mode .pill div, 
         body.privacy-mode .pill span,
         body.privacy-mode .stat-val, 
         body.privacy-mode .stat-label,
-        body.privacy-mode .med-name, body.privacy-mode .med-dose,
+        body.privacy-mode .med-name, 
+        body.privacy-mode .med-dose,
+        body.privacy-mode .med-desc,
+        body.privacy-mode .pharm-stock,
         body.privacy-mode .check-name,
-        body.privacy-mode .phase-btn span, body.privacy-mode .phase-btn small,
+        body.privacy-mode .phase-btn span, 
+        body.privacy-mode .phase-btn small,
         body.privacy-mode .day-header span,
-        body.privacy-mode .category-header, body.privacy-mode .med-title,
+        body.privacy-mode .category-header span, 
+        body.privacy-mode .med-title,
+        body.privacy-mode .med-timing,
         body.privacy-mode .note-input,
         body.privacy-mode .modal-title,
         body.privacy-mode .modal-content p {
             color: transparent !important;
             background-color: transparent;
             border-radius: 4px;
-            
-            /* Текстура смужок */
-            background-image: repeating-linear-gradient(
-                135deg,
-                #1c1c1c,
-                #1c1c1c 10px,
-                #2a2a2a 10px,
-                #2a2a2a 20px
-            );
-            
-            /* ВАЖЛИВО: Розмір і анімація */
+            background-image: repeating-linear-gradient(135deg, #1c1c1c, #1c1c1c 10px, #2a2a2a 10px, #2a2a2a 20px);
             background-size: 28px 28px; 
-            animation: stripes-move 3s linear infinite; /* Повільний рух */
-            
+            animation: stripes-move 3s linear infinite; 
             box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
-            display: inline-block;
-            min-height: 14px;
-            margin-bottom: 2px;
-            pointer-events: none;
+            display: inline-block; min-height: 14px; margin-bottom: 2px; pointer-events: none;
         }
         
         /* Вирівнювання блоків, щоб виглядало гарно */
@@ -849,35 +841,37 @@
         }
         #undoFloat.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
 
-        /* --- 3D КАРТКИ ДЛЯ АПТЕЧКИ (РЕНТГЕН) --- */
+        /* --- АПТЕЧКА (Повернуті рамки та блокування виділення) --- */
+        .pharm-card, .med-card {
+            -webkit-user-select: none; -moz-user-select: none; user-select: none; /* БЛОКУЄМО ВИДІЛЕННЯ */
+        }
         .pharm-card {
-            background: linear-gradient(145deg, #161616, #0a0a0a);
-            border-radius: 16px; padding: 20px; border: 1px solid #333;
-            box-shadow: 8px 8px 20px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.05);
+            background: var(--bg-panel);
+            border-radius: 12px; padding: 15px; border: 1px solid var(--border); /* ПОВЕРНУЛИ РАМКИ */
             position: relative; overflow: hidden;
         }
         .pharm-card::before {
-            content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px;
+            content: ''; position: absolute; top: 0; right: 0; width: 100px; height: 100px;
             background: radial-gradient(circle, var(--cat-color) 0%, transparent 70%);
             opacity: 0.15; transform: translate(30%, -30%); border-radius: 50%; pointer-events: none;
         }
         .pharm-item {
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.03);
-            border-radius: 12px; padding: 14px; margin-bottom: 12px;
-            display: flex; flex-direction: column; gap: 10px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); transition: 0.2s;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); /* ЧІТКІ РАМКИ ЕЛЕМЕНТІВ */
+            border-radius: 8px; padding: 12px; margin-bottom: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
-        .pharm-item:hover { border-color: rgba(255,255,255,0.1); }
         .pharm-item-top { display: flex; justify-content: space-between; align-items: center; }
         
         /* Значок Залишку (Stock) */
         .pharm-stock {
-            background: #111; border: 1px dashed #555; border-radius: 6px; padding: 4px 8px; 
-            font-size: 0.7rem; color: #aaa; font-family: 'JetBrains Mono', monospace; cursor: text;
+            background: #000; border: 1px dashed #555; border-radius: 6px; padding: 4px 8px; 
+            font-size: 0.75rem; color: #aaa; font-family: 'JetBrains Mono', monospace; cursor: text;
             display: inline-block; min-width: 40px; text-align: center;
+            -webkit-user-select: text; user-select: text; /* Дозволяємо виділяти ТІЛЬКИ текст залишку для вводу */
         }
-        .pharm-stock.low { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); box-shadow: 0 0 8px rgba(239,68,68,0.2); }
-        .pharm-stock:empty::before { content: '📦 Залишок...'; opacity: 0.5; }
+        .pharm-stock.low { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); }
+        .pharm-stock:empty::before { content: '📦 шт/мл...'; opacity: 0.4; font-size: 0.65rem; }
     </style>
 </head>
 <body id="appBody">
