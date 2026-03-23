@@ -1,36 +1,34 @@
-    const PhotoDB = {
+const PhotoDB = {
         db: null,
         init() {
-    return new Promise((r) => {
-        // Додано перевірку на наявність indexedDB
-        if (!window.indexedDB) {
-            console.warn("IndexedDB not supported");
-            this.db = null;
-            r();
-            return;
-        }
-        
-        const req = indexedDB.open("GoldProtocolDB", 1);
-        
-        req.onupgradeneeded = (e) => { 
-            const db = e.target.result;
-            if(!db.objectStoreNames.contains("photos")) 
-                db.createObjectStore("photos", { keyPath: "id", autoIncrement: true }); 
-        };
-        
-        req.onsuccess = (e) => { this.db = e.target.result; r(); };
-        
-        req.onerror = (e) => { 
-            console.error("IndexedDB error:", e.target.error); 
-            r(); 
-        };
-        
-        // Важливо: закривати з'єднання при оновленні версії в іншій вкладці
-        req.onblocked = () => {
-            alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
-        };
-    });
-},
+            return new Promise((r) => {
+                if (!window.indexedDB) {
+                    console.warn("IndexedDB not supported");
+                    this.db = null;
+                    r();
+                    return;
+                }
+                
+                const req = indexedDB.open("GoldProtocolDB", 1);
+                
+                req.onupgradeneeded = (e) => { 
+                    const db = e.target.result;
+                    if(!db.objectStoreNames.contains("photos")) 
+                        db.createObjectStore("photos", { keyPath: "id", autoIncrement: true }); 
+                };
+                
+                req.onsuccess = (e) => { this.db = e.target.result; r(); };
+                
+                req.onerror = (e) => { 
+                    console.error("IndexedDB error:", e.target.error); 
+                    r(); 
+                };
+                
+                req.onblocked = () => {
+                    alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
+                };
+            });
+        },
         add(week, file) {
             return new Promise((r) => {
                 if(!this.db) { r(); return; }
@@ -169,7 +167,7 @@
         ],
         notes: {}
     };
-    // --- HELPER: IMAGE COMPRESSOR ---
+
     const compressImage = (file, maxWidth = 1920, quality = 0.85) => {
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -207,7 +205,7 @@
             document.body.style.position = 'fixed';
             document.body.style.top = `-${this.state.lockedScrollY}px`;
             document.body.style.width = '100%';
-            document.body.classList.add('modal-active'); // СИГНАЛ: Сховати Зірку/Меню
+            document.body.classList.add('modal-active');
         },
         unlockScroll() {
             if (document.body.style.position !== 'fixed') return;
@@ -215,10 +213,9 @@
             document.body.style.top = '';
             document.body.style.width = '';
             window.scrollTo(0, this.state.lockedScrollY || 0);
-            document.body.classList.remove('modal-active'); // СИГНАЛ: Повернути Зірку/Меню
+            document.body.classList.remove('modal-active');
         },
 
-        // Підключаємо StateManager
         stateManager: new StateManager('gold_protocol', DefaultData),
         
         state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0 },
@@ -226,7 +223,6 @@
         chartInstance: null,
         measChartInstance: null,
         
-        // --- НОВІ, ІДЕАЛЬНІ ЗМІННІ СТАНУ ФОТО (from scratch) ---
         photoModalScale: 1,
         photoModalTranslate: { x: 0, y: 0 },
         photoModalIsZooming: false,
@@ -244,6 +240,14 @@
                 return;
             }
             this.smartSave();
+        },
+        
+        safeLoad() {
+            if(document.body.classList.contains('privacy-mode')) {
+                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                return;
+            }
+            document.getElementById('fileInput').click();
         },
 
         // =========================================================================
@@ -336,6 +340,7 @@
             this.updatePhotoTransform();
             this.loadViewerData();
         },
+
         closePhotoModal() {
             const modal = document.getElementById('customPhotoModal');
             if(!modal) return;
@@ -344,28 +349,21 @@
             this.unlockScroll();
         },
 
-        // 1. ГОЛОВНИЙ ОБРОБНИК ЖЕСТІВ
         initPhotoGestures(modal, img) {
-            // Щоб уникнути дублікатів обробників, ми їх очистимо (через заміну на клони)
             const newModal = modal.cloneNode(true);
             modal.parentNode.replaceChild(newModal, modal);
             const newImg = newModal.querySelector('img');
 
-            // --- Touch START ---
             newModal.addEventListener('touchstart', (e) => {
-                // event.preventDefault(); // Нам не потрібно, бо touch-action: none на img
-                
-                // Якщо 1 палець - початок перетягування (pan)
                 if (e.touches.length === 1) {
                     this.state.photoModalIsPanning = true;
                     this.state.photoModalTouchStart.x = e.touches[0].clientX - this.state.photoModalTranslate.x;
                     this.state.photoModalTouchStart.y = e.touches[0].clientY - this.state.photoModalTranslate.y;
                     newModal.classList.add('is-pan');
                 }
-                // Якщо 2 пальці - початок щипка (zoom)
                 else if (e.touches.length === 2) {
                     this.state.photoModalIsZooming = true;
-                    this.state.photoModalIsPanning = false; // Zoom пріоритетніший
+                    this.state.photoModalIsPanning = false; 
                     this.state.photoModalTouchStart.dist = Math.hypot(
                         e.touches[0].clientX - e.touches[1].clientX,
                         e.touches[0].clientY - e.touches[1].clientY
@@ -376,11 +374,9 @@
                 }
             }, { passive: false });
 
-            // --- Touch MOVE (Найкапризніша частина) ---
             newModal.addEventListener('touchmove', (e) => {
-                e.preventDefault(); // Жорстко забороняємо скрол фону
+                e.preventDefault(); 
 
-                // --- ЛОГІКА ЗУМУ (2 пальці) ---
                 if (this.state.photoModalIsZooming && e.touches.length === 2) {
                     const dist = Math.hypot(
                         e.touches[0].clientX - e.touches[1].clientX,
@@ -388,33 +384,21 @@
                     );
                     
                     const newScale = this.state.photoModalTouchStart.scale * (dist / this.state.photoModalTouchStart.dist);
-                    
-                    // Обмежуємо зум (min х1, max x4)
                     this.state.photoModalScale = Math.min(Math.max(1, newScale), 4);
                     
-                    // Після зміни зуму треба перерахувати межі для pan
                     this.calculatePhotoBoundary(newImg);
-                    
-                    // Жорстко enforce межі під час зуму (щоб не "вилітало")
                     this.enforcePhotoBoundary();
-                    
                     this.updatePhotoTransform();
                 }
-                // --- ЛОГІКА ПАНУВАННЯ (1 палець) ---
                 else if (this.state.photoModalIsPanning && e.touches.length === 1 && !this.state.photoModalIsZooming) {
                     let newX = e.touches[0].clientX - this.state.photoModalTouchStart.x;
                     let newY = e.touches[0].clientY - this.state.photoModalTouchStart.y;
                     
-                    // ЛОГІКА SNAP-BACK (головна фішка): 
-                    // Якщо фото НЕ зближене, ми дозволяємо йому рухатись, але з "опором" (х0.3), 
-                    // щоб на END воно відскочило назад.
                     if (this.state.photoModalScale <= 1.05) {
-                        newX *= 0.3; // Опір
+                        newX *= 0.3; 
                         newY *= 0.3;
                     } 
-                    // Якщо фото зближене, ми дозволяємо йому вільно рухатись в межах!
                     else {
-                        // Потрібно enforce межі в реальному часі (з легким rubber-banding)
                         newX = Math.min(Math.max(newX, this.state.photoModalBoundary.minX - 30), this.state.photoModalBoundary.maxX + 30);
                         newY = Math.min(Math.max(newY, this.state.photoModalBoundary.minY - 30), this.state.photoModalBoundary.maxY + 30);
                     }
@@ -425,22 +409,17 @@
                 }
             }, { passive: false });
 
-            // --- Touch END ---
             newModal.addEventListener('touchend', (e) => {
                 this.state.photoModalIsZooming = false;
                 this.state.photoModalIsPanning = false;
                 newModal.classList.remove('is-zoom', 'is-pan');
                 
-                // ГОЛОВНЕ: SNAP-BACK
-                // Якщо фото не зближене (або майже не зближене), при END жорстко вертаємо в 0,0
                 if (this.state.photoModalScale <= 1.05) {
                     this.state.photoModalScale = 1;
                     this.state.photoModalTranslate = { x: 0, y: 0 };
-                    // Жорстко enforce межі після END (щоб прибрати гумові 30px)
                     this.calculatePhotoBoundary(newImg); 
                     this.enforcePhotoBoundary();
                 } 
-                // Якщо зближене, при END жорстко вертаємо до меж (з пружинистих 30px)
                 else {
                     this.calculatePhotoBoundary(newImg);
                     this.enforcePhotoBoundary();
@@ -449,21 +428,16 @@
                 this.updatePhotoTransform();
             });
 
-            // --- ДОДАТКОВІ ФІШКИ ---
-            // 2. Подвійний тап для швидкого зуму
             let lastTap = 0;
             newImg.addEventListener('touchend', (e) => {
                 const now = new Date().getTime();
                 if (now - lastTap < 300) {
-                    // event.preventDefault();
                     if (this.state.photoModalScale > 1) {
-                        // Віддалити в 1
                         this.state.photoModalScale = 1;
                         this.state.photoModalTranslate = { x: 0, y: 0 };
                     } else {
-                        // Наблизити в х2.5 (оптимально для Full HD)
                         this.state.photoModalScale = 2.5;
-                        this.state.photoModalTranslate = { x: 0, y: 0 }; // Для простоти центровано
+                        this.state.photoModalTranslate = { x: 0, y: 0 }; 
                     }
                     this.calculatePhotoBoundary(newImg);
                     this.updatePhotoTransform();
@@ -471,7 +445,6 @@
                 lastTap = now;
             });
 
-            // 3. Тап по фону для закриття (native experience)
             newModal.addEventListener('click', (e) => {
                 if (e.target === newModal) {
                     this.closePhotoModal();
@@ -479,9 +452,6 @@
             });
         },
 
-        // 2. ДОПОМІЖНІ МАТЕМАТИЧНІ ФУНКЦІЇ
-        
-        // Перераховує межі в залежності від поточного масштабу
         calculatePhotoBoundary(img) {
             this.state.photoModalSize.iw = img.naturalWidth;
             this.state.photoModalSize.ih = img.naturalHeight;
@@ -494,26 +464,18 @@
             const sw = this.state.photoModalSize.sw;
             const sh = this.state.photoModalSize.sh;
 
-            // Логіка CSS: max-width: 100%; max-height: 100%. Viewer.js рахує складніше. 
-            // Ми порахуємо так: 
             const ratio = iw / ih;
             let finalW, finalH;
             
-            // Визначаємо, як фото вписалося в екран (по ширині чи по висоті)
             if (sw / sh > ratio) {
-                // Фото вписалося по висоті, ширина менша екрану
                 finalH = sh; finalW = sh * ratio;
             } else {
-                // Фото вписалося по ширині, висота менша екрану
                 finalW = sw; finalH = sw / ratio;
             }
 
-            // Поточний розмір фото з урахуванням зуму
             const curW = finalW * scale;
             const curH = finalH * scale;
 
-            // МАТЕМАТИКА меж (відносного центру 0,0):
-            // Якщо поточний розмір більше екрану, ми дозволяємо рухати в діапазоні [(curW - sw)/2]
             this.state.photoModalBoundary.maxX = curW > sw ? (curW - sw) / 2 : 0;
             this.state.photoModalBoundary.minX = -this.state.photoModalBoundary.maxX;
             
@@ -521,7 +483,6 @@
             this.state.photoModalBoundary.minY = -this.state.photoModalBoundary.maxY;
         },
 
-        // Жорстко притискає фото до меж (enforce)
         enforcePhotoBoundary() {
             let x = this.state.photoModalTranslate.x;
             let y = this.state.photoModalTranslate.y;
@@ -533,7 +494,6 @@
             this.state.photoModalTranslate.y = y;
         },
 
-        // Застосовує трансформацію до елементу
         updatePhotoTransform() {
             const img = document.getElementById('customPhotoImg');
             if(!img) return;
@@ -542,18 +502,8 @@
             const y = this.state.photoModalTranslate.y;
             const s = this.state.photoModalScale;
             
-            // translate3d для апаратного прискорення
             img.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${s})`;
         },
-        // ------------------------------------
-        safeLoad() {
-            if(document.body.classList.contains('privacy-mode')) {
-                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
-                return;
-            }
-            document.getElementById('fileInput').click();
-        },
-        // -------------------------
 
         availablePills: [],
 
@@ -579,23 +529,19 @@
                 }
             };
 
-            // 1. КЛІК НА СТРІЛКУ: Тільки вона відкриває/закриває список.
-            // e.preventDefault() гарантує, що айфон не проігнорує клік!
             arrow.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if(list.style.display === 'block') {
                     this.closeCustomDropdown();
                 } else {
-                    renderList(''); // Показуємо всі варіанти
+                    renderList(''); 
                     list.style.display = 'block';
                     arrow.querySelector('svg').style.transform = 'rotate(180deg)';
                     arrow.style.color = 'var(--primary)';
                 }
             });
 
-            // 2. ВВІД ТЕКСТУ В ПОЛЕ: Відкриває список і фільтрує його.
-            // Клік по полю нічого не робить, тільки ввід тексту!
             input.addEventListener('input', () => {
                 renderList(input.value);
                 list.style.display = 'block';
@@ -603,7 +549,6 @@
                 arrow.style.color = 'var(--primary)';
             });
 
-            // 3. ЗАКРИТТЯ ПРИ КЛІКУ ПОВЗ
             document.addEventListener('click', (e) => {
                 if(group && !group.contains(e.target)) {
                     this.closeCustomDropdown();
@@ -628,10 +573,10 @@
             document.getElementById('pillDose').focus(); 
         },
 
-openAddPillModal(week, dayIndex) {
-            this.lockScroll(); // Блокуємо фон
+        openAddPillModal(week, dayIndex) {
+            this.lockScroll(); 
             if(document.activeElement) document.activeElement.blur();
-            this.state.lastScroll = window.scrollY; // ЗАПАМ'ЯТОВУЄМО СКРОЛ ДО КЛАВІАТУРИ
+            this.state.lastScroll = window.scrollY; 
 
             this.state.tempPill = { w: week, d: dayIndex, color: 'c-blue' };
             
@@ -656,7 +601,8 @@ openAddPillModal(week, dayIndex) {
             document.getElementById('addPillModal').style.display = 'flex';
             setTimeout(() => document.getElementById('pillName').focus(), 100);
         },
-async init() {
+
+        async init() {
             const extraStyles = document.createElement('style');
             extraStyles.innerHTML = `
                 @keyframes goldShimmer {
@@ -672,16 +618,13 @@ async init() {
                     .custom-pill-option:hover { background: #333 !important; }
                 }
                 
-                /* Ховаємо стрілку ТІЛЬКИ в інпуті назви препарату, щоб не зламати календар! */
                 #pillName::-webkit-calendar-picker-indicator { display: none !important; }
                 
-                /* --- ІДЕАЛЬНИЙ КАЛЕНДАР (PC + iOS) --- */
                 .date-picker-wrapper { 
                     position: relative; display: inline-flex; align-items: center; 
                     justify-content: center; margin-left: 6px; vertical-align: middle; 
                     width: 28px; height: 28px; cursor: pointer; 
                 }
-                /* Залізобетонне блокування кліків у Privacy Mode */
                 body.privacy-mode .date-picker-wrapper { 
                     pointer-events: none !important; 
                 }
@@ -689,7 +632,6 @@ async init() {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
                     opacity: 0; cursor: pointer; z-index: 10; border: none; background: transparent; color: transparent; 
                 }
-                /* Секрет для ПК: розтягуємо тригер календаря на весь невидимий інпут */
                 .date-hidden-input::-webkit-calendar-picker-indicator { 
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
                     opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
@@ -703,7 +645,6 @@ async init() {
             
             this.initCustomDropdown();
             
-            // --- АВТОМАТИЧНИЙ ПЕРЕХІД НА ПОТОЧНИЙ ТИЖДЕНЬ ---
             const now = new Date();
             const start = this.getMondayOfStartWeek();
             const diffTime = now.getTime() - start.getTime();
@@ -743,11 +684,10 @@ async init() {
                 }
             };
         },
+
         load() {
-            // 2. ЗАВАНТАЖУЄМО ЧЕРЕЗ МЕНЕДЖЕР
             this.data = this.stateManager.init();
             
-            // Перевірки цілісності (залишаємо, бо це важливо для старих даних)
             if(!this.data.vitals) this.data.vitals = {};
             if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
             if(!this.data.bodyMap) this.data.bodyMap = { last: null, history: [] };
@@ -757,7 +697,6 @@ async init() {
             if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
             if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
             if(!this.data.measurements) this.data.measurements = {};
-            
         },
 
         save() { 
@@ -779,7 +718,7 @@ async init() {
             const pwdInput = document.getElementById('privacyPassword');
             const pwd = pwdInput.value;
             const truePass = this.data.privacyPassword || '2255';
-            const fakePass = '1111'; // 4. ПАРОЛЬ-ОБМАНКА
+            const fakePass = '1111';
 
             const container = document.getElementById('pwdContainer');
             const icon = document.getElementById('privIcon');
@@ -787,7 +726,6 @@ async init() {
             const title = container.querySelector('h2'); 
             const sub = container.querySelector('p');    
 
-            // Функція успішного входу (спільна)
             const grantAccess = (isFake) => {
                 container.classList.add('success');
                 pwdInput.style.borderColor = 'var(--green)';
@@ -804,7 +742,6 @@ async init() {
                     document.getElementById('privacyModal').classList.add('fade-out');
                     document.body.classList.remove('privacy-locked', 'privacy-mode');
                     
-                    // ЯКЩО ФЕЙК: Підміняємо дані на льоту
                     if (isFake) {
                         this.enableFakeMode();
                     }
@@ -823,11 +760,10 @@ async init() {
             };
 
             if (pwd === truePass) {
-                grantAccess(false); // Реальний вхід
+                grantAccess(false); 
             } else if (pwd === fakePass) {
-                grantAccess(true);  // 4. Фейковий вхід
+                grantAccess(true);  
             } else {
-                // ... код помилки (той самий, що був) ...
                 pwdInput.style.borderColor = 'var(--red)';
                 pwdInput.style.color = 'var(--red)';
                 sub.innerText = "INVALID PASSCODE";
@@ -844,9 +780,7 @@ async init() {
             }
         },
 
-        // 4. ФУНКЦІЯ ДЛЯ РЕЖИМУ ОБМАНКИ
         enableFakeMode() {
-            // Очищаємо екран і малюємо "невинні" вітамінки
             const c = document.getElementById('mainView');
             c.innerHTML = `
                 <div style="padding:20px; text-align:center; color:#888;">
@@ -863,15 +797,12 @@ async init() {
                     `).join('')}
                 </div>
             `;
-            // Ховаємо елементи керування, щоб не спалитись
             document.querySelector('.nav-tabs').style.display = 'none';
             document.querySelector('.phase-scroll').style.display = 'none';
             document.querySelector('.controls').innerHTML = '<div style="color:#444">User: Guest</div>';
             document.querySelector('.brand h1').innerText = "HEALTH";
             document.querySelector('.brand span').innerText = "DAILY";
         },
-
-
 
         getMondayOfStartWeek() {
             const d = new Date(this.data.startDate);
@@ -898,8 +829,8 @@ async init() {
             return d.getTime() === now.getTime();
         },
         
-changeStartDate() {
-            if(document.body.classList.contains('privacy-mode')) return; // Блокуємо в Privacy Mode
+        changeStartDate() {
+            if(document.body.classList.contains('privacy-mode')) return; 
             
             const inp = document.getElementById('startDateInput');
             if (inp) {
@@ -917,13 +848,13 @@ changeStartDate() {
                 }
             }
         },
-    setStartDate(newDate) {
+
+        setStartDate(newDate) {
             if (!newDate) return;
             this.pushHistory();
             this.data.startDate = newDate;
             this.save();
             
-            // Заново вираховуємо, який зараз тиждень відносно нової дати
             const now = new Date();
             const start = this.getMondayOfStartWeek();
             const diffTime = now.getTime() - start.getTime();
@@ -934,67 +865,55 @@ changeStartDate() {
             if (currentWeek < 1) currentWeek = 1;
             if (currentWeek > maxW) currentWeek = maxW;
             
-            // Встановлюємо правильний тиждень і фазу
             this.state.week = currentWeek; 
             const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
             if (currentPhase) this.state.phaseId = currentPhase.id;
             
-            // Оновлюємо екран
             this.renderNav();
             this.renderView();
         },
 
         pushHistory() {
-        this.stateManager.push(this.data);
-        // Відображення кнопки Undo
-        if (this.state.editing) {
-            const btn = document.getElementById('undoFloat');
-            if(btn) btn.classList.add('visible');
-        }
-    },
+            this.stateManager.push(this.data);
+            if (this.state.editing) {
+                const btn = document.getElementById('undoFloat');
+                if(btn) btn.classList.add('visible');
+            }
+        },
 
         undo() {
-        const prev = this.stateManager.undo(this.data); // Передаємо поточні дані, якщо менеджер це підтримує, але для StateManager з utils.js аргумент не обов'язковий, якщо він просто бере з масиву
-        
-        // ВАЖЛИВО: StateManager у нас повертає дані, а не сам робить save.
-        // Тому ми маємо отримати prev і присвоїти його this.data
-        if (prev) {
-            this.data = prev;
-            
-            // Ховаємо кнопку, якщо історія пуста
-            if (this.stateManager.history.length === 0) {
-                const btn = document.getElementById('undoFloat');
-                if(btn) btn.classList.remove('visible');
+            const prev = this.stateManager.undo(this.data); 
+            if (prev) {
+                this.data = prev;
+                
+                if (this.stateManager.history.length === 0) {
+                    const btn = document.getElementById('undoFloat');
+                    if(btn) btn.classList.remove('visible');
+                }
+                
+                this.save(); 
+                this.refreshPhotos(); 
+                this.renderNav(); 
+                this.renderView();
             }
-            
-            this.save(); // Зберігаємо відновлений стан
-            this.refreshPhotos(); 
-            this.renderNav(); 
-            this.renderView();
-        }
-    },
+        },
 
-       async renderView() {
-            
+        async renderView() {
             const c = document.getElementById('mainView'); 
-            // ВАЖЛИВО: Ми НЕ очищаємо c.innerHTML тут, щоб уникнути "миготіння" і стрибка вгору
-            
             this.renderTimeline();
             
             if(this.state.view === 'protocol') {
-                await this.renderProtocol(c); // renderProtocol сам оновить HTML
+                await this.renderProtocol(c); 
             }
             else {
-                // Для інших вкладок очищення потрібне
                 c.innerHTML = ''; 
                 if(this.state.view === 'analysis') this.renderAnalysis(c);
                 else if(this.state.view === 'pharmacy') this.renderPharm(c);
                 else if(this.state.view === 'analytics') this.renderAnalytics(c);
             }
-
         },
 
-    renderTimeline() {
+        renderTimeline() {
             const weekNumbers = Object.keys(this.data.schedule).map(Number);
             const maxW = weekNumbers.length > 0 ? Math.max(...weekNumbers) : 1;
             const curW = this.state.week;
@@ -1016,11 +935,9 @@ changeStartDate() {
             }, 50);
 
             if (progText) {
-                // Перевіряємо, чи ми на вкладці Protocol
                 const activeTab = document.querySelector('.nav-tab.active');
                 const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
 
-                // Додаємо іконку з умовою display
                 progText.innerHTML = `Week ${curW}/${maxW} 
                 <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
                     <span style="font-size:1.2rem; pointer-events:none;">📅</span>
@@ -1029,8 +946,7 @@ changeStartDate() {
             }
         },
 
-async renderProtocol(c) {
-            // 1. ЗАПАМ'ЯТОВУЄМО СКРОЛ ТИЖНІВ ДО ПЕРЕМАЛЬОВКИ
+        async renderProtocol(c) {
             let weekScrollPos = 0;
             const oldWeekBar = document.querySelector('.week-bar');
             if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
@@ -1047,7 +963,6 @@ async renderProtocol(c) {
                 const pills = this.data.schedule[this.state.week]?.[i] || [];
                 const v = this.data.vitals[`${this.state.week}-${i}`] || { bp: "", hr: "", w: "" };
 
-                // ГОТУЄМО ДАНІ ТИСКУ (тепер правильно, ПЕРЕД генерацією HTML)
                 let sys = "", dia = "";
                 if (v.bp && v.bp.includes('/')) {
                     const parts = v.bp.split('/');
@@ -1082,7 +997,6 @@ async renderProtocol(c) {
                     headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste' : '📋'}</span>`;
                 }
 
-                // А ось тепер формуємо HTML
                 grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 10px rgba(212,175,55,0.1)' : ''}">
                     <div class="day-header">
                         <div style="display:flex; flex-direction:column; line-height:1.2">
@@ -1118,10 +1032,8 @@ async renderProtocol(c) {
             const photos = await PhotoDB.get(this.state.week);
             const pHtml = photos.map((p, idx) => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${idx})"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
-            // ГОТУЄМО ДАНІ ЗАМІРІВ ТУТ (в JS, ПЕРЕД генерацією HTML)
             const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
 
-            // ТЕПЕР ФОРМУЄМО ВЕСЬ БЛОК РАЗОМ
             c.innerHTML = `
                 <div class="stats-grid" id="stats-container"></div>
                 <div class="week-bar">${wHtml}</div>
@@ -1145,20 +1057,17 @@ async renderProtocol(c) {
 
                 <div class="photo-area">
                     <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
-                    <button class="btn-compare" onclick="App.openCompareModal()">⚔️ ПОРІВНЯТИ (W1 vs W${this.state.week})</button>
                     <div class="photo-grid">${pHtml}</div>
                     <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
                 </div>`;
 
-            // 2. ПОВЕРТАЄМО СКРОЛ НА МІСЦЕ
             const newWeekBar = document.querySelector('.week-bar');
             if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
 
             this.renderStatsPanel();
         },
 
-renderAnalytics(c) {
-            // 1. СТРУКТУРА (ДВА ГРАФІКИ)
+        renderAnalytics(c) {
             c.innerHTML = `
                 <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
                     <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
@@ -1187,14 +1096,12 @@ renderAnalytics(c) {
                     </style>
                 </div>`;
             
-            // 2. ПІДГОТОВКА ДАНИХ
             const labels = []; 
             const dataTest = [];    
             const dataStack = []; 
             const dataWeight = [];
             const weekDetails = []; 
 
-            // Масиви для замірів
             const dataChest = [], dataWaist = [], dataArm = [], dataLeg = [], dataCalf = [];
         
             const weekKeys = Object.keys(this.data.schedule).map(Number);
@@ -1242,7 +1149,6 @@ renderAnalytics(c) {
                 dataTest.push(weekTest);
                 dataStack.push(weekOther);
         
-                // Вага
                 let weightSum = 0; let weightCount = 0;
                 for(let d=0; d<7; d++) {
                     const v = this.data.vitals[`${w}-${d}`];
@@ -1256,7 +1162,6 @@ renderAnalytics(c) {
                 }
                 dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
 
-                // ЗАМІРИ
                 const meas = (this.data.measurements && this.data.measurements[w]) || {};
                 dataChest.push(meas.chest ? parseFloat(meas.chest) : null);
                 dataWaist.push(meas.waist ? parseFloat(meas.waist) : null);
@@ -1269,7 +1174,6 @@ renderAnalytics(c) {
             const y1Min = Math.max(0, Math.floor(minWeight - 2));
             const y1Max = Math.ceil(maxWeight + 2);
         
-            // 3. МАЛЮЄМО ПЕРШИЙ ГРАФІК (ВАГА ТА ФАРМА)
             if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
             const ctx = document.getElementById('mainChart').getContext('2d');
             
@@ -1300,7 +1204,7 @@ renderAnalytics(c) {
                     interaction: { mode: 'index', intersect: false },
                     layout: { padding: { top: 10, left: 5, right: 5, bottom: 5 } },
                     scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, // ДОДАНО offset: true
+                        x: { stacked: true, grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, 
                         y: { stacked: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, display: false },
                         y1: { display: true, position: 'right', grid: { display: false }, border: { display: false }, ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, min: y1Min, max: y1Max }
                     },
@@ -1332,7 +1236,6 @@ renderAnalytics(c) {
                 }
             });
 
-            // 4. МАЛЮЄМО ДРУГИЙ ГРАФІК (ЗАМІРИ)
             if (this.measChartInstance) { this.measChartInstance.destroy(); this.measChartInstance = null; }
             const ctxMeas = document.getElementById('measChart').getContext('2d');
             
@@ -1353,7 +1256,7 @@ renderAnalytics(c) {
                     animation: { duration: 1500, easing: 'easeOutExpo', delay: 200 }, 
                     interaction: { mode: 'index', intersect: false },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, // ДОДАНО offset: true
+                        x: { grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, 
                         y: { grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, ticks: { color: '#fff', font: {size: 10, weight: 'bold'} } }
                     },
                     plugins: { 
@@ -1375,7 +1278,6 @@ renderAnalytics(c) {
             });
         },
 
-        // Додаткова функція для кліку по кастомній легенді
         toggleDataset(chartType, index, el) {
             const chart = chartType === 'main' ? this.chartInstance : this.measChartInstance;
             if (!chart) return;
@@ -1434,7 +1336,7 @@ renderAnalytics(c) {
         },
         
        renderPharm(c) {
-            let html = '<div class="med-grid">'; // Та сама сітка
+            let html = '<div class="med-grid">'; 
             
             this.data.pharmacy.forEach((cat, i) => {
                 html += `
@@ -1472,7 +1374,7 @@ renderAnalytics(c) {
         },
 
         openBodyMap() { 
-            this.lockScroll(); // Блокуємо фон
+            this.lockScroll(); 
             document.getElementById('bodyMapModal').style.display='flex'; 
             this.renderBodyMap(); 
         },
@@ -1487,7 +1389,6 @@ renderBodyMap() {
                 {id:'quad_r', d:'M200,280 Q215,350 210,400 L160,400 Q155,350 150,280 Z', cx:180, cy:340}
             ];
             
-            // Автоматична підтримка старих даних, щоб нічого не зникло
             if (this.data.bodyMap && this.data.bodyMap.last && !this.data.bodyMap.active) {
                 this.data.bodyMap.active = [this.data.bodyMap.last];
             }
@@ -1500,9 +1401,6 @@ renderBodyMap() {
                 svg += `<path d="${m.d}" class="muscle-group ${isActive?'active':''}" onclick="App.setInjectionSite('${m.id}')" />`;
                 
                 if(isActive) {
-                    // Повертаємо шприц! 
-                    // Додали font-size="16" і тінь (drop-shadow), щоб на айфоні він виглядав чітко.
-                    // pointer-events:none дозволяє клікати прямо по шприцу для відміни.
                     svg += `<text x="${m.cx}" y="${m.cy}" font-size="16" text-anchor="middle" dominant-baseline="middle" style="pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">💉</text>`;
                 }
             });
@@ -1521,10 +1419,8 @@ renderBodyMap() {
             const idx = this.data.bodyMap.active.indexOf(id);
             
             if (idx > -1) {
-                // Якщо зона ВЖЕ вибрана — знімаємо відмітку
                 this.data.bodyMap.active.splice(idx, 1);
             } else {
-                // Якщо зона НЕ вибрана — ставимо шприц
                 this.data.bodyMap.active.push(id);
                 if(!this.data.bodyMap.history) this.data.bodyMap.history = [];
                 this.data.bodyMap.history.push({ date: new Date().toISOString(), id: id });
@@ -1557,7 +1453,6 @@ updateSuggestions() {
                 if(p.meta) tagSet.add(p.meta);
             })));
 
-            // Заповнюємо масив для нашого нового списку
             this.availablePills = Array.from(medSet).sort();
 
             const tagContainer = document.getElementById('tagPresets');
@@ -1624,22 +1519,21 @@ confirmAddPill() {
                 }
             }
             
-            if(document.activeElement) document.activeElement.blur(); // ХОВАЄМО КЛАВІАТУРУ
+            if(document.activeElement) document.activeElement.blur();
             this.save(); 
             this.renderView();
             this.closeModal(); 
             
             if (this.state.lastScroll !== undefined) {
-                window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' }); // ПЛАВНО ОПУСКАЄМО
+                window.scrollTo({ top: this.state.lastScroll, behavior: 'smooth' });
             }
         },
 
         closeModal() { 
             document.getElementById('addPillModal').style.display = 'none'; 
-            this.unlockScroll(); // Відпускаємо фон
+            this.unlockScroll();
         },
         
-        // --- CALC FIX (REGEX) ---
 calc(week) {
             const stats = {};
             if(!this.data.schedule[week]) return stats;
@@ -1661,7 +1555,6 @@ calc(week) {
                         else if(dLow.includes("tab")) u = "tab";
 
                         if(!stats[k]) {
-                            // БЕРЕМО КОЛІР САМЕ З ПРЕПАРАТУ (наприклад 'c-green' -> 'green')
                             let colorName = (p.color || 'c-yellow').replace('c-', '');
                             stats[k] = { v: 0, u: u, c: colorName }; 
                         }
@@ -1680,7 +1573,6 @@ calc(week) {
             this.updateStatsUI();
         },
 
-        // Нова функція для точкового оновлення статистики без мерехтіння
         updateStatsUI() {
              this.renderStatsPanel();
         },
@@ -1689,21 +1581,16 @@ renderStatsPanel() {
             const container = document.getElementById('stats-container');
             if(!container) return;
             
-            // 1. Рахуємо статистику (тепер calc повертає і правильний колір)
             const stats = this.calc(this.state.week);
             
-            // 2. Сортуємо: від найбільшої дози до найменшої
             const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
             
-            // 3. Генеруємо HTML для дозувань
             let statsHtml = sortedStats.map(([k,v]) => {
-                // Використовуємо колір, який ми зберегли у функції calc (v.c)
                 let color = v.c || 'yellow'; 
                 
                 return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
             }).join('') || '';
             
-            // 4. Додаємо кнопку карти (MAP) в кінці
             statsHtml += `<div class="stat-card" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
             
             container.innerHTML = statsHtml;
@@ -1715,7 +1602,6 @@ renderStatsPanel() {
             this.save(); 
         },
         
-// Нова функція спеціально для тиску (збирає 2 поля в одне значення)
         saveBP(w, d, type, val) {
             this.pushHistory();
             const key = `${w}-${d}`;
@@ -1728,7 +1614,6 @@ renderStatsPanel() {
             if (type === 'sys') parts[0] = val;
             if (type === 'dia') parts[1] = val;
 
-            // Зберігаємо лише якщо хоча б одне поле заповнене
             if (parts[0] === "" && parts[1] === "") {
                 this.data.vitals[key].bp = "";
             } else {
@@ -1738,13 +1623,11 @@ renderStatsPanel() {
             this.save();
         },
         
-        // Оновлена, чиста функція для пульсу та ваги
         saveVital(w,d,k,v) { 
             this.pushHistory();
             const key = `${w}-${d}`; 
             if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""}; 
             
-            // Якщо це вага, переконуємось перед збереженням, що там крапка
             if (k === 'w' && v) v = v.replace(',', '.'); 
 
             this.data.vitals[key][k] = v; 
@@ -1756,7 +1639,6 @@ renderStatsPanel() {
             if(!this.data.measurements) this.data.measurements = {};
             if(!this.data.measurements[w]) this.data.measurements[w] = { chest: '', waist: '', arm: '', leg: '', calf: '' };
             
-            // Якщо є кома, міняємо на крапку
             if (v) v = v.replace(',', '.');
             
             this.data.measurements[w][k] = v;
@@ -1779,10 +1661,9 @@ renderStatsPanel() {
         },
         copyPill(w, d, i) {
             this.pillBuffer = { ...this.data.schedule[w][d][i] };
-            this.state.openMenu = null; // Закриваємо меню
-            this.renderView(); // Оновлюємо, щоб з'явились кнопки 📥
+            this.state.openMenu = null;
+            this.renderView(); 
             
-            // Показуємо спливаюче повідомлення
             const toast = document.createElement('div');
             toast.innerText = "💊 Скопійовано! Натисніть 📥 біля потрібного дня";
             toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; border:1px solid #d4af37; font-family:sans-serif; font-size:0.9rem;";
@@ -1790,40 +1671,33 @@ renderStatsPanel() {
             setTimeout(() => toast.remove(), 2500);
         },
 
-        // Вставити 1 препарат (з перевіркою на дублікати)
         pastePill(w, d) {
             if (!this.pillBuffer) return;
 
-            // 1. Перевіряємо, чи вже є такий препарат у цьому дні
             const targetDay = this.data.schedule[w][d];
             const isDuplicate = targetDay.some(p => 
                 p.name.trim().toLowerCase() === this.pillBuffer.name.trim().toLowerCase()
             );
 
-            // 2. Якщо є — показуємо помилку і виходимо
             if (isDuplicate) {
                 alert(`⛔ Помилка: Препарат "${this.pillBuffer.name}" вже є в цьому дні!`);
                 return;
             }
 
-            // 3. Якщо немає — вставляємо
             this.pushHistory();
             this.data.schedule[w][d].push({ ...this.pillBuffer });
             this.save();
             this.renderView();
         },
 
-                // --- ПОЧАТОК НОВОГО КОДУ (КРОК 4) ---
         duplicatePillToPhase(w, d, pillIdx) {
             if(!confirm("Дублювати цей препарат до кінця фази?")) return;
             this.pushHistory();
             const sourcePill = this.data.schedule[w][d][pillIdx];
             
-            // Знаходимо фазу
             const phase = this.data.phases.find(p => p.weeks.includes(w));
             if(!phase) return;
 
-            // Копіюємо на всі майбутні тижні цієї фази
             phase.weeks.forEach(weekNum => {
                 if (weekNum > w) {
                     this.data.schedule[weekNum][d].push({ ...sourcePill });
@@ -1833,7 +1707,6 @@ renderStatsPanel() {
             this.save();
             this.renderView(); 
         },
-// Генерує вигляд меню
         getMenuUI(w, d, i, name, isOpen) {
             const safeName = name.replace(/'/g, "\\'"); 
             
@@ -1856,12 +1729,10 @@ renderStatsPanel() {
             const id = `${w}-${d}-${i}`;
             const lastId = this.state.openMenu;
 
-            // 1. Якщо було відкрите інше меню — закриваємо його "тихо"
             if (lastId && lastId !== id) {
                 const oldEl = document.getElementById(`menu-${lastId}`);
                 if (oldEl) {
                     const oldName = oldEl.getAttribute('data-name') || 'Item';
-                    // Розбираємо ID старого меню
                     const parts = lastId.split('-');
                     if(parts.length === 3) {
                         oldEl.innerHTML = this.getMenuUI(parts[0], parts[1], parts[2], oldName, false);
@@ -1869,17 +1740,14 @@ renderStatsPanel() {
                 }
             }
 
-            // 2. Перемикаємо стан поточного
             this.state.openMenu = (this.state.openMenu === id) ? null : id;
             const isOpen = (this.state.openMenu === id);
 
-            // 3. Оновлюємо ТІЛЬКИ цей елемент (без перезавантаження сторінки)
             const el = document.getElementById(`menu-${id}`);
             if (el) {
                 el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
             }
         },
-// Видалити препарат починаючи з цього тижня і до кінця фази
         deletePillFutureInPhase(name, startWeek, dayIndex) {
             const dayNames = ["Понеділків", "Вівторків", "Серед", "Четвергів", "П'ятниць", "Субот", "Неділь"];
             const dayName = dayNames[dayIndex] || "днів";
@@ -1888,13 +1756,10 @@ renderStatsPanel() {
             
             this.pushHistory();
             
-            // Знаходимо фазу, до якої належить поточний тиждень
             const phase = this.data.phases.find(p => p.weeks.includes(startWeek));
             if (!phase) return;
             
-            // Проходимось по тижнях знайденої фази
             phase.weeks.forEach(w => {
-                // Видаляємо ТІЛЬКИ якщо тиждень більший або дорівнює тому, де ми натиснули (startWeek)
                 if (w >= startWeek && this.data.schedule[w] && this.data.schedule[w][dayIndex]) {
                     this.data.schedule[w][dayIndex] = this.data.schedule[w][dayIndex].filter(p => p.name !== name);
                 }
@@ -1904,13 +1769,11 @@ renderStatsPanel() {
             this.renderView();
         },
 
-                // --- ЦЕ ВСТАВИТИ ПРАВИЛЬНО ---
         smartSave() {
             let report = `══════════════════════════════════════\n`;
             report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
             report += `══════════════════════════════════════\n\n`;
             
-            // 1. СТАТИСТИКА (З СОРТУВАННЯМ)
             const stats = this.calc(this.state.week);
             const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
 
@@ -1923,7 +1786,6 @@ renderStatsPanel() {
                 report += `\n`;
             }
             
-            // 2. ПО ДНЯХ
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
             report += `📅 ПО ДНЯХ:\n`;
             report += `────────────────────────────────────\n`;
@@ -1942,7 +1804,6 @@ renderStatsPanel() {
                     });
                 }
             }
-            // ЗАМІРИ
             const meas = this.data.measurements ? this.data.measurements[this.state.week] : null;
             if (meas && (meas.chest || meas.waist || meas.arm || meas.leg || meas.calf)) {
                 report += `\n📏 ЗАМІРИ (см):\n`;
@@ -1955,7 +1816,6 @@ renderStatsPanel() {
                 if(meas.calf)  mArr.push(`Гомілка: ${meas.calf}`);
                 report += mArr.join(' | ') + `\n`;
             }
-            // 3. НОТАТКИ
             if(this.data.notes[this.state.week]) {
                 report += `\n📝 НОТАТКИ:\n`;
                 report += `────────────────────────────────────\n`;
@@ -1964,7 +1824,6 @@ renderStatsPanel() {
             
             report += `\n══════════════════════════════════════\n`;
             
-            // 4. КОПІЮВАННЯ ТА ЕКСПОРТ
             navigator.clipboard.writeText(report).then(() => {
                 alert('✅ Скопійовано!');
                 if(confirm("Скачати JSON бекап?")) {
@@ -1981,7 +1840,6 @@ renderStatsPanel() {
             btn.classList.add('active'); 
             document.getElementById('phaseNav').style.display = v==='protocol'?'flex':'none'; 
             
-            // НОВИЙ РЯДОК: Ховаємо або показуємо календар залежно від вкладки
             const picker = document.querySelector('.date-picker-wrapper');
             if (picker) picker.style.display = (v === 'protocol') ? 'inline-flex' : 'none';
 
@@ -2067,7 +1925,7 @@ renderStatsPanel() {
             } 
             
             this.data.schedule[lastWeek + 1] = copyOfLastWeek;
-            await PhotoDB.shiftWeeks(1); 
+            await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
             phase.weeks.push(lastWeek + 1); 
             for(let i = pIdx + 1; i < this.data.phases.length; i++) {
                 this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + 1);
@@ -2078,7 +1936,6 @@ renderStatsPanel() {
             this.renderView(); 
         },
         
-        // NEW: PREPEND WEEK
         async prependPhaseWeek(pId) {
             this.pushHistory();
             const pIdx = this.data.phases.findIndex(p => p.id === pId);
@@ -2089,7 +1946,6 @@ renderStatsPanel() {
             
             const phase = this.data.phases[0];
             
-            // Shift ALL data +1
             const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
             for(let w = maxW; w >= 1; w--) {
                 this.data.schedule[w+1] = this.data.schedule[w];
@@ -2099,22 +1955,17 @@ renderStatsPanel() {
                 }
             }
             
-            // Clear Week 1
             this.data.schedule[1] = [[],[],[],[],[],[],[]];
             this.data.notes[1] = "";
             
-            // Shift Photos
-            await PhotoDB.shiftWeeks(1);
+            await PhotoDB.shiftWeeks(1, 1);
             
-            // Shift All Phase Weeks
             this.data.phases.forEach(p => {
                 p.weeks = p.weeks.map(w => w + 1);
             });
             
-            // Add Week 1 to current phase
             phase.weeks.unshift(1);
             
-            // Update Start Date (Shift back 7 days)
             const d = new Date(this.data.startDate);
             d.setDate(d.getDate() - 7);
             this.data.startDate = d.toISOString().split('T')[0];
@@ -2129,21 +1980,10 @@ renderStatsPanel() {
             this.pushHistory(); 
             const lastWeek = phase.weeks[phase.weeks.length - 1]; 
             
-            // Shift photos back? (Not fully implemented for simplicity, just removing ref)
-            // But let's try to be clean: 
-            // We are removing the LAST week of phase.
-            
             delete this.data.schedule[lastWeek]; 
             phase.weeks.pop(); 
             
-            // If there are subsequent phases, shift them back? 
-            // Standard logic: removing from end of phase just shortens it. 
-            // If phases are consecutive, next phase weeks need shifting down.
-            
             const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
-            
-            // If this wasn't the last phase, we have a gap now. 
-            // We need to shift everything after `lastWeek` down by 1.
             
             for(let w = lastWeek; w < maxW; w++) { 
                 this.data.schedule[w] = this.data.schedule[w+1]; 
@@ -2154,14 +1994,10 @@ renderStatsPanel() {
             } 
             delete this.data.schedule[maxW]; 
             
-            // Update weeks in subsequent phases
             for(let i = pIdx + 1; i < this.data.phases.length; i++) {
                  this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - 1); 
             }
             
-            // Note: Photos are bound to week number. If we shift schedule, we should shift photos too.
-            // But removing a week is tricky. Let's assume user deletes empty week or accepts photo mismatch for now, 
-            // or we implement shiftWeeks(-1) starting from lastWeek + 1.
             await PhotoDB.shiftWeeks(lastWeek + 1, -1);
 
             this.save(); 
@@ -2207,11 +2043,9 @@ renderStatsPanel() {
 
                 async uploadPhoto(inp) { 
             this.pushHistory(); 
-            // 1. Проходимось по файлах і стискаємо їх
             for(let f of inp.files) {
                 try {
-                    const compressedBase64 = await compressImage(f); // Стискаємо
-                    // Перетворюємо Base64 назад у Blob для старої логіки (або модифікуємо PhotoDB.add)
+                    const compressedBase64 = await compressImage(f); 
                     if(PhotoDB.db) {
                         const tx = PhotoDB.db.transaction(["photos"], "readwrite");
                         tx.objectStore("photos").add({ week: this.state.week, data: compressedBase64 });
@@ -2245,71 +2079,8 @@ renderStatsPanel() {
             this.renderNav(); 
             this.renderView();
         },
-        async openCompareModal() {
-            this.lockScroll(); // Блокуємо фон
-            const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
-            
-            if (keys.length === 0) {
-                alert("Немає завантажених фото для порівняння.");
-                return;
-            }
-            
-            const selL = document.getElementById('compSelectL');
-            const selR = document.getElementById('compSelectR');
-            
-            // Створюємо список опцій (Тільки ті тижні, де є фото)
-            let options = keys.map(k => `<option value="${k}">Week ${k}</option>`).join('');
-            selL.innerHTML = options;
-            selR.innerHTML = options;
-            
-            // За замовчуванням: зліва найперший тиждень (Week 1), справа - поточний (або останній наявний)
-            selL.value = keys[0];
-            selR.value = keys.includes(this.state.week) ? this.state.week : keys[keys.length - 1];
-            
-            document.getElementById('compareModal').style.display = 'flex';
-            
-            // Завантажуємо фотографії для вибраних тижнів
-            await this.loadCompareImage('L', selL.value);
-            await this.loadCompareImage('R', selR.value);
-        },
+        // Порівняння видалене звідси, бо тепер є Універсальний Хаб
 
-        async loadCompareImage(side, week) {
-            const box = document.getElementById('imgBox' + side);
-            box.innerHTML = '<span style="opacity:0.3">Loading...</span>';
-            
-            const photos = await PhotoDB.get(Number(week));
-            
-            // Зберігаємо завантажені фото для швидкого перемикання
-            if (!this.compareData) this.compareData = { L: [], R: [], wL: '', wR: '' };
-            this.compareData[side] = photos || [];
-            this.compareData['w' + side] = week;
-            
-            if (photos && photos.length > 0) {
-                box.style.aspectRatio = 'auto';
-                box.style.display = 'flex';
-                box.style.flexDirection = 'column';
-                box.style.gap = '10px';
-                box.style.maxHeight = '65vh'; 
-                box.style.overflowY = 'auto'; 
-                box.style.padding = '0 5px 0 0';
-                box.style.background = 'transparent';
-                box.style.border = 'none';
-
-                // ЗАМІНЕНО: тепер викликаємо спеціальну функцію openCompareFullscreen
-                box.innerHTML = photos.map((p, idx) => 
-                    `<img src="${p.data}" style="width:100%; border-radius:8px; object-fit:cover; border:1px solid #333; cursor:pointer;" onclick="App.openPhotoModal(${week}, ${idx})">`
-                ).join('');
-            } else {
-                box.style.aspectRatio = '3/4';
-                box.style.display = 'flex';
-                box.style.maxHeight = 'none';
-                box.style.overflowY = 'hidden';
-                box.style.background = '#000';
-                box.style.border = '1px dashed #333';
-                box.innerHTML = '<span style="opacity:0.3">Немає фото</span>';
-            }
-        },
-        
             updatePhaseTitle(id, newTitle) {
             this.pushHistory();
             const p = this.data.phases.find(x => x.id === id);
@@ -2322,18 +2093,15 @@ renderStatsPanel() {
         async insertPhase(index) {
             this.pushHistory();
             
-            // 1. Визначаємо, з якого тижня починаємо вставку
             let startWeek = 1;
             if (index > 0) {
                 const prevPhase = this.data.phases[index - 1];
                 startWeek = prevPhase.weeks[prevPhase.weeks.length - 1] + 1;
             }
     
-            const duration = 4; // Довжина нової фази (стандартно 4 тижні)
+            const duration = 4; 
             const maxW = Math.max(...Object.keys(this.data.schedule).map(Number), 0);
     
-            // 2. Зсуваємо дані (розклад, нотатки, показники) ВПЕРЕД
-            // Йдемо з кінця, щоб не перезаписати дані
             for (let w = maxW; w >= startWeek; w--) {
                 this.data.schedule[w + duration] = this.data.schedule[w];
                 this.data.notes[w + duration] = this.data.notes[w];
@@ -2347,20 +2115,16 @@ renderStatsPanel() {
                 delete this.data.notes[w];
             }
     
-            // 3. Очищаємо нові тижні (створюємо пусті слоти)
             for (let i = 0; i < duration; i++) {
                 this.data.schedule[startWeek + i] = [[],[],[],[],[],[],[]];
             }
     
-            // 4. Зсуваємо фото
             await PhotoDB.shiftWeeks(startWeek, duration);
     
-            // 5. Оновлюємо тижні у всіх наступних фазах
             for (let i = index; i < this.data.phases.length; i++) {
                 this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + duration);
             }
     
-            // 6. Створюємо нову фазу
             const maxId = this.data.phases.reduce((max, p) => Math.max(max, p.id), 0);
             const newPhase = {
                 id: maxId + 1,
@@ -2368,11 +2132,7 @@ renderStatsPanel() {
                 weeks: Array.from({length: duration}, (_, i) => startWeek + i)
             };
     
-            // 7. Вставляємо фазу в масив у потрібне місце
             this.data.phases.splice(index, 0, newPhase);
-    
-            // Якщо вставили на початок, оновлюємо дату старту (зсуваємо назад на 4 тижні, щоб "сьогодні" лишилось правильним, або просто лишаємо як є, тоді все зсунеться в майбутнє)
-            // Логічніше просто зсунути всі події в майбутнє, дату старту не чіпаємо.
     
             this.save();
             this.refreshPhotos();
@@ -2386,7 +2146,6 @@ renderStatsPanel() {
             let html = '';
     
             this.data.phases.forEach((p, idx) => {
-                // Кнопка вставки ПЕРЕД фазою (тільки в режимі редагування)
                 if (isEd) {
                     html += `<div class="insert-phase-btn" onclick="App.insertPhase(${idx})"><span>+</span></div>`;
                 }
@@ -2411,12 +2170,8 @@ renderStatsPanel() {
                 </div>`;
             });
             
-            // Кнопка вставки в самому кінці
             if (isEd) {
                 html += `<div class="insert-phase-btn" onclick="App.insertPhase(${this.data.phases.length})"><span>+</span></div>`;
-            } else {
-                // Стара кнопка додавання в кінець (для звичайного режиму, якщо треба, або можна прибрати)
-                // html += `<div class="new-phase-btn phase-btn" onclick="App.addNewPhase()">+</div>`; 
             }
             
             nav.innerHTML = html; 
