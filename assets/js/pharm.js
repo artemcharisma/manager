@@ -201,13 +201,13 @@
         data: null,
         photoKeys: new Set(),
         
-        // --- БЛОКУВАННЯ ФОНУ (SCROLL LOCK) ---
         lockScroll() {
             if (document.body.style.position === 'fixed') return; 
             this.state.lockedScrollY = window.scrollY; 
             document.body.style.position = 'fixed';
             document.body.style.top = `-${this.state.lockedScrollY}px`;
             document.body.style.width = '100%';
+            document.body.classList.add('modal-active'); // СИГНАЛ: Сховати Зірку/Меню
         },
         unlockScroll() {
             if (document.body.style.position !== 'fixed') return;
@@ -215,6 +215,7 @@
             document.body.style.top = '';
             document.body.style.width = '';
             window.scrollTo(0, this.state.lockedScrollY || 0);
+            document.body.classList.remove('modal-active'); // СИГНАЛ: Повернути Зірку/Меню
         },
 
         // Підключаємо StateManager
@@ -252,13 +253,8 @@
         openPhotoModal(imgUrl, altUrl = null, labelMain = '', labelAlt = '') {
             this.lockScroll();
             
-            const modal = document.getElementById('customPhotoModal');
-            const img = document.getElementById('customPhotoImg');
-            
-            // Елементи перемикача
-            const swapWrapper = document.getElementById('photoSwapWrapper');
-            const btnMain = document.getElementById('btnSwapMain');
-            const btnAlt = document.getElementById('btnSwapAlt');
+            let modal = document.getElementById('customPhotoModal');
+            let img = document.getElementById('customPhotoImg');
 
             if(!modal || !img) return;
 
@@ -269,9 +265,26 @@
 
             img.src = imgUrl;
             img.style.touchAction = 'none';
-            
-            // Логіка перемикача
-            if (altUrl && swapWrapper) {
+            modal.classList.add('active');
+
+            // 1. Клонуємо модалку і вішаємо жести ПЕРЕД кнопками (щоб не вбити кліки)
+            this.initPhotoGestures(modal, img);
+
+            // 2. ОНОВЛЮЄМО ПОСИЛАННЯ НА ЕЛЕМЕНТИ (бо старі вмерли при клонуванні)
+            modal = document.getElementById('customPhotoModal');
+            img = document.getElementById('customPhotoImg');
+            const swapWrapper = document.getElementById('photoSwapWrapper');
+            const btnMain = document.getElementById('btnSwapMain');
+            const btnAlt = document.getElementById('btnSwapAlt');
+
+            // Оновлюємо розміри для НОВОЇ картинки
+            img.onload = () => {
+                this.calculatePhotoBoundary(img);
+                this.updatePhotoTransform();
+            };
+
+            // 3. Вішаємо залізобетонні події на нові кнопки
+            if (altUrl && swapWrapper && btnMain && btnAlt) {
                 img.setAttribute('data-main-src', imgUrl);
                 img.setAttribute('data-alt-src', altUrl);
                 
@@ -280,25 +293,28 @@
                 
                 btnMain.classList.add('active');
                 btnAlt.classList.remove('active');
-                
                 swapWrapper.style.display = 'flex';
                 
-                // Миттєва зміна фото без закриття вікна
-                btnMain.onclick = (e) => {
-                    e.stopPropagation();
+                // Функції миттєвого перемикання
+                const swapToMain = (e) => {
+                    e.preventDefault(); e.stopPropagation();
                     img.src = img.getAttribute('data-main-src');
-                    btnMain.classList.add('active');
-                    btnAlt.classList.remove('active');
+                    btnMain.classList.add('active'); btnAlt.classList.remove('active');
                 };
-                btnAlt.onclick = (e) => {
-                    e.stopPropagation();
+                const swapToAlt = (e) => {
+                    e.preventDefault(); e.stopPropagation();
                     img.src = img.getAttribute('data-alt-src');
-                    btnAlt.classList.add('active');
-                    btnMain.classList.remove('active');
+                    btnAlt.classList.add('active'); btnMain.classList.remove('active');
                 };
+
+                // Дублюємо для ідеальної роботи на iOS та Android
+                btnMain.onclick = swapToMain; btnMain.ontouchend = swapToMain;
+                btnAlt.onclick = swapToAlt; btnAlt.ontouchend = swapToAlt;
+                
             } else if (swapWrapper) {
                 swapWrapper.style.display = 'none';
             }
+        },
 
             modal.classList.add('active');
 
