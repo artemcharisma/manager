@@ -1076,15 +1076,13 @@ const PhotoDB = {
                     <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
                 </div>`;
 
-            const newWeekBar = document.querySelector('.week-bar');
-            if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
             // ТЕПЕР ФОРМУЄМО ВЕСЬ БЛОК РАЗОМ
             const statsHtml = this.getStatsHtml(this.state.week); // ГЕНЕРУЄМО МИТТЄВО
 
             c.innerHTML = `
                 <div class="stats-grid" id="stats-container">${statsHtml}</div>
                 <div class="week-bar">${wHtml}</div>
-                ${this.state.editing && this.pillBuffer ? `<div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed var(--green); color: var(--green); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; cursor: pointer; font-weight: 800; font-size: 0.9rem;" onclick="App.pastePillToWeek(${this.state.week})">🗓 ВСТАВИТИ [${this.pillBuffer.name.toUpperCase()}] НА ВЕСЬ ТИЖДЕНЬ</div>` : ''}
+                ${pasteToWeekHtml}
                 ${grid}
                 
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
