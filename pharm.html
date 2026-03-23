@@ -815,6 +815,69 @@
             font-size: 0.85rem; color: #888; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0;
         }
         .p-week.active { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        /* --- СИНХРОНІЗАЦІЯ ІНТЕРФЕЙСУ З МОДАЛКАМИ ТА РЕДАГУВАННЯМ --- */
+        body.modal-active .nav-tabs,
+        body.modal-active .brand,
+        body.modal-active .controls,
+        body.modal-active #undoFloat {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transform: translateY(-10px) scale(0.95) !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+
+        /* Ховаємо Зірку (Хаб) і коли відкриті вікна, і під час редагування, щоб не заважала */
+        body.modal-active #sys-fab,
+        body.editing #sys-fab {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(80px) scale(0.5) !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+
+        /* Розумний Undo з ефектом пружини (Оновлено z-index) */
+        #undoFloat { 
+            position: fixed; bottom: 100px; right: 20px; width: 50px; height: 50px; 
+            border-radius: 50%; background: rgba(28,28,30,0.9); border: 2px solid var(--primary); 
+            color: var(--primary); display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; font-weight: 800; z-index: 900; /* Під модалками */
+            opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.5); 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; 
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        #undoFloat.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+        /* --- 3D КАРТКИ ДЛЯ АПТЕЧКИ (РЕНТГЕН) --- */
+        .pharm-card {
+            background: linear-gradient(145deg, #161616, #0a0a0a);
+            border-radius: 16px; padding: 20px; border: 1px solid #333;
+            box-shadow: 8px 8px 20px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.05);
+            position: relative; overflow: hidden;
+        }
+        .pharm-card::before {
+            content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px;
+            background: radial-gradient(circle, var(--cat-color) 0%, transparent 70%);
+            opacity: 0.15; transform: translate(30%, -30%); border-radius: 50%; pointer-events: none;
+        }
+        .pharm-item {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 12px; padding: 14px; margin-bottom: 12px;
+            display: flex; flex-direction: column; gap: 10px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); transition: 0.2s;
+        }
+        .pharm-item:hover { border-color: rgba(255,255,255,0.1); }
+        .pharm-item-top { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Значок Залишку (Stock) */
+        .pharm-stock {
+            background: #111; border: 1px dashed #555; border-radius: 6px; padding: 4px 8px; 
+            font-size: 0.7rem; color: #aaa; font-family: 'JetBrains Mono', monospace; cursor: text;
+            display: inline-block; min-width: 40px; text-align: center;
+        }
+        .pharm-stock.low { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); box-shadow: 0 0 8px rgba(239,68,68,0.2); }
+        .pharm-stock:empty::before { content: '📦 Залишок...'; opacity: 0.5; }
     </style>
 </head>
 <body id="appBody">
