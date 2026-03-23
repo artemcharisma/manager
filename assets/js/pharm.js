@@ -1383,7 +1383,7 @@ const PhotoDB = {
             }
             
             c.innerHTML = html;
-        }
+        },
         
        renderPharm(c) {
             let html = '<div class="med-grid">'; 
