@@ -246,10 +246,6 @@
             this.smartSave();
         },
 
-        // =========================================================================
-        // --- ІДЕАЛЬНИЙ ФОТО-ПЕРЕГЛЯДАЧ З НУЛЯ (Step-by-Step Native Experience) ---
-        // =========================================================================
-
         openPhotoModal(imgUrl, altUrl = null, labelMain = '', labelAlt = '') {
             this.lockScroll();
             
@@ -314,16 +310,6 @@
             } else if (swapWrapper) {
                 swapWrapper.style.display = 'none';
             }
-        },
-
-            modal.classList.add('active');
-
-            img.onload = () => {
-                this.calculatePhotoBoundary(img);
-                this.updatePhotoTransform();
-            };
-
-            this.initPhotoGestures(modal, img);
         },
         closePhotoModal() {
             const modal = document.getElementById('customPhotoModal');
