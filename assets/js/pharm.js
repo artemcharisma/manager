@@ -953,7 +953,11 @@ const PhotoDB = {
 
             const ph = this.data.phases.find(x => x.id === this.state.phaseId);
             const wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
-
+            const pasteToWeekHtml = (this.state.editing && this.pillBuffer) ? `
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed var(--green); color: var(--green); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; cursor: pointer; font-weight: 800; font-size: 0.9rem;" onclick="App.pastePillToWeek(${this.state.week})">
+                    🗓 ВСТАВИТИ [${this.pillBuffer.name.toUpperCase()}] НА ВЕСЬ ТИЖДЕНЬ
+                </div>
+            ` : '';
             let grid = '<div class="days-grid">';
             const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 
@@ -1044,7 +1048,7 @@ const PhotoDB = {
             c.innerHTML = `
                 <div class="stats-grid" id="stats-container"></div>
                 <div class="week-bar">${wHtml}</div>
-                ${grid}
+                ${pasteToWeekHtml} ${grid}
                 
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
@@ -1346,7 +1350,6 @@ const PhotoDB = {
             let html = '<div class="med-grid">'; 
             
             this.data.pharmacy.forEach((cat, i) => {
-                // Визначаємо колір світіння для категорії
                 let catColor = '#555';
                 if(cat.style === 'heart') catColor = '#3b82f6';
                 if(cat.style === 'liver') catColor = '#10b981';
@@ -1367,9 +1370,8 @@ const PhotoDB = {
                             let isLow = (!isNaN(stockNum) && stockNum <= 10) ? 'low' : '';
                             let stockHtml = '';
                             
-                            // Показуємо інпут залишку, якщо ми в режимі редагування АБО якщо залишок вже вписано
-                            // Якщо порожньо і ми не редагуємо - він просто зникає!
-                            if (this.state.editing || item.stock) {
+                            // ПОЛІПШЕННЯ: Якщо ми редагуємо АБО якщо залишок існує (навіть якщо це текст)
+                            if (this.state.editing || (item.stock && item.stock.trim() !== '')) {
                                 stockHtml = `<span class="pharm-stock ${isLow}" contenteditable="${this.state.editing}" 
                                     onblur="App.data.pharmacy[${i}].items[${j}].stock=this.innerText; App.save()">${item.stock || ''}</span>`;
                             }
@@ -1382,8 +1384,8 @@ const PhotoDB = {
                                     
                                     <div style="display:flex; align-items:center; gap:8px;">
                                         <span class="med-dose" contenteditable="${this.state.editing}" 
-                                            onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()" style="background:#000; border-color:${catColor}40;">${item.d}</span>
-                                        ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;font-size:0.8rem; background:rgba(239,68,68,0.1); width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;" onclick="App.delMed(${i},${j})">✕</span>` : ''}
+                                            onblur="App.data.pharmacy[${i}].items[${j}].d=this.innerText; App.save()">${item.d}</span>
+                                        ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;font-size:1rem; font-weight:bold; margin-left:5px;" onclick="App.delMed(${i},${j})">✕</span>` : ''}
                                     </div>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
@@ -1720,6 +1722,36 @@ renderStatsPanel() {
             this.renderView();
         },
 
+        // ВСТАВКА НА ВЕСЬ ТИЖДЕНЬ В ОДИН КЛІК
+        pastePillToWeek(w) {
+            if (!this.pillBuffer) return;
+            if (!confirm(`🗓 Вставити препарат "${this.pillBuffer.name}" на КОЖЕН ДЕНЬ цього тижня?`)) return;
+            
+            this.pushHistory();
+            
+            // Проходимось по всіх 7 днях
+            for (let d = 0; d < 7; d++) {
+                const targetDay = this.data.schedule[w][d];
+                const isDuplicate = targetDay.some(p => 
+                    p.name.trim().toLowerCase() === this.pillBuffer.name.trim().toLowerCase()
+                );
+                // Вставляємо тільки туди, де його ще немає
+                if (!isDuplicate) {
+                    this.data.schedule[w][d].push({ ...this.pillBuffer });
+                }
+            }
+            
+            this.save();
+            this.renderView();
+            
+            // Показуємо повідомлення
+            const toast = document.createElement('div');
+            toast.innerText = "✅ Вставлено на весь тиждень!";
+            toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:#000; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        },
+            
         duplicatePillToPhase(w, d, pillIdx) {
             if(!confirm("Дублювати цей препарат до кінця фази?")) return;
             this.pushHistory();
