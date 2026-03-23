@@ -1078,8 +1078,40 @@ const PhotoDB = {
 
             const newWeekBar = document.querySelector('.week-bar');
             if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
+            // ТЕПЕР ФОРМУЄМО ВЕСЬ БЛОК РАЗОМ
+            const statsHtml = this.getStatsHtml(this.state.week); // ГЕНЕРУЄМО МИТТЄВО
 
-            this.renderStatsPanel();
+            c.innerHTML = `
+                <div class="stats-grid" id="stats-container">${statsHtml}</div>
+                <div class="week-bar">${wHtml}</div>
+                ${this.state.editing && this.pillBuffer ? `<div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed var(--green); color: var(--green); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; cursor: pointer; font-weight: 800; font-size: 0.9rem;" onclick="App.pastePillToWeek(${this.state.week})">🗓 ВСТАВИТИ [${this.pillBuffer.name.toUpperCase()}] НА ВЕСЬ ТИЖДЕНЬ</div>` : ''}
+                ${grid}
+                
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
+                        <span style="color:#fff; font-size:0.9rem; font-weight:800; letter-spacing:1px;">📏 ЗАМІРИ ТІЛА (см)</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px;">
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГРУДИ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.chest}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'chest', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ТАЛІЯ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.waist}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'waist', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">БІЦЕПС</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.arm}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'arm', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">СТЕГНО</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.leg}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'leg', this.value)" style="padding:6px 2px;"></div>
+                        <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГОМІЛКА</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.calf}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'calf', this.value)" style="padding:6px 2px;"></div>
+                    </div>
+
+                    <textarea class="note-input" style="margin-top:0; border-color:#222; background:#0a0a0a;" placeholder="Звіт за тиждень, самопочуття, нотатки..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week] || ""}</textarea>
+                </div>
+
+                <div class="photo-area">
+                    <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
+                    <div class="photo-grid">${pHtml}</div>
+                    <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
+                </div>`;
+
+            const newWeekBar = document.querySelector('.week-bar');
+            if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
+        },
         },
 
         renderAnalytics(c) {
@@ -1311,44 +1343,48 @@ const PhotoDB = {
         },
         
         renderAnalysis(c) {
-            let html = '<div class="med-grid">';
+            let html = '<div style="display:flex; flex-direction:column; gap:20px; position:relative; padding-left:20px;">';
+            // Вертикальна лінія таймлайну
+            html += `<div style="position:absolute; left: 6px; top: 15px; bottom: 15px; width: 2px; background: linear-gradient(to bottom, var(--primary), #222);"></div>`;
             
             this.data.analysis.forEach((block, i) => {
                 html += `
-                <div class="med-card">
-                    <div class="med-header">
+                <div class="med-card" style="overflow:visible; padding: 15px;">
+                    <div style="position:absolute; left: -20px; top: 22px; width: 12px; height: 12px; background: #000; border: 3px solid var(--primary); border-radius: 50%; box-shadow: 0 0 10px rgba(212,175,55,0.6);"></div>
+                    
+                    <div class="med-header" style="border-bottom: 1px dashed #333; padding: 0 0 10px 0; background: transparent;">
                         <div style="flex-grow:1">
                             <div class="med-title" contenteditable="${this.state.editing}" 
-                                onblur="App.data.analysis[${i}].title=this.innerText; App.save()">${block.title}</div>
+                                onblur="App.data.analysis[${i}].title=this.innerText; App.save()" style="color:var(--primary); font-size:1rem;">${block.title}</div>
                             <div class="med-timing" contenteditable="${this.state.editing}" 
-                                onblur="App.data.analysis[${i}].timing=this.innerText; App.save()">${block.timing}</div>
+                                onblur="App.data.analysis[${i}].timing=this.innerText; App.save()" style="color:#aaa; margin-top:2px;">${block.timing}</div>
                         </div>
-                        ${this.state.editing ? `<div style="cursor:pointer; color:#ef4444; padding:0 0 10px 10px;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}
+                        ${this.state.editing ? `<div style="cursor:pointer; color:#ef4444; padding:5px; background:rgba(239,68,68,0.1); border-radius:6px; font-weight:bold;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}
                     </div>
                     
-                    <div class="med-list">
+                    <div class="med-list" style="padding-top:10px;">
                         ${block.checks.map((chk, j) => `
-                            <div class="check-row">
-                                <span class="check-icon">●</span>
+                            <div class="check-row" style="border-bottom:none; padding: 6px 0;">
+                                <span class="check-icon" style="color:var(--blue); font-size:1.1rem; text-shadow:none;">🔬</span>
                                 <span class="check-name" contenteditable="${this.state.editing}" 
                                     onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
-                                ${this.state.editing ? `<span style="color:#ef4444;cursor:pointer;margin-left:10px; font-size:0.8rem" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
+                                ${this.state.editing ? `<span style="color:#ef4444; cursor:pointer; margin-left:10px; font-weight:bold;" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
                             </div>
                         `).join('')}
                     </div>
                     
-                    ${this.state.editing ? `<button class="btn-ghost" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий показник'); App.save(); App.renderView()">+ Add Check</button>` : ''}
+                    ${this.state.editing ? `<button class="btn-ghost" style="margin-top:10px; border-top:1px dashed #333; border-radius:8px;" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий показник'); App.save(); App.renderView()">+ Додати маркер</button>` : ''}
                 </div>`;
             });
 
             html += `</div>`;
             
             if (this.state.editing) {
-                html += `<button class="btn-new-section" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:['Показник']}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
+                html += `<button class="btn-new-section" style="margin-top:20px; border-color:var(--primary); color:var(--primary);" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:['Показник']}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
             }
             
             c.innerHTML = html;
-        },
+        }
         
        renderPharm(c) {
             let html = '<div class="med-grid">'; 
@@ -1372,14 +1408,15 @@ const PhotoDB = {
                             // Логіка залишків (Stock)
                             let stockNum = parseInt(item.stock);
                             let isLow = (!isNaN(stockNum) && stockNum <= 10) ? 'low' : '';
+                            // Логіка залишків (Stock) з мікро-очисткою
+                            let stockNum = parseInt(item.stock);
+                            let isLow = (!isNaN(stockNum) && stockNum <= 10) ? 'low' : '';
                             let stockHtml = '';
                             
-                            // ПОЛІПШЕННЯ: Якщо ми редагуємо АБО якщо залишок існує (навіть якщо це текст)
                             if (this.state.editing || (item.stock && item.stock.trim() !== '')) {
                                 stockHtml = `<span class="pharm-stock ${isLow}" contenteditable="${this.state.editing}" 
-                                    onblur="App.data.pharmacy[${i}].items[${j}].stock=this.innerText; App.save()">${item.stock || ''}</span>`;
+                                    onblur="this.innerHTML=this.innerText.trim(); App.data.pharmacy[${i}].items[${j}].stock=this.innerText; App.save()">${item.stock || ''}</span>`;
                             }
-
                             return `
                             <div class="pharm-item">
                                 <div class="pharm-item-top">
@@ -1610,26 +1647,18 @@ calc(week) {
         },
 
         updateStatsUI() {
-             this.renderStatsPanel();
+             const container = document.getElementById('stats-container');
+             if(container) container.innerHTML = this.getStatsHtml(this.state.week);
         },
-
-renderStatsPanel() {
-            const container = document.getElementById('stats-container');
-            if(!container) return;
-            
-            const stats = this.calc(this.state.week);
-            
+        getStatsHtml(week) {
+            const stats = this.calc(week);
             const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
-            
             let statsHtml = sortedStats.map(([k,v]) => {
                 let color = v.c || 'yellow'; 
-                
                 return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
             }).join('') || '';
-            
             statsHtml += `<div class="stat-card" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
-            
-            container.innerHTML = statsHtml;
+            return statsHtml;
         },
         
         saveNote(w,t) { 
