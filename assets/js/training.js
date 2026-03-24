@@ -264,6 +264,38 @@ const App = {
         }
         return null;
     },
+    getEstimated1RM(exerciseName, currentWNum, currentDIdx) {
+        if (!exerciseName || !this.data.weeks) return 0;
+        let max1RM = 0;
+        const currentProg = this.data.currentProgram;
+
+        this.data.weeks.forEach(week => {
+            // Шукаємо тільки в поточній програмі і тільки в минулому
+            if (week.prog !== currentProg) return;
+            if (week.num > currentWNum) return;
+
+            week.days.forEach((day, dIdx) => {
+                // Не дивимось у майбутні дні поточного тижня
+                if (week.num === currentWNum && dIdx >= currentDIdx) return;
+                
+                if (day.exercises) {
+                    const pastEx = day.exercises.find(e => e.n && e.n.trim().toLowerCase() === exerciseName.trim().toLowerCase());
+                    if (pastEx && pastEx.sets) {
+                        pastEx.sets.forEach(set => {
+                            const w = parseFloat(set.w) || 0;
+                            const r = parseFloat(set.r) || 0;
+                            if (w > 0 && r > 0) {
+                                // Формула Еплі для 1RM
+                                const oneRm = w * (1 + r / 30);
+                                if (oneRm > max1RM) max1RM = oneRm;
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        return Math.round(max1RM);
+    },
     
     render() {
         const c = document.getElementById('scheduleList');
@@ -334,7 +366,7 @@ const App = {
                             return `<div class="set-row">
                                 <div class="set-num">${sIdx+1}</div>
                                 <div class="set-part">
-                                    <input class="set-input w-val" type="number" inputmode="decimal" ${placeholderW} value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
+                                    <input class="set-input w-val" type="text" inputmode="text" ${placeholderW} value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
                                     <span class="set-unit">кг</span>
                                 </div>
                                 <div class="set-part">
@@ -715,10 +747,48 @@ const App = {
     },
 
     updateSet(w, d, e, s, f, val) {
-        if(this.data.weeks[w].days[d].exercises[e].sets[s][f] !== val) {
+        let finalVal = val;
+        let needRender = false;
+
+        // --- АВТОРОЗРАХУНОК ВІДСОТКІВ ВІД 1RM ---
+        if (f === 'w' && typeof val === 'string' && (val.includes('%') || val.toLowerCase().includes('p'))) {
+            const percent = parseFloat(val);
+            if (!isNaN(percent) && percent > 0) {
+                const exName = this.data.weeks[w].days[d].exercises[e].n;
+                const wNum = this.data.weeks[w].num;
+                const e1RM = this.getEstimated1RM(exName, wNum, d);
+                
+                if (e1RM > 0) {
+                    const calcWeight = e1RM * (percent / 100);
+                    // Округлення до стандартного кроку 2.5 кг (млинці по 1.25кг)
+                    finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
+                    
+                    const toast = document.createElement('div');
+                    toast.innerText = `🎯 1RM: ${e1RM}кг. ${percent}% = ${finalVal}кг`;
+                    toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--success); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5);";
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                    
+                    needRender = true;
+                } else {
+                    const toast = document.createElement('div');
+                    toast.innerText = `⚠️ Немає історії підходів для "${exName}"`;
+                    toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--danger); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                    finalVal = ""; // Очищаємо, якщо не вийшло порахувати
+                    needRender = true;
+                }
+            }
+        }
+
+        // Стандартне збереження
+        if(this.data.weeks[w].days[d].exercises[e].sets[s][f] !== finalVal) {
             this.pushHistory();
-            this.data.weeks[w].days[d].exercises[e].sets[s][f] = val;
+            this.data.weeks[w].days[d].exercises[e].sets[s][f] = finalVal;
             this.save();
+            // Перемальовуємо UI тільки якщо ми змінили значення на відсотки
+            if (needRender) this.render();
         }
     },
 
