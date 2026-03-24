@@ -1805,6 +1805,7 @@ calc(week) {
                     <span onclick="App.copyPill(${w},${d},${i})" title="Копіювати" style="cursor:pointer;">📋</span>
                     <span onclick="App.duplicatePillToPhase(${w},${d},${i})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
                     
+                    <span onclick="App.deletePillFromWeek('${safeName}', ${w})" title="Видалити з усього тижня" style="cursor:pointer; color:#f59e0b">🗓️</span>
                     <span onclick="App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" title="Видалити до кінця фази" style="cursor:pointer; color:#ef4444">🌍</span>
                     
                     <span onclick="App.delPillItem(${w},${d},${i})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
@@ -1836,6 +1837,27 @@ calc(week) {
             if (el) {
                 el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
             }
+        },
+
+        deletePillFromWeek(name, w) {
+            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" з УСЬОГО тижня ${w}?`)) return;
+            this.pushHistory();
+            
+            for (let d = 0; d < 7; d++) {
+                if (this.data.schedule[w] && this.data.schedule[w][d]) {
+                    this.data.schedule[w][d] = this.data.schedule[w][d].filter(p => p.name !== name);
+                }
+            }
+            
+            this.save();
+            this.renderView();
+            
+            // Показуємо повідомлення
+            const toast = document.createElement('div');
+            toast.innerText = "🗑 Видалено з усього тижня!";
+            toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
         },
         deletePillFutureInPhase(name, startWeek, dayIndex) {
             const dayNames = ["Понеділків", "Вівторків", "Серед", "Четвергів", "П'ятниць", "Субот", "Неділь"];
@@ -1927,13 +1949,45 @@ calc(week) {
             this.pushHistory();
             const pill = this.data.schedule[w][d][i];
             pill.done = !pill.done; // Перемикаємо статус
+
+            // --- АВТО-СПИСАННЯ ЗАЛИШКІВ ---
+            let showLowStockWarning = null;
+            
+            this.data.pharmacy.forEach(cat => {
+                cat.items.forEach(item => {
+                    // Шукаємо препарат в аптечці за назвою
+                    if (item.n.trim().toLowerCase() === pill.name.trim().toLowerCase()) {
+                        let currentStock = parseInt(item.stock);
+                        if (!isNaN(currentStock)) {
+                            // Віднімаємо 1 порцію, якщо випито, і повертаємо, якщо знято відмітку
+                            let newStock = pill.done ? currentStock - 1 : currentStock + 1;
+                            item.stock = newStock.toString();
+                            
+                            // Якщо залишилось мало
+                            if (pill.done && newStock <= 10 && newStock > 0) {
+                                showLowStockWarning = item.n;
+                            }
+                        }
+                    }
+                });
+            });
+
             this.save();
             this.renderView();
+            
             // Вібрація для iOS/Android
             if (pill.done && window.Haptics) window.Haptics.success();
             else if (window.Haptics) window.Haptics.light();
-        },
 
+            // Попередження про закінчення препарату
+            if (showLowStockWarning) {
+                const toast = document.createElement('div');
+                toast.innerText = `⚠️ Увага: ${showLowStockWarning} закінчується!`;
+                toast.style.cssText = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); text-align:center; min-width: 250px;";
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        },
         setView(v, btn) { 
             this.state.view = v; 
             document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active')); 
