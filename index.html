@@ -705,13 +705,12 @@
         async function SystemReset() {
             const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
             if(hasBackup) {
-                // Ідеально вирівняний текст вибору
                 const promptText = `
                     <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
                     <div style="display: flex; flex-direction: column; align-items: center;">
                         <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
-                            <div><span style="color: var(--gold); font-weight: 700; display: inline-block; width: 40px;">[ 1 ]</span> - ВІДНОВИТИ з Backup</div>
-                            <div><span style="color: var(--red); font-weight: 700; display: inline-block; width: 40px;">[ 2 ]</span> - ВИДАЛИТИ ВСІ ДАНІ</div>
+                            <div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ВІДНОВИТИ з Backup</span></div>
+                            <div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div>
                         </div>
                     </div>
                 `;
