@@ -128,7 +128,7 @@ const InitialData = {
 const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
-    timerState: { interval: null, left: 0, default: 90, el: null, audioCtx: null },
+    timerState: { interval: null, left: 0, default: 90, el: null, audioCtx: null, endTime: null },
 
     init() {
         this.data = this.state.init();
@@ -536,7 +536,15 @@ const App = {
         this.stopTimer();
         this.timerState.left = seconds;
         
-        // Змінюємо дизайн на "активний"
+        // ЗАПАМ'ЯТОВУЄМО ТОЧНИЙ ЧАС ЗАВЕРШЕННЯ В МАЙБУТНЬОМУ
+        this.timerState.endTime = Date.now() + (seconds * 1000);
+        
+        // Запитуємо дозвіл на системні сповіщення (при першому запуску)
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+        
+        // Дизайн
         this.timerState.el.style.background = 'var(--theme, #d4af37)';
         this.timerState.el.style.color = '#000';
         this.timerState.el.style.boxShadow = '0 0 20px var(--theme, #d4af37)';
@@ -544,35 +552,46 @@ const App = {
         this.updateTimerUI();
         if (window.Haptics) window.Haptics.light();
 
-        // "Розблоковуємо" аудіо на iOS при першому натисканні на старт
         if (!this.timerState.audioCtx) {
             this.timerState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
+        // Перевіряємо час кожні 250мс (щоб швидше "прокинутись" після розблокування)
         this.timerState.interval = setInterval(() => {
-            this.timerState.left--;
+            const now = Date.now();
+            // Рахуємо різницю між поточним часом і часом завершення
+            this.timerState.left = Math.ceil((this.timerState.endTime - now) / 1000);
+            
             this.updateTimerUI();
 
             if (this.timerState.left <= 0) {
                 this.stopTimer();
                 this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
                 
-                // ВІБРАЦІЯ ТА ЗВУК
+                // --- СИСТЕМНЕ СПОВІЩЕННЯ ---
+                if ("Notification" in window && Notification.permission === "granted") {
+                    // Якщо телефон заблоковано, це може висвітитись на екрані
+                    new Notification("Час відпочинку вийшов!", {
+                        body: "Пора робити наступний підхід!",
+                        icon: "icon.png", 
+                        vibrate: [200, 100, 200]
+                    });
+                }
+                
                 this.playDing();
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
                 if (window.Haptics) window.Haptics.heavy();
                 
-                // Повертаємо нормальний вигляд через 4 секунди
                 setTimeout(() => this.updateTimerUI(), 4000);
             }
-        }, 1000);
+        }, 250); 
     },
 
     stopTimer() {
         clearInterval(this.timerState.interval);
         this.timerState.interval = null;
+        this.timerState.endTime = null; // Очищаємо час
         
-        // Повертаємо дизайн у режим очікування
         this.timerState.el.style.background = 'rgba(26, 26, 26, 0.85)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
         this.timerState.el.style.boxShadow = '0 4px 15px rgba(0,0,0,0.6)';
