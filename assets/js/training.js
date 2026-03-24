@@ -128,6 +128,7 @@ const InitialData = {
 const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
+    timerState: { interval: null, left: 0, default: 90, el: null },
 
     init() {
         this.data = this.state.init();
@@ -174,6 +175,7 @@ const App = {
         this.updateBank();
         this.render();
         this.save();
+        this.initTimer();
     },
 
     // --- ЛОГІКА КАСТОМНИХ СПИСКІВ ---
@@ -481,6 +483,112 @@ const App = {
         this.toggleFab(true);
     },
 
+    // --- REST TIMER (ТАЙМЕР ВІДПОЧИНКУ) ---
+    initTimer() {
+        const t = document.createElement('div');
+        t.id = 'rest-timer';
+        // Стилізуємо як плаваючу пігулку
+        t.style.cssText = `
+            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+            background: rgba(26, 26, 26, 0.85); border: 1px solid var(--theme, #d4af37);
+            color: var(--theme, #d4af37); padding: 8px 20px; border-radius: 30px;
+            font-family: monospace; font-size: 1.4rem; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; z-index: 999;
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); user-select: none; touch-action: manipulation; min-width: 120px;
+        `;
+        
+        // Один клік - старт/стоп
+        t.onclick = () => this.toggleTimer();
+        // Подвійний клік - налаштування часу
+        t.ondblclick = (e) => { e.preventDefault(); this.setTimerDefault(); };
+
+        document.body.appendChild(t);
+        this.timerState.el = t;
+        
+        // Відновлюємо збережений час (якщо є)
+        const savedTime = localStorage.getItem('rest_timer_default');
+        if (savedTime) this.timerState.default = parseInt(savedTime);
+        
+        this.updateTimerUI();
+    },
+
+    toggleTimer() {
+        if (this.timerState.interval) {
+            this.stopTimer();
+        } else {
+            this.startTimer(this.timerState.default);
+        }
+    },
+
+    startTimer(seconds) {
+        this.stopTimer();
+        this.timerState.left = seconds;
+        
+        // Змінюємо дизайн на "активний" (золотий фон, чорний текст)
+        this.timerState.el.style.background = 'var(--theme, #d4af37)';
+        this.timerState.el.style.color = '#000';
+        this.timerState.el.style.boxShadow = '0 0 20px var(--theme, #d4af37)';
+        
+        this.updateTimerUI();
+        if (window.Haptics) window.Haptics.light();
+
+        this.timerState.interval = setInterval(() => {
+            this.timerState.left--;
+            this.updateTimerUI();
+
+            if (this.timerState.left <= 0) {
+                this.stopTimer();
+                this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
+                
+                // Вібрація (серія імпульсів для привернення уваги)
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+                if (window.Haptics) window.Haptics.heavy();
+                
+                // Повертаємо нормальний вигляд через 4 секунди
+                setTimeout(() => this.updateTimerUI(), 4000);
+            }
+        }, 1000);
+    },
+
+    stopTimer() {
+        clearInterval(this.timerState.interval);
+        this.timerState.interval = null;
+        
+        // Повертаємо дизайн у режим очікування
+        this.timerState.el.style.background = 'rgba(26, 26, 26, 0.85)';
+        this.timerState.el.style.color = 'var(--theme, #d4af37)';
+        this.timerState.el.style.boxShadow = '0 4px 15px rgba(0,0,0,0.6)';
+        
+        this.timerState.left = this.timerState.default;
+        this.updateTimerUI();
+    },
+
+    updateTimerUI() {
+        if (!this.timerState.el) return;
+        const timeToFormat = this.timerState.interval ? this.timerState.left : this.timerState.default;
+        
+        const m = Math.floor(timeToFormat / 60).toString().padStart(2, '0');
+        const s = (timeToFormat % 60).toString().padStart(2, '0');
+        
+        if (this.timerState.interval) {
+            this.timerState.el.innerHTML = `⏳ ${m}:${s}`;
+        } else {
+            this.timerState.el.innerHTML = `⏱ ${m}:${s}`;
+        }
+    },
+
+    setTimerDefault() {
+        this.stopTimer();
+        const val = prompt("Введіть час відпочинку (в секундах):\nНаприклад: 90 (1.5 хв) або 120 (2 хв)", this.timerState.default);
+        if (val && !isNaN(val)) {
+            const newTime = parseInt(val);
+            this.timerState.default = newTime;
+            localStorage.setItem('rest_timer_default', newTime); // Зберігаємо назавжди
+            this.updateTimerUI();
+        }
+    },
+    // --- КІНЕЦЬ БЛОКУ ТАЙМЕРА ---
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
         if(val && !this.data.exBank.includes(val)) {
