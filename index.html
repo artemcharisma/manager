@@ -31,9 +31,9 @@
 
         body { 
             background-color: var(--bg);
-            /* Багатошаровий глибокий фон з сіткою */
+            /* Багатошаровий насичений фон: радіальний градієнт + сітка для глибини */
             background-image: 
-                radial-gradient(circle at 50% -20%, #151515 0%, #030303 70%),
+                radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
                 linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
             background-size: 100% 100%, 25px 25px, 25px 25px;
@@ -54,41 +54,32 @@
         
         /* --- ПРЕМІАЛЬНИЙ HEADER БЕЗ РАМОК --- */
         header { 
-            display: flex; flex-direction: column; gap: 8px;
-            width: 100%; padding-bottom: 5px; margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; padding-bottom: 10px; margin-bottom: 35px;
             animation: slideDown 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .h-top { display: flex; justify-content: space-between; align-items: flex-end; }
-        
-        .sys-title {
-            display: flex; align-items: center; gap: 10px;
+        .sys-status-left {
+            display: flex; align-items: center; gap: 12px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.1rem; color: #fff; letter-spacing: 1px; font-weight: 800;
+            font-size: 0.85rem; color: #fff; letter-spacing: 2px; font-weight: 800;
+            text-shadow: 0 0 15px rgba(255,255,255,0.15);
         }
 
         .status-dot {
-            width: 8px; height: 8px; background-color: var(--green); border-radius: 50%;
-            box-shadow: 0 0 12px var(--green); animation: pulse 2.5s infinite;
+            width: 6px; height: 6px; background-color: var(--green); border-radius: 50%;
+            box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite;
         }
 
-        .sys-time { 
-            font-size: 2.2rem; font-weight: 800; color: #fff; 
-            letter-spacing: -1px; line-height: 0.8; 
-            text-shadow: 0 0 25px rgba(255,255,255,0.15); 
-        }
-        
-        .h-bot {
-            display: flex; justify-content: space-between; width: 100%;
-            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; 
-            color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase;
-        }
+        .sys-status-right { text-align: right; font-family: 'JetBrains Mono', monospace; }
+        .sys-time { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 1px; line-height: 1; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .sys-date { font-size: 0.65rem; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
 
-        /* --- SMART CARDS (ГРАДІЄНТИ ТА АНІМАЦІЇ) --- */
-        .nav-grid { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+        /* --- SMART CARDS --- */
+        .nav-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; }
         
         .smart-card {
-            background: linear-gradient(145deg, var(--card-bg) 0%, rgba(10,10,12,0.95) 100%);
+            background: linear-gradient(145deg, rgba(25, 25, 28, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border);
             border-radius: 20px;
@@ -114,6 +105,7 @@
         .smart-card:nth-child(2) { animation-delay: 0.2s; }
         .smart-card:nth-child(3) { animation-delay: 0.3s; }
 
+        /* Насичені градієнтні іконки */
         .icon-box { 
             width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center; 
@@ -123,20 +115,39 @@
             background: rgba(0,0,0,0.6);
         }
         
-        .card-pharm .icon-box { color: var(--gold); border-color: rgba(212,175,55,0.3); background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(0,0,0,0.6)); }
-        .card-train .icon-box { color: var(--blue); border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(0,0,0,0.6)); }
-        .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,0,0,0.6)); }
+        .card-pharm .icon-box { color: var(--gold); border-color: rgba(212,175,55,0.3); }
+        .card-train .icon-box { color: var(--blue); border-color: rgba(59,130,246,0.3); }
+        .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); }
 
+        /* HOVER ТА АКТИВНІ СТАНИ ДЛЯ КАРТОК */
         @media (hover: hover) {
-            .card-pharm:hover { border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15); }
-            .card-train:hover { border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15); }
-            .card-nutri:hover { border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15); }
+            .card-pharm:hover { 
+                background: linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(10,10,12,0.95) 100%);
+                border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15);
+            }
+            .card-train:hover { 
+                background: linear-gradient(145deg, rgba(59,130,246,0.15) 0%, rgba(10,10,12,0.95) 100%);
+                border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15);
+            }
+            .card-nutri:hover { 
+                background: linear-gradient(145deg, rgba(16,185,129,0.15) 0%, rgba(10,10,12,0.95) 100%);
+                border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15);
+            }
         }
         
-        .card-pharm:active { border-color: var(--gold); transform: scale(0.96); background: rgba(20,20,22,0.95); }
-        .card-train:active { border-color: var(--blue); transform: scale(0.96); background: rgba(20,20,22,0.95); }
-        .card-nutri:active { border-color: var(--green); transform: scale(0.96); background: rgba(20,20,22,0.95); }
-
+        /* Чітке та швидке протискання (Squish) для iOS */
+        .card-pharm:active { 
+            background: linear-gradient(145deg, rgba(212,175,55,0.2) 0%, rgba(20,20,22,0.95) 100%);
+            border-color: var(--gold); transform: scale(0.96); transition: transform 0.05s ease;
+        }
+        .card-train:active { 
+            background: linear-gradient(145deg, rgba(59,130,246,0.2) 0%, rgba(20,20,22,0.95) 100%);
+            border-color: var(--blue); transform: scale(0.96); transition: transform 0.05s ease;
+        }
+        .card-nutri:active { 
+            background: linear-gradient(145deg, rgba(16,185,129,0.2) 0%, rgba(20,20,22,0.95) 100%);
+            border-color: var(--green); transform: scale(0.96); transition: transform 0.05s ease;
+        }
         .smart-card:active .icon-box { transform: scale(0.9) rotate(-5deg); box-shadow: 0 0 20px currentColor; }
         
         .info { flex-grow: 1; }
@@ -146,14 +157,14 @@
             margin-top: 8px; font-family: 'JetBrains Mono', monospace; 
             font-size: 0.75rem; color: var(--text-dim); 
             letter-spacing: 0.5px; line-height: 1.5;
-            display: flex; flex-direction: column; gap: 4px;
+            display: flex; flex-direction: column; gap: 5px;
         }
         
         .data-row { display: flex; align-items: center; gap: 8px; }
         .data-hl { color: #fff; font-weight: 700; }
         .data-lbl { color: var(--text-dark); }
 
-        /* --- ТЕРМІНАЛ ПОКАЗНИКІВ (БЕЗ РАМОК) --- */
+        /* --- ЧИСТИЙ БЛОК VITALS БЕЗ РАМОК --- */
         .bottom-wrapper {
             margin-top: 40px; 
             width: 100%;
@@ -162,80 +173,72 @@
 
         .vitals-strip {
             display: flex; justify-content: space-between;
-            margin-bottom: 25px; padding: 10px 5px;
-            position: relative;
-        }
-
-        /* Тонка лінія знизу замість коробки */
-        .vitals-strip::after {
-            content: ''; position: absolute; bottom: -5px; left: 10%; width: 80%; height: 1px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 100%);
+            margin-bottom: 30px; padding: 0 10px;
         }
         
-        .v-item { display: flex; flex-direction: column; gap: 6px; }
+        .v-item { display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 2; }
         .v-item.right { text-align: right; align-items: flex-end; }
         
         .v-label { 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
             color: var(--text-dim); letter-spacing: 1.5px; font-weight: 700; 
             display: flex; align-items: center; gap: 6px;
         }
         
         .v-val { 
-            font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; 
-            color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(255,255,255,0.1);
+            font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; 
+            color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(255,255,255,0.15);
+            margin-top: 2px;
         }
-        .v-val span { font-size: 0.75rem; color: var(--text-dark); font-weight: 600; letter-spacing: 1px; margin-left: 2px;}
+        .v-val span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; letter-spacing: 1px; margin-left: 2px;}
 
         .sys-control-title {
-            text-align: center; color: #444; 
+            text-align: center; color: #555; 
             font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
             letter-spacing: 4px; margin-bottom: 15px; font-weight: 800;
         }
 
-        /* --- КНОПКИ БЕКАПУ ТА СКИДАННЯ (Яскраві кольори + Fix для iOS) --- */
+        /* --- КНОПКИ БЕКАПУ ТА СКИДАННЯ (КОЛЬОРОВІ) --- */
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
         .ctrl-btn {
-            background: linear-gradient(to bottom, rgba(20, 20, 22, 0.9), rgba(10, 10, 12, 0.95)); 
+            background: linear-gradient(to bottom, rgba(25, 25, 28, 0.9), rgba(15, 15, 17, 0.95)); 
+            border: 1px solid rgba(255,255,255,0.05); 
             padding: 16px; border-radius: 14px;
             font-size: 0.75rem; cursor: pointer; 
             font-family: 'JetBrains Mono', monospace; font-weight: 700;
-            transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
             display: flex; align-items: center; justify-content: center; gap: 8px;
             letter-spacing: 1px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            /* Блокуємо системний хайлайт на мобільних */
-            -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Повертаємо кольори за замовчуванням */
-        .btn-save { color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .btn-reset { color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        /* Базові кольори повернуті */
+        .btn-save { color: var(--green); border-color: rgba(16, 185, 129, 0.15); }
+        .btn-reset { color: var(--red); border-color: rgba(239, 68, 68, 0.15); }
 
+        /* Hover (тільки для ПК) */
         @media (hover: hover) {
             .btn-save:hover { 
-                background: rgba(16, 185, 129, 0.1);
+                border-color: var(--green); 
+                background: linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(15, 15, 17, 0.95));
                 box-shadow: 0 5px 20px rgba(16, 185, 129, 0.2);
             }
             .btn-reset:hover { 
-                background: rgba(239, 68, 68, 0.1);
+                border-color: var(--red); 
+                background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(15, 15, 17, 0.95));
                 box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2);
             }
         }
         
-        /* ACTIVE СТАН З ЖОРСТКИМ !important (Для ідеальної реакції на iOS) */
+        /* Пружний Active для мобільних (відпрацьовує миттєво і не залипає) */
         .btn-save:active { 
-            transform: scale(0.94) !important;
-            background: rgba(16, 185, 129, 0.2) !important;
-            border-color: var(--green) !important;
-            transition: 0.05s !important;
+            border-color: var(--green); background: rgba(16, 185, 129, 0.2); 
+            transform: scale(0.93); transition: transform 0.05s ease;
         }
         .btn-reset:active { 
-            transform: scale(0.94) !important;
-            background: rgba(239, 68, 68, 0.2) !important;
-            border-color: var(--red) !important;
-            transition: 0.05s !important;
+            border-color: var(--red); background: rgba(239, 68, 68, 0.2); 
+            transform: scale(0.93); transition: transform 0.05s ease;
         }
 
         .last-backup {
@@ -243,7 +246,7 @@
             font-size: 0.65rem; color: var(--text-dark); letter-spacing: 1px;
         }
 
-        @keyframes pulse { 0% { opacity: 1; box-shadow: 0 0 12px var(--green); } 50% { opacity: 0.4; box-shadow: 0 0 2px var(--green); } 100% { opacity: 1; box-shadow: 0 0 12px var(--green); } }
+        @keyframes pulse { 0% { opacity: 1; box-shadow: 0 0 10px var(--green); } 50% { opacity: 0.4; box-shadow: 0 0 2px var(--green); } 100% { opacity: 1; box-shadow: 0 0 10px var(--green); } }
         @keyframes slideDown { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -253,16 +256,13 @@
     <div class="hub-container">
         
         <header>
-            <div class="h-top">
-                <div class="sys-title">
-                    <div class="status-dot"></div>
-                    PROTOCOL<span style="color:var(--text-dim)">_MANAGER</span>
-                </div>
-                <div class="sys-time" id="clock-time">00:00</div>
+            <div class="sys-status-left">
+                <div class="status-dot"></div>
+                <span>PROTOCOL MANAGER</span>
             </div>
-            <div class="h-bot">
-                <div>SYS.ADMIN // ONLINE</div>
-                <div id="clock-date">-- --</div>
+            <div class="sys-status-right">
+                <div class="sys-time" id="clock-time">00:00</div>
+                <div class="sys-date" id="clock-date">-- --</div>
             </div>
         </header>
 
@@ -321,12 +321,12 @@
             <div class="sys-control-title">SYSTEM CONTROL</div>
 
             <div class="controls-grid">
-                <button onclick="CreateRestorePoint(); setTimeout(()=>this.blur(), 50)" class="ctrl-btn btn-save">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                     BACKUP
                 </button>
-                <button onclick="SystemReset(); setTimeout(()=>this.blur(), 50)" class="ctrl-btn btn-reset">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                <button onclick="SystemReset()" class="ctrl-btn btn-reset">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     WIPE ALL
                 </button>
             </div>
@@ -339,7 +339,7 @@
         function updateClock() {
             const now = new Date();
             document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
-            document.getElementById('clock-date').innerText = now.toLocaleDateString('uk-UA', {year: 'numeric', month: '2-digit', day: '2-digit'});
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('uk-UA', {weekday:'short', day:'2-digit', month:'2-digit'});
         }
         setInterval(updateClock, 1000); 
 
@@ -370,6 +370,7 @@
         }
 
         function populateSmartCards() {
+            // 1. ФАРМАКОЛОГІЯ ТА ПОКАЗНИКИ (ВАГА, ТИСК)
             try {
                 const ph = JSON.parse(localStorage.getItem('gold_protocol'));
                 if (ph) {
@@ -421,6 +422,7 @@
                 }
             } catch(e){}
 
+            // 2. ТРЕНУВАННЯ
             try {
                 const tr = JSON.parse(localStorage.getItem('training_protocol'));
                 if (tr && tr.weeks && tr.weeks.length > 0) {
@@ -434,6 +436,7 @@
                 }
             } catch(e){}
 
+            // 3. ХАРЧУВАННЯ
             try {
                 const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days) {
@@ -475,7 +478,6 @@
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
-            if(window.Haptics) window.Haptics.success();
         }
 
         function updateBackupLabel() {
@@ -504,7 +506,7 @@
 
         document.addEventListener('click', (e) => {
             if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn')) {
-                if(navigator.vibrate) navigator.vibrate(15);
+                if(navigator.vibrate) navigator.vibrate(10);
             }
         });
 
