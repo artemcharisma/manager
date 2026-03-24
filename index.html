@@ -31,8 +31,9 @@
 
         body { 
             background-color: var(--bg);
+            /* Багатошаровий глибокий фон з сіткою */
             background-image: 
-                radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
+                radial-gradient(circle at 50% -20%, #151515 0%, #030303 70%),
                 linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
             background-size: 100% 100%, 25px 25px, 25px 25px;
@@ -51,63 +52,51 @@
             margin: auto 0; 
         }
         
-        /* --- ПЕРЕРОБЛЕНА ШАПКА --- */
+        /* --- ПРЕМІАЛЬНИЙ HEADER БЕЗ РАМОК --- */
         header { 
-            display: flex; justify-content: space-between; align-items: flex-end;
-            width: 100%; padding-bottom: 18px; margin-bottom: 30px;
-            position: relative;
+            display: flex; flex-direction: column; gap: 8px;
+            width: 100%; padding-bottom: 5px; margin-bottom: 30px;
             animation: slideDown 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* Тонка неонова лінія знизу (замість грубої рамки) */
-        header::after {
-            content: ''; position: absolute; bottom: 0; left: 0;
-            width: 100%; height: 1px; 
-            background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+        .h-top { display: flex; justify-content: space-between; align-items: flex-end; }
+        
+        .sys-title {
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem; color: #fff; letter-spacing: 1px; font-weight: 800;
         }
 
-        .header-logo { display: flex; align-items: center; gap: 12px; }
-        
         .status-dot {
             width: 8px; height: 8px; background-color: var(--green); border-radius: 50%;
-            box-shadow: 0 0 12px var(--green); animation: pulse 2s infinite;
+            box-shadow: 0 0 12px var(--green); animation: pulse 2.5s infinite;
         }
 
-        .logo-text { 
-            font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.15rem; 
-            letter-spacing: 1.5px; color: #fff; text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+        .sys-time { 
+            font-size: 2.2rem; font-weight: 800; color: #fff; 
+            letter-spacing: -1px; line-height: 0.8; 
+            text-shadow: 0 0 25px rgba(255,255,255,0.15); 
         }
         
-        .logo-sub { 
-            color: var(--gold); font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; margin-left: 4px; 
-            text-shadow: 0 0 10px rgba(212,175,55,0.3);
+        .h-bot {
+            display: flex; justify-content: space-between; width: 100%;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; 
+            color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase;
         }
 
-        .header-time { text-align: right; }
-        
-        .time-main { 
-            font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; 
-            font-weight: 800; color: #fff; line-height: 1; letter-spacing: -1px; 
-            text-shadow: 0 0 20px rgba(255,255,255,0.2); 
-        }
-        
-        .time-sub { 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
-            color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; 
-            margin-top: 6px; 
-        }
-
-        /* --- SMART CARDS (Залишив як було) --- */
-        .nav-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+        /* --- SMART CARDS (ГРАДІЄНТИ ТА АНІМАЦІЇ) --- */
+        .nav-grid { display: flex; flex-direction: column; gap: 14px; width: 100%; }
         
         .smart-card {
-            background: linear-gradient(145deg, rgba(25, 25, 28, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
+            background: linear-gradient(145deg, var(--card-bg) 0%, rgba(10,10,12,0.95) 100%);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border); border-radius: 20px;
-            padding: 22px 20px; text-decoration: none; display: flex; align-items: center; gap: 20px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px 20px;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 20px;
             position: relative; overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
             animation: fadeInUp 0.6s ease backwards;
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
         }
@@ -129,23 +118,24 @@
             width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center; 
             font-size: 26px; border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.3s ease; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
             background: rgba(0,0,0,0.6);
         }
         
-        .card-pharm .icon-box { color: var(--gold); border-color: rgba(212,175,55,0.3); }
-        .card-train .icon-box { color: var(--blue); border-color: rgba(59,130,246,0.3); }
-        .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); }
+        .card-pharm .icon-box { color: var(--gold); border-color: rgba(212,175,55,0.3); background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(0,0,0,0.6)); }
+        .card-train .icon-box { color: var(--blue); border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(0,0,0,0.6)); }
+        .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,0,0,0.6)); }
 
         @media (hover: hover) {
-            .card-pharm:hover { background: linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15); }
-            .card-train:hover { background: linear-gradient(145deg, rgba(59,130,246,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15); }
-            .card-nutri:hover { background: linear-gradient(145deg, rgba(16,185,129,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15); }
+            .card-pharm:hover { border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15); }
+            .card-train:hover { border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15); }
+            .card-nutri:hover { border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15); }
         }
         
-        .card-pharm:active { background: linear-gradient(145deg, rgba(212,175,55,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--gold); transform: scale(0.96); }
-        .card-train:active { background: linear-gradient(145deg, rgba(59,130,246,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--blue); transform: scale(0.96); }
-        .card-nutri:active { background: linear-gradient(145deg, rgba(16,185,129,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--green); transform: scale(0.96); }
+        .card-pharm:active { border-color: var(--gold); transform: scale(0.96); background: rgba(20,20,22,0.95); }
+        .card-train:active { border-color: var(--blue); transform: scale(0.96); background: rgba(20,20,22,0.95); }
+        .card-nutri:active { border-color: var(--green); transform: scale(0.96); background: rgba(20,20,22,0.95); }
 
         .smart-card:active .icon-box { transform: scale(0.9) rotate(-5deg); box-shadow: 0 0 20px currentColor; }
         
@@ -153,100 +143,99 @@
         .info h3 { margin: 0; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         
         .info-data { 
-            margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; 
-            color: var(--text-dim); letter-spacing: 0.5px; line-height: 1.5;
-            display: flex; flex-direction: column; gap: 5px;
+            margin-top: 8px; font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.75rem; color: var(--text-dim); 
+            letter-spacing: 0.5px; line-height: 1.5;
+            display: flex; flex-direction: column; gap: 4px;
         }
         
         .data-row { display: flex; align-items: center; gap: 8px; }
         .data-hl { color: #fff; font-weight: 700; }
         .data-lbl { color: var(--text-dark); }
 
-        /* --- БЛОК VITALS ТА КНОПКИ --- */
+        /* --- ТЕРМІНАЛ ПОКАЗНИКІВ (БЕЗ РАМОК) --- */
         .bottom-wrapper {
-            margin-top: 40px; width: 100%;
+            margin-top: 40px; 
+            width: 100%;
             animation: fadeIn 1s ease 0.5s backwards;
         }
 
         .vitals-strip {
             display: flex; justify-content: space-between;
-            margin-bottom: 25px; padding: 18px 20px;
-            background: linear-gradient(to bottom, rgba(20, 20, 25, 0.8), rgba(10, 10, 12, 0.95));
-            border: 1px solid var(--border); border-radius: 18px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-            position: relative; overflow: hidden;
+            margin-bottom: 25px; padding: 10px 5px;
+            position: relative;
         }
 
-        .vitals-strip::before {
-            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 50%; height: 1px; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 100%);
+        /* Тонка лінія знизу замість коробки */
+        .vitals-strip::after {
+            content: ''; position: absolute; bottom: -5px; left: 10%; width: 80%; height: 1px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 100%);
         }
         
-        .v-item { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 2; }
+        .v-item { display: flex; flex-direction: column; gap: 6px; }
         .v-item.right { text-align: right; align-items: flex-end; }
         
-        .v-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim); letter-spacing: 1.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-        .v-val { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
-        .v-val span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; letter-spacing: 1px; margin-left: 2px;}
+        .v-label { 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; 
+            color: var(--text-dim); letter-spacing: 1.5px; font-weight: 700; 
+            display: flex; align-items: center; gap: 6px;
+        }
+        
+        .v-val { 
+            font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; 
+            color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+        .v-val span { font-size: 0.75rem; color: var(--text-dark); font-weight: 600; letter-spacing: 1px; margin-left: 2px;}
 
         .sys-control-title {
-            text-align: center; color: #555; font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.65rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: 800;
+            text-align: center; color: #444; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
+            letter-spacing: 4px; margin-bottom: 15px; font-weight: 800;
         }
 
-        /* --- ОНОВЛЕНІ КНОПКИ (Колір + Фікс iOS) --- */
+        /* --- КНОПКИ БЕКАПУ ТА СКИДАННЯ (Яскраві кольори + Fix для iOS) --- */
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
         .ctrl-btn {
+            background: linear-gradient(to bottom, rgba(20, 20, 22, 0.9), rgba(10, 10, 12, 0.95)); 
             padding: 16px; border-radius: 14px;
             font-size: 0.75rem; cursor: pointer; 
             font-family: 'JetBrains Mono', monospace; font-weight: 700;
-            /* Швидка анімація для миттєвої реакції на клік */
-            transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; 
+            transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease; 
             display: flex; align-items: center; justify-content: center; gap: 8px;
             letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            /* Блокуємо системний хайлайт на мобільних */
+            -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Повертаємо базові кольори */
-        .btn-save {
-            color: var(--green);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.08), rgba(15, 15, 17, 0.95));
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.05);
-        }
-        
-        .btn-reset {
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            background: linear-gradient(to bottom, rgba(239, 68, 68, 0.08), rgba(15, 15, 17, 0.95));
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.05);
-        }
+        /* Повертаємо кольори за замовчуванням */
+        .btn-save { color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-reset { color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
 
-        /* Hover ТІЛЬКИ для ПК (мишка). Це вбиває баг "залипання" на iOS */
-        @media (hover: hover) and (pointer: fine) {
+        @media (hover: hover) {
             .btn-save:hover { 
-                border-color: var(--green); 
-                background: linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(15, 15, 17, 0.95));
+                background: rgba(16, 185, 129, 0.1);
                 box-shadow: 0 5px 20px rgba(16, 185, 129, 0.2);
-                text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
             }
             .btn-reset:hover { 
-                border-color: var(--red); 
-                background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(15, 15, 17, 0.95));
+                background: rgba(239, 68, 68, 0.1);
                 box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2);
-                text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
             }
         }
         
-        /* ACTIVE СТАН - Відчутне "протискання" (працює і на ПК, і на смартфонах) */
+        /* ACTIVE СТАН З ЖОРСТКИМ !important (Для ідеальної реакції на iOS) */
         .btn-save:active { 
-            transform: scale(0.92) !important; 
-            background: rgba(16, 185, 129, 0.2) !important; 
+            transform: scale(0.94) !important;
+            background: rgba(16, 185, 129, 0.2) !important;
+            border-color: var(--green) !important;
+            transition: 0.05s !important;
         }
         .btn-reset:active { 
-            transform: scale(0.92) !important; 
-            background: rgba(239, 68, 68, 0.2) !important; 
+            transform: scale(0.94) !important;
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: var(--red) !important;
+            transition: 0.05s !important;
         }
 
         .last-backup {
@@ -260,17 +249,20 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body>
+<body ontouchstart="">
     <div class="hub-container">
         
         <header>
-            <div class="header-logo">
-                <div class="status-dot"></div>
-                <div class="logo-text">PROTOCOL<span class="logo-sub">_MANAGER</span></div>
+            <div class="h-top">
+                <div class="sys-title">
+                    <div class="status-dot"></div>
+                    PROTOCOL<span style="color:var(--text-dim)">_MANAGER</span>
+                </div>
+                <div class="sys-time" id="clock-time">00:00</div>
             </div>
-            <div class="header-time">
-                <div id="clock-time" class="time-main">00:00</div>
-                <div id="clock-date" class="time-sub">-- --</div>
+            <div class="h-bot">
+                <div>SYS.ADMIN // ONLINE</div>
+                <div id="clock-date">-- --</div>
             </div>
         </header>
 
@@ -329,11 +321,11 @@
             <div class="sys-control-title">SYSTEM CONTROL</div>
 
             <div class="controls-grid">
-                <button ontouchstart="" onclick="CreateRestorePoint()" class="ctrl-btn btn-save">
+                <button onclick="CreateRestorePoint(); setTimeout(()=>this.blur(), 50)" class="ctrl-btn btn-save">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                     BACKUP
                 </button>
-                <button ontouchstart="" onclick="SystemReset()" class="ctrl-btn btn-reset">
+                <button onclick="SystemReset(); setTimeout(()=>this.blur(), 50)" class="ctrl-btn btn-reset">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     WIPE ALL
                 </button>
@@ -344,14 +336,10 @@
     </div>
 
 <script>
-        // Дата у більш стильному форматі: 24 BЕР 2026 // ВІВТОРОК
         function updateClock() {
             const now = new Date();
             document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
-            
-            const opts = { weekday: 'short', day: '2-digit', month: 'short' };
-            let dateStr = now.toLocaleDateString('uk-UA', opts).replace(',', '').toUpperCase();
-            document.getElementById('clock-date').innerText = dateStr;
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('uk-UA', {year: 'numeric', month: '2-digit', day: '2-digit'});
         }
         setInterval(updateClock, 1000); 
 
@@ -382,7 +370,6 @@
         }
 
         function populateSmartCards() {
-            // 1. ФАРМАКОЛОГІЯ ТА ПОКАЗНИКИ
             try {
                 const ph = JSON.parse(localStorage.getItem('gold_protocol'));
                 if (ph) {
@@ -434,7 +421,6 @@
                 }
             } catch(e){}
 
-            // 2. ТРЕНУВАННЯ
             try {
                 const tr = JSON.parse(localStorage.getItem('training_protocol'));
                 if (tr && tr.weeks && tr.weeks.length > 0) {
@@ -448,7 +434,6 @@
                 }
             } catch(e){}
 
-            // 3. ХАРЧУВАННЯ
             try {
                 const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days) {
@@ -490,6 +475,7 @@
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
+            if(window.Haptics) window.Haptics.success();
         }
 
         function updateBackupLabel() {
@@ -516,10 +502,9 @@
 
         function FullWipe() { localStorage.clear(); location.reload(); }
 
-        // Вібрація для карток (кнопки вже мають ontouchstart)
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.smart-card')) {
-                if(navigator.vibrate) navigator.vibrate(10);
+            if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn')) {
+                if(navigator.vibrate) navigator.vibrate(15);
             }
         });
 
