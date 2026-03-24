@@ -326,8 +326,8 @@ const App = {
                             let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
 
                             // Формуємо плейсхолдери (або старі дані, або просто кг/раз)
-                            let placeholderW = ghostW ? `placeholder="${ghostW}"` : `placeholder="кг"`;
-                            let placeholderR = ghostR ? `placeholder="${ghostR}"` : `placeholder="раз"`;
+                            let placeholderW = ghostW ? `placeholder="${ghostW}"` : ``;
+                            let placeholderR = ghostR ? `placeholder="${ghostR}"` : ``;
 
                             return `<div class="set-row">
                                 <div class="set-num">${sIdx+1}</div>
