@@ -31,7 +31,6 @@
 
         body { 
             background-color: var(--bg);
-            /* Багатошаровий насичений фон: радіальний градієнт + сітка для глибини */
             background-image: 
                 radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
                 linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
@@ -44,6 +43,8 @@
             min-height: 100vh; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased; /* Робить шрифти ідеально гладкими на iOS */
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .hub-container { 
@@ -52,7 +53,7 @@
             margin: auto 0; 
         }
         
-        /* --- ПРЕМІАЛЬНИЙ HEADER БЕЗ РАМОК --- */
+        /* --- ПРЕМІАЛЬНИЙ HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; padding-bottom: 10px; margin-bottom: 35px;
@@ -61,14 +62,36 @@
 
         .sys-status-left {
             display: flex; align-items: center; gap: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem; color: #fff; letter-spacing: 2px; font-weight: 800;
-            text-shadow: 0 0 15px rgba(255,255,255,0.15);
+        }
+
+        /* Нова технологічна крапка з радаром */
+        .status-indicator {
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            width: 14px; height: 14px;
         }
 
         .status-dot {
             width: 6px; height: 6px; background-color: var(--green); border-radius: 50%;
-            box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite;
+            box-shadow: 0 0 8px var(--green);
+            position: relative; z-index: 2;
+        }
+
+        .status-ring {
+            position: absolute; width: 100%; height: 100%;
+            border: 1px solid var(--green); border-radius: 50%;
+            animation: radarPulse 2.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Двотональна типографіка (Bold + Light) */
+        .brand-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem; color: #fff; letter-spacing: 2px; font-weight: 800;
+            text-transform: uppercase; display: flex; align-items: center;
+        }
+        
+        .brand-title span {
+            font-weight: 400; color: var(--text-dim); margin-left: 6px;
         }
 
         .sys-status-right { text-align: right; font-family: 'JetBrains Mono', monospace; }
@@ -105,7 +128,6 @@
         .smart-card:nth-child(2) { animation-delay: 0.2s; }
         .smart-card:nth-child(3) { animation-delay: 0.3s; }
 
-        /* Насичені градієнтні іконки */
         .icon-box { 
             width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center; 
@@ -119,7 +141,6 @@
         .card-train .icon-box { color: var(--blue); border-color: rgba(59,130,246,0.3); }
         .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); }
 
-        /* HOVER ТА АКТИВНІ СТАНИ ДЛЯ КАРТОК */
         @media (hover: hover) {
             .card-pharm:hover { 
                 background: linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(10,10,12,0.95) 100%);
@@ -135,7 +156,6 @@
             }
         }
         
-        /* Чітке та швидке протискання (Squish) для iOS */
         .card-pharm:active { 
             background: linear-gradient(145deg, rgba(212,175,55,0.2) 0%, rgba(20,20,22,0.95) 100%);
             border-color: var(--gold); transform: scale(0.96); transition: transform 0.05s ease;
@@ -213,11 +233,9 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
-        /* Базові кольори повернуті */
         .btn-save { color: var(--green); border-color: rgba(16, 185, 129, 0.15); }
         .btn-reset { color: var(--red); border-color: rgba(239, 68, 68, 0.15); }
 
-        /* Hover (тільки для ПК) */
         @media (hover: hover) {
             .btn-save:hover { 
                 border-color: var(--green); 
@@ -231,7 +249,7 @@
             }
         }
         
-        /* Пружний Active для мобільних (відпрацьовує миттєво і не залипає) */
+        /* Миттєвий ефект на iOS без залипання */
         .btn-save:active { 
             border-color: var(--green); background: rgba(16, 185, 129, 0.2); 
             transform: scale(0.93); transition: transform 0.05s ease;
@@ -246,7 +264,10 @@
             font-size: 0.65rem; color: var(--text-dark); letter-spacing: 1px;
         }
 
-        @keyframes pulse { 0% { opacity: 1; box-shadow: 0 0 10px var(--green); } 50% { opacity: 0.4; box-shadow: 0 0 2px var(--green); } 100% { opacity: 1; box-shadow: 0 0 10px var(--green); } }
+        @keyframes radarPulse { 
+            0% { transform: scale(0.5); opacity: 1; } 
+            100% { transform: scale(2.5); opacity: 0; } 
+        }
         @keyframes slideDown { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -257,8 +278,11 @@
         
         <header>
             <div class="sys-status-left">
-                <div class="status-dot"></div>
-                <span>PROTOCOL MANAGER</span>
+                <div class="status-indicator">
+                    <div class="status-ring"></div>
+                    <div class="status-dot"></div>
+                </div>
+                <div class="brand-title">PROTOCOL<span>MANAGER</span></div>
             </div>
             <div class="sys-status-right">
                 <div class="sys-time" id="clock-time">00:00</div>
