@@ -1,25 +1,45 @@
-// assets/common.js
-// Автоматичне додавання глобального меню
+// assets/js/common.js
+
 document.addEventListener('DOMContentLoaded', () => {
-    const menuHTML = `
+    // Вбудовуємо Меню та Систему Модальних вікон на кожну сторінку
+    const globalHTML = `
     <div id="sys-fab" onclick="SysSwitch.toggle()">✦</div>
     <div id="sys-overlay" onclick="SysSwitch.close()">
         <div class="sys-panel" onclick="event.stopPropagation()">
             <div class="sys-header">
-                <span>MANAGER OS</span>
+                <span>PROTOCOL OS</span>
                 <div class="sys-close" onclick="SysSwitch.close()">✕</div>
             </div>
             <div class="sys-grid">
                 <a href="index.html" class="sys-card"><div class="sys-icon" style="color:#fff">🏠</div><span>HUB</span></a>
-                <a href="pharm.html" class="sys-card"><div class="sys-icon" style="color:#d4af37">🏆</div><span>PHARM</span></a>
-                <a href="training.html" class="sys-card"><div class="sys-icon" style="color:#3b82f6">⚖️</div><span>TRAIN</span></a>
-                <a href="nutrition.html" class="sys-card"><div class="sys-icon" style="color:#10b981">🥑</div><span>FOOD</span></a>
+                <a href="pharm.html" class="sys-card"><div class="sys-icon" style="color:var(--gold)">🏆</div><span>PHARM</span></a>
+                <a href="training.html" class="sys-card"><div class="sys-icon" style="color:var(--blue)">⚖️</div><span>TRAIN</span></a>
+                <a href="nutrition.html" class="sys-card"><div class="sys-icon" style="color:var(--green)">🥑</div><span>FOOD</span></a>
+            </div>
+        </div>
+    </div>
+
+    <div id="protocol-modal-overlay">
+        <div id="protocol-modal-box">
+            <div id="protocol-modal-header">СИСТЕМНЕ ПОВІДОМЛЕННЯ</div>
+            <div id="protocol-modal-body">
+                <div id="protocol-modal-text">Текст повідомлення</div>
+                <div id="protocol-modal-input-wrap">
+                    <input type="text" id="protocol-modal-input" placeholder="Введіть дані...">
+                </div>
+            </div>
+            <div id="protocol-modal-footer">
+                <button id="modal-btn-cancel" class="modal-ctrl-btn" onclick="Modal.handleCancel()">СКАСУВАТИ</button>
+                <button id="modal-btn-ok" class="modal-ctrl-btn btn-save" onclick="Modal.handleOK()">ОК</button>
             </div>
         </div>
     </div>`;
-    document.body.insertAdjacentHTML('beforeend', menuHTML);
+    
+    document.body.insertAdjacentHTML('beforeend', globalHTML);
+    Modal.init(); // Ініціалізуємо модалку
 });
 
+// КЕРУВАННЯ МЕНЮ
 const SysSwitch = {
     get el() { return document.getElementById('sys-overlay'); },
     toggle() { 
@@ -28,8 +48,7 @@ const SysSwitch = {
     },
     open() {
         this.el.style.display = 'flex';
-        // Force reflow
-        this.el.offsetHeight; 
+        this.el.offsetHeight; // Force reflow
         this.el.classList.add('open');
     },
     close() {
@@ -37,35 +56,110 @@ const SysSwitch = {
         setTimeout(() => this.el.style.display = 'none', 300);
     }
 };
+
+// КЕРУВАННЯ ВІБРАЦІЄЮ
 const Haptics = {
     light: () => { if(navigator.vibrate) navigator.vibrate(10); },
     medium: () => { if(navigator.vibrate) navigator.vibrate(25); },
     heavy: () => { if(navigator.vibrate) navigator.vibrate(50); },
-    success: () => { if(navigator.vibrate) navigator.vibrate([10, 30, 10]); }, // дрр-дрр
-    error: () => { if(navigator.vibrate) navigator.vibrate([50, 50, 50]); }   // ДРР-ДРР-ДРР
+    success: () => { if(navigator.vibrate) navigator.vibrate([10, 30, 10]); },
+    error: () => { if(navigator.vibrate) navigator.vibrate([50, 50, 50]); }
 };
 
-// Автоматично додаємо вібрацію на всі кнопки
-document.addEventListener('DOMContentLoaded', () => {
-    document.body.addEventListener('click', (e) => {
-        // Якщо клікнули по кнопці, іконці або табу
-        if (e.target.closest('button') || 
-            e.target.closest('.nav-tab') || 
-            e.target.closest('.icon-btn') ||
-            e.target.closest('.day-tab') ||
-            e.target.closest('.phase-btn')) {
-            Haptics.light();
-        }
-    });
+// Вібрація на всі системні кліки
+document.addEventListener('click', (e) => {
+    if (e.target.closest('button') || 
+        e.target.closest('.nav-tab') || 
+        e.target.closest('.icon-btn') ||
+        e.target.closest('.day-tab') ||
+        e.target.closest('.phase-btn') ||
+        e.target.closest('.smart-card') ||
+        e.target.closest('.modal-ctrl-btn') ||
+        e.target.closest('.ctrl-btn')) {
+        Haptics.light();
+    }
 });
 
-// Реєстрація Service Worker для PWA
+// КЕРУВАННЯ МОДАЛЬНИМИ ВІКНАМИ (Global)
+let modalResolve = null; 
+
+const Modal = {
+    overlay: null, box: null, header: null, text: null,
+    inputWrap: null, input: null, btnCancel: null, btnOk: null, footer: null,
+
+    init() {
+        this.overlay = document.getElementById('protocol-modal-overlay');
+        this.box = document.getElementById('protocol-modal-box');
+        this.header = document.getElementById('protocol-modal-header');
+        this.text = document.getElementById('protocol-modal-text');
+        this.inputWrap = document.getElementById('protocol-modal-input-wrap');
+        this.input = document.getElementById('protocol-modal-input');
+        this.btnCancel = document.getElementById('modal-btn-cancel');
+        this.btnOk = document.getElementById('modal-btn-ok');
+        this.footer = document.getElementById('protocol-modal-footer');
+    },
+
+    show({ title, text, type = 'alert', theme = 'gold', placeholder = '' }) {
+        if(!this.overlay) this.init(); 
+        
+        this.header.innerText = title;
+        this.text.innerHTML = text;
+        this.input.value = ''; 
+        this.box.className = `theme-${theme}`;
+
+        if (type === 'alert') {
+            this.inputWrap.style.display = 'none';
+            this.btnCancel.style.display = 'none';
+            this.footer.className = '';
+            this.btnOk.className = `modal-ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
+            this.btnOk.innerText = 'ОК';
+        } else if (type === 'confirm') {
+            this.inputWrap.style.display = 'none';
+            this.btnCancel.style.display = 'flex';
+            this.footer.className = 'dual-btn';
+            this.btnOk.className = `modal-ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
+            this.btnOk.innerText = theme === 'red' ? 'ПІДТВЕРДИТИ' : 'ОК';
+        } else if (type === 'prompt') {
+            this.inputWrap.style.display = 'block';
+            this.input.placeholder = placeholder;
+            this.btnCancel.style.display = 'flex';
+            this.footer.className = 'dual-btn';
+            this.btnOk.className = 'modal-ctrl-btn btn-save';
+            this.btnOk.innerText = 'ОК';
+            setTimeout(() => this.input.focus(), 300);
+        }
+
+        this.overlay.className = 'active';
+        Haptics.medium();
+        return new Promise((resolve) => { modalResolve = resolve; });
+    },
+
+    handleOK() {
+        const type = this.inputWrap.style.display === 'block' ? 'prompt' : (this.btnCancel.style.display === 'flex' ? 'confirm' : 'alert');
+        this.close();
+        if (type === 'prompt') modalResolve(this.input.value);
+        else modalResolve(true);
+    },
+
+    handleCancel() {
+        this.close();
+        modalResolve(null); 
+    },
+
+    close() {
+        this.overlay.className = '';
+        setTimeout(() => modalResolve = null, 300);
+    },
+
+    async alert(text, title = "УВАГА", theme = "gold") { return this.show({ text, title, theme, type: 'alert' }); },
+    async confirm(text, title = "ПІДТВЕРДЖЕННЯ", theme = "gold") { return this.show({ text, title, theme, type: 'confirm' }); },
+    async prompt(text, title = "ВВЕДЕННЯ", placeholder = "") { return this.show({ text, title, placeholder, type: 'prompt', theme: 'gold' }); }
+};
+
+// PWA Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW зареєстровано!', reg))
-            .catch(err => console.error('Помилка реєстрації SW', err));
+            .catch(err => console.error('Помилка SW:', err));
     });
 }
-
-
