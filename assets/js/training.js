@@ -231,6 +231,38 @@ const App = {
         }
     },
 
+    getGhostData(exerciseName, currentWNum, currentDIdx) {
+        if (!exerciseName || !this.data.weeks) return null;
+        
+        // Знаходимо реальний індекс поточного тижня в масиві
+        const currentWeekIndex = this.data.weeks.findIndex(w => w.num === currentWNum && w.prog === this.data.currentProgram);
+        if (currentWeekIndex === -1) return null;
+
+        // Йдемо назад від поточного тижня до найпершого
+        for (let wIdx = currentWeekIndex; wIdx >= 0; wIdx--) {
+            const week = this.data.weeks[wIdx];
+            
+            // Якщо це поточний тиждень, шукаємо тільки до вчорашнього дня (currentDIdx - 1)
+            // Якщо це минулий тиждень, перевіряємо всі дні з кінця (6, 5, 4...)
+            let startDayIdx = (wIdx === currentWeekIndex) ? currentDIdx - 1 : week.days.length - 1;
+            
+            for (let dIdx = startDayIdx; dIdx >= 0; dIdx--) {
+                const day = week.days[dIdx];
+                if (day && day.exercises) {
+                    // Шукаємо вправу з такою ж назвою
+                    const pastEx = day.exercises.find(
+                        e => e.n && e.n.trim().toLowerCase() === exerciseName.trim().toLowerCase()
+                    );
+                    
+                    if (pastEx && pastEx.sets && pastEx.sets.length > 0) {
+                        return pastEx.sets; // Повертаємо підходи
+                    }
+                }
+            }
+        }
+        return null;
+    },
+    
     render() {
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
@@ -280,11 +312,34 @@ const App = {
                             </div>`;
                         }
 
+                        // --- GHOST DATA (ПІДКАЗКИ) ---
+                        // Отримуємо історію для цієї вправи, передаючи поточний тиждень та день
+                        const ghostSets = App.getGhostData(ex.n, week.num, dIdx);
+
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
                                 return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
                             }
-                            return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input w-val" type="number" inputmode="decimal" value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)"><span class="set-unit">кг</span></div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">x</span></div></div>`;
+
+                            // Шукаємо дані минулого разу для цього конкретного підходу
+                            let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
+                            let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
+
+                            // Формуємо плейсхолдери (або старі дані, або просто кг/раз)
+                            let placeholderW = ghostW ? `placeholder="${ghostW}"` : `placeholder="кг"`;
+                            let placeholderR = ghostR ? `placeholder="${ghostR}"` : `placeholder="раз"`;
+
+                            return `<div class="set-row">
+                                <div class="set-num">${sIdx+1}</div>
+                                <div class="set-part">
+                                    <input class="set-input w-val" type="number" inputmode="decimal" ${placeholderW} value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
+                                    <span class="set-unit">кг</span>
+                                </div>
+                                <div class="set-part">
+                                    <input class="set-input" type="number" inputmode="decimal" ${placeholderR} value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
+                                    <span class="set-unit">x</span>
+                                </div>
+                            </div>`;
                         }).join('');
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
