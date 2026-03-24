@@ -1,19 +1,32 @@
-/* assets/style.css */
+/* =========================================
+   PROTOCOL OS - GLOBAL STYLES
+   ========================================= */
 
-/* 1. ШРИФТИ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
 
-/* 2. БАЗОВІ НАЛАШТУВАННЯ */
-* {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    box-sizing: border-box;
-    outline: none;
+:root { 
+    --bg: #030303; 
+    --card-bg: rgba(18, 18, 20, 0.8); 
+    --border: rgba(255, 255, 255, 0.08); 
+    --gold: #d4af37; 
+    --blue: #3b82f6; 
+    --green: #10b981; 
+    --red: #ef4444;
+    --text-main: #ffffff; 
+    --text-dim: #888888; 
+    --text-dark: #555555;
+    --theme: var(--gold); /* Запасний колір, якщо не вказано */
 }
 
-/* Дозволяємо вводити текст */
+* { 
+    box-sizing: border-box; 
+    -webkit-user-select: none; 
+    -moz-user-select: none; 
+    user-select: none; 
+    -webkit-tap-highlight-color: transparent; 
+    outline: none; 
+}
+
 input, textarea, [contenteditable] {
     -webkit-user-select: text;
     -moz-user-select: text;
@@ -21,55 +34,154 @@ input, textarea, [contenteditable] {
     cursor: text;
 }
 
-/* Скролбар (темний стиль) */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+/* ГЛОБАЛЬНИЙ ФОН (Кіберпанк-сітка) */
+body { 
+    background-color: var(--bg);
+    background-image: 
+        radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 100% 100%, 25px 25px, 25px 25px;
+    background-position: center top;
+    background-attachment: fixed;
+    color: var(--text-main); 
+    font-family: 'Inter', -apple-system, sans-serif;
+    margin: 0; padding: 0; 
+    min-height: 100vh; 
+    -webkit-font-smoothing: antialiased; 
+    -moz-osx-font-smoothing: grayscale;
+}
 
-/* 3. СТИЛІ МЕНЮ (Global Menu) */
+/* Скролбар */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--theme); }
+
+
+/* =========================================
+   GLOBAL SYSTEM MENU (FAB)
+   ========================================= */
 #sys-fab {
     position: fixed; bottom: 90px; right: 20px;
-    width: 50px; height: 50px; background: #111;
-    border: 1px solid #333; border-radius: 50%;
+    width: 50px; height: 50px; background: rgba(15, 15, 15, 0.8);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;
     color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 32px; cursor: pointer; z-index: 9999;
-    line-height: 1;
-    padding-bottom: 4px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    font-size: 30px; cursor: pointer; z-index: 9000;
+    line-height: 1; padding-bottom: 4px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.8);
     transition: 0.3s; backdrop-filter: blur(5px);
-    touch-action: manipulation;
 }
-#sys-fab:hover { transform: scale(1.1); border-color: #fff; }
+#sys-fab:active { transform: scale(0.9); background: #222; }
 
 #sys-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-    z-index: 10000; display: none; align-items: flex-end; justify-content: center;
+    z-index: 9999; display: none; align-items: flex-end; justify-content: center;
     opacity: 0; transition: opacity 0.3s;
 }
 #sys-overlay.open { display: flex; opacity: 1; }
 
 .sys-panel {
-    width: 100%; max-width: 500px; background: #0a0a0a;
-    border-top: 1px solid #333; border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 500px; background: #0a0a0c;
+    border-top: 1px solid #333; border-radius: 24px 24px 0 0;
     padding: 25px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    padding-bottom: 40px;
+    padding-bottom: 50px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
 }
 #sys-overlay.open .sys-panel { transform: translateY(0); }
 
-.sys-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; color: #666; font-family: sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; }
+.sys-header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    margin-bottom: 25px; color: var(--text-dim); 
+    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; 
+}
 .sys-close { font-size: 1.2rem; cursor: pointer; color: #fff; padding: 5px; }
 
 .sys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .sys-card {
-    background: #161616; border: 1px solid #2a2a2a; border-radius: 12px;
+    background: linear-gradient(145deg, #1a1a1c 0%, #101012 100%); 
+    border: 1px solid var(--border); border-radius: 16px;
     padding: 15px 5px; text-decoration: none; display: flex; flex-direction: column;
     align-items: center; gap: 8px; transition: 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
-@media (hover: hover) { .sys-card:hover { background: #222; border-color: #555; } }
-.sys-card:active { background: #222; border-color: #555; transform: scale(0.96); }
-.sys-icon { font-size: 1.5rem; }
+.sys-card:active { background: #222; border-color: #555; transform: scale(0.92); }
+.sys-icon { font-size: 1.8rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+.sys-card span { font-size: 0.65rem; color: #aaa; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.5px;}
 
-.sys-card span { font-size: 0.6rem; color: #aaa; font-family: monospace; font-weight: 700; }
 
+/* =========================================
+   PROTOCOL MODAL OS (Глобальні вікна)
+   ========================================= */
+#protocol-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+    z-index: 10000; display: none; 
+    opacity: 0; transition: opacity 0.2s ease;
+    align-items: center; justify-content: center;
+}
+#protocol-modal-overlay.active { display: flex; opacity: 1; }
+
+#protocol-modal-box {
+    background: linear-gradient(145deg, #101012 0%, #050505 100%);
+    border: 1px solid var(--border); border-radius: 20px;
+    width: 90%; max-width: 400px; padding: 25px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+    transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    text-align: center;
+}
+#protocol-modal-overlay.active #protocol-modal-box { transform: scale(1); }
+
+#protocol-modal-box.theme-green { border-color: var(--green); box-shadow: 0 0 30px rgba(16,185,129,0.15); }
+#protocol-modal-box.theme-gold { border-color: var(--gold); box-shadow: 0 0 30px rgba(212,175,55,0.15); }
+#protocol-modal-box.theme-red { border-color: var(--red); box-shadow: 0 0 40px rgba(239,68,68,0.2); }
+
+#protocol-modal-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; color: var(--text-dim); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 18px; font-weight: 700;
+}
+
+#protocol-modal-body {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem; color: #e0e0e0; line-height: 1.6; margin-bottom: 25px;
+    letter-spacing: 0.2px;
+}
+
+#protocol-modal-input-wrap { display: none; margin-top: 15px; }
+#protocol-modal-input {
+    width: 100%; background: #000; border: 1px solid #333; color: #fff;
+    font-family: 'JetBrains Mono', monospace; font-size: 1rem;
+    padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center;
+    outline: none; transition: 0.2s;
+}
+#protocol-modal-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+
+#protocol-modal-footer { display: grid; gap: 12px; }
+#protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
+
+/* Кнопки всередині модалки */
+.modal-ctrl-btn {
+    background: linear-gradient(to bottom, rgba(25, 25, 28, 0.9), rgba(15, 15, 17, 0.95)); 
+    border: 1px solid rgba(255,255,255,0.05); 
+    padding: 16px; border-radius: 14px;
+    font-size: 0.75rem; cursor: pointer; 
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    transition: all 0.15s ease; 
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    letter-spacing: 1px; color: var(--text-main);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-ctrl-btn.btn-save { color: var(--green); border-color: rgba(16, 185, 129, 0.15); }
+.modal-ctrl-btn.btn-save:active { border-color: var(--green); background: rgba(16, 185, 129, 0.2); transform: scale(0.93); }
+
+.modal-ctrl-btn.btn-reset { color: var(--red); border-color: rgba(239, 68, 68, 0.15); }
+.modal-ctrl-btn.btn-reset:active { border-color: var(--red); background: rgba(239, 68, 68, 0.2); transform: scale(0.93); }
+
+#modal-btn-cancel {
+    background: linear-gradient(to bottom, rgba(40, 40, 45, 0.8), rgba(25, 25, 30, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1); color: #d1d1d1;
+}
+#modal-btn-cancel:active { background: rgba(55, 55, 60, 0.9); border-color: rgba(255, 255, 255, 0.4); color: #fff; transform: scale(0.93); }
