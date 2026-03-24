@@ -63,13 +63,14 @@ const App = {
             void brandIcon.offsetWidth; 
             brandIcon.classList.add('hint-active');
         };
-        brandBlock.ondblclick = () => {
-            if(confirm("⚠ HARD RESET?")) {
+        brandBlock.ondblclick = async () => {
+            if(await Modal.confirm("⚠ HARD RESET?<br>Видалити всі дані харчування?", "КРИТИЧНО", "red")) {
                 localStorage.removeItem(DB_KEY);
                 location.reload();
             }
         };
     },
+
 
     toggleFab(show) {
         const fab = document.getElementById('sys-fab');
@@ -177,9 +178,12 @@ const App = {
         }
     },
 
-    deleteDay() {
-        if(this.data.days.length <= 1) return;
-        if(!confirm("Видалити цей день?")) return;
+    async deleteDay() {
+        if(this.data.days.length <= 1) {
+            await Modal.alert("Останній день видалити неможливо.", "ПОМИЛКА", "red");
+            return;
+        }
+        if(!(await Modal.confirm("Видалити цей день назавжди?", "ВИДАЛЕННЯ ДНЯ", "red"))) return;
         this.pushHistory();
         this.data.days = this.data.days.filter(d => d.id !== this.state.currentDayId);
         this.state.currentDayId = this.data.days[0].id;
@@ -489,34 +493,29 @@ const App = {
         }
     },
 
-    pasteMeal() {
+    async pasteMeal() {
         if (!this.state.mealBuffer) return;
         
         const day = this.getCurrentDay();
         const copiedMeal = this.state.mealBuffer;
         
-        // Шукаємо, чи є в цьому дні прийом їжі з точно такою ж назвою
         const existingMealIndex = day.meals.findIndex(
             m => m.name.trim().toLowerCase() === copiedMeal.name.trim().toLowerCase()
         );
         
         if (existingMealIndex !== -1) {
-            // Якщо такий прийом вже існує (наприклад, пустий "Обід" між Сніданком і Вечерею)
             const existingMeal = day.meals[existingMealIndex];
             
-            // Якщо він не пустий, запитуємо підтвердження, щоб не затерти дані випадково
             if (existingMeal.foods && existingMeal.foods.length > 0) {
-                if (!confirm(`⚠️ Прийом "${existingMeal.name}" вже містить продукти. Перезаписати його скопійованим?`)) {
-                    return; // Відміна
+                if (!(await Modal.confirm(`⚠️ Прийом "${existingMeal.name}" вже містить продукти. Перезаписати його скопійованим?`, "УВАГА", "gold"))) {
+                    return; 
                 }
             }
             
             this.pushHistory();
-            // Просто оновлюємо продукти в існуючому блоці (робимо глибоку копію)
             existingMeal.foods = JSON.parse(JSON.stringify(copiedMeal.foods));
             
         } else {
-            // Якщо такого прийому не було (наприклад, ти копіюєш "Перекус 2"), додаємо як новий
             this.pushHistory();
             const newMeal = JSON.parse(JSON.stringify(copiedMeal));
             newMeal.id = Date.now() + Math.floor(Math.random() * 1000);
@@ -525,10 +524,9 @@ const App = {
 
         this.save();
         this.render();
-        
-        // Легка вібрація для фідбеку, якщо є підтримка на мобільному
         if (window.Haptics) window.Haptics.success();
     },
+
     
     addMealBlock() {
         this.pushHistory();
@@ -537,13 +535,14 @@ const App = {
         this.save(); this.render();
     },
     
-    deleteMealBlock(id) {
-        if(!confirm("Видалити цей блок?")) return;
+    async deleteMealBlock(id) {
+        if(!(await Modal.confirm("Видалити цей прийом їжі?", "ВИДАЛЕННЯ", "red"))) return;
         this.pushHistory();
         const day = this.getCurrentDay();
         day.meals = day.meals.filter(m=>m.id!==id);
         this.save(); this.render();
     },
+
     
     renameMeal(id, val) {
         this.getCurrentDay().meals.find(m=>m.id===id).name = val;
@@ -617,8 +616,8 @@ openBank() {
         this.render();
     },
     
-    delFromBank() {
-        if(confirm('Видалити з бази назавжди?')) {
+    async delFromBank() {
+        if(await Modal.confirm(`Видалити "${this.state.editName}" з бази назавжди?`, "ВИДАЛЕННЯ", "red")) {
             delete this.data.bank[this.state.editName];
             this.closeModal();
             this.save(); 
@@ -626,6 +625,7 @@ openBank() {
             this.render();
         }
     },
+
 
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
