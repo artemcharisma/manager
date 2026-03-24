@@ -491,17 +491,43 @@ const App = {
 
     pasteMeal() {
         if (!this.state.mealBuffer) return;
-        this.pushHistory();
+        
         const day = this.getCurrentDay();
+        const copiedMeal = this.state.mealBuffer;
         
-        // Створюємо новий прийом їжі на основі буфера
-        const newMeal = JSON.parse(JSON.stringify(this.state.mealBuffer));
-        // Генеруємо унікальний ID (додаємо рандом, щоб уникнути дублів при швидкому кліку)
-        newMeal.id = Date.now() + Math.floor(Math.random() * 1000); 
+        // Шукаємо, чи є в цьому дні прийом їжі з точно такою ж назвою
+        const existingMealIndex = day.meals.findIndex(
+            m => m.name.trim().toLowerCase() === copiedMeal.name.trim().toLowerCase()
+        );
         
-        day.meals.push(newMeal);
+        if (existingMealIndex !== -1) {
+            // Якщо такий прийом вже існує (наприклад, пустий "Обід" між Сніданком і Вечерею)
+            const existingMeal = day.meals[existingMealIndex];
+            
+            // Якщо він не пустий, запитуємо підтвердження, щоб не затерти дані випадково
+            if (existingMeal.foods && existingMeal.foods.length > 0) {
+                if (!confirm(`⚠️ Прийом "${existingMeal.name}" вже містить продукти. Перезаписати його скопійованим?`)) {
+                    return; // Відміна
+                }
+            }
+            
+            this.pushHistory();
+            // Просто оновлюємо продукти в існуючому блоці (робимо глибоку копію)
+            existingMeal.foods = JSON.parse(JSON.stringify(copiedMeal.foods));
+            
+        } else {
+            // Якщо такого прийому не було (наприклад, ти копіюєш "Перекус 2"), додаємо як новий
+            this.pushHistory();
+            const newMeal = JSON.parse(JSON.stringify(copiedMeal));
+            newMeal.id = Date.now() + Math.floor(Math.random() * 1000);
+            day.meals.push(newMeal);
+        }
+
         this.save();
         this.render();
+        
+        // Легка вібрація для фідбеку, якщо є підтримка на мобільному
+        if (window.Haptics) window.Haptics.success();
     },
     
     addMealBlock() {
