@@ -1408,8 +1408,12 @@ const PhotoDB = {
                             let stockHtml = '';
                             
                             if (this.state.editing || (item.stock && item.stock.trim() !== '')) {
-                                stockHtml = `<span class="pharm-stock ${isLow}" contenteditable="${this.state.editing}" 
-                                    onblur="this.innerHTML=this.innerText.trim(); App.data.pharmacy[${i}].items[${j}].stock=this.innerText; App.save()">${item.stock || ''}</span>`;
+                                stockHtml = `
+                                <div style="display:flex; align-items:center; gap:5px;">
+                                    ${(!this.state.editing && stockNum > 0) ? `<button style="background:#222; border:1px solid #444; color:#aaa; border-radius:4px; padding:2px 8px; font-size:0.75rem; cursor:pointer;" onclick="App.quickDeductStock(${i}, ${j})">-1</button>` : ''}
+                                    <span class="pharm-stock ${isLow}" contenteditable="${this.state.editing}" 
+                                        onblur="this.innerHTML=this.innerText.trim(); App.data.pharmacy[${i}].items[${j}].stock=this.innerText; App.save()">${item.stock || ''}</span>
+                                </div>`;
                             }
                             return `
                             <div class="pharm-item">
@@ -1845,20 +1849,21 @@ calc(week) {
             
             for (let d = 0; d < 7; d++) {
                 if (this.data.schedule[w] && this.data.schedule[w][d]) {
-                    this.data.schedule[w][d] = this.data.schedule[w][d].filter(p => p.name !== name);
+                    this.data.schedule[w][d] = this.data.schedule[w][d].filter(p => p.name.trim().toLowerCase() !== name.trim().toLowerCase());
                 }
             }
             
+            this.state.openMenu = null; // Закриваємо меню
             this.save();
             this.renderView();
             
-            // Показуємо повідомлення
             const toast = document.createElement('div');
             toast.innerText = "🗑 Видалено з усього тижня!";
             toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
         },
+        
         deletePillFutureInPhase(name, startWeek, dayIndex) {
             const dayNames = ["Понеділків", "Вівторків", "Серед", "Четвергів", "П'ятниць", "Субот", "Неділь"];
             const dayName = dayNames[dayIndex] || "днів";
@@ -1949,45 +1954,13 @@ calc(week) {
             this.pushHistory();
             const pill = this.data.schedule[w][d][i];
             pill.done = !pill.done; // Перемикаємо статус
-
-            // --- АВТО-СПИСАННЯ ЗАЛИШКІВ ---
-            let showLowStockWarning = null;
-            
-            this.data.pharmacy.forEach(cat => {
-                cat.items.forEach(item => {
-                    // Шукаємо препарат в аптечці за назвою
-                    if (item.n.trim().toLowerCase() === pill.name.trim().toLowerCase()) {
-                        let currentStock = parseInt(item.stock);
-                        if (!isNaN(currentStock)) {
-                            // Віднімаємо 1 порцію, якщо випито, і повертаємо, якщо знято відмітку
-                            let newStock = pill.done ? currentStock - 1 : currentStock + 1;
-                            item.stock = newStock.toString();
-                            
-                            // Якщо залишилось мало
-                            if (pill.done && newStock <= 10 && newStock > 0) {
-                                showLowStockWarning = item.n;
-                            }
-                        }
-                    }
-                });
-            });
-
             this.save();
             this.renderView();
-            
             // Вібрація для iOS/Android
             if (pill.done && window.Haptics) window.Haptics.success();
             else if (window.Haptics) window.Haptics.light();
-
-            // Попередження про закінчення препарату
-            if (showLowStockWarning) {
-                const toast = document.createElement('div');
-                toast.innerText = `⚠️ Увага: ${showLowStockWarning} закінчується!`;
-                toast.style.cssText = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); text-align:center; min-width: 250px;";
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
         },
+
         setView(v, btn) { 
             this.state.view = v; 
             document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active')); 
@@ -2033,6 +2006,19 @@ calc(week) {
             } 
         },
 
+        quickDeductStock(catIdx, itemIdx) {
+            this.pushHistory();
+            const item = this.data.pharmacy[catIdx].items[itemIdx];
+            let currentStock = parseInt(item.stock);
+            
+            if (!isNaN(currentStock) && currentStock > 0) {
+                item.stock = (currentStock - 1).toString();
+                this.save();
+                this.renderView();
+                if (window.Haptics) window.Haptics.light();
+            }
+        },
+            
         delMed(c,i) { 
             if(confirm("Видалити?")) { 
                 this.pushHistory(); 
