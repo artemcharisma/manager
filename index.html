@@ -12,12 +12,12 @@
     <link rel="manifest" href="manifest.json">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
 
         :root { 
             --bg: #050505; 
-            --card-bg: rgba(18, 18, 18, 0.6); 
-            --border: #2a2a2a; 
+            --card-bg: rgba(18, 18, 18, 0.7); 
+            --border: #222; 
             --gold: #d4af37; 
             --blue: #3b82f6; 
             --green: #10b981; 
@@ -26,25 +26,25 @@
             --text-dim: #a1a1aa; 
         }
         
-        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body { 
             background-color: var(--bg);
-            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 60%);
+            background-image: radial-gradient(circle at 50% 0%, #151515 0%, #050505 70%);
             color: var(--text); 
             font-family: 'Inter', sans-serif;
-            margin: 0; padding: 15px; 
+            margin: 0; padding: 20px 15px; 
             min-height: 100vh; 
             display: flex; flex-direction: column; align-items: center; 
             overflow-x: hidden;
         }
 
-        .hub-container { width: 100%; max-width: 450px; margin-top: 10px; }
+        .hub-container { width: 100%; max-width: 450px; }
         
         /* --- HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center;
-            width: 100%; padding: 10px 5px; margin-bottom: 25px;
+            width: 100%; padding-bottom: 20px; margin-bottom: 30px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
             animation: slideDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
@@ -52,7 +52,7 @@
         .sys-status-left {
             display: flex; align-items: center; gap: 10px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem; color: #fff; letter-spacing: 1.5px; font-weight: 700;
+            font-size: 0.8rem; color: #fff; letter-spacing: 1.5px; font-weight: 700;
         }
 
         .status-dot {
@@ -61,90 +61,73 @@
         }
 
         .sys-status-right { text-align: right; font-family: 'JetBrains Mono', monospace; }
-        .sys-time { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
-        .sys-date { font-size: 0.6rem; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
+        .sys-time { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 2px; line-height: 1; }
+        .sys-date { font-size: 0.65rem; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
 
-        /* --- VITALS DASHBOARD (Заміна кілець) --- */
-        .vitals-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 25px;
-            animation: fadeIn 1s ease 0.2s backwards;
-        }
-
-        .vital-card {
+        /* --- SMART NAVIGATION CARDS --- */
+        .nav-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+        
+        .smart-card {
             background: var(--card-bg);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px 5px;
-            text-align: center;
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.5);
-            position: relative;
-        }
-
-        /* Кольорові акценти зверху карток */
-        .vital-train { border-top: 3px solid var(--blue); }
-        .vital-food { border-top: 3px solid var(--green); }
-        .vital-pharm { border-top: 3px solid var(--gold); }
-
-        .vital-icon { font-size: 1.4rem; opacity: 0.9; margin-bottom: 2px; }
-        
-        .vital-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem; font-weight: 700; color: #fff;
-            letter-spacing: 0.5px;
-        }
-        
-        .vital-sub {
-            font-size: 0.6rem; color: var(--text-dim);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            line-height: 1.2;
-        }
-
-        /* --- CARDS GRID (Швидкий доступ) --- */
-        .app-grid { display: grid; gap: 12px; width: 100%; }
-        
-        .app-card { 
-            background: var(--card-bg); backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 14px; 
-            text-decoration: none; display: flex; align-items: center; gap: 15px; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; 
+            border-radius: 16px;
+            padding: 22px 20px;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 20px;
+            position: relative; overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             animation: fadeInUp 0.6s ease backwards;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
-        .app-card:nth-child(1) { animation-delay: 0.3s; }
-        .app-card:nth-child(2) { animation-delay: 0.4s; }
-        .app-card:nth-child(3) { animation-delay: 0.5s; }
+        /* Бічна кольорова лінія для кожної картки */
+        .smart-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: #333; transition: 0.3s;
+        }
+        
+        .card-pharm::before { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
+        .card-train::before { background: var(--blue); box-shadow: 0 0 15px var(--blue); }
+        .card-nutri::before { background: var(--green); box-shadow: 0 0 15px var(--green); }
 
-        .app-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.03); }
-        .app-card:active { transform: scale(0.98); }
+        .smart-card:nth-child(1) { animation-delay: 0.2s; }
+        .smart-card:nth-child(2) { animation-delay: 0.3s; }
+        .smart-card:nth-child(3) { animation-delay: 0.4s; }
+
+        @media (hover: hover) {
+            .smart-card:hover { transform: translateY(-3px); border-color: #444; background: rgba(30, 30, 30, 0.8); }
+        }
+        .smart-card:active { transform: scale(0.98); }
         
         .icon-box { 
-            width: 45px; height: 45px; border-radius: 12px; flex-shrink: 0;
+            width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; background: rgba(0,0,0,0.3); 
-            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
+            font-size: 26px; background: rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255,255,255,0.05);
         }
         
-        .info h3 { margin: 0; font-size: 0.95rem; color: #fff; letter-spacing: 0.5px; font-weight: 600; }
-        .info p { margin: 3px 0 0; font-size: 0.65rem; color: var(--text-dim); font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info { flex-grow: 1; }
+        .info h3 { margin: 0; font-size: 1.1rem; color: #fff; letter-spacing: 0.5px; font-weight: 700; }
         
-        .card-pharm:hover { border-color: rgba(212, 175, 55, 0.4); } 
-        .card-pharm:hover .icon-box { color: var(--gold); border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .info-data { 
+            margin-top: 6px; font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.7rem; color: var(--text-dim); 
+            text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;
+        }
 
-        .card-train:hover { border-color: rgba(59, 130, 246, 0.4); } 
-        .card-train:hover .icon-box { color: var(--blue); border-color: var(--blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        /* --- SYSTEM CONTROL --- */
+        .sys-control-title {
+            margin-top: 50px; text-align: center; color: #444; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
+            letter-spacing: 3px; margin-bottom: 15px; font-weight: 700;
+        }
 
-        .card-nutri:hover { border-color: rgba(16, 185, 129, 0.4); } 
-        .card-nutri:hover .icon-box { color: var(--green); border-color: var(--green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
-
-        /* --- BUTTONS --- */
+        .controls-grid { display: flex; gap: 15px; justify-content: center; }
+        
         .ctrl-btn {
-            background: rgba(0,0,0,0.4); border: 1px solid #333; padding: 12px 20px; border-radius: 8px;
-            font-size: 0.7rem; cursor: pointer; font-family: 'JetBrains Mono'; font-weight: 600;
+            background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 14px 24px; border-radius: 10px;
+            font-size: 0.75rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700;
             transition: 0.2s; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px);
         }
         .btn-save { color: var(--green); }
@@ -153,9 +136,13 @@
         .btn-reset { color: var(--red); }
         .btn-reset:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--red); }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); opacity: 1; } 50% { opacity: 0.8; } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); opacity: 1; } }
+        .last-backup {
+            margin-top: 15px; text-align: center; font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.6rem; color: #555;
+        }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); opacity: 1; } 50% { opacity: 0.6; } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); opacity: 1; } }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
@@ -169,51 +156,46 @@
             </div>
             <div class="sys-status-right">
                 <div class="sys-time" id="clock-time">00:00</div>
-                <div class="sys-date" id="clock-date">LOADING...</div>
+                <div class="sys-date" id="clock-date">-- --</div>
             </div>
         </header>
 
-        <div class="vitals-grid">
-            <div class="vital-card vital-train">
-                <div class="vital-icon">⚖️</div>
-                <div class="vital-val" id="vital-train-val">--</div>
-                <div class="vital-sub" id="vital-train-sub">Завантаження</div>
-            </div>
-            <div class="vital-card vital-food">
-                <div class="vital-icon">🥑</div>
-                <div class="vital-val" id="vital-food-val">-- KCAL</div>
-                <div class="vital-sub" id="vital-food-sub">Б:0 Ж:0 В:0</div>
-            </div>
-            <div class="vital-card vital-pharm">
-                <div class="vital-icon">🏆</div>
-                <div class="vital-val" id="vital-pharm-val">--</div>
-                <div class="vital-sub" id="vital-pharm-sub">Оновлення</div>
-            </div>
-        </div>
-
-        <div class="app-grid">
-            <a href="pharm.html" class="app-card card-pharm">
-                <div class="icon-box">🏆</div>
-                <div class="info"><h3>Фармакологія</h3><p>Протокол • Аналізи • Аптечка</p></div>
+        <div class="nav-grid">
+            
+            <a href="pharm.html" class="smart-card card-pharm">
+                <div class="icon-box" style="color: var(--gold); border-color: rgba(212,175,55,0.3);">🏆</div>
+                <div class="info">
+                    <h3>Фармакологія</h3>
+                    <div class="info-data" id="data-pharm">Протокол • Аналізи • Аптечка</div>
+                </div>
             </a>
-            <a href="training.html" class="app-card card-train">
-                <div class="icon-box">⚖️</div>
-                <div class="info"><h3>Тренування</h3><p>Журнал • Програми • Статистика</p></div>
+            
+            <a href="training.html" class="smart-card card-train">
+                <div class="icon-box" style="color: var(--blue); border-color: rgba(59,130,246,0.3);">⚖️</div>
+                <div class="info">
+                    <h3>Тренування</h3>
+                    <div class="info-data" id="data-train">Журнал • Програми • Статистика</div>
+                </div>
             </a>
-            <a href="nutrition.html" class="app-card card-nutri">
-                <div class="icon-box">🥑</div>
-                <div class="info"><h3>Харчування</h3><p>КБЖУ • Раціон • Продукти</p></div>
+            
+            <a href="nutrition.html" class="smart-card card-nutri">
+                <div class="icon-box" style="color: var(--green); border-color: rgba(16,185,129,0.3);">🥑</div>
+                <div class="info">
+                    <h3>Харчування</h3>
+                    <div class="info-data" id="data-nutri">КБЖУ • Раціон • База продуктів</div>
+                </div>
             </a>
+            
         </div>
         
-        <div style="margin-top: 40px; text-align: center; color: #333; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; margin-bottom: 15px;">SYSTEM CONTROL</div>
+        <div class="sys-control-title">SYSTEM CONTROL</div>
 
-        <div style="display:flex; gap:15px; justify-content:center;">
+        <div class="controls-grid">
             <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">💾 BACKUP</button>
             <button onclick="SystemReset()" class="ctrl-btn btn-reset">⚠ WIPE ALL</button>
         </div>
         
-        <div id="last-backup" style="margin-top: 15px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #555;">NO DATA FOUND</div>
+        <div id="last-backup" class="last-backup">NO BACKUP FOUND</div>
     </div>
 
 <script>
@@ -225,86 +207,91 @@
         }
         setInterval(updateClock, 1000); 
 
-        // --- ЛОГІКА ЗЧИТУВАННЯ СТАТУСУ ---
-        function fetchSystemVitals() {
-            // 1. ТРЕНУВАННЯ (Зчитуємо поточну фазу)
-            let trainText = "ПУСТО";
-            let trainSub = "Додайте тиждень";
+        // --- ЛОГІКА ЗЧИТУВАННЯ СТАТУСУ ДЛЯ РОЗУМНИХ КАРТОК ---
+        function populateSmartCards() {
+            // 1. ФАРМАКОЛОГІЯ
+            try {
+                const ph = JSON.parse(localStorage.getItem('gold_protocol'));
+                if (ph && ph.schedule && ph.startDate) {
+                    // Рахуємо реальний поточний тиждень від дати старту
+                    const startDate = new Date(ph.startDate);
+                    const now = new Date();
+                    
+                    const day = startDate.getDay();
+                    const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                    const startMonday = new Date(startDate.setDate(diff));
+                    startMonday.setHours(0,0,0,0);
+                    
+                    const diffTime = now.getTime() - startMonday.getTime();
+                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                    
+                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
+                    if (currentWeek < 1) currentWeek = 1;
+                    if (currentWeek > maxW) currentWeek = maxW;
+
+                    let phaseTitle = "Курс";
+                    if (ph.phases) {
+                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
+                        if (currentPhase) phaseTitle = currentPhase.title;
+                    }
+                    
+                    document.getElementById('data-pharm').innerHTML = `Фаза: <span style="color:var(--gold)">${phaseTitle.toUpperCase()}</span> &nbsp;•&nbsp; ТИЖДЕНЬ ${currentWeek}`;
+                }
+            } catch(e){ console.log("Pharm data error", e); }
+
+            // 2. ТРЕНУВАННЯ
             try {
                 const tr = JSON.parse(localStorage.getItem('training_protocol'));
                 if (tr && tr.weeks && tr.weeks.length > 0) {
-                    const lastWeek = tr.weeks[tr.weeks.length - 1]; // Беремо останній створений тиждень
-                    trainText = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-                    trainSub = `Тиждень ${lastWeek.num}`;
+                    const lastWeek = tr.weeks[tr.weeks.length - 1]; // Беремо останній тиждень
+                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
+                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
+                    
+                    document.getElementById('data-train').innerHTML = `План: <span style="color:var(--blue)">${progName}</span> &nbsp;•&nbsp; ${typeName} (W${lastWeek.num})`;
                 }
-            } catch(e){}
+            } catch(e){ console.log("Train data error", e); }
 
-            // 2. ХАРЧУВАННЯ (Зчитуємо КБЖУ монодієти з першого дня)
-            let foodText = "0 KCAL";
-            let foodSub = "Б:0 Ж:0 В:0";
+            // 3. ХАРЧУВАННЯ (З точним перерахунком через Базу Продуктів)
             try {
-                // Перевіряємо всі можливі ключі бази
-                const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days') || localStorage.getItem('nutrition_protocol') || localStorage.getItem('nutrition_sys'));
+                const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days && nu.days.length > 0) {
-                    const day = nu.days[0]; // Монодієта = читаємо лише 1-й день
+                    const day = nu.days[0]; // Беремо перший день (монодієта)
+                    const bank = nu.bank || {}; 
+                    
                     let p=0, f=0, c=0, kcal=0;
+                    
                     if (day.meals) {
                         day.meals.forEach(m => {
                             if (m.foods) {
                                 m.foods.forEach(item => {
-                                    const w = parseFloat(item.w)||0;
-                                    p += (parseFloat(item.p)||0) * w / 100;
-                                    f += (parseFloat(item.f)||0) * w / 100;
-                                    c += (parseFloat(item.c)||0) * w / 100;
-                                    kcal += (parseFloat(item.kcal)||0) * w / 100;
+                                    // Шукаємо продукт у базі
+                                    const ref = bank[item.n];
+                                    if (ref) {
+                                        // Рахуємо по пропорції (якщо штуки, то * шт, якщо вага то / 100)
+                                        const ratio = ref.unit ? parseFloat(item.w) : parseFloat(item.w) / 100;
+                                        p += (parseFloat(ref.p)||0) * ratio;
+                                        f += (parseFloat(ref.f)||0) * ratio;
+                                        c += (parseFloat(ref.c)||0) * ratio;
+                                        kcal += (parseFloat(ref.k)||0) * ratio;
+                                    } else {
+                                        // Якщо продукту чомусь нема в базі, беремо старі збережені значення
+                                        p += parseFloat(item.p)||0;
+                                        f += parseFloat(item.f)||0;
+                                        c += parseFloat(item.c)||0;
+                                        kcal += parseFloat(item.k)||0;
+                                    }
                                 });
                             }
                         });
                     }
-                    if (kcal > 0) {
-                        foodText = Math.round(kcal) + " KCAL";
-                        foodSub = `Б:${Math.round(p)} Ж:${Math.round(f)} В:${Math.round(c)}`;
-                    } else {
-                        foodText = "ПУСТО";
-                        foodSub = "Додайте їжу";
-                    }
-                }
-            } catch(e){}
-
-            // 3. ФАРМАКОЛОГІЯ (Кількість препаратів і залишки)
-            let pharmText = "ПУСТО";
-            let pharmSub = "Створіть базу";
-            try {
-                const ph = JSON.parse(localStorage.getItem('gold_protocol') || localStorage.getItem('pharm_protocol') || localStorage.getItem('pharmacy_sys'));
-                if (ph && ph.pharmacy) {
-                    let itemsCount = 0;
-                    let lowStock = 0;
-                    ph.pharmacy.forEach(cat => {
-                        if(cat.items) {
-                            cat.items.forEach(i => {
-                                itemsCount++;
-                                const stockNum = parseInt(i.stock);
-                                if(!isNaN(stockNum) && stockNum <= 10 && stockNum > 0) lowStock++;
-                            });
-                        }
-                    });
                     
-                    if (itemsCount > 0) {
-                        pharmText = `${itemsCount} ПОЗИЦІЙ`;
-                        pharmSub = lowStock > 0 ? `⚠️ ${lowStock} закінчується` : "Запаси в нормі";
+                    if (kcal > 0) {
+                        document.getElementById('data-nutri').innerHTML = `<span style="color:var(--green); font-size:0.8rem">${Math.round(kcal)} KCAL</span> &nbsp;•&nbsp; Б${Math.round(p)} Ж${Math.round(f)} В${Math.round(c)}`;
+                    } else {
+                        document.getElementById('data-nutri').innerHTML = `Раціон порожній`;
                     }
                 }
-            } catch(e){}
-
-            // Оновлюємо DOM
-            document.getElementById('vital-train-val').innerText = trainText;
-            document.getElementById('vital-train-sub').innerText = trainSub;
-            
-            document.getElementById('vital-food-val').innerText = foodText;
-            document.getElementById('vital-food-sub').innerText = foodSub;
-            
-            document.getElementById('vital-pharm-val').innerText = pharmText;
-            document.getElementById('vital-pharm-sub').innerText = pharmSub;
+            } catch(e){ console.log("Nutrition data error", e); }
         }
 
         // --- БЕКАП ЛОГІКА ---
@@ -347,7 +334,7 @@
         window.onload = () => {
             updateClock();
             updateBackupLabel();
-            fetchSystemVitals(); // Підтягуємо дані з інших модулів
+            populateSmartCards(); // Завантажуємо інфу на картки
         };
     </script>
 </body>
