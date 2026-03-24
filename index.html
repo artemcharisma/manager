@@ -10,114 +10,49 @@
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
+    
+    <link rel="stylesheet" href="assets/style.css">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
-
-        :root { 
-            --bg: #030303; 
-            --card-bg: rgba(18, 18, 20, 0.8); 
-            --border: rgba(255, 255, 255, 0.08); 
-            --gold: #d4af37; 
-            --blue: #3b82f6; 
-            --green: #10b981; 
-            --red: #ef4444;
-            --text-main: #ffffff; 
-            --text-dim: #888888; 
-            --text-dark: #555555;
-        }
-        
-        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-
-        body { 
-            background-color: var(--bg);
-            background-image: 
-                radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
-                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 100% 100%, 25px 25px, 25px 25px;
-            background-position: center top;
-            color: var(--text-main); 
-            font-family: 'Inter', -apple-system, sans-serif;
-            margin: 0; padding: 20px 15px; 
-            min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased; 
-            -moz-osx-font-smoothing: grayscale;
-        }
-
+        /* ТУТ ЗАЛИШИЛИСЬ ТІЛЬКИ УНІКАЛЬНІ СТИЛІ ДЛЯ HUB-У */
         .hub-container { 
             width: 100%; max-width: 450px; 
             display: flex; flex-direction: column;
             margin: auto 0; 
         }
         
-        /* --- ПРЕМІАЛЬНИЙ HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; padding-bottom: 10px; margin-bottom: 35px;
             animation: slideDown 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .sys-status-left {
-            display: flex; align-items: center; gap: 12px;
-        }
+        .sys-status-left { display: flex; align-items: center; gap: 12px; }
+        .status-indicator { position: relative; display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; }
+        .status-dot { width: 6px; height: 6px; background-color: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); position: relative; z-index: 2; }
+        .status-ring { position: absolute; width: 100%; height: 100%; border: 1px solid var(--green); border-radius: 50%; animation: radarPulse 2.5s infinite cubic-bezier(0.25, 1, 0.5, 1); }
 
-        .status-indicator {
-            position: relative;
-            display: flex; align-items: center; justify-content: center;
-            width: 14px; height: 14px;
-        }
-
-        .status-dot {
-            width: 6px; height: 6px; background-color: var(--green); border-radius: 50%;
-            box-shadow: 0 0 8px var(--green);
-            position: relative; z-index: 2;
-        }
-
-        .status-ring {
-            position: absolute; width: 100%; height: 100%;
-            border: 1px solid var(--green); border-radius: 50%;
-            animation: radarPulse 2.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .brand-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem; color: #fff; letter-spacing: 2px; font-weight: 800;
-            text-transform: uppercase; display: flex; align-items: center;
-        }
-        
-        .brand-title span {
-            font-weight: 400; color: var(--text-dim); margin-left: 6px;
-        }
+        .brand-title { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #fff; letter-spacing: 2px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; }
+        .brand-title span { font-weight: 400; color: var(--text-dim); margin-left: 6px; }
 
         .sys-status-right { text-align: right; font-family: 'JetBrains Mono', monospace; }
         .sys-time { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 1px; line-height: 1; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
         .sys-date { font-size: 0.65rem; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
 
-        /* --- SMART CARDS --- */
         .nav-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; }
         
         .smart-card {
             background: linear-gradient(145deg, rgba(25, 25, 28, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 22px 20px;
-            text-decoration: none;
-            display: flex; align-items: center; gap: 20px;
+            border: 1px solid var(--border); border-radius: 20px; padding: 22px 20px;
+            text-decoration: none; display: flex; align-items: center; gap: 20px;
             position: relative; overflow: hidden;
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
             animation: fadeInUp 0.6s ease backwards;
             box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
         }
 
-        .smart-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-            background: #333; transition: 0.3s;
-        }
-        
+        .smart-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #333; transition: 0.3s; }
         .card-pharm::before { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
         .card-train::before { background: var(--blue); box-shadow: 0 0 15px var(--blue); }
         .card-nutri::before { background: var(--green); box-shadow: 0 0 15px var(--green); }
@@ -130,9 +65,7 @@
             width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center; 
             font-size: 26px; border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.3s ease;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-            background: rgba(0,0,0,0.6);
+            transition: all 0.3s ease; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); background: rgba(0,0,0,0.6);
         }
         
         .card-pharm .icon-box { color: var(--gold); border-color: rgba(212,175,55,0.3); }
@@ -140,224 +73,64 @@
         .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); }
 
         @media (hover: hover) {
-            .card-pharm:hover { 
-                background: linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(10,10,12,0.95) 100%);
-                border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15);
-            }
-            .card-train:hover { 
-                background: linear-gradient(145deg, rgba(59,130,246,0.15) 0%, rgba(10,10,12,0.95) 100%);
-                border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15);
-            }
-            .card-nutri:hover { 
-                background: linear-gradient(145deg, rgba(16,185,129,0.15) 0%, rgba(10,10,12,0.95) 100%);
-                border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15);
-            }
+            .card-pharm:hover { background: linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15); }
+            .card-train:hover { background: linear-gradient(145deg, rgba(59,130,246,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15); }
+            .card-nutri:hover { background: linear-gradient(145deg, rgba(16,185,129,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15); }
         }
         
-        .card-pharm:active { 
-            background: linear-gradient(145deg, rgba(212,175,55,0.2) 0%, rgba(20,20,22,0.95) 100%);
-            border-color: var(--gold); transform: scale(0.96); transition: transform 0.05s ease;
-        }
-        .card-train:active { 
-            background: linear-gradient(145deg, rgba(59,130,246,0.2) 0%, rgba(20,20,22,0.95) 100%);
-            border-color: var(--blue); transform: scale(0.96); transition: transform 0.05s ease;
-        }
-        .card-nutri:active { 
-            background: linear-gradient(145deg, rgba(16,185,129,0.2) 0%, rgba(20,20,22,0.95) 100%);
-            border-color: var(--green); transform: scale(0.96); transition: transform 0.05s ease;
-        }
+        .card-pharm:active { background: linear-gradient(145deg, rgba(212,175,55,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--gold); transform: scale(0.96); transition: transform 0.05s ease; }
+        .card-train:active { background: linear-gradient(145deg, rgba(59,130,246,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--blue); transform: scale(0.96); transition: transform 0.05s ease; }
+        .card-nutri:active { background: linear-gradient(145deg, rgba(16,185,129,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--green); transform: scale(0.96); transition: transform 0.05s ease; }
         .smart-card:active .icon-box { transform: scale(0.9) rotate(-5deg); box-shadow: 0 0 20px currentColor; }
         
         .info { flex-grow: 1; }
         .info h3 { margin: 0; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         
-        .info-data { 
-            margin-top: 8px; font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.75rem; color: var(--text-dim); 
-            letter-spacing: 0.5px; line-height: 1.5;
-            display: flex; flex-direction: column; gap: 5px;
-        }
-        
+        .info-data { margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 5px; }
         .data-row { display: flex; align-items: center; gap: 8px; }
         .data-hl { color: #fff; font-weight: 700; }
         .data-lbl { color: var(--text-dark); }
 
-        /* --- ЧИСТИЙ БЛОК VITALS --- */
-        .bottom-wrapper {
-            margin-top: 40px; 
-            width: 100%;
-            animation: fadeIn 1s ease 0.5s backwards;
-        }
+        .bottom-wrapper { margin-top: 40px; width: 100%; animation: fadeIn 1s ease 0.5s backwards; }
 
-        .vitals-strip {
-            display: flex; justify-content: space-between;
-            margin-bottom: 30px; padding: 0 10px;
-        }
-        
+        .vitals-strip { display: flex; justify-content: space-between; margin-bottom: 30px; padding: 0 10px; }
         .v-item { display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 2; }
         .v-item.right { text-align: right; align-items: flex-end; }
+        .v-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
         
-        .v-label { 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
-            color: var(--text-dim); letter-spacing: 1.5px; font-weight: 700; 
-            display: flex; align-items: center; gap: 6px;
-        }
-        
-        .ecg-svg {
-            width: 32px; height: 12px; stroke: var(--red); fill: none; stroke-width: 2.5;
-            stroke-linecap: round; stroke-linejoin: round;
-            filter: drop-shadow(0 0 4px rgba(239,68,68,0.6));
-        }
-        .ecg-line {
-            stroke-dasharray: 90; stroke-dashoffset: 90;
-            animation: ecgDraw 2s infinite linear;
-        }
+        .ecg-svg { width: 32px; height: 12px; stroke: var(--red); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(239,68,68,0.6)); }
+        .ecg-line { stroke-dasharray: 90; stroke-dashoffset: 90; animation: ecgDraw 2s infinite linear; }
 
-        .v-val { 
-            font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; 
-            color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(255,255,255,0.15);
-            margin-top: 2px;
-        }
+        .v-val { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(255,255,255,0.15); margin-top: 2px; }
         .v-val span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; letter-spacing: 1px; margin-left: 2px;}
 
-        .sys-control-title {
-            text-align: center; color: #555; 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
-            letter-spacing: 4px; margin-bottom: 15px; font-weight: 800;
-        }
+        .sys-control-title { text-align: center; color: #555; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: 800; }
 
-        /* --- КНОПКИ БЕКАПУ ТА СКИДАННЯ --- */
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
+        /* Кнопки використовують глобальний клас .modal-ctrl-btn зі style.css, додаємо специфіку розміру */
         .ctrl-btn {
             background: linear-gradient(to bottom, rgba(25, 25, 28, 0.9), rgba(15, 15, 17, 0.95)); 
-            border: 1px solid rgba(255,255,255,0.05); 
-            padding: 16px; border-radius: 14px;
-            font-size: 0.75rem; cursor: pointer; 
-            font-family: 'JetBrains Mono', monospace; font-weight: 700;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 14px;
+            font-size: 0.75rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: 8px;
+            letter-spacing: 1px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-
         .btn-save { color: var(--green); border-color: rgba(16, 185, 129, 0.15); }
         .btn-reset { color: var(--red); border-color: rgba(239, 68, 68, 0.15); }
 
         @media (hover: hover) {
-            .btn-save:hover { 
-                border-color: var(--green); 
-                background: linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(15, 15, 17, 0.95));
-                box-shadow: 0 5px 20px rgba(16, 185, 129, 0.2);
-            }
-            .btn-reset:hover { 
-                border-color: var(--red); 
-                background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(15, 15, 17, 0.95));
-                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2);
-            }
+            .btn-save:hover { border-color: var(--green); background: linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(15, 15, 17, 0.95)); box-shadow: 0 5px 20px rgba(16, 185, 129, 0.2); }
+            .btn-reset:hover { border-color: var(--red); background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(15, 15, 17, 0.95)); box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2); }
         }
         
-        .btn-save:active { 
-            border-color: var(--green); background: rgba(16, 185, 129, 0.2); 
-            transform: scale(0.93); transition: transform 0.05s ease;
-        }
-        .btn-reset:active { 
-            border-color: var(--red); background: rgba(239, 68, 68, 0.2); 
-            transform: scale(0.93); transition: transform 0.05s ease;
-        }
+        .btn-save:active { border-color: var(--green); background: rgba(16, 185, 129, 0.2); transform: scale(0.93); transition: transform 0.05s ease; }
+        .btn-reset:active { border-color: var(--red); background: rgba(239, 68, 68, 0.2); transform: scale(0.93); transition: transform 0.05s ease; }
 
-        .last-backup {
-            margin-top: 18px; text-align: center; font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.65rem; color: var(--text-dark); letter-spacing: 1px;
-        }
+        .last-backup { margin-top: 18px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dark); letter-spacing: 1px; }
 
-        /* --- PROTOCOL MODAL OS --- */
-        #protocol-modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
-            z-index: 9000; display: none; 
-            opacity: 0; transition: opacity 0.3s ease;
-            align-items: center; justify-content: center;
-        }
-        
-        #protocol-modal-overlay.active { display: flex; opacity: 1; }
-
-        #protocol-modal-box {
-            background: linear-gradient(145deg, #101012 0%, #050505 100%);
-            border: 1px solid var(--border); border-radius: 20px;
-            width: 90%; max-width: 400px; padding: 25px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
-            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            text-align: center;
-        }
-        
-        #protocol-modal-overlay.active #protocol-modal-box { transform: scale(1); }
-
-        #protocol-modal-box.theme-green { border-color: var(--green); box-shadow: 0 0 30px rgba(16,185,129,0.15); }
-        #protocol-modal-box.theme-gold { border-color: var(--gold); box-shadow: 0 0 30px rgba(212,175,55,0.15); }
-        #protocol-modal-box.theme-red { border-color: var(--red); box-shadow: 0 0 40px rgba(239,68,68,0.2); }
-
-        #protocol-modal-header {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem; color: var(--text-dim); letter-spacing: 2px;
-            text-transform: uppercase; margin-bottom: 18px; font-weight: 700;
-        }
-        
-        #protocol-modal-body {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem; color: #e0e0e0; line-height: 1.6; margin-bottom: 25px;
-            letter-spacing: 0.2px;
-        }
-        
-        #protocol-modal-input-wrap { display: none; margin-top: 15px; }
-        #protocol-modal-input {
-            width: 100%; background: #000; border: 1px solid #333; color: #fff;
-            font-family: 'JetBrains Mono', monospace; font-size: 1rem;
-            padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center;
-            outline: none; transition: 0.2s;
-        }
-        #protocol-modal-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
-
-        #protocol-modal-footer { display: grid; gap: 12px; }
-        #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
-
-        /* --- КНОПКА "СКАСУВАТИ" (Динамічна та стильна) --- */
-        #modal-btn-cancel {
-            background: linear-gradient(to bottom, rgba(40, 40, 45, 0.8), rgba(25, 25, 30, 0.9));
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #d1d1d1;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        @media (hover: hover) {
-            #modal-btn-cancel:hover {
-                background: linear-gradient(to bottom, rgba(55, 55, 60, 0.9), rgba(35, 35, 40, 0.95));
-                border-color: rgba(255, 255, 255, 0.3);
-                color: #fff;
-                box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
-            }
-        }
-        
-        /* Пружний Active для мобільних (як у головних кнопок) */
-        #modal-btn-cancel:active {
-            transform: scale(0.93);
-            background: rgba(55, 55, 60, 0.9);
-            border-color: rgba(255, 255, 255, 0.4);
-            color: #fff;
-            transition: transform 0.05s ease;
-        }
-
-        /* Ключові кадри анімацій */
-        @keyframes ecgDraw {
-            0% { stroke-dashoffset: 90; }
-            40% { stroke-dashoffset: 0; }
-            100% { stroke-dashoffset: -90; }
-        }
-        @keyframes radarPulse { 
-            0% { transform: scale(0.5); opacity: 1; } 
-            100% { transform: scale(2.5); opacity: 0; } 
-        }
+        @keyframes ecgDraw { 0% { stroke-dashoffset: 90; } 40% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -90; } }
+        @keyframes radarPulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
         @keyframes slideDown { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -381,41 +154,30 @@
         </header>
 
         <div class="nav-grid">
-            
             <a href="pharm.html" class="smart-card card-pharm">
                 <div class="icon-box">🏆</div>
                 <div class="info">
                     <h3>Фармакологія</h3>
-                    <div class="info-data" id="data-pharm">
-                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
-                    </div>
+                    <div class="info-data" id="data-pharm"><span class="data-lbl">ЗАВАНТАЖЕННЯ...</span></div>
                 </div>
             </a>
-            
             <a href="training.html" class="smart-card card-train">
                 <div class="icon-box">⚖️</div>
                 <div class="info">
                     <h3>Тренування</h3>
-                    <div class="info-data" id="data-train">
-                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
-                    </div>
+                    <div class="info-data" id="data-train"><span class="data-lbl">ЗАВАНТАЖЕННЯ...</span></div>
                 </div>
             </a>
-            
             <a href="nutrition.html" class="smart-card card-nutri">
                 <div class="icon-box">🥑</div>
                 <div class="info">
                     <h3>Харчування</h3>
-                    <div class="info-data" id="data-nutri">
-                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
-                    </div>
+                    <div class="info-data" id="data-nutri"><span class="data-lbl">ЗАВАНТАЖЕННЯ...</span></div>
                 </div>
             </a>
-            
         </div>
         
         <div class="bottom-wrapper">
-            
             <div class="vitals-strip">
                 <div class="v-item">
                     <span class="v-label">CURRENT WEIGHT</span>
@@ -433,7 +195,6 @@
             </div>
 
             <div class="sys-control-title">SYSTEM CONTROL</div>
-
             <div class="controls-grid">
                 <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
@@ -444,29 +205,13 @@
                     WIPE ALL
                 </button>
             </div>
-            
             <div id="last-backup" class="last-backup">NO BACKUP FOUND</div>
         </div>
-        
     </div>
 
-    <div id="protocol-modal-overlay">
-        <div id="protocol-modal-box">
-            <div id="protocol-modal-header">СИСТЕМНЕ ПОВІДОМЛЕННЯ</div>
-            <div id="protocol-modal-body">
-                <div id="protocol-modal-text">Текст повідомлення</div>
-                <div id="protocol-modal-input-wrap">
-                    <input type="text" id="protocol-modal-input" placeholder="Введіть дані...">
-                </div>
-            </div>
-            <div id="protocol-modal-footer">
-                <button id="modal-btn-cancel" class="ctrl-btn" onclick="Modal.handleCancel()">СКАСУВАТИ</button>
-                <button id="modal-btn-ok" class="ctrl-btn btn-save" onclick="Modal.handleOK()">ОК</button>
-            </div>
-        </div>
-    </div>
+    <script src="assets/js/common.js"></script>
 
-<script>
+    <script>
         function updateClock() {
             const now = new Date();
             document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
@@ -483,15 +228,9 @@
                             const ref = bank[item.n];
                             if (ref) {
                                 const ratio = ref.unit ? parseFloat(item.w) : parseFloat(item.w) / 100;
-                                p += (parseFloat(ref.p)||0) * ratio;
-                                f += (parseFloat(ref.f)||0) * ratio;
-                                c += (parseFloat(ref.c)||0) * ratio;
-                                kcal += (parseFloat(ref.k)||0) * ratio;
+                                p += (parseFloat(ref.p)||0) * ratio; f += (parseFloat(ref.f)||0) * ratio; c += (parseFloat(ref.c)||0) * ratio; kcal += (parseFloat(ref.k)||0) * ratio;
                             } else {
-                                p += parseFloat(item.p)||0;
-                                f += parseFloat(item.f)||0;
-                                c += parseFloat(item.c)||0;
-                                kcal += parseFloat(item.k)||0;
+                                p += parseFloat(item.p)||0; f += parseFloat(item.f)||0; c += parseFloat(item.c)||0; kcal += parseFloat(item.k)||0;
                             }
                         });
                     }
@@ -501,53 +240,34 @@
         }
 
         function populateSmartCards() {
+            // ... (Логіка зчитування Фарми, Тренувань та Харчування залишилась без змін) ...
             try {
                 const ph = JSON.parse(localStorage.getItem('gold_protocol'));
                 if (ph) {
                     if (ph.schedule && ph.startDate) {
-                        const startDate = new Date(ph.startDate);
-                        const now = new Date();
-                        const day = startDate.getDay();
-                        const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                        const startMonday = new Date(startDate.setDate(diff));
-                        startMonday.setHours(0,0,0,0);
-                        
+                        const startDate = new Date(ph.startDate); const now = new Date();
+                        const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                        const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
                         const diffTime = now.getTime() - startMonday.getTime();
                         let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-                        
                         const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-                        if (currentWeek < 1) currentWeek = 1;
-                        if (currentWeek > maxW) currentWeek = maxW;
-
+                        if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
                         let phaseTitle = "Курс";
                         if (ph.phases) {
                             const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
                             if (currentPhase) phaseTitle = currentPhase.title;
                         }
-                        
-                        document.getElementById('data-pharm').innerHTML = `
-                            <div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div>
-                            <div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>
-                        `;
+                        document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
                     }
-
                     if(ph.vitals) {
                         let latestW = "--.--<span>KG</span>", latestBP = "--/--";
-                        const keys = Object.keys(ph.vitals).sort((a,b) => {
-                            const [wA, dA] = a.split('-').map(Number);
-                            const [wB, dB] = b.split('-').map(Number);
-                            if(wA !== wB) return wB - wA;
-                            return dB - dA;
-                        });
-                        
+                        const keys = Object.keys(ph.vitals).sort((a,b) => { const [wA, dA] = a.split('-').map(Number); const [wB, dB] = b.split('-').map(Number); if(wA !== wB) return wB - wA; return dB - dA; });
                         for(let key of keys) {
                             if(ph.vitals[key].w && latestW.includes("--")) latestW = ph.vitals[key].w + "<span>KG</span>";
                             if(ph.vitals[key].bp && latestBP === "--/--") latestBP = ph.vitals[key].bp;
                             if(!latestW.includes("--") && latestBP !== "--/--") break;
                         }
-                        
-                        document.getElementById('vital-weight').innerHTML = latestW;
-                        document.getElementById('vital-bp').innerHTML = latestBP;
+                        document.getElementById('vital-weight').innerHTML = latestW; document.getElementById('vital-bp').innerHTML = latestBP;
                     }
                 }
             } catch(e){}
@@ -558,195 +278,72 @@
                     const lastWeek = tr.weeks[tr.weeks.length - 1]; 
                     const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
                     const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-                    document.getElementById('data-train').innerHTML = `
-                        <div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div>
-                        <div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>
-                    `;
+                    document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
                 }
             } catch(e){}
 
             try {
                 const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days) {
-                    const bank = nu.bank || {}; 
-                    let htmlContent = '';
-                    
+                    const bank = nu.bank || {}; let htmlContent = '';
                     if (nu.days[0]) {
                         const d1 = getDayMacros(nu.days[0], bank);
-                        if(d1.kcal > 0) {
-                            htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
-                        }
+                        if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
                     }
-                    
                     if (nu.days[1]) {
                         const d2 = getDayMacros(nu.days[1], bank);
-                        if(d2.kcal > 0) {
-                            htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
-                        }
+                        if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
                     }
-                    
-                    if (htmlContent !== '') {
-                        document.getElementById('data-nutri').innerHTML = htmlContent;
-                    } else {
-                        document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
-                    }
+                    document.getElementById('data-nutri').innerHTML = htmlContent !== '' ? htmlContent : `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
                 }
             } catch(e){}
         }
 
-        // --- ЛОГІКА PROTOCOL MODAL OS ---
-        let modalResolve = null; 
-
-        const Modal = {
-            overlay: null, box: null, header: null, text: null,
-            inputWrap: null, input: null, btnCancel: null, btnOk: null, footer: null,
-
-            init() {
-                this.overlay = document.getElementById('protocol-modal-overlay');
-                this.box = document.getElementById('protocol-modal-box');
-                this.header = document.getElementById('protocol-modal-header');
-                this.text = document.getElementById('protocol-modal-text');
-                this.inputWrap = document.getElementById('protocol-modal-input-wrap');
-                this.input = document.getElementById('protocol-modal-input');
-                this.btnCancel = document.getElementById('modal-btn-cancel');
-                this.btnOk = document.getElementById('modal-btn-ok');
-                this.footer = document.getElementById('protocol-modal-footer');
-            },
-
-            show({ title, text, type = 'alert', theme = 'gold', placeholder = '' }) {
-                this.init(); 
-                this.header.innerText = title;
-                this.text.innerHTML = text;
-                this.input.value = ''; 
-                this.box.className = `theme-${theme}`;
-
-                if (type === 'alert') {
-                    this.inputWrap.style.display = 'none';
-                    this.btnCancel.style.display = 'none';
-                    this.footer.className = '';
-                    this.btnOk.className = `ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
-                    this.btnOk.innerText = 'ОК';
-                } else if (type === 'confirm') {
-                    this.inputWrap.style.display = 'none';
-                    this.btnCancel.style.display = 'flex';
-                    this.footer.className = 'dual-btn';
-                    this.btnOk.className = `ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
-                    this.btnOk.innerText = theme === 'red' ? 'ПІДТВЕРДИТИ' : 'ОК';
-                } else if (type === 'prompt') {
-                    this.inputWrap.style.display = 'block';
-                    this.input.placeholder = placeholder;
-                    this.btnCancel.style.display = 'flex';
-                    this.footer.className = 'dual-btn';
-                    this.btnOk.className = 'ctrl-btn btn-save';
-                    this.btnOk.innerText = 'ОК';
-                    setTimeout(() => this.input.focus(), 300);
-                }
-
-                this.overlay.className = 'active';
-                return new Promise((resolve) => { modalResolve = resolve; });
-            },
-
-            handleOK() {
-                const type = this.inputWrap.style.display === 'block' ? 'prompt' : (this.btnCancel.style.display === 'flex' ? 'confirm' : 'alert');
-                this.close();
-                if (type === 'prompt') modalResolve(this.input.value);
-                else modalResolve(true);
-            },
-
-            handleCancel() {
-                this.close();
-                modalResolve(null); 
-            },
-
-            close() {
-                this.overlay.className = '';
-                setTimeout(() => modalResolve = null, 300);
-            },
-
-            async alert(text, title, theme) { return this.show({ text, title, theme, type: 'alert' }); },
-            async confirm(text, title, theme) { return this.show({ text, title, theme, type: 'confirm' }); },
-            async prompt(text, title, placeholder) { return this.show({ text, title, placeholder, type: 'prompt', theme: 'gold' }); }
-        };
-
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
+        // ФУНКЦІЇ БЕКАПУ (ВЖЕ ВИКОРИСТОВУЮТЬ ГЛОБАЛЬНИЙ Modal.confirm)
         async function CreateRestorePoint() {
-            const msg = `Створити нову резервну копію (Backup)?<br><br>
-                         <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
-                            Попередня копія буде перезаписана поточним станом бази даних.
-                         </span>`;
-            
-            const confirmed = await Modal.confirm(msg, "СТВОРЕННЯ BACKUP", "gold");
-            if(!confirmed) return; 
+            const msg = `Створити нову резервну копію (Backup)?<br><br><span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">Попередня копія буде перезаписана поточним станом бази даних.</span>`;
+            if(!(await Modal.confirm(msg, "СТВОРЕННЯ BACKUP", "gold"))) return; 
 
             let savedCount = 0;
-            APP_KEYS.forEach(k => {
-                const d = localStorage.getItem(k);
-                if(d) { localStorage.setItem(k + '_backup', d); savedCount++; }
-            });
-            const now = new Date().toLocaleString('uk-UA');
-            localStorage.setItem('backup_timestamp', now);
+            APP_KEYS.forEach(k => { const d = localStorage.getItem(k); if(d) { localStorage.setItem(k + '_backup', d); savedCount++; } });
+            localStorage.setItem('backup_timestamp', new Date().toLocaleString('uk-UA'));
             updateBackupLabel();
             
-            if(savedCount > 0) {
-                await Modal.alert("Резервну копію успішно створено та збережено в пам'ять пристрою.", "BACKUP СТВОРЕНО", "green");
-            } else {
-                await Modal.alert("Система пуста. Немає даних для бекапу.", "ПОВІДОМЛЕННЯ", "gold");
-            }
+            if(savedCount > 0) await Modal.alert("Резервну копію успішно створено.", "BACKUP СТВОРЕНО", "green");
+            else await Modal.alert("Система пуста. Немає даних для бекапу.", "ПОВІДОМЛЕННЯ", "gold");
         }
 
         function updateBackupLabel() {
             const ts = localStorage.getItem('backup_timestamp');
             const el = document.getElementById('last-backup');
-            if(ts) { el.innerText = "LAST BACKUP: " + ts; el.style.color = "var(--green)"; } 
-            else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
+            if(ts) { el.innerText = "LAST BACKUP: " + ts; el.style.color = "var(--green)"; } else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
         }
 
         async function SystemReset() {
             const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
             if(hasBackup) {
-                const promptText = `
-                    <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
-                            <div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ВІДНОВИТИ з Backup</span></div>
-                            <div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div>
-                        </div>
-                    </div>
-                `;
-                
+                const promptText = `<div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div><div style="display: flex; flex-direction: column; align-items: center;"><div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;"><div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ВІДНОВИТИ з Backup</span></div><div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div></div></div>`;
                 const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "Введіть 1 або 2");
                 
                 if (choice === '1') {
-                    const confirmRestore = await Modal.confirm("Ви точно хочете відновити систему з останнього Backup?", "ВІДНОВЛЕННЯ ДАНИХ", "green");
-                    if (confirmRestore) {
+                    if (await Modal.confirm("Ви точно хочете відновити систему з останнього Backup?", "ВІДНОВЛЕННЯ ДАНИХ", "green")) {
                         APP_KEYS.forEach(k => { const b = localStorage.getItem(k + '_backup'); if(b) localStorage.setItem(k, b); });
-                        await Modal.alert("Систему успішно відновлено!", "ВІДНОВЛЕНО", "green");
-                        location.reload();
+                        await Modal.alert("Систему успішно відновлено!", "ВІДНОВЛЕНО", "green"); location.reload();
                     }
                 } else if (choice === '2') {
-                    const confirmWipe = await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО.</span><br><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red");
-                    if (confirmWipe) FullWipe();
+                    if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО.</span><br><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red")) FullWipe();
                 }
             } else {
-                const proceedWipe = await Modal.confirm("Резервних копій не знайдено.<br>Ви впевнені, що хочете очистити систему?", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red");
-                if (proceedWipe) FullWipe();
+                if (await Modal.confirm("Резервних копій не знайдено.<br>Ви впевнені, що хочете очистити систему?", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red")) FullWipe();
             }
         }
 
         function FullWipe() { localStorage.clear(); location.reload(); }
 
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn')) {
-                if(navigator.vibrate) navigator.vibrate(15);
-            }
-        });
-
         window.onload = () => {
-            Modal.init(); 
-            updateClock();
-            updateBackupLabel();
-            populateSmartCards(); 
+            updateClock(); updateBackupLabel(); populateSmartCards(); 
         };
     </script>
 </body>
