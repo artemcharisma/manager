@@ -26,7 +26,7 @@ const App = {
         targets: {p:200, f:80, c:300, k:2700}, 
         days: [] 
     },
-    state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null },
+    state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
     history: [],
 
     init() {
@@ -238,14 +238,23 @@ const App = {
                             <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                         </div>
                     </div>
-                    <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати прийом їжі">📋</div>
+                        <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
+                    </div>
                 </div>
                 <div>${foodsHtml}</div>
                 <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
             </div>`;
         });
 
-        list.innerHTML = mealsHtml;
+        // Якщо в буфері щось є, малюємо золоту кнопку вставки під списком
+        let pasteBtnHtml = '';
+        if (this.state.mealBuffer) {
+            pasteBtnHtml = `<button class="btn-main-add" style="margin-top:10px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05);" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
+        }
+
+        list.innerHTML = mealsHtml + pasteBtnHtml;
         this.updateStats();
     },
 
@@ -463,6 +472,38 @@ const App = {
         this.render(); 
     },
 
+    copyMeal(mid) {
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === mid);
+        if (meal) {
+            // Робимо глибоку копію прийому їжі в буфер
+            this.state.mealBuffer = JSON.parse(JSON.stringify(meal));
+            this.render(); // Оновлюємо UI, щоб з'явилась кнопка вставки
+            
+            // Показуємо спливаюче повідомлення
+            const toast = document.createElement('div');
+            toast.innerText = "🍽 Скопійовано! Тепер можна вставити.";
+            toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#222; color:var(--theme); padding:10px 20px; border-radius:20px; z-index:9999; border:1px solid var(--theme); font-family:sans-serif; font-size:0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+    },
+
+    pasteMeal() {
+        if (!this.state.mealBuffer) return;
+        this.pushHistory();
+        const day = this.getCurrentDay();
+        
+        // Створюємо новий прийом їжі на основі буфера
+        const newMeal = JSON.parse(JSON.stringify(this.state.mealBuffer));
+        // Генеруємо унікальний ID (додаємо рандом, щоб уникнути дублів при швидкому кліку)
+        newMeal.id = Date.now() + Math.floor(Math.random() * 1000); 
+        
+        day.meals.push(newMeal);
+        this.save();
+        this.render();
+    },
+    
     addMealBlock() {
         this.pushHistory();
         const id = Utils.id();
