@@ -163,12 +163,13 @@ const App = {
             brandIcon.classList.add('hint-active');
         };
 
-        brandBlock.ondblclick = () => {
-            if(confirm("⚠ HARD RESET?")) {
+        brandBlock.ondblclick = async () => {
+            if(await Modal.confirm("⚠ HARD RESET?<br>Це знищить усі дані тренувань.", "УВАГА", "red")) {
                 localStorage.removeItem('training_protocol');
                 location.reload();
             }
         };
+
 
         if(!this.data.currentProgram) this.data.currentProgram = 'balanced';
         this.setTheme(this.data.currentProgram);
@@ -640,16 +641,17 @@ const App = {
         }
     },
 
-    setTimerDefault() {
+    async setTimerDefault() {
         this.stopTimer();
-        const val = prompt("Введіть час відпочинку (в секундах):\nНаприклад: 90 (1.5 хв) або 120 (2 хв)", this.timerState.default);
+        const val = await Modal.prompt("Введіть час відпочинку (в секундах):<br>Наприклад: 90 (1.5 хв) або 120 (2 хв)", "НАЛАШТУВАННЯ ТАЙМЕРА", this.timerState.default);
         if (val && !isNaN(val)) {
             const newTime = parseInt(val);
             this.timerState.default = newTime;
-            localStorage.setItem('rest_timer_default', newTime); // Зберігаємо назавжди
+            localStorage.setItem('rest_timer_default', newTime); 
             this.updateTimerUI();
         }
     },
+
     
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
@@ -664,14 +666,15 @@ const App = {
         }
     },
 
-    deleteFromBank(name) {
-        if(!confirm(`Видалити "${name}" з бази?`)) return;
+    async deleteFromBank(name) {
+        if(!(await Modal.confirm(`Видалити "${name}" з бази назавжди?`, "ВИДАЛЕННЯ", "red"))) return;
         this.pushHistory();
         this.data.exBank = this.data.exBank.filter(x => x !== name);
         this.save();
         this.updateBank();
         this.openBank();
     },
+
 
     addWeek(type, init=false) {
         if (!init) this.pushHistory(); 
@@ -696,8 +699,8 @@ const App = {
         this.render();
     },
 
-    delWeek(id) {
-        if(!confirm("Видалити тиждень?")) return;
+    async delWeek(id) {
+        if(!(await Modal.confirm("Видалити цей тиждень повністю?", "ВИДАЛЕННЯ ТИЖНЯ", "red"))) return;
         this.pushHistory();
         const idx = this.data.weeks.findIndex(w => w.id === id);
         if (idx !== -1) {
@@ -714,12 +717,13 @@ const App = {
         this.save(); this.render();
     },
     
-    delEx(w, d, e) {
-        if(!confirm("Видалити?")) return;
+    async delEx(w, d, e) {
+        if(!(await Modal.confirm("Видалити цю вправу з дня?", "ВИДАЛЕННЯ ВПРАВИ", "red"))) return;
         this.pushHistory();
         this.data.weeks[w].days[d].exercises.splice(e, 1);
         this.save(); this.render();
     },
+
 
     updateDay(w, d, f, v) {
         if(this.data.weeks[w].days[d][f] !== v) {
@@ -818,13 +822,14 @@ const App = {
         }
     },
     
-    delGuideRow(m, i) {
-        if(!confirm("Видалити цю вправу з довідника?")) return;
+    async delGuideRow(m, i) {
+        if(!(await Modal.confirm("Видалити цю вправу з довідника?", "ВИДАЛЕННЯ", "red"))) return;
         this.pushHistory();
         this.data.guidelines[m].splice(i, 1);
         this.save();
         this.renderGuide();
     },
+
 
     toggleEdit() {
         document.body.classList.toggle('editing');
