@@ -15,24 +15,25 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
 
         :root { 
-            --bg: #050505; 
-            --card-bg: rgba(20, 20, 22, 0.85); 
-            --border: #2a2a2a; 
+            --bg: #000000; /* Глибокий чорний для OLED */
+            --card-bg: #0a0a0a; /* Дуже темний сірий */
+            --card-hover: #111111;
+            --border: #1f1f1f; /* Тонка, ледь помітна лінія */
             --gold: #d4af37; 
             --blue: #3b82f6; 
             --green: #10b981; 
             --red: #ef4444;
-            --text: #f4f4f5; 
-            --text-dim: #a1a1aa; 
+            --text-main: #ffffff; 
+            --text-dim: #888888; 
+            --text-dark: #555555;
         }
         
         * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body { 
             background-color: var(--bg);
-            background-image: radial-gradient(circle at 50% 0%, #151515 0%, #050505 70%);
-            color: var(--text); 
-            font-family: 'Inter', sans-serif;
+            color: var(--text-main); 
+            font-family: 'Inter', -apple-system, sans-serif;
             margin: 0; padding: 20px 15px; 
             min-height: 100vh; 
             display: flex; flex-direction: column; align-items: center; 
@@ -44,142 +45,131 @@
             display: flex; flex-direction: column; flex: 1; 
         }
         
-        /* --- HEADER --- */
+        /* --- СТРОГИЙ HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center;
-            width: 100%; padding-bottom: 20px; margin-bottom: 25px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            width: 100%; padding-bottom: 20px; margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
             animation: slideDown 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .sys-status-left {
             display: flex; align-items: center; gap: 10px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem; color: #fff; letter-spacing: 1.5px; font-weight: 700;
+            font-size: 0.75rem; color: #fff; letter-spacing: 1.5px; font-weight: 700;
         }
 
         .status-dot {
-            width: 8px; height: 8px; background-color: var(--green); border-radius: 50%;
-            box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite;
+            width: 6px; height: 6px; background-color: var(--green); border-radius: 50%;
+            box-shadow: 0 0 8px var(--green); animation: pulse 2.5s infinite;
         }
 
         .sys-status-right { text-align: right; font-family: 'JetBrains Mono', monospace; }
-        .sys-time { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 2px; line-height: 1; }
-        .sys-date { font-size: 0.65rem; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+        .sys-time { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: 1px; line-height: 1; }
+        .sys-date { font-size: 0.6rem; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; }
 
-        /* --- SMART NAVIGATION CARDS --- */
-        .nav-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+        /* --- МІНІМАЛІСТИЧНІ КАРТКИ --- */
+        .nav-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
         
         .smart-card {
-            background: linear-gradient(145deg, var(--card-bg) 0%, rgba(10,10,12,0.9) 100%);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 22px 20px;
+            border-radius: 16px;
+            padding: 20px;
             text-decoration: none;
             display: flex; align-items: center; gap: 20px;
             position: relative; overflow: hidden;
-            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            transition: all 0.2s ease;
             animation: fadeInUp 0.6s ease backwards;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6);
         }
 
+        /* Тонка кольорова лінія зліва замість масивного градієнту */
         .smart-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
             background: #333; transition: 0.3s;
         }
         
-        .card-pharm::before { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
-        .card-train::before { background: var(--blue); box-shadow: 0 0 15px var(--blue); }
-        .card-nutri::before { background: var(--green); box-shadow: 0 0 15px var(--green); }
+        .card-pharm::before { background: var(--gold); }
+        .card-train::before { background: var(--blue); }
+        .card-nutri::before { background: var(--green); }
 
         .smart-card:nth-child(1) { animation-delay: 0.1s; }
         .smart-card:nth-child(2) { animation-delay: 0.2s; }
         .smart-card:nth-child(3) { animation-delay: 0.3s; }
 
-        /* Анімації натискання і наведення */
         @media (hover: hover) {
-            .smart-card:hover { transform: translateY(-3px); border-color: #444; }
+            .smart-card:hover { background: var(--card-hover); border-color: #333; }
         }
-        .smart-card:active { 
-            transform: scale(0.96); /* Чутливий Squish-ефект */
-            background: rgba(30, 30, 35, 0.9);
-            box-shadow: 0 5px 15px -5px rgba(0,0,0,0.8);
-        }
+        .smart-card:active { transform: scale(0.98); background: #141414; }
         
         .icon-box { 
-            width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
+            width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center; 
-            font-size: 26px; background: rgba(0,0,0,0.6); 
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            font-size: 22px; background: #000; 
+            border: 1px solid var(--border);
         }
-        
-        .smart-card:active .icon-box { transform: scale(0.9); }
-
-        /* Градієнтні фони іконок (як було в тебе) */
-        .card-pharm .icon-box { background: linear-gradient(135deg, rgba(212,175,55,0.15), transparent); border-color: rgba(212,175,55,0.3); color: var(--gold); }
-        .card-train .icon-box { background: linear-gradient(135deg, rgba(59,130,246,0.15), transparent); border-color: rgba(59,130,246,0.3); color: var(--blue); }
-        .card-nutri .icon-box { background: linear-gradient(135deg, rgba(16,185,129,0.15), transparent); border-color: rgba(16,185,129,0.3); color: var(--green); }
         
         .info { flex-grow: 1; }
-        .info h3 { margin: 0; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .info h3 { margin: 0; font-size: 1.05rem; color: #fff; letter-spacing: 0.5px; font-weight: 600; }
         
+        /* Типографіка даних: Моноширинний шрифт, чітке вирівнювання */
         .info-data { 
-            margin-top: 8px; font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.75rem; color: var(--text-dim); 
-            letter-spacing: 0.5px; line-height: 1.5;
-            display: flex; flex-direction: column; gap: 4px;
+            margin-top: 6px; font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.7rem; color: var(--text-dim); 
+            letter-spacing: 0.5px; line-height: 1.6;
+            display: flex; flex-direction: column;
         }
+        
+        .data-row { display: flex; align-items: center; gap: 8px; }
+        .data-hl { color: #fff; font-weight: 600; }
+        .data-lbl { color: var(--text-dark); }
 
-        /* --- BOTTOM AREA (Заповнюємо пустоту) --- */
+        /* --- ТЕРМІНАЛ ПОКАЗНИКІВ --- */
         .bottom-wrapper {
-            margin-top: auto; /* Притискає все до низу */
+            margin-top: auto; 
             width: 100%;
-            padding-top: 30px;
+            padding-top: 40px;
             animation: fadeIn 1s ease 0.5s backwards;
         }
 
-        /* Термінальна стрічка вітальних показників */
         .vitals-strip {
-            background: #0a0a0c; border: 1px dashed #333; border-radius: 12px;
-            padding: 12px 15px; display: flex; justify-content: space-around;
-            margin-bottom: 20px; font-family: 'JetBrains Mono', monospace;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            display: flex; justify-content: space-between;
+            margin-bottom: 25px; padding: 0 10px;
         }
-        .v-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .v-label { font-size: 0.55rem; color: #666; letter-spacing: 1px; font-weight: 700; }
-        .v-val { font-size: 0.85rem; color: #fff; font-weight: 700; }
-        .v-val span { color: var(--gold); }
-
-        .sys-control-title {
-            text-align: center; color: #444; 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; 
-            letter-spacing: 3px; margin-bottom: 12px; font-weight: 700;
+        
+        .v-item { display: flex; flex-direction: column; gap: 6px; }
+        .v-item.right { text-align: right; align-items: flex-end; }
+        
+        .v-label { 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; 
+            color: var(--text-dark); letter-spacing: 1.5px; font-weight: 700; 
         }
+        .v-val { 
+            font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; 
+            color: #fff; font-weight: 800; letter-spacing: -0.5px;
+        }
+        .v-val span { font-size: 0.7rem; color: var(--text-dim); font-weight: 500; letter-spacing: 1px; margin-left: 2px;}
 
-        .controls-grid { display: flex; gap: 15px; justify-content: center; }
+        /* --- СИСТЕМНІ КНОПКИ --- */
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
         .ctrl-btn {
-            background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 14px 24px; border-radius: 12px;
-            font-size: 0.75rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-            transition: all 0.15s ease; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px);
+            background: #050505; border: 1px solid var(--border); padding: 16px; border-radius: 12px;
+            font-size: 0.7rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+            transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+            color: var(--text-dim); letter-spacing: 1px;
         }
-        .btn-save { color: var(--green); }
-        .btn-save:active { background: rgba(16, 185, 129, 0.15); border-color: var(--green); transform: scale(0.95); }
-        
-        .btn-reset { color: var(--red); }
-        .btn-reset:active { background: rgba(239, 68, 68, 0.15); border-color: var(--red); transform: scale(0.95); }
+        .btn-save:hover, .btn-save:active { color: var(--green); border-color: var(--green); background: rgba(16, 185, 129, 0.05); }
+        .btn-reset:hover, .btn-reset:active { color: var(--red); border-color: var(--red); background: rgba(239, 68, 68, 0.05); }
 
         .last-backup {
             margin-top: 15px; text-align: center; font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.6rem; color: #555;
+            font-size: 0.55rem; color: var(--text-dark); letter-spacing: 1px;
         }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); opacity: 1; } 50% { opacity: 0.6; } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); opacity: 1; } }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeInUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -203,7 +193,9 @@
                 <div class="icon-box">🏆</div>
                 <div class="info">
                     <h3>Фармакологія</h3>
-                    <div class="info-data" id="data-pharm">ПРОТОКОЛ • АНАЛІЗИ</div>
+                    <div class="info-data" id="data-pharm">
+                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
+                    </div>
                 </div>
             </a>
             
@@ -211,7 +203,9 @@
                 <div class="icon-box">⚖️</div>
                 <div class="info">
                     <h3>Тренування</h3>
-                    <div class="info-data" id="data-train">ПЛАН: ЗБАЛАНСОВАНА</div>
+                    <div class="info-data" id="data-train">
+                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
+                    </div>
                 </div>
             </a>
             
@@ -219,7 +213,9 @@
                 <div class="icon-box">🥑</div>
                 <div class="info">
                     <h3>Харчування</h3>
-                    <div class="info-data" id="data-nutri">ОНОВЛЕННЯ ДАНИХ...</div>
+                    <div class="info-data" id="data-nutri">
+                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
+                    </div>
                 </div>
             </a>
             
@@ -229,16 +225,14 @@
             
             <div class="vitals-strip">
                 <div class="v-item">
-                    <span class="v-label">LAST WEIGHT</span>
-                    <span class="v-val" id="vital-weight">--</span>
+                    <span class="v-label">CURRENT WEIGHT</span>
+                    <span class="v-val" id="vital-weight">--.--<span>KG</span></span>
                 </div>
-                <div class="v-item">
+                <div class="v-item right">
                     <span class="v-label">BLOOD PRESSURE</span>
                     <span class="v-val" id="vital-bp">--/--</span>
                 </div>
             </div>
-
-            <div class="sys-control-title">SYSTEM CONTROL</div>
 
             <div class="controls-grid">
                 <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">💾 BACKUP</button>
@@ -250,7 +244,6 @@
     </div>
 
 <script>
-        // Годинник
         function updateClock() {
             const now = new Date();
             document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
@@ -258,7 +251,6 @@
         }
         setInterval(updateClock, 1000); 
 
-        // Хелпер для підрахунку макросів 1 дня
         function getDayMacros(day, bank) {
             let p=0, f=0, c=0, kcal=0;
             if (day && day.meals) {
@@ -285,52 +277,43 @@
             return { p: Math.round(p), f: Math.round(f), c: Math.round(c), kcal: Math.round(kcal) };
         }
 
-        // --- ЛОГІКА ЗЧИТУВАННЯ СТАТУСУ ---
         function populateSmartCards() {
-            // 1. ФАРМАКОЛОГІЯ
+            // 1. ФАРМАКОЛОГІЯ ТА ПОКАЗНИКИ (ВАГА, ТИСК)
             try {
                 const ph = JSON.parse(localStorage.getItem('gold_protocol'));
-                if (ph && ph.schedule && ph.startDate) {
-                    const startDate = new Date(ph.startDate);
-                    const now = new Date();
-                    
-                    const day = startDate.getDay();
-                    const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                    const startMonday = new Date(startDate.setDate(diff));
-                    startMonday.setHours(0,0,0,0);
-                    
-                    const diffTime = now.getTime() - startMonday.getTime();
-                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-                    
-                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-                    if (currentWeek < 1) currentWeek = 1;
-                    if (currentWeek > maxW) currentWeek = maxW;
+                if (ph) {
+                    // Парсимо фазу
+                    if (ph.schedule && ph.startDate) {
+                        const startDate = new Date(ph.startDate);
+                        const now = new Date();
+                        const day = startDate.getDay();
+                        const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                        const startMonday = new Date(startDate.setDate(diff));
+                        startMonday.setHours(0,0,0,0);
+                        
+                        const diffTime = now.getTime() - startMonday.getTime();
+                        let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                        
+                        const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
+                        if (currentWeek < 1) currentWeek = 1;
+                        if (currentWeek > maxW) currentWeek = maxW;
 
-                    let phaseTitle = "Курс";
-                    if (ph.phases) {
-                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
-                        if (currentPhase) phaseTitle = currentPhase.title;
+                        let phaseTitle = "Курс";
+                        if (ph.phases) {
+                            const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
+                            if (currentPhase) phaseTitle = currentPhase.title;
+                        }
+                        
+                        document.getElementById('data-pharm').innerHTML = `
+                            <div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div>
+                            <div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>
+                        `;
                     }
-                    
-                    document.getElementById('data-pharm').innerHTML = `ФАЗА: <span style="color:var(--gold)">${phaseTitle.toUpperCase()}</span> &nbsp;•&nbsp; ТИЖДЕНЬ ${currentWeek}`;
-                }
-            } catch(e){}
 
-            // 2. ТРЕНУВАННЯ ТА ВІТАЛЬНІ ПОКАЗНИКИ (ТИСК І ВАГА)
-            try {
-                const tr = JSON.parse(localStorage.getItem('training_protocol'));
-                if (tr && tr.weeks && tr.weeks.length > 0) {
-                    // Оновлення картки Тренування
-                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
-                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
-                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-                    document.getElementById('data-train').innerHTML = `ПЛАН: <span style="color:var(--blue)">${progName}</span> &nbsp;•&nbsp; ${typeName} (W${lastWeek.num})`;
-
-                    // Оновлення Терміналу Діагностики (Низ екрану)
-                    if(tr.vitals) {
-                        let latestW = "--", latestBP = "--/--";
-                        // Йдемо по ключах у зворотному порядку (спрощений пошук останніх даних)
-                        const keys = Object.keys(tr.vitals).sort((a,b) => {
+                    // Парсимо Вітальні показники (Вага і Тиск)
+                    if(ph.vitals) {
+                        let latestW = "--.--<span>KG</span>", latestBP = "--/--";
+                        const keys = Object.keys(ph.vitals).sort((a,b) => {
                             const [wA, dA] = a.split('-').map(Number);
                             const [wB, dB] = b.split('-').map(Number);
                             if(wA !== wB) return wB - wA;
@@ -338,9 +321,9 @@
                         });
                         
                         for(let key of keys) {
-                            if(tr.vitals[key].w && latestW === "--") latestW = tr.vitals[key].w + " <span>KG</span>";
-                            if(tr.vitals[key].bp && latestBP === "--/--") latestBP = tr.vitals[key].bp;
-                            if(latestW !== "--" && latestBP !== "--/--") break;
+                            if(ph.vitals[key].w && latestW.includes("--")) latestW = ph.vitals[key].w + "<span>KG</span>";
+                            if(ph.vitals[key].bp && latestBP === "--/--") latestBP = ph.vitals[key].bp;
+                            if(!latestW.includes("--") && latestBP !== "--/--") break;
                         }
                         
                         document.getElementById('vital-weight').innerHTML = latestW;
@@ -349,39 +332,50 @@
                 }
             } catch(e){}
 
-            // 3. ХАРЧУВАННЯ (Читаємо 2 дні: Train & Rest)
+            // 2. ТРЕНУВАННЯ
+            try {
+                const tr = JSON.parse(localStorage.getItem('training_protocol'));
+                if (tr && tr.weeks && tr.weeks.length > 0) {
+                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
+                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
+                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
+                    document.getElementById('data-train').innerHTML = `
+                        <div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div>
+                        <div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>
+                    `;
+                }
+            } catch(e){}
+
+            // 3. ХАРЧУВАННЯ (Тренування та Відпочинок)
             try {
                 const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days) {
                     const bank = nu.bank || {}; 
                     let htmlContent = '';
                     
-                    // День 1 (Тренування)
                     if (nu.days[0]) {
                         const d1 = getDayMacros(nu.days[0], bank);
                         if(d1.kcal > 0) {
-                            htmlContent += `<div><span style="color:var(--green)">[T]</span> <span style="color:#fff">${d1.kcal} KCAL</span> &nbsp;&nbsp;<span style="color:#666">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
+                            htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
                         }
                     }
                     
-                    // День 2 (Відпочинок)
                     if (nu.days[1]) {
                         const d2 = getDayMacros(nu.days[1], bank);
                         if(d2.kcal > 0) {
-                            htmlContent += `<div><span style="color:var(--green)">[R]</span> <span style="color:#fff">${d2.kcal} KCAL</span> &nbsp;&nbsp;<span style="color:#666">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
+                            htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--text-dark)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
                         }
                     }
                     
                     if (htmlContent !== '') {
                         document.getElementById('data-nutri').innerHTML = htmlContent;
                     } else {
-                        document.getElementById('data-nutri').innerHTML = `РАЦІОН ПОРОЖНІЙ`;
+                        document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
                     }
                 }
             } catch(e){}
         }
 
-        // --- БЕКАП ЛОГІКА ---
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
         function CreateRestorePoint() {
@@ -394,14 +388,13 @@
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
-            alert(savedCount > 0 ? "Успішно збережено в пам'ять пристрою!" : "Система пуста.");
         }
 
         function updateBackupLabel() {
             const ts = localStorage.getItem('backup_timestamp');
             const el = document.getElementById('last-backup');
             if(ts) { el.innerText = "LAST BACKUP: " + ts; el.style.color = "var(--green)"; } 
-            else { el.innerText = "NO BACKUP FOUND"; el.style.color = "#555"; }
+            else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
         }
 
         function SystemReset() {
@@ -418,10 +411,9 @@
 
         function FullWipe() { localStorage.clear(); location.reload(); }
 
-        // Додаємо вібрацію на кнопки
         document.addEventListener('click', (e) => {
             if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn')) {
-                if(navigator.vibrate) navigator.vibrate(15);
+                if(navigator.vibrate) navigator.vibrate(10);
             }
         });
 
