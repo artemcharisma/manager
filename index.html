@@ -210,8 +210,7 @@
             filter: drop-shadow(0 0 4px rgba(239,68,68,0.6));
         }
         .ecg-line {
-            stroke-dasharray: 90;
-            stroke-dashoffset: 90;
+            stroke-dasharray: 90; stroke-dashoffset: 90;
             animation: ecgDraw 2s infinite linear;
         }
 
@@ -228,7 +227,7 @@
             letter-spacing: 4px; margin-bottom: 15px; font-weight: 800;
         }
 
-        /* --- КНОПКИ БЕКАПУ ТА СКИДАННЯ (КОЛЬОРОВІ) --- */
+        /* --- КНОПКИ БЕКАПУ ТА СКИДАННЯ --- */
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
         .ctrl-btn {
@@ -288,7 +287,7 @@
             background: linear-gradient(145deg, #101012 0%, #050505 100%);
             border: 1px solid var(--border); border-radius: 20px;
             width: 90%; max-width: 400px; padding: 25px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
             transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             text-align: center;
         }
@@ -297,17 +296,19 @@
 
         #protocol-modal-box.theme-green { border-color: var(--green); box-shadow: 0 0 30px rgba(16,185,129,0.15); }
         #protocol-modal-box.theme-gold { border-color: var(--gold); box-shadow: 0 0 30px rgba(212,175,55,0.15); }
-        #protocol-modal-box.theme-red { border-color: var(--red); box-shadow: 0 0 30px rgba(239,68,68,0.15); }
+        #protocol-modal-box.theme-red { border-color: var(--red); box-shadow: 0 0 40px rgba(239,68,68,0.2); }
 
         #protocol-modal-header {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.75rem; color: var(--text-dim); letter-spacing: 2px;
-            text-transform: uppercase; margin-bottom: 15px; font-weight: 700;
+            text-transform: uppercase; margin-bottom: 18px; font-weight: 700;
         }
         
+        /* Покращена типографіка тексту вікна */
         #protocol-modal-body {
             font-family: 'Inter', sans-serif;
-            font-size: 1rem; color: #fff; line-height: 1.5; margin-bottom: 25px;
+            font-size: 0.95rem; color: #e0e0e0; line-height: 1.6; margin-bottom: 25px;
+            letter-spacing: 0.2px;
         }
         
         #protocol-modal-input-wrap { display: none; margin-top: 15px; }
@@ -321,6 +322,29 @@
 
         #protocol-modal-footer { display: grid; gap: 12px; }
         #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
+
+        /* Стилізація активної кнопки СКАСУВАТИ */
+        #modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #d1d1d1;
+            box-shadow: none;
+        }
+        
+        @media (hover: hover) {
+            #modal-btn-cancel:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.3);
+                color: #fff;
+            }
+        }
+        
+        #modal-btn-cancel:active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+            transform: scale(0.95);
+        }
 
         /* Ключові кадри анімацій */
         @keyframes ecgDraw {
@@ -645,7 +669,13 @@
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
         async function CreateRestorePoint() {
-            const confirmed = await Modal.confirm("Створити нову резервну копію (Backup)?<br><br><span style='color:var(--text-dim);font-size:0.8rem'>Попередня копія буде перезаписана.</span>", "СТВОРЕННЯ BACKUP", "gold");
+            // Оновлений текст із красивою лівою лінією попередження
+            const msg = `Створити нову резервну копію (Backup)?<br><br>
+                         <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
+                            Попередня копія буде перезаписана поточним станом бази даних.
+                         </span>`;
+            
+            const confirmed = await Modal.confirm(msg, "СТВОРЕННЯ BACKUP", "gold");
             if(!confirmed) return; 
 
             let savedCount = 0;
@@ -674,7 +704,15 @@
         async function SystemReset() {
             const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
             if(hasBackup) {
-                const promptText = "Оберіть дію:<br><br><span style='color:var(--gold)'>[ 1 ]</span> - ВІДНОВИТИ з Backup<br><span style='color:var(--red)'>[ 2 ]</span> - ВИДАЛИТИ ВСІ ДАНІ";
+                // Стилізований термінальний блок для вибору
+                const promptText = `
+                    <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; margin-bottom: 10px;">
+                        <div style="color: var(--text-dim); margin-bottom: 12px;">// Введіть команду:</div>
+                        <div style="margin-bottom: 8px;"><span style="color: var(--gold); font-weight: bold;">[1]</span> ВІДНОВИТИ з Backup</div>
+                        <div><span style="color: var(--red); font-weight: bold;">[2]</span> ВИДАЛИТИ всі дані</div>
+                    </div>
+                `;
+                
                 const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "Введіть 1 або 2");
                 
                 if (choice === '1') {
