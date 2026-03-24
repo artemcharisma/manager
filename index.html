@@ -182,7 +182,7 @@
         .data-hl { color: #fff; font-weight: 700; }
         .data-lbl { color: var(--text-dark); }
 
-        /* --- ЧИСТИЙ БЛОК VITALS БЕЗ РАМОК --- */
+        /* --- ЧИСТИЙ БЛОК VITALS --- */
         .bottom-wrapper {
             margin-top: 40px; 
             width: 100%;
@@ -203,7 +203,6 @@
             display: flex; align-items: center; gap: 6px;
         }
         
-        /* АНІМОВАНА ЛІНІЯ ПУЛЬСУ (ECG) */
         .ecg-svg {
             width: 32px; height: 12px; stroke: var(--red); fill: none; stroke-width: 2.5;
             stroke-linecap: round; stroke-linejoin: round;
@@ -304,7 +303,6 @@
             text-transform: uppercase; margin-bottom: 18px; font-weight: 700;
         }
         
-        /* Покращена типографіка тексту вікна */
         #protocol-modal-body {
             font-family: 'Inter', sans-serif;
             font-size: 0.95rem; color: #e0e0e0; line-height: 1.6; margin-bottom: 25px;
@@ -323,27 +321,31 @@
         #protocol-modal-footer { display: grid; gap: 12px; }
         #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
 
-        /* Стилізація активної кнопки СКАСУВАТИ */
+        /* --- КНОПКА "СКАСУВАТИ" (Динамічна та стильна) --- */
         #modal-btn-cancel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: linear-gradient(to bottom, rgba(40, 40, 45, 0.8), rgba(25, 25, 30, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #d1d1d1;
-            box-shadow: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         @media (hover: hover) {
             #modal-btn-cancel:hover {
-                background: rgba(255, 255, 255, 0.1);
+                background: linear-gradient(to bottom, rgba(55, 55, 60, 0.9), rgba(35, 35, 40, 0.95));
                 border-color: rgba(255, 255, 255, 0.3);
                 color: #fff;
+                box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
             }
         }
         
+        /* Пружний Active для мобільних (як у головних кнопок) */
         #modal-btn-cancel:active {
-            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0.93);
+            background: rgba(55, 55, 60, 0.9);
             border-color: rgba(255, 255, 255, 0.4);
             color: #fff;
-            transform: scale(0.95);
+            transition: transform 0.05s ease;
         }
 
         /* Ключові кадри анімацій */
@@ -452,7 +454,7 @@
         <div id="protocol-modal-box">
             <div id="protocol-modal-header">СИСТЕМНЕ ПОВІДОМЛЕННЯ</div>
             <div id="protocol-modal-body">
-                <p id="protocol-modal-text">Текст повідомлення</p>
+                <div id="protocol-modal-text">Текст повідомлення</div>
                 <div id="protocol-modal-input-wrap">
                     <input type="text" id="protocol-modal-input" placeholder="Введіть дані...">
                 </div>
@@ -669,7 +671,6 @@
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
         async function CreateRestorePoint() {
-            // Оновлений текст із красивою лівою лінією попередження
             const msg = `Створити нову резервну копію (Backup)?<br><br>
                          <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
                             Попередня копія буде перезаписана поточним станом бази даних.
@@ -704,12 +705,14 @@
         async function SystemReset() {
             const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
             if(hasBackup) {
-                // Стилізований термінальний блок для вибору
+                // Ідеально вирівняний текст вибору
                 const promptText = `
-                    <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; margin-bottom: 10px;">
-                        <div style="color: var(--text-dim); margin-bottom: 12px;">// Введіть команду:</div>
-                        <div style="margin-bottom: 8px;"><span style="color: var(--gold); font-weight: bold;">[1]</span> ВІДНОВИТИ з Backup</div>
-                        <div><span style="color: var(--red); font-weight: bold;">[2]</span> ВИДАЛИТИ всі дані</div>
+                    <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
+                            <div><span style="color: var(--gold); font-weight: 700; display: inline-block; width: 40px;">[ 1 ]</span> - ВІДНОВИТИ з Backup</div>
+                            <div><span style="color: var(--red); font-weight: 700; display: inline-block; width: 40px;">[ 2 ]</span> - ВИДАЛИТИ ВСІ ДАНІ</div>
+                        </div>
                     </div>
                 `;
                 
@@ -735,7 +738,7 @@
         function FullWipe() { localStorage.clear(); location.reload(); }
 
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn') || e.target.closest('.modal-btn')) {
+            if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn')) {
                 if(navigator.vibrate) navigator.vibrate(15);
             }
         });
