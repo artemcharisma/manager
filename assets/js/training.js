@@ -128,7 +128,7 @@ const InitialData = {
 const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
-    timerState: { interval: null, left: 0, default: 90, el: null, audioCtx: null, endTime: null },
+    timerState: { interval: null, left: 0, default: 90, el: null, endTime: null },
 
     init() {
         this.data = this.state.init();
@@ -536,15 +536,15 @@ const App = {
         this.stopTimer();
         this.timerState.left = seconds;
         
-        // ЗАПАМ'ЯТОВУЄМО ТОЧНИЙ ЧАС ЗАВЕРШЕННЯ В МАЙБУТНЬОМУ
+        // ЗАПАМ'ЯТОВУЄМО ТОЧНИЙ ЧАС ЗАВЕРШЕННЯ
         this.timerState.endTime = Date.now() + (seconds * 1000);
         
-        // Запитуємо дозвіл на системні сповіщення (при першому запуску)
+        // Запитуємо дозвіл на системні сповіщення
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
         }
         
-        // Дизайн
+        // Дизайн (активний)
         this.timerState.el.style.background = 'var(--theme, #d4af37)';
         this.timerState.el.style.color = '#000';
         this.timerState.el.style.boxShadow = '0 0 20px var(--theme, #d4af37)';
@@ -552,14 +552,9 @@ const App = {
         this.updateTimerUI();
         if (window.Haptics) window.Haptics.light();
 
-        if (!this.timerState.audioCtx) {
-            this.timerState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        // Перевіряємо час кожні 250мс (щоб швидше "прокинутись" після розблокування)
+        // Перевіряємо час кожні 250мс
         this.timerState.interval = setInterval(() => {
             const now = Date.now();
-            // Рахуємо різницю між поточним часом і часом завершення
             this.timerState.left = Math.ceil((this.timerState.endTime - now) / 1000);
             
             this.updateTimerUI();
@@ -570,15 +565,14 @@ const App = {
                 
                 // --- СИСТЕМНЕ СПОВІЩЕННЯ ---
                 if ("Notification" in window && Notification.permission === "granted") {
-                    // Якщо телефон заблоковано, це може висвітитись на екрані
-                    new Notification("Час відпочинку вийшов!", {
-                        body: "Пора робити наступний підхід!",
+                    new Notification("Час вийшов!", {
+                        body: "Пора робити наступний підхід",
                         icon: "icon.png", 
                         vibrate: [200, 100, 200]
                     });
                 }
                 
-                this.playDing();
+                // Тільки вібрація
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
                 if (window.Haptics) window.Haptics.heavy();
                 
@@ -624,37 +618,7 @@ const App = {
             this.updateTimerUI();
         }
     },
-    playDing() {
-        try {
-            // Ініціалізуємо аудіо-контекст (браузер дозволяє це лише після першого кліку користувача)
-            if (!this.timerState.audioCtx) {
-                this.timerState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            const ctx = this.timerState.audioCtx;
-            if (ctx.state === 'suspended') ctx.resume(); // "Будимо" аудіо для iOS
-
-            // Створюємо осцилятор (генератор звукових хвиль)
-            const osc = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-
-            osc.type = 'sine'; // М'яка синусоїдна хвиля (звучить як скло/дзвіночок)
-            osc.frequency.setValueAtTime(880, ctx.currentTime); // Нота Ля 5-ї октави (A5)
-
-            // Налаштовуємо гучність (Envelope): швидкий старт і плавне затухання
-            gainNode.gain.setValueAtTime(0, ctx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05); // Гучність 50% (щоб не глушило)
-            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5); // Плавно стихає за 1.5 сек
-
-            osc.connect(gainNode);
-            gainNode.connect(ctx.destination);
-
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 1.5);
-        } catch(e) { 
-            console.log("Audio API не підтримується", e); 
-        }
-    },
-    // --- КІНЕЦЬ БЛОКУ ТАЙМЕРА ---
+    
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
         if(val && !this.data.exBank.includes(val)) {
