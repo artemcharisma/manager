@@ -43,7 +43,7 @@
             min-height: 100vh; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased; /* Робить шрифти ідеально гладкими на iOS */
+            -webkit-font-smoothing: antialiased; 
             -moz-osx-font-smoothing: grayscale;
         }
 
@@ -64,7 +64,6 @@
             display: flex; align-items: center; gap: 12px;
         }
 
-        /* Нова технологічна крапка з радаром */
         .status-indicator {
             position: relative;
             display: flex; align-items: center; justify-content: center;
@@ -83,7 +82,6 @@
             animation: radarPulse 2.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Двотональна типографіка (Bold + Light) */
         .brand-title {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem; color: #fff; letter-spacing: 2px; font-weight: 800;
@@ -249,7 +247,6 @@
             }
         }
         
-        /* Миттєвий ефект на iOS без залипання */
         .btn-save:active { 
             border-color: var(--green); background: rgba(16, 185, 129, 0.2); 
             transform: scale(0.93); transition: transform 0.05s ease;
@@ -263,6 +260,61 @@
             margin-top: 18px; text-align: center; font-family: 'JetBrains Mono', monospace; 
             font-size: 0.65rem; color: var(--text-dark); letter-spacing: 1px;
         }
+
+        /* --- PROTOCOL MODAL OS (Кастомні вспливаючі вікна) --- */
+        #protocol-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            z-index: 9000; display: none; /* Спочатку приховане */
+            opacity: 0; transition: opacity 0.3s ease;
+            align-items: center; justify-content: center;
+        }
+        
+        #protocol-modal-overlay.active { display: flex; opacity: 1; }
+
+        #protocol-modal-box {
+            background: linear-gradient(145deg, #101012 0%, #050505 100%);
+            border: 1px solid var(--border); border-radius: 20px;
+            width: 90%; max-width: 400px; padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            text-align: center;
+        }
+        
+        #protocol-modal-overlay.active #protocol-modal-box { transform: scale(1); }
+
+        /* Кольорові теми модальних вікон */
+        #protocol-modal-box.theme-green { border-color: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+        #protocol-modal-box.theme-gold { border-color: var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.2); }
+        #protocol-modal-box.theme-red { border-color: var(--red); box-shadow: 0 0 20px rgba(239,68,68,0.2); }
+
+        #protocol-modal-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; color: var(--text-dim); letter-spacing: 2px;
+            text-transform: uppercase; margin-bottom: 15px; font-weight: 700;
+        }
+        
+        #protocol-modal-body {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem; color: #fff; line-height: 1.5; margin-bottom: 25px;
+        }
+        
+        /* Стилізація поля вводу (prompt) всередині модального вікна */
+        #protocol-modal-input-wrap { display: none; margin-top: 15px; }
+        #protocol-modal-input {
+            width: 100%; background: #000; border: 1px solid #333; color: #fff;
+            font-family: 'JetBrains Mono', monospace; font-size: 1rem;
+            padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center;
+            outline: none; transition: 0.2s;
+        }
+        #protocol-modal-input:focus { border-color: var(--green); box-shadow: 0 0 10px rgba(16,185,129,0.3); }
+
+        #protocol-modal-footer {
+            display: grid; gap: 12px;
+        }
+        
+        /* Grid для 2 кнопок (confirm) */
+        #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
 
         @keyframes radarPulse { 
             0% { transform: scale(0.5); opacity: 1; } 
@@ -356,6 +408,21 @@
             </div>
             
             <div id="last-backup" class="last-backup">NO BACKUP FOUND</div>
+        </div>
+        
+    </div> <div id="protocol-modal-overlay">
+        <div id="protocol-modal-box">
+            <div id="protocol-modal-header">СИСТЕМНЕ ПОВІДОМЛЕННЯ</div>
+            <div id="protocol-modal-body">
+                <p id="protocol-modal-text">Текст повідомлення</p>
+                <div id="protocol-modal-input-wrap">
+                    <input type="text" id="protocol-modal-input" placeholder="Введіть дані...">
+                </div>
+            </div>
+            <div id="protocol-modal-footer">
+                <button id="modal-btn-cancel" class="ctrl-btn" onclick="Modal.handleCancel()">СКАСУВАТИ</button>
+                <button id="modal-btn-ok" class="ctrl-btn btn-save" onclick="Modal.handleOK()">ОК</button>
+            </div>
         </div>
     </div>
 
@@ -490,10 +557,114 @@
             } catch(e){}
         }
 
+        // --- ЛОГІКА PROTOCOL MODAL OS (ASYNC WRAPPER) ---
+        let modalResolve = null; // Глобальна змінна для промісу
+
+        const Modal = {
+            overlay: null,
+            box: null,
+            header: null,
+            text: null,
+            inputWrap: null,
+            input: null,
+            btnCancel: null,
+            btnOk: null,
+            footer: null,
+
+            init() {
+                // Знаходимо елементи один раз при завантаженні
+                this.overlay = document.getElementById('protocol-modal-overlay');
+                this.box = document.getElementById('protocol-modal-box');
+                this.header = document.getElementById('protocol-modal-header');
+                this.text = document.getElementById('protocol-modal-text');
+                this.inputWrap = document.getElementById('protocol-modal-input-wrap');
+                this.input = document.getElementById('protocol-modal-input');
+                this.btnCancel = document.getElementById('modal-btn-cancel');
+                this.btnOk = document.getElementById('modal-btn-ok');
+                this.footer = document.getElementById('protocol-modal-footer');
+            },
+
+            // Універсальна функція показу вікна, повертає Проміс
+            show({ title, text, type = 'alert', theme = 'gold', placeholder = '' }) {
+                this.init(); // Гарантуємо, що елементи знайдені
+
+                // Встановлюємо контент
+                this.header.innerText = title;
+                this.text.innerHTML = text;
+                this.input.value = ''; // Скидаємо ввід
+
+                // Налаштовуємо тему (клас рамки)
+                this.box.className = `theme-${theme}`;
+
+                // Налаштовуємо тип вікна
+                if (type === 'alert') {
+                    this.inputWrap.style.display = 'none';
+                    this.btnCancel.style.display = 'none';
+                    this.footer.className = '';
+                    this.btnOk.className = `ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`; // Ок або Вайп
+                } else if (type === 'confirm') {
+                    this.inputWrap.style.display = 'none';
+                    this.btnCancel.style.display = 'flex';
+                    this.footer.className = 'dual-btn';
+                    this.btnOk.className = `ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
+                } else if (type === 'prompt') {
+                    this.inputWrap.style.display = 'block';
+                    this.input.placeholder = placeholder;
+                    this.btnCancel.style.display = 'flex';
+                    this.footer.className = 'dual-btn';
+                    this.btnOk.className = 'ctrl-btn btn-save';
+                    // Фокус на поле вводу після анімації
+                    setTimeout(() => this.input.focus(), 300);
+                }
+
+                // Показуємо вікно з анімацією
+                this.overlay.className = 'active';
+
+                // Створюємо Проміс
+                return new Promise((resolve) => {
+                    modalResolve = resolve;
+                });
+            },
+
+            handleOK() {
+                const type = this.inputWrap.style.display === 'block' ? 'prompt' : (this.btnCancel.style.display === 'flex' ? 'confirm' : 'alert');
+                this.close();
+                if (type === 'prompt') modalResolve(this.input.value);
+                else modalResolve(true);
+            },
+
+            handleCancel() {
+                this.close();
+                modalResolve(null); // Скасовано (null або false)
+            },
+
+            close() {
+                this.overlay.className = '';
+                // Скидаємо resolved після закриття
+                setTimeout(() => modalResolve = null, 300);
+            },
+
+            // Хелпери для швидкого виклику (імітація стандартних)
+            async alert(text, title, theme) {
+                return this.show({ text, title, theme, type: 'alert' });
+            },
+            async confirm(text, title, theme) {
+                return this.show({ text, title, theme, type: 'confirm' });
+            },
+            async prompt(text, title, placeholder) {
+                return this.show({ text, title, placeholder, type: 'prompt', theme: 'gold' });
+            }
+        };
+
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
-        function CreateRestorePoint() {
-            if(!confirm("Створити резервну копію (Backup)?")) return;
+        // --- ОНОВЛЕНІ КЕРУЮЧІ ФУНКЦІЇ З КАСТОМНИМИ ВІКНАМИ ---
+
+        async function CreateRestorePoint() {
+            // Запит підтвердження (Confirm)
+            const confirmed = await Modal.confirm("Створити нову резервну копію (Backup)?<br>Старий бекап буде перезаписано.", "СТВОРЕННЯ BACKUP");
+            if(!confirmed) return; // Користувач скасував
+
             let savedCount = 0;
             APP_KEYS.forEach(k => {
                 const d = localStorage.getItem(k);
@@ -502,6 +673,13 @@
             const now = new Date().toLocaleString('uk-UA');
             localStorage.setItem('backup_timestamp', now);
             updateBackupLabel();
+            
+            // Повідомлення про успіх (Alert - Green)
+            if(savedCount > 0) {
+                await Modal.alert("Резервну копію успішно створено!", "BACKUP СТВОРЕНО", "green");
+            } else {
+                await Modal.alert("Система пуста. Немає даних для бекапу.", "ПОВІДОМЛЕННЯ");
+            }
         }
 
         function updateBackupLabel() {
@@ -511,30 +689,44 @@
             else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
         }
 
-        function SystemReset() {
+        async function SystemReset() {
             const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
             if(hasBackup) {
-                const choice = prompt("1 - ВІДНОВИТИ з Backup\n2 - ВИДАЛИТИ ВСІ ДАНІ (Wipe All)\nВведіть цифру:", "1");
+                // Запит вибору (Prompt - Gold)
+                const promptText = "Для вибору введіть цифру:<br><br>[1] - ВІДНОВИТИ з Backup<br>[2] - ВИДАЛИТИ ВСІ ДАНІ (Wipe All)";
+                const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "1");
+                
                 if (choice === '1') {
-                    APP_KEYS.forEach(k => { const b = localStorage.getItem(k + '_backup'); if(b) localStorage.setItem(k, b); });
-                    alert("Систему успішно відновлено!"); location.reload();
+                    // Підтвердження відновлення (Confirm - Gold)
+                    const confirmRestore = await Modal.confirm("Ви точно хочете відновити систему з останнього Backup?", "ВІДНОВЛЕННЯ ДАНИХ");
+                    if (confirmRestore) {
+                        APP_KEYS.forEach(k => { const b = localStorage.getItem(k + '_backup'); if(b) localStorage.setItem(k, b); });
+                        await Modal.alert("Систему успішно відновлено!", "ВІДНОВЛЕНО", "green");
+                        location.reload();
+                    }
                 } else if (choice === '2') {
-                    if(confirm("Ви точно хочете видалити ВСІ дані назавжди?")) FullWipe();
+                    // Критичне підтвердження видалення (Confirm - Red)
+                    const confirmWipe = await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br>Відновити дані буде НЕМОЖЛИВО.<br>Ви впевнені?", "⚠ ПОВНЕ ВИДАЛЕННЯ [WIPE] ⚠", "red");
+                    if (confirmWipe) FullWipe();
                 }
+                // Якщо null або інша цифра - просто закривається
             } else {
-                if(confirm("Резервних копій немає. Точно очистити додаток?")) FullWipe();
+                // Підтвердження видалення без бекапу (Confirm - Red)
+                const proceedWipe = await Modal.confirm("Резервних копій не знайдено.<br>Ви впевнені, що хочете видалити ВСІ дані?", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red");
+                if (proceedWipe) FullWipe();
             }
         }
 
         function FullWipe() { localStorage.clear(); location.reload(); }
 
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn')) {
+            if (e.target.closest('.smart-card') || e.target.closest('.ctrl-btn') || e.target.closest('.modal-btn')) {
                 if(navigator.vibrate) navigator.vibrate(10);
             }
         });
 
         window.onload = () => {
+            Modal.init(); // Ініціалізуємо кастомні вікна
             updateClock();
             updateBackupLabel();
             populateSmartCards(); 
