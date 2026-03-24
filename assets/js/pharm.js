@@ -1854,6 +1854,11 @@ calc(week) {
             this.state.openMenu = null;
             this.save();
             this.renderView();
+            const toast = document.createElement('div');
+            toast.innerText = "🗑 Видалено з усього тижня!";
+            toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
         },
         
         async deletePillFutureInPhase(name, startWeek, dayIndex) {
