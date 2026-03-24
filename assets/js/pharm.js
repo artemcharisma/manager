@@ -234,21 +234,22 @@ const PhotoDB = {
         dayBuffer: null,
         pillBuffer: null,
 
-        safeSave() {
+        async safeSave() {
             if(document.body.classList.contains('privacy-mode')) {
-                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                await Modal.alert("ACCESS DENIED: SYSTEM LOCKED", "ПОМИЛКА", "red");
                 return;
             }
             this.smartSave();
         },
         
-        safeLoad() {
+        async safeLoad() {
             if(document.body.classList.contains('privacy-mode')) {
-                alert("⛔ ACCESS DENIED: SYSTEM LOCKED");
+                await Modal.alert("ACCESS DENIED: SYSTEM LOCKED", "ПОМИЛКА", "red");
                 return;
             }
             document.getElementById('fileInput').click();
         },
+
 
         // =========================================================================
         // --- УНІВЕРСАЛЬНИЙ ФОТО-ХАБ (Пози + Тижні) ---
@@ -675,15 +676,15 @@ const PhotoDB = {
                 brandIcon.classList.add('hint-active');
             };
             
-            brandBlock.ondblclick = () => {
+               brandBlock.ondblclick = async () => {
                 if (document.body.classList.contains('privacy-mode')) return;
-                if(confirm("⚠ HARD RESET? Це знищить усі дані.")) {
+                if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані.", "КРИТИЧНО", "red")) {
                     localStorage.removeItem('gold_protocol');
                     try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
                     location.reload();
                 }
             };
-        },
+
 
         load() {
             this.data = this.stateManager.init();
@@ -1783,20 +1784,18 @@ calc(week) {
             setTimeout(() => toast.remove(), 2500);
         },
             
-        duplicatePillToPhase(w, d, pillIdx) {
-            if(!confirm("Дублювати цей препарат до кінця фази?")) return;
+        async duplicatePillToPhase(w, d, pillIdx) {
+            if(!(await Modal.confirm("Дублювати цей препарат до кінця фази?", "КОПІЮВАННЯ", "gold"))) return;
             this.pushHistory();
+            // ... решта коду функції
             const sourcePill = this.data.schedule[w][d][pillIdx];
-            
             const phase = this.data.phases.find(p => p.weeks.includes(w));
             if(!phase) return;
-
             phase.weeks.forEach(weekNum => {
                 if (weekNum > w) {
                     this.data.schedule[weekNum][d].push({ ...sourcePill });
                 }
             });
-            
             this.save();
             this.renderView(); 
         },
@@ -1843,47 +1842,38 @@ calc(week) {
             }
         },
 
-        deletePillFromWeek(name, w) {
-            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" з УСЬОГО тижня ${w}?`)) return;
+        async deletePillFromWeek(name, w) {
+            if(!(await Modal.confirm(`⚠️ ВИДАЛИТИ "${name}" з УСЬОГО тижня ${w}?`, "ОЧИЩЕННЯ ТИЖНЯ", "red"))) return;
             this.pushHistory();
-            
+            // ... решта коду
             for (let d = 0; d < 7; d++) {
                 if (this.data.schedule[w] && this.data.schedule[w][d]) {
                     this.data.schedule[w][d] = this.data.schedule[w][d].filter(p => p.name.trim().toLowerCase() !== name.trim().toLowerCase());
                 }
             }
-            
-            this.state.openMenu = null; // Закриваємо меню
+            this.state.openMenu = null;
             this.save();
             this.renderView();
-            
-            const toast = document.createElement('div');
-            toast.innerText = "🗑 Видалено з усього тижня!";
-            toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2500);
         },
         
-        deletePillFutureInPhase(name, startWeek, dayIndex) {
+        async deletePillFutureInPhase(name, startWeek, dayIndex) {
             const dayNames = ["Понеділків", "Вівторків", "Серед", "Четвергів", "П'ятниць", "Субот", "Неділь"];
             const dayName = dayNames[dayIndex] || "днів";
 
-            if(!confirm(`⚠️ ВИДАЛИТИ "${name}" з усіх "${dayName}" починаючи з тижня ${startWeek} і до кінця цієї фази?`)) return;
+            if(!(await Modal.confirm(`⚠️ ВИДАЛИТИ "${name}" з усіх "${dayName}" починаючи з тижня ${startWeek} і до кінця цієї фази?`, "МАСОВЕ ВИДАЛЕННЯ", "red"))) return;
             
             this.pushHistory();
             
             const phase = this.data.phases.find(p => p.weeks.includes(startWeek));
             if (!phase) return;
-            
             phase.weeks.forEach(w => {
                 if (w >= startWeek && this.data.schedule[w] && this.data.schedule[w][dayIndex]) {
                     this.data.schedule[w][dayIndex] = this.data.schedule[w][dayIndex].filter(p => p.name !== name);
                 }
             });
-            
             this.save();
             this.renderView();
-        },
+
 
         smartSave() {
             let report = `══════════════════════════════════════\n`;
@@ -1940,13 +1930,13 @@ calc(week) {
             
             report += `\n══════════════════════════════════════\n`;
             
-            navigator.clipboard.writeText(report).then(() => {
-                alert('✅ Скопійовано!');
-                if(confirm("Скачати JSON бекап?")) {
+            navigator.clipboard.writeText(report).then(async () => {
+                await Modal.alert("Дані успішно скопійовано в буфер обміну.", "✅ СКОПІЙОВАНО", "green");
+                if(await Modal.confirm("Скачати повний JSON бекап?", "ЗАВАНТАЖЕННЯ", "gold")) {
                     const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
                     this.stateManager.export(this.data, filename);
                 }
-            }).catch(e => alert('❌ Помилка'));
+            }).catch(async e => await Modal.alert("Не вдалося скопіювати текст", "ПОМИЛКА", "red"));
         },
 
         togglePillDone(w, d, i) {
@@ -1996,8 +1986,8 @@ calc(week) {
             this.renderView();
         },
         
-        addMed(catIdx) { 
-            let n=prompt("Назва:"); 
+          async addMed(catIdx) { 
+            let n = await Modal.prompt("Введіть назву препарату:", "ДОДАТИ ПРЕПАРАТ", ""); 
             if(n) { 
                 this.pushHistory(); 
                 this.data.pharmacy[catIdx].items.push({n:n,d:"-",i:"-"}); 
@@ -2019,8 +2009,9 @@ calc(week) {
             }
         },
             
-        delMed(c,i) { 
-            if(confirm("Видалити?")) { 
+
+        async delMed(c,i) { 
+            if(await Modal.confirm("Видалити цей препарат?", "ВИДАЛЕННЯ", "red")) { 
                 this.pushHistory(); 
                 this.data.pharmacy[c].items.splice(i,1); 
                 this.save(); 
@@ -2028,9 +2019,9 @@ calc(week) {
             } 
         },
         
-        importData(inp) { 
+        async importData(inp) { 
             const r=new FileReader(); 
-            r.onload=e=>{ 
+            r.onload = async e => { 
                 try { 
                     const json = JSON.parse(e.target.result); 
                     if(!json.phases) throw new Error("Invalid"); 
@@ -2039,7 +2030,7 @@ calc(week) {
                     this.save(); 
                     location.reload(); 
                 } catch(err) { 
-                    alert("❌ Невірний файл!"); 
+                    await Modal.alert("Невірний або пошкоджений файл!", "ПОМИЛКА ІМПОРТУ", "red"); 
                 } 
             }; 
             r.readAsText(inp.files[0]); 
@@ -2116,15 +2107,13 @@ calc(week) {
         async removePhaseWeek(pId) { 
             const pIdx = this.data.phases.findIndex(p => p.id === pId); 
             const phase = this.data.phases[pIdx]; 
-            if(phase.weeks.length <= 1) return alert("Мін 1 тиждень!"); 
+            if(phase.weeks.length <= 1) return await Modal.alert("Фаза повинна мати мінімум 1 тиждень!", "ПОМИЛКА", "red"); 
             this.pushHistory(); 
+            //... (весь інший код функції залишається без змін)
             const lastWeek = phase.weeks[phase.weeks.length - 1]; 
-            
             delete this.data.schedule[lastWeek]; 
             phase.weeks.pop(); 
-            
             const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
-            
             for(let w = lastWeek; w < maxW; w++) { 
                 this.data.schedule[w] = this.data.schedule[w+1]; 
                 this.data.notes[w] = this.data.notes[w+1]; 
@@ -2133,13 +2122,10 @@ calc(week) {
                 } 
             } 
             delete this.data.schedule[maxW]; 
-            
             for(let i = pIdx + 1; i < this.data.phases.length; i++) {
                  this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - 1); 
             }
-            
             await PhotoDB.shiftWeeks(lastWeek + 1, -1);
-
             this.save(); 
             this.refreshPhotos(); 
             this.renderNav(); 
@@ -2157,8 +2143,8 @@ calc(week) {
             this.renderNav(); 
         },
         
-        deletePhase(pId) { 
-            if(!confirm("Видалити фазу?")) return; 
+        async deletePhase(pId) { 
+            if(!(await Modal.confirm("Видалити цю фазу повністю?", "ВИДАЛЕННЯ ФАЗИ", "red"))) return; 
             this.pushHistory(); 
             const pIdx = this.data.phases.findIndex(p => p.id === pId); 
             const p = this.data.phases[pIdx]; 
@@ -2200,7 +2186,7 @@ calc(week) {
 
 
         async deletePhoto(id) { 
-            if(confirm("Видалити фото?")) { 
+            if(await Modal.confirm("Видалити це фото?", "ВИДАЛЕННЯ", "red")) { 
                 this.pushHistory(); 
                 await PhotoDB.del(id); 
                 await this.refreshPhotos(); 
