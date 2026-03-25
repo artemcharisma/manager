@@ -1,5 +1,3 @@
-// assets/js/nutrition.js
-
 const DB_KEY = 'protocol_sys_plus_days';
 
 const DefaultBank = {
@@ -64,28 +62,21 @@ const App = {
             brandIcon.classList.add('hint-active');
         };
         brandBlock.ondblclick = async () => {
-            if(await Modal.confirm("⚠ HARD RESET?<br>Видалити всі дані харчування?", "КРИТИЧНО", "red")) {
+            if(await Modal.confirm("⚠ HARD RESET?<br><br><span style='color:var(--text-dim)'>Видалити абсолютно всі дані харчування?</span>", "КРИТИЧНО", "red")) {
                 localStorage.removeItem(DB_KEY);
                 location.reload();
             }
         };
     },
 
-
     toggleFab(show) {
         const fab = document.getElementById('sys-fab');
         if(fab) fab.style.display = show ? 'flex' : 'none';
     },
 
-// --- МАГІЯ ДЛЯ iOS: ПОВНЕ БЛОКУВАННЯ ФОНУ ---
     lockScroll() {
-        // Якщо вже заблоковано - ігноруємо
         if (document.body.style.position === 'fixed') return; 
-        
-        // Запам'ятовуємо, де ми були
         this.state.lockedScrollY = window.scrollY; 
-        
-        // "Прибиваємо" сторінку до екрану, щоб клавіатура її не тягнула
         document.body.style.position = 'fixed';
         document.body.style.top = `-${this.state.lockedScrollY}px`;
         document.body.style.width = '100%';
@@ -93,16 +84,11 @@ const App = {
 
     unlockScroll() {
         if (document.body.style.position !== 'fixed') return;
-        
-        // Відпускаємо сторінку
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
-        
-        // Миттєво повертаємо туди, де стояли (без анімацій і ривків)
         window.scrollTo(0, this.state.lockedScrollY || 0);
     },
-    // ---------------------------------------------
     
     save() {
         Utils.save(DB_KEY, this.data);
@@ -184,6 +170,7 @@ const App = {
             return;
         }
         if(!(await Modal.confirm("Видалити цей день назавжди?", "ВИДАЛЕННЯ ДНЯ", "red"))) return;
+        
         this.pushHistory();
         this.data.days = this.data.days.filter(d => d.id !== this.state.currentDayId);
         this.state.currentDayId = this.data.days[0].id;
@@ -252,7 +239,6 @@ const App = {
             </div>`;
         });
 
-        // Якщо в буфері щось є, малюємо золоту кнопку вставки під списком
         let pasteBtnHtml = '';
         if (this.state.mealBuffer) {
             pasteBtnHtml = `<button class="btn-main-add" style="margin-top:10px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05);" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
@@ -375,7 +361,7 @@ const App = {
     addFood(mid) {
         this.state.mid = mid; this.state.fidx = -1;
         this.state.tempFood = null; 
-        this.openModal('ДОДАТИ', {}, false);
+        this.openModal('ДОДАТИ ПРОДУКТ', {}, false);
         setTimeout(() => document.getElementById('inpName').focus(), 100);
     },
     
@@ -409,8 +395,7 @@ const App = {
 
     openModal(title, f, del) {
         if(document.activeElement) document.activeElement.blur(); 
-        
-        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
+        this.lockScroll(); 
         
         this.toggleFab(false); 
         document.getElementById('modalTitle').innerText = title;
@@ -427,8 +412,6 @@ const App = {
     
     closeModal() { 
         if(document.activeElement) document.activeElement.blur(); 
-        
-        // Гарантовано ховаємо вікна по їх унікальним ID
         const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal'];
         modalIds.forEach(id => {
             const el = document.getElementById(id);
@@ -436,10 +419,8 @@ const App = {
         });
 
         document.querySelectorAll('.modal-overlay, .modal').forEach(el => el.style.display='none');
-        
         this.toggleFab(true); 
-        
-        this.unlockScroll(); // 🔓 ВІДПУСКАЄМО ФОН
+        this.unlockScroll(); 
     },
 
     saveFood() {
@@ -461,7 +442,6 @@ const App = {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        // Порядок змінено на найбезпечніший: 1. Закриваємо модалку, 2. Зберігаємо, 3. Малюємо
         this.closeModal(); 
         this.save(); 
         this.render(); 
@@ -480,11 +460,9 @@ const App = {
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mid);
         if (meal) {
-            // Робимо глибоку копію прийому їжі в буфер
             this.state.mealBuffer = JSON.parse(JSON.stringify(meal));
-            this.render(); // Оновлюємо UI, щоб з'явилась кнопка вставки
+            this.render(); 
             
-            // Показуємо спливаюче повідомлення
             const toast = document.createElement('div');
             toast.innerText = "🍽 Скопійовано! Тепер можна вставити.";
             toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#222; color:var(--theme); padding:10px 20px; border-radius:20px; z-index:9999; border:1px solid var(--theme); font-family:sans-serif; font-size:0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);";
@@ -526,7 +504,6 @@ const App = {
         this.render();
         if (window.Haptics) window.Haptics.success();
     },
-
     
     addMealBlock() {
         this.pushHistory();
@@ -536,13 +513,12 @@ const App = {
     },
     
     async deleteMealBlock(id) {
-        if(!(await Modal.confirm("Видалити цей прийом їжі?", "ВИДАЛЕННЯ", "red"))) return;
+        if(!(await Modal.confirm("Видалити цей прийом їжі повністю?", "ВИДАЛЕННЯ", "red"))) return;
         this.pushHistory();
         const day = this.getCurrentDay();
         day.meals = day.meals.filter(m=>m.id!==id);
         this.save(); this.render();
     },
-
     
     renameMeal(id, val) {
         this.getCurrentDay().meals.find(m=>m.id===id).name = val;
@@ -555,18 +531,18 @@ const App = {
             .filter(([n]) => n.toLowerCase().includes(filter.toLowerCase()))
             .sort()
             .map(([n,v]) => `
-            <div class="bank-row" onclick="App.openBankEdit('${n}')">
+            <div class="bank-row" onclick="App.openBankEdit('${n.replace(/'/g, "\\'")}')">
                 <div class="bank-info">
                     <b>${n}</b>
                     <span>${v.unit ? 'ШТ/ПОРЦ' : '100г'} | Б${v.p} Ж${v.f} В${v.c} | ${v.k} ккал</span>
                 </div>
-                <div class="edit-icon">✎</div>
+                <div class="edit-icon" style="color:var(--text-muted)">✎</div>
             </div>`).join('');
     },
     
-openBank() {
+    openBank() {
         if(document.activeElement) document.activeElement.blur();
-        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
+        this.lockScroll(); 
         this.toggleFab(false); 
         this.renderBank();
         document.getElementById('bankModal').style.display='flex';
@@ -574,7 +550,7 @@ openBank() {
     
     openBankEdit(name) {
         if(document.activeElement) document.activeElement.blur();
-        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
+        this.lockScroll(); 
         this.toggleFab(false); 
         this.state.editName = name;
         if(name) {
@@ -599,7 +575,8 @@ openBank() {
     },
     
     saveBankItem() {
-        const n = document.getElementById('bankInpName').value;
+        const n = document.getElementById('bankInpName').value.trim();
+        if(!n) return;
         const p = parseFloat(document.getElementById('bankInpP').value)||0;
         const f = parseFloat(document.getElementById('bankInpF').value)||0;
         const c = parseFloat(document.getElementById('bankInpC').value)||0;
@@ -626,10 +603,9 @@ openBank() {
         }
     },
 
-
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
-        this.lockScroll(); // 🔒 БЛОКУЄМО ФОН
+        this.lockScroll(); 
         this.toggleFab(false); 
         const t = this.data.targets;
         document.getElementById('tgP').value = t.p;
