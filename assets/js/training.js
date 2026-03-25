@@ -90,9 +90,9 @@ const InitialData = {
             {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі 1×12", i:"не гойдати корпус"},
             {n:"Згинання/Розгинання зап'ястка", p:"60-70%", s:"2-3x12-20", w:"легка вага 1×15", i:"повний ROM"},
             {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"глибина без втрати техніки"},
-            {n:"Згинання гантелей сидячи (інклайн)", p:"65-75%", s:"3x10-15", w:"легка вага 1×12", i:"roztyag bitsepsa"},
-            {n:"Французький жим лежачи", p:"70-75%", s:"3x8-12", w:"гриф 1x15, 50% 1x10", i:"likti do steli"},
-            {n:"Розгинання з-за голови", p:"65-70%", s:"3x10-15", w:"легка вага 1x15", i:"aktsent na dovhu golivku"}
+            {n:"Згинання гантелей сидячи (інклайн)", p:"65-75%", s:"3x10-15", w:"легка вага 1×12", i:"розтяг біцепса"},
+            {n:"Французький жим лежачи", p:"70-75%", s:"3x8-12", w:"гриф 1x15, 50% 1x10", i:"лікті до стелі"},
+            {n:"Розгинання з-за голови", p:"65-70%", s:"3x10-15", w:"легка вага 1x15", i:"акцент на довгу голівку"}
         ],
         cut: [
             {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"гриф 1×15, 40%, 60%, 75%", i:"тримати вагу, 1-2 RIR"},
@@ -138,6 +138,21 @@ const App = {
         if(!this.data.exBank) this.data.exBank = [];
         if(!this.data.opened) this.data.opened = {}; 
         
+        // CSS для анімації та підсвічування ghost data
+        const extraStyles = document.createElement('style');
+        extraStyles.innerHTML = `
+            @keyframes fadeInDown {
+                from { opacity: 0; transform: translateY(-5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .ghost-active::placeholder { 
+                color: rgba(212, 175, 55, 0.6) !important; 
+                font-weight: 700; 
+                text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+            }
+        `;
+        document.head.appendChild(extraStyles);
+
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('scrollTopBtn');
             if(btn) {
@@ -146,7 +161,6 @@ const App = {
             }
         });
 
-        // НОВЕ: Закриваємо випадаючі списки при кліку в пусте місце екрану
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.ex-name-input') && !e.target.closest('.custom-dropdown')) {
                 document.querySelectorAll('.custom-dropdown').forEach(el => el.style.display = 'none');
@@ -164,12 +178,11 @@ const App = {
         };
 
         brandBlock.ondblclick = async () => {
-            if(await Modal.confirm("⚠ HARD RESET?<br>Це знищить усі дані тренувань.", "УВАГА", "red")) {
+            if(await Modal.confirm("⚠ HARD RESET?<br><br>Це незворотно видалить усі дані тренувань.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('training_protocol');
                 location.reload();
             }
         };
-
 
         if(!this.data.currentProgram) this.data.currentProgram = 'balanced';
         this.setTheme(this.data.currentProgram);
@@ -179,7 +192,6 @@ const App = {
         this.initTimer();
     },
 
-    // --- ЛОГІКА КАСТОМНИХ СПИСКІВ ---
     openExList(w, d, e) {
         const inp = document.getElementById(`ex-${w}-${d}-${e}`);
         if(inp) this.filterExList(inp.value, w, d, e);
@@ -205,6 +217,7 @@ const App = {
             `).join('');
         }
         list.style.display = 'block';
+        list.style.animation = 'fadeInDown 0.2s ease forwards';
     },
     
     selectEx(val, w, d, e) {
@@ -216,7 +229,6 @@ const App = {
         document.getElementById(`list-${w}-${d}-${e}`).style.display = 'none';
     },
 
-    // --- РОЗГОРТАННЯ БЕЗ ПЕРЕМАЛЬОВКИ ---
     toggleDay(uid, el) {
         if(!this.data.opened) this.data.opened = {};
         
@@ -237,46 +249,39 @@ const App = {
     getGhostData(exerciseName, currentWNum, currentDIdx) {
         if (!exerciseName || !this.data.weeks) return null;
         
-        // Знаходимо реальний індекс поточного тижня в масиві
         const currentWeekIndex = this.data.weeks.findIndex(w => w.num === currentWNum && w.prog === this.data.currentProgram);
         if (currentWeekIndex === -1) return null;
 
-        // Йдемо назад від поточного тижня до найпершого
         for (let wIdx = currentWeekIndex; wIdx >= 0; wIdx--) {
             const week = this.data.weeks[wIdx];
-            
-            // Якщо це поточний тиждень, шукаємо тільки до вчорашнього дня (currentDIdx - 1)
-            // Якщо це минулий тиждень, перевіряємо всі дні з кінця (6, 5, 4...)
             let startDayIdx = (wIdx === currentWeekIndex) ? currentDIdx - 1 : week.days.length - 1;
             
             for (let dIdx = startDayIdx; dIdx >= 0; dIdx--) {
                 const day = week.days[dIdx];
                 if (day && day.exercises) {
-                    // Шукаємо вправу з такою ж назвою
                     const pastEx = day.exercises.find(
                         e => e.n && e.n.trim().toLowerCase() === exerciseName.trim().toLowerCase()
                     );
                     
                     if (pastEx && pastEx.sets && pastEx.sets.length > 0) {
-                        return pastEx.sets; // Повертаємо підходи
+                        return pastEx.sets; 
                     }
                 }
             }
         }
         return null;
     },
+
     getEstimated1RM(exerciseName, currentWNum, currentDIdx) {
         if (!exerciseName || !this.data.weeks) return 0;
         let max1RM = 0;
         const currentProg = this.data.currentProgram;
 
         this.data.weeks.forEach(week => {
-            // Шукаємо тільки в поточній програмі і тільки в минулому
             if (week.prog !== currentProg) return;
             if (week.num > currentWNum) return;
 
             week.days.forEach((day, dIdx) => {
-                // Не дивимось у майбутні дні поточного тижня
                 if (week.num === currentWNum && dIdx >= currentDIdx) return;
                 
                 if (day.exercises) {
@@ -286,7 +291,6 @@ const App = {
                             const w = parseFloat(set.w) || 0;
                             const r = parseFloat(set.r) || 0;
                             if (w > 0 && r > 0) {
-                                // Формула Еплі для 1RM
                                 const oneRm = w * (1 + r / 30);
                                 if (oneRm > max1RM) max1RM = oneRm;
                             }
@@ -310,7 +314,6 @@ const App = {
 
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
-        // КНОПКИ ЗАВЖДИ НА ВИДНОТІ
         nav.innerHTML = filteredWeeks.map((w) => {
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
             return `<div class="week-btn ${w.type} ${specialClass}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
@@ -347,8 +350,6 @@ const App = {
                             </div>`;
                         }
 
-                        // --- GHOST DATA (ПІДКАЗКИ) ---
-                        // Отримуємо історію для цієї вправи, передаючи поточний тиждень та день
                         const ghostSets = App.getGhostData(ex.n, week.num, dIdx);
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
@@ -356,22 +357,21 @@ const App = {
                                 return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
                             }
 
-                            // Шукаємо дані минулого разу для цього конкретного підходу
                             let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
                             let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
 
-                            // Формуємо плейсхолдери (або старі дані, або просто кг/раз)
-                            let placeholderW = ghostW ? `placeholder="${ghostW}"` : ``;
-                            let placeholderR = ghostR ? `placeholder="${ghostR}"` : ``;
+                            // Нова логіка відображення підказок (золотий колір)
+                            let placeholderW = ghostW ? `placeholder="${ghostW}" class="set-input w-val ghost-active"` : `class="set-input w-val"`;
+                            let placeholderR = ghostR ? `placeholder="${ghostR}" class="set-input ghost-active"` : `class="set-input"`;
 
                             return `<div class="set-row">
                                 <div class="set-num">${sIdx+1}</div>
                                 <div class="set-part">
-                                    <input class="set-input w-val" type="text" inputmode="text" ${placeholderW} value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
+                                    <input type="text" inputmode="text" ${placeholderW} value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
                                     <span class="set-unit">кг</span>
                                 </div>
                                 <div class="set-part">
-                                    <input class="set-input" type="number" inputmode="decimal" ${placeholderR} value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
+                                    <input type="number" inputmode="decimal" ${placeholderR} value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
                                     <span class="set-unit">x</span>
                                 </div>
                             </div>`;
@@ -392,7 +392,6 @@ const App = {
                                         <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
                                     </div>
                                     ` : 
-                                    // Якщо назви немає - відображається "Вправа" сірим
                                     `<span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>`}
                                     ${groupSelect}
                                 </div>
@@ -485,13 +484,12 @@ const App = {
         }));
         
         this.data.exBank = Array.from(allNames).sort();
-        // datalist прибрано, тепер він не потрібен
     },
 
     openBank() {
         this.toggleFab(false);
         const list = document.getElementById('bankList');
-        list.innerHTML = this.data.exBank.map(n => `<div class="bank-item"><span>${n}</span><span class="bank-del" onclick="App.deleteFromBank('${n}')">✕</span></div>`).join('');
+        list.innerHTML = this.data.exBank.map(n => `<div class="bank-item"><span>${n}</span><span class="bank-del" onclick="App.deleteFromBank('${n.replace(/'/g, "\\'")}')">✕</span></div>`).join('');
         document.getElementById('bankModal').style.display = 'flex';
     },
     
@@ -516,32 +514,28 @@ const App = {
         this.toggleFab(true);
     },
 
-    // --- REST TIMER (ТАЙМЕР ВІДПОЧИНКУ) ---
+    // --- REST TIMER (У ВЕРХНЬОМУ ПРАВОМУ КУТІ) ---
     initTimer() {
         const t = document.createElement('div');
         t.id = 'rest-timer';
-        // Стилізуємо як плаваючу пігулку
         t.style.cssText = `
-            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
-            background: rgba(26, 26, 26, 0.85); border: 1px solid var(--theme, #d4af37);
-            color: var(--theme, #d4af37); padding: 8px 20px; border-radius: 30px;
-            font-family: monospace; font-size: 1.4rem; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; z-index: 999;
-            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(8px); user-select: none; touch-action: manipulation; min-width: 120px;
+            position: fixed; top: 75px; right: 15px; 
+            background: rgba(15, 15, 17, 0.85); border: 1px solid var(--theme, #d4af37);
+            color: var(--theme, #d4af37); padding: 6px 16px; border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 800;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 8000;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); user-select: none; touch-action: manipulation;
         `;
         
-        // Надійний кастомний "подвійний клік", який працює на iOS
         let lastTap = 0;
         t.onclick = (e) => {
             e.preventDefault();
             const now = Date.now();
             if (now - lastTap < 400) {
-                // Подвійний тап (менше 400 мілісекунд між кліками)
                 this.setTimerDefault();
                 lastTap = 0; 
             } else {
-                // Одинарний тап
                 this.toggleTimer();
                 lastTap = now;
             }
@@ -550,7 +544,6 @@ const App = {
         document.body.appendChild(t);
         this.timerState.el = t;
         
-        // Відновлюємо збережений час (якщо є)
         const savedTime = localStorage.getItem('rest_timer_default');
         if (savedTime) this.timerState.default = parseInt(savedTime);
         
@@ -568,16 +561,12 @@ const App = {
     startTimer(seconds) {
         this.stopTimer();
         this.timerState.left = seconds;
-        
-        // ЗАПАМ'ЯТОВУЄМО ТОЧНИЙ ЧАС ЗАВЕРШЕННЯ
         this.timerState.endTime = Date.now() + (seconds * 1000);
         
-        // Запитуємо дозвіл на системні сповіщення
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
         }
         
-        // Дизайн (активний)
         this.timerState.el.style.background = 'var(--theme, #d4af37)';
         this.timerState.el.style.color = '#000';
         this.timerState.el.style.boxShadow = '0 0 20px var(--theme, #d4af37)';
@@ -585,7 +574,6 @@ const App = {
         this.updateTimerUI();
         if (window.Haptics) window.Haptics.light();
 
-        // Перевіряємо час кожні 250мс
         this.timerState.interval = setInterval(() => {
             const now = Date.now();
             this.timerState.left = Math.ceil((this.timerState.endTime - now) / 1000);
@@ -596,7 +584,6 @@ const App = {
                 this.stopTimer();
                 this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
                 
-                // --- СИСТЕМНЕ СПОВІЩЕННЯ ---
                 if ("Notification" in window && Notification.permission === "granted") {
                     new Notification("Час вийшов!", {
                         body: "Пора робити наступний підхід",
@@ -605,7 +592,6 @@ const App = {
                     });
                 }
                 
-                // Тільки вібрація
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
                 if (window.Haptics) window.Haptics.heavy();
                 
@@ -617,11 +603,11 @@ const App = {
     stopTimer() {
         clearInterval(this.timerState.interval);
         this.timerState.interval = null;
-        this.timerState.endTime = null; // Очищаємо час
+        this.timerState.endTime = null; 
         
-        this.timerState.el.style.background = 'rgba(26, 26, 26, 0.85)';
+        this.timerState.el.style.background = 'rgba(15, 15, 17, 0.85)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
-        this.timerState.el.style.boxShadow = '0 4px 15px rgba(0,0,0,0.6)';
+        this.timerState.el.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
         
         this.timerState.left = this.timerState.default;
         this.updateTimerUI();
@@ -643,7 +629,7 @@ const App = {
 
     async setTimerDefault() {
         this.stopTimer();
-        const val = await Modal.prompt("Введіть час відпочинку (в секундах):<br>Наприклад: 90 (1.5 хв) або 120 (2 хв)", "НАЛАШТУВАННЯ ТАЙМЕРА", this.timerState.default);
+        const val = await Modal.prompt("Введіть час відпочинку (в секундах):<br><span style='color:#666; font-size:0.8rem'>Наприклад: 90 (1.5 хв) або 120 (2 хв)</span>", "ТАЙМЕР", this.timerState.default.toString());
         if (val && !isNaN(val)) {
             const newTime = parseInt(val);
             this.timerState.default = newTime;
@@ -651,7 +637,6 @@ const App = {
             this.updateTimerUI();
         }
     },
-
     
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
@@ -674,7 +659,6 @@ const App = {
         this.updateBank();
         this.openBank();
     },
-
 
     addWeek(type, init=false) {
         if (!init) this.pushHistory(); 
@@ -724,7 +708,6 @@ const App = {
         this.save(); this.render();
     },
 
-
     updateDay(w, d, f, v) {
         if(this.data.weeks[w].days[d][f] !== v) {
             this.pushHistory();
@@ -754,7 +737,6 @@ const App = {
         let finalVal = val;
         let needRender = false;
 
-        // --- АВТОРОЗРАХУНОК ВІДСОТКІВ ВІД 1RM ---
         if (f === 'w' && typeof val === 'string' && (val.includes('%') || val.toLowerCase().includes('p'))) {
             const percent = parseFloat(val);
             if (!isNaN(percent) && percent > 0) {
@@ -764,7 +746,6 @@ const App = {
                 
                 if (e1RM > 0) {
                     const calcWeight = e1RM * (percent / 100);
-                    // Округлення до стандартного кроку 2.5 кг (млинці по 1.25кг)
                     finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
                     
                     const toast = document.createElement('div');
@@ -776,22 +757,20 @@ const App = {
                     needRender = true;
                 } else {
                     const toast = document.createElement('div');
-                    toast.innerText = `⚠️ Немає історії підходів для "${exName}"`;
+                    toast.innerText = `⚠️ Немає історії для розрахунку`;
                     toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--danger); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
                     document.body.appendChild(toast);
                     setTimeout(() => toast.remove(), 3000);
-                    finalVal = ""; // Очищаємо, якщо не вийшло порахувати
+                    finalVal = ""; 
                     needRender = true;
                 }
             }
         }
 
-        // Стандартне збереження
         if(this.data.weeks[w].days[d].exercises[e].sets[s][f] !== finalVal) {
             this.pushHistory();
             this.data.weeks[w].days[d].exercises[e].sets[s][f] = finalVal;
             this.save();
-            // Перемальовуємо UI тільки якщо ми змінили значення на відсотки
             if (needRender) this.render();
         }
     },
@@ -829,7 +808,6 @@ const App = {
         this.save();
         this.renderGuide();
     },
-
 
     toggleEdit() {
         document.body.classList.toggle('editing');
