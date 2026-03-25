@@ -514,18 +514,20 @@ const App = {
         this.toggleFab(true);
     },
 
-    // --- REST TIMER (У ВЕРХНЬОМУ ПРАВОМУ КУТІ) ---
+    // --- REST TIMER (ТАЙМЕР ВІДПОЧИНКУ - ОНОВЛЕНО ПОЗИЦІЮ) ---
     initTimer() {
         const t = document.createElement('div');
         t.id = 'rest-timer';
+        // Перемістили вниз по центру (стиль "Dynamic Island")
         t.style.cssText = `
-            position: fixed; top: 75px; right: 15px; 
-            background: rgba(15, 15, 17, 0.85); border: 1px solid var(--theme, #d4af37);
-            color: var(--theme, #d4af37); padding: 6px 16px; border-radius: 12px;
+            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 22, 0.9); border: 1px solid var(--theme, #d4af37);
+            color: var(--theme, #d4af37); padding: 8px 24px; border-radius: 30px;
             font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 800;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 8000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6); cursor: pointer; z-index: 8000;
             transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(8px); user-select: none; touch-action: manipulation;
+            backdrop-filter: blur(10px); user-select: none; touch-action: manipulation;
+            min-width: 120px; text-align: center;
         `;
         
         let lastTap = 0;
@@ -605,13 +607,15 @@ const App = {
         this.timerState.interval = null;
         this.timerState.endTime = null; 
         
-        this.timerState.el.style.background = 'rgba(15, 15, 17, 0.85)';
+        // Повертаємо базовий колір при зупинці
+        this.timerState.el.style.background = 'rgba(20, 20, 22, 0.9)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
-        this.timerState.el.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
+        this.timerState.el.style.boxShadow = '0 5px 20px rgba(0,0,0,0.6)';
         
         this.timerState.left = this.timerState.default;
         this.updateTimerUI();
     },
+
 
     updateTimerUI() {
         if (!this.timerState.el) return;
