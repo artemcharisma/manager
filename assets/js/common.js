@@ -163,3 +163,12 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.error('Помилка SW:', err));
     });
 }
+// Вирішення проблеми iOS: повертає сторінку на місце, коли ховається клавіатура
+document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        setTimeout(() => {
+            window.scrollTo(0, Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop));
+        }, 10);
+    }
+});
+
