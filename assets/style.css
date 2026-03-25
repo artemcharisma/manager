@@ -185,3 +185,11 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1); color: #d1d1d1;
 }
 #modal-btn-cancel:active { background: rgba(55, 55, 60, 0.9); border-color: rgba(255, 255, 255, 0.4); color: #fff; transform: scale(0.93); }
+/* --- ФІКСИ ДЛЯ IOS ТА РОЗМІРІВ КНОПОК --- */
+#protocol-modal-overlay, #sys-overlay, .modal-overlay, .modal {
+    height: 100dvh !important; 
+}
+.modal-ctrl-btn {
+    width: 100% !important;
+}
+
