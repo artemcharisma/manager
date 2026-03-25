@@ -69,16 +69,16 @@
         label, 
         a, 
         input[type="checkbox"],
-        [class*="btn"],  /* Ловить усі класи btn-action, icon-btn, btn-mini тощо */
-        .day-tab,        /* Вкладка дня */
-        .mh-del,         /* Хрестик видалення */
-        .target-badge,   /* Кнопка цілі */
-        .food-row,       /* Рядок їжі (бо він клікабельний для редагування) */
-        .bank-row,       /* Рядок у базі */
-        .sugg-item,      /* Елемент пошуку */
+        [class*="btn"],  
+        .day-tab,        
+        .mh-del,         
+        .target-badge,   
+        .food-row,       
+        .bank-row,       
+        .sugg-item,      
         .sys-card, 
         .sys-close, 
-        .mc-header span  /* Хрестик закриття модалки */
+        .mc-header span  
         {
             cursor: pointer !important;
         }
@@ -86,7 +86,6 @@
         body {
             background-color: var(--bg-app); 
             color: var(--text-main);
-            /* Стандартний системний шрифт */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 15px; min-height: 100vh;
             padding-bottom: 80px;
@@ -104,26 +103,26 @@
             border-bottom: 1px solid var(--border);
         }
         
-        .brand { display: flex; align-items: center; gap: 10px; } /* gap 10px */
+        .brand { display: flex; align-items: center; gap: 10px; }
         
         .brand-icon {
             width: 44px; height: 44px; 
             background: linear-gradient(135deg, var(--theme), #fcd34d);
             border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-            font-size: 22px; /* Було 24, стало 22 */
+            font-size: 22px; 
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
             transition: transform 0.2s ease;
-            cursor: pointer; /* Палець тільки на іконці */
+            cursor: pointer; 
         }
         
         .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
         
         .brand-text span { 
-            font-size: 0.7rem; /* Було 0.65 */
+            font-size: 0.7rem; 
             color: var(--text-muted); 
             font-weight: 600; 
             text-transform: uppercase; 
-            letter-spacing: 1px; /* Було 2px */
+            letter-spacing: 1px; 
             display: block; 
         }
         .controls { display: flex; gap: 10px; align-items: center; }
@@ -139,7 +138,6 @@
         /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
-            /* Збільшено відступи, щоб не обрізало тіні */
             padding: 10px 10px 20px 10px; 
             margin-bottom: 0; 
             scrollbar-width: none;
@@ -253,7 +251,7 @@
         }
         .btn-main-add:active { border-color: var(--theme); color: var(--theme); background: rgba(212, 175, 55, 0.05); }
 
-        /* --- 6. MODALS --- */
+        /* --- 6. ЛОКАЛЬНІ МОДАЛКИ (Оновлені під Protocol OS) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
@@ -269,19 +267,20 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
         .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .mc-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .mc-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
 
         .inp-main {
             width: 100%; background: #000; border: 1px solid #333;
             padding: 16px; border-radius: 12px; color: #fff; font-size: 1.1rem;
             font-family: var(--font-mono); outline: none; transition: 0.2s;
         }
-        .inp-main:focus { border-color: var(--theme); }
+        .inp-main:focus { border-color: var(--theme); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
         .inp-main::placeholder { color: #444; font-family: var(--font-ui); }
 
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .stat-box { background: #050505; padding: 10px 5px; border-radius: 10px; text-align: center; border: 1px solid #222; }
-        .stat-box label { display: block; font-size: 0.6rem; color: #666; font-weight: 700; margin-bottom: 4px; }
+        .stat-box { background: #050505; padding: 10px 5px; border-radius: 10px; text-align: center; border: 1px solid #222; transition: 0.2s; }
+        .stat-box:focus-within { border-color: #555; }
+        .stat-box label { display: block; font-size: 0.65rem; color: #666; font-weight: 700; margin-bottom: 4px; font-family: var(--font-mono); letter-spacing: 1px;}
         .stat-box input { 
             width: 100%; 
             background: transparent; 
@@ -290,31 +289,29 @@
             text-align: center; 
             font-family: var(--font-mono); 
             font-weight: 700; 
-            font-size: 1.1rem;
-            
-            /* Скидання стилів iOS */
+            font-size: 1.2rem;
             -webkit-appearance: none;
             appearance: none;
             border-radius: 0;
-            
-            /* Жорстка фіксація висоти (це вирішує проблему стрибків) */
-            padding: 0;
-            margin: 0;
-            display: block;
-            height: 24px;      /* Фіксована висота */
-            line-height: 24px; /* Висота рядка = висоті блоку */
+            padding: 0; margin: 0; display: block; height: 26px; line-height: 26px; 
+            outline: none;
         }
 
         .btn-primary {
             width: 100%; background: var(--theme); color: #000; padding: 16px;
             border-radius: 12px; font-weight: 800; border: none; text-transform: uppercase;
-            margin-top: 10px; font-size: 1rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            margin-top: 10px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); font-family: var(--font-mono); letter-spacing: 1px;
+            transition: 0.2s;
         }
+        .btn-primary:active { transform: scale(0.98); background: #fcd34d; }
+        
         .btn-danger {
             width: 100%; background: transparent; color: var(--danger); padding: 14px;
-            border-radius: 12px; font-weight: 700; border: 1px solid #333; margin-top: 5px;
-            font-size: 0.8rem;
+            border-radius: 12px; font-weight: 700; border: 1px dashed #333; margin-top: 5px;
+            font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 1px;
+            transition: 0.2s;
         }
+        .btn-danger:active { background: rgba(239,68,68,0.1); border-color: var(--danger); }
 
         /* AUTOCOMPLETE */
         #sugg-list {
@@ -347,7 +344,6 @@
             0% { transform: scale(1); }
             50% { 
                 transform: scale(1.15) rotate(5deg); 
-                /* Зміна фону на червоний градієнт */
                 background: linear-gradient(135deg, #ef4444, #991b1b);
                 box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
                 border-color: #ef4444;
@@ -449,7 +445,7 @@
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
-        <button class="btn-danger" id="btnDeleteFood" style="display:none" onclick="App.deleteFood()">ВИДАЛИТИ</button>
+        <button class="btn-danger" id="btnDeleteFood" style="display:none" onclick="App.deleteFood()">ВИДАЛИТИ ПРОДУКТ</button>
     </div>
 </div>
 
@@ -513,14 +509,3 @@
     
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
