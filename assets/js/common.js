@@ -113,12 +113,12 @@ const Modal = {
             this.footer.className = '';
             this.btnOk.className = `modal-ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
             this.btnOk.innerText = 'ОК';
-        } else if (type === 'confirm') {
+                } else if (type === 'confirm') {
             this.inputWrap.style.display = 'none';
             this.btnCancel.style.display = 'flex';
             this.footer.className = 'dual-btn';
             this.btnOk.className = `modal-ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
-            this.btnOk.innerText = theme === 'red' ? 'ПІДТВЕРДИТИ' : 'ОК';
+            this.btnOk.innerText = 'ПІДТВЕРДИТИ'; /* Тепер текст однаковий для всіх підтверджень */
         } else if (type === 'prompt') {
             this.inputWrap.style.display = 'block';
             this.input.placeholder = placeholder;
