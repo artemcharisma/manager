@@ -190,4 +190,5 @@ body {
 .modal-ctrl-btn {
     width: 100% !important;
 }
-
+/* Фікс однакового розміру кнопок у модалці */
+#protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
