@@ -285,16 +285,14 @@
         .ctrl-btn { font-size: 0.7rem; background: #222; padding: 2px 8px; border-radius: 4px; cursor: pointer; color: #ccc; border: none; }
 
         /* ==========================================================
-       ЖОРСТКЕ БЛОКУВАННЯ ПАЛОЧКИ ТА ВИДІЛЕННЯ (ПЕРЕБИВАЄ ВСЕ)
-       ========================================================== */
+           ЖОРСТКЕ БЛОКУВАННЯ ПАЛОЧКИ ТА ВИДІЛЕННЯ (ПЕРЕБИВАЄ ВСЕ)
+           ========================================================== */
         body:not(.editing) [contenteditable="true"],
         body:not(.editing) .pharm-stock,
         body:not(.editing) .med-name,
         body:not(.editing) .med-desc,
         body:not(.editing) .category-header,
         body:not(.editing) .phase-scroll,   
-        body:not(.editing) .phase-btn span, 
-        body:not(.editing) .phase-btn small, 
         body:not(.editing) .check-row {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
@@ -303,22 +301,24 @@
             user-select: none !important;
             cursor: default !important;
         }
-        
-        /* АБСОЛЮТНЕ БЛОКУВАННЯ ТЕКСТУ АНАЛІЗІВ (вбиває лупу iOS) */
-        body:not(.editing) .check-name {
+
+        /* АБСОЛЮТНЕ БЛОКУВАННЯ ТЕКСТУ АНАЛІЗІВ ТА ЕТАПІВ (вбиває лупу iOS) */
+        body:not(.editing) .check-name,
+        body:not(.editing) .phase-btn span,
+        body:not(.editing) .phase-btn small {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
             cursor: default !important;
-            pointer-events: none !important; /* iOS фізично не зможе "вхопити" цей текст */
+            pointer-events: none !important; 
         }
-        
-        /* ФАЗИ: Блокуємо виділення, АЛЕ ПОВЕРТАЄМО ПАЛЕЦЬ */
+
+        /* ФАЗИ: Повертаємо палець */
         body:not(.editing) .phase-btn {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
-            cursor: pointer !important; /* Палець знову на місці */
+            cursor: pointer !important;
         }
         
         #undoFloat { position: fixed; bottom: 160px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: rgba(28,28,30,0.9); border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; z-index: 900; opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.5); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; backdrop-filter: blur(5px); }
