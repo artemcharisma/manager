@@ -179,3 +179,29 @@ document.addEventListener('click', function(e) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
+// --- ЖОРСТКИЙ ФІКС ЗАВИСАННЯ ЕКРАНУ НА IOS (Без стрибків наверх) ---
+document.addEventListener('focusout', function(e) {
+    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
+    if (isInput) {
+        // Замість scrollTo (який кидає наверх), ми робимо мікро-зміну в DOM.
+        // Це змушує Safari перерахувати висоту вікна і прибрати пусте місце, 
+        // залишаючи тебе точно там, де ти був.
+        setTimeout(function() {
+            const originalHeight = document.body.style.height;
+            document.body.style.height = '100.1vh'; // Мікро-зміна
+            setTimeout(() => {
+                document.body.style.height = originalHeight || ''; // Повернення
+            }, 20);
+        }, 100); // Даємо iOS час сховати клавіатуру
+    }
+});
+
+// Примусово знімаємо фокус при тапі повз поле
+document.addEventListener('touchstart', (e) => {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
+        if (e.target !== active && !active.contains(e.target)) {
+            active.blur();
+        }
+    }
+});
