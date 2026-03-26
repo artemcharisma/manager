@@ -265,6 +265,12 @@
             animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @media (hover: hover) {
+        .btn-primary:hover { background: #fcd34d; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
+        .btn-danger:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); box-shadow: 0 4px 15px rgba(239,68,68,0.2); transform: translateY(-2px); }
+        .btn-main-add:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--theme); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-2px); }
+        .btn-action:hover { background: #151515; color: var(--theme); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    }
 
         .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .mc-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
