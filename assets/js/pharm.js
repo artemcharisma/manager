@@ -212,9 +212,15 @@ const App = {
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
-        window.scrollTo(0, this.state.lockedScrollY || 0);
-        document.body.classList.remove('modal-active');
-    },
+        document.body.classList.remove('modal-active'); // якщо є такий клас
+        
+        // Змінено з простого window.scrollTo(0, this.state.lockedScrollY)
+        window.scrollTo({
+            left: 0, 
+            top: this.state.lockedScrollY || 0, 
+            behavior: 'instant'
+        });
+    }
 
     stateManager: new StateManager('gold_protocol', DefaultData),
     
