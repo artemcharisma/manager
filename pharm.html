@@ -361,7 +361,10 @@
 <script>
     try {
         const pd = JSON.parse(localStorage.getItem('gold_protocol') || '{}');
-        if (pd && pd.privacyEnabled) { document.body.classList.add('privacy-mode', 'privacy-locked'); }
+        const manualLock = localStorage.getItem('pharm_manual_lock') === 'true';
+        if ((pd && pd.privacyEnabled) || manualLock) { 
+            document.body.classList.add('privacy-mode', 'privacy-locked'); 
+        }
     } catch(e) {}
 </script>
 
