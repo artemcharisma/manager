@@ -154,19 +154,21 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// --- ЖОРСТКИЙ ФІКС ПЕРЕМАЛЬОВКИ ЕКРАНУ НА IOS ---
 document.addEventListener('focusout', function(e) {
     const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
     if (isInput) {
-        // Даємо iOS 100ms на те, щоб повністю сховати клавіатуру, після чого примусово оновлюємо сторінку
         setTimeout(function() {
-            window.scrollTo(document.body.scrollLeft, document.body.scrollTop);
-            // Примусовий рефлоу (лікує зависання пустого місця)
-            document.documentElement.style.height = '100.1vh';
-            setTimeout(() => document.documentElement.style.height = '100vh', 10);
-        }, 100);
+            // Беремо правильний параметр висоти (scrollY), а не нульовий body.scrollTop
+            const currentScroll = window.scrollY || document.documentElement.scrollTop;
+            window.scrollTo({
+                top: currentScroll,
+                left: 0,
+                behavior: 'instant'
+            });
+        }, 10);
     }
 });
-
 // Примусово знімаємо фокус при тапі повз поле (щоб клавіатура закривалася)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
