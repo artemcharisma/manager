@@ -466,7 +466,7 @@
         <h2 style="margin:0 0 10px 0; color:#fff; font-size:1.2rem">ACCESS LOCKED</h2>
         <p style="color:#666; font-size:0.8rem; margin-bottom:20px">ENTER PASSCODE</p>
         <input type="password" inputmode="numeric" pattern="[0-9]*" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
-        <button class="btn-privacy-unlock" id="unlockBtn" onclick="App.unlockPrivacy()">UNLOCK</button>
+        <button class="btn-privacy-unlock" id="unlockBtn" ontouchstart="event.preventDefault(); App.unlockPrivacy()" onmousedown="App.unlockPrivacy()">UNLOCK</button>
         
         <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <input type="checkbox" id="privacyAutoLock" onchange="App.toggleAutoLock(this.checked)" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
