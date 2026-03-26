@@ -48,8 +48,7 @@
             user-select: none !important;
         }
 
-        /* ДОЗВІЛ ЛИШЕ ДЛЯ ПОЛІВ ВВОДУ ТА РЕДАГУВАННЯ */
-        input, textarea, [contenteditable="true"], .pharm-stock, .check-name {
+        input, textarea, [contenteditable="true"] {
             -webkit-touch-callout: default !important;
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
@@ -299,10 +298,19 @@
         .brand-icon.hint-active { animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         .day-card, .stat-card, .med-card { transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, border-color 0.25s ease; }
-        @media (hover: hover) { .day-card:hover, .med-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #444; } }
+        @media (hover: hover) {
+        /* Твої старі стилі */
+        .day-card:hover, .med-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #444; }
+        
+        /* Нові стилі для кнопок */
+        .btn-save:hover { box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-new-section:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--primary); color: var(--primary); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
+        .btn-privacy-unlock:hover { box-shadow: 0 5px 20px rgba(255,255,255,0.3); transform: translateY(-2px); }
+        .btn-upload:hover { background: rgba(139, 92, 246, 0.2); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transform: translateY(-2px); }
+    }
         .btn-icon, .edit-toggle, .phase-btn, .week-btn, .pill { transition: transform 0.1s ease, background 0.2s ease; }
         .btn-icon:active, .edit-toggle:active, .phase-btn:active, .week-btn:active { transform: scale(0.94); }
-
         .nav-tab { position: relative; overflow: hidden; }
         .nav-tab::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(212, 175, 55, 0.1); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease; }
         .nav-tab:active::before { width: 200%; height: 200%; }
@@ -411,7 +419,7 @@
         
         <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <input type="checkbox" id="privacyAutoLock" onchange="App.toggleAutoLock(this.checked)" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-            <label for="privacyAutoLock" style="color: #888; font-size: 0.8rem; cursor: pointer;">Завжди блокувати при вході</label>
+            <label style="color: #888; font-size: 0.8rem; cursor: default;">Завжди блокувати при вході</label>
         </div>
     </div>
 </div>
@@ -520,23 +528,6 @@
     <div id="photoNavRight" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(1)">▶</div>
     <div id="photoWeekSelector" class="photo-week-bar"></div>
 </div>
-
-<script>
-    document.addEventListener('touchstart', function(e) {
-        const active = document.activeElement;
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
-            if (e.target !== active && !active.contains(e.target)) {
-                active.blur(); 
-            }
-        }
-    });
-
-    document.addEventListener('focusout', function() {
-        setTimeout(function() {
-            window.scrollTo(document.body.scrollLeft, document.body.scrollTop);
-        }, 10);
-    });
-</script>
 
 </body>
 </html>
