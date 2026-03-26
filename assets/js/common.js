@@ -170,12 +170,29 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ПРИМУСОВЕ ЗНЯТТЯ ФОКУСУ (Для закриття клавіатури без зсувів)
+// 1. Зняття фокусу при тапі на пусте місце (щоб клавіатура ховалась)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
+        // Якщо клік не по самому інпуту
         if (e.target !== active && !active.contains(e.target)) {
             active.blur();
         }
+    }
+}, { passive: true });
+
+// 2. ФІКС ЗСУВУ IOS: Примусове повернення сторінки на місце після закриття клавіатури
+document.addEventListener('focusout', (e) => {
+    const active = e.target;
+    if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable')) {
+        // Мінімальна затримка дозволяє iOS завершити анімацію приховування клавіатури
+        setTimeout(() => {
+            // Цей метод змушує браузер перерахувати координати без візуального стрибка
+            window.scrollTo({
+                left: 0,
+                top: window.scrollY,
+                behavior: 'instant'
+            });
+        }, 10);
     }
 });
