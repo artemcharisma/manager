@@ -730,6 +730,7 @@ const App = {
     
     unlockPrivacy() {
         const pwdInput = document.getElementById('privacyPassword');
+        pwdInput.blur();
         const pwd = pwdInput.value;
         const truePass = this.data.privacyPassword || '2255';
         const fakePass = '1111';
