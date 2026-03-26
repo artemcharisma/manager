@@ -177,3 +177,17 @@ document.addEventListener('touchend', (e) => {
         }
     }
 });
+// Фікс зависання екрану на iOS після закриття клавіатури
+document.addEventListener('focusout', function(e) {
+    const isInput = e.target.tagName === 'INPUT' || 
+                    e.target.tagName === 'TEXTAREA' || 
+                    e.target.hasAttribute('contenteditable');
+    
+    if (isInput) {
+        setTimeout(function() {
+            // Примусово перераховуємо скрол, щоб iOS повернув в'юпорт на місце
+            window.scrollTo(window.scrollX, window.scrollY);
+        }, 10);
+    }
+});
+
