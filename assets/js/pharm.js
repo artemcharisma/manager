@@ -658,8 +658,17 @@ const App = {
         this.renderNav(); 
         this.renderView();
         
-        document.body.classList.add('privacy-mode', 'privacy-locked');
-        setTimeout(() => document.body.classList.add('privacy-anim'), 100);
+        // --- ПРАВИЛЬНА ЛОГІКА ПРИВАТНОСТІ ---
+        // Тепер Фарма блокується ТІЛЬКИ якщо ти поставив галочку в налаштуваннях
+        if (this.data.privacyEnabled) {
+            document.body.classList.add('privacy-mode', 'privacy-locked');
+        }
+        
+        // Синхронізуємо візуал галочки в модалці при старті
+        setTimeout(() => {
+            const cb = document.getElementById('privacyAutoLock');
+            if (cb) cb.checked = this.data.privacyEnabled || false;
+        }, 100);
         
         const brandBlock = document.querySelector('.brand');
         const brandIcon = document.querySelector('.brand-icon');
@@ -687,6 +696,7 @@ const App = {
         if(!this.data.vitals) this.data.vitals = {};
         if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
         if(!this.data.bodyMap) this.data.bodyMap = { last: null, history: [] };
+        if(this.data.privacyEnabled === undefined) this.data.privacyEnabled = false; // За замовчуванням вимкнено
         if(!this.data.privacyPassword) this.data.privacyPassword = '2255';
         if(!this.data.analysis) this.data.analysis = JSON.parse(JSON.stringify(DefaultData.analysis));
         if(!this.data.pharmacy) this.data.pharmacy = JSON.parse(JSON.stringify(DefaultData.pharmacy));
@@ -697,6 +707,12 @@ const App = {
 
     save() { 
         this.stateManager.save(this.data); 
+    },
+
+    // Збереження стану галочки
+    toggleAutoLock(val) {
+        this.data.privacyEnabled = val;
+        this.save();
     },
     
     togglePrivacy() {
@@ -741,6 +757,9 @@ const App = {
                 if (isFake) {
                     this.enableFakeMode();
                 }
+
+                // Запускаємо красиву анімацію жовтої смужки тільки ПІСЛЯ розблокування
+                setTimeout(() => this.renderTimeline(), 50);
 
                 setTimeout(() => {
                     document.getElementById('privacyModal').style.display = 'none';
@@ -921,20 +940,20 @@ const App = {
 
         if (!progBar) return;
 
-        // Якщо заблоковано, просто ставимо ширину без анімації
         if (document.body.classList.contains('privacy-locked')) {
-            progBar.style.transition = 'none';
-            progBar.style.width = pct + '%';
+            // Тримаємо її порожньою, доки сторінка заблокована
+            progBar.style.cssText = `width: 0px !important; transition: none !important;`;
         } else {
-            // Якщо розблоковано, анімуємо
-            if (!progBar.style.width || progBar.style.width === '0%') {
-                progBar.style.width = '0%';
+            // Якщо розблоковано і лінія порожня — робимо красивий виїзд
+            if (!progBar.style.width || progBar.style.width === '0px' || progBar.style.width === '0%') {
+                progBar.style.cssText = `width: 0%; transition: none !important;`;
                 setTimeout(() => {
-                    progBar.style.transition = 'width 1s cubic-bezier(0.25, 1, 0.5, 1)';
+                    progBar.style.transition = 'width 1.2s cubic-bezier(0.25, 1, 0.5, 1)';
                     progBar.style.width = pct + '%';
                 }, 50);
             } else {
-                progBar.style.transition = 'width 0.5s ease';
+                // Якщо просто перемикаємо тижні — плавна швидка зміна
+                progBar.style.transition = 'width 0.4s ease-out';
                 progBar.style.width = pct + '%';
             }
         }
