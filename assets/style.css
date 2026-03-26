@@ -58,7 +58,6 @@ body {
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--theme); }
 
-
 /* =========================================
    GLOBAL SYSTEM MENU (FAB)
    ========================================= */
@@ -70,9 +69,8 @@ body {
     font-size: 30px; cursor: pointer; z-index: 9000;
     line-height: 1; padding-bottom: 4px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-    transition: 0.3s; backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
 }
-#sys-fab:active { transform: scale(0.9); background: #222; }
 
 #sys-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -103,13 +101,11 @@ body {
     background: linear-gradient(145deg, #1a1a1c 0%, #101012 100%); 
     border: 1px solid var(--border); border-radius: 16px;
     padding: 15px 5px; text-decoration: none; display: flex; flex-direction: column;
-    align-items: center; gap: 8px; transition: 0.2s;
+    align-items: center; gap: 8px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
-.sys-card:active { background: #222; border-color: #555; transform: scale(0.92); }
 .sys-icon { font-size: 1.8rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 .sys-card span { font-size: 0.65rem; color: #aaa; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.5px;}
-
 
 /* =========================================
    PROTOCOL MODAL OS (Глобальні вікна)
@@ -160,47 +156,6 @@ body {
 
 #protocol-modal-footer { display: grid; gap: 12px; }
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
-@media (hover: hover) {
-    /* Легка динаміка для кнопок Хабу (які вилітають із зірки) */
-    .hub-action, .fab-action {
-        transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    }
-    .hub-action:hover, .fab-action:hover {
-        transform: scale(1.05) translateY(-2px);
-        background: #1a1a1a !important;
-        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
-    }
-
-    /* Динаміка для кнопок у системних модалках (Hard Reset: Скасувати / Підтвердити) */
-    .sys-btn, .modal-content button, .modal-card button {
-        transition: transform 0.2s ease, filter 0.2s ease;
-    }
-    .sys-btn:hover, .modal-content button:hover {
-        transform: translateY(-1px);
-        filter: brightness(1.15);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    }
-   .sys-card:hover {
-        background: #222;
-        border-color: #555;
-        transform: scale(1.03) translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-    }
-    
-    /* 2. Сама кнопка "Зірка" (FAB) */
-    #sys-fab:hover {
-        transform: scale(1.08);
-        background: #222;
-        box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-    }
-
-    /* 3. Кнопки системних вікон (ОК, Скасувати, Підтвердити) */
-    .modal-ctrl-btn:hover {
-        filter: brightness(1.3);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-    }
-}
 
 /* Кнопки всередині модалки */
 .modal-ctrl-btn {
@@ -209,34 +164,60 @@ body {
     padding: 16px; border-radius: 14px;
     font-size: 0.75rem; cursor: pointer; 
     font-family: 'JetBrains Mono', monospace; font-weight: 700;
-    transition: all 0.15s ease; 
     display: flex; align-items: center; justify-content: center; gap: 8px;
     letter-spacing: 1px; color: var(--text-main);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .modal-ctrl-btn.sys-save { color: var(--green) !important; border-color: rgba(16, 185, 129, 0.15) !important; background: transparent !important; margin: 0 !important; border-radius: 14px !important; }
-.modal-ctrl-btn.sys-save:active { border-color: var(--green) !important; background: rgba(16, 185, 129, 0.2) !important; transform: scale(0.93); }
-
 .modal-ctrl-btn.sys-reset { color: var(--red) !important; border-color: rgba(239, 68, 68, 0.15) !important; background: transparent !important; margin: 0 !important; border-radius: 14px !important; }
-.modal-ctrl-btn.sys-reset:active { border-color: var(--red) !important; background: rgba(239, 68, 68, 0.2) !important; transform: scale(0.93); }
 
 #modal-btn-cancel {
     background: linear-gradient(to bottom, rgba(40, 40, 45, 0.8), rgba(25, 25, 30, 0.9));
     border: 1px solid rgba(255, 255, 255, 0.1); color: #d1d1d1;
 }
-#modal-btn-cancel:active { background: rgba(55, 55, 60, 0.9); border-color: rgba(255, 255, 255, 0.4); color: #fff; transform: scale(0.93); }
+
+/* =========================================
+   ДИНАМІКА КНОПОК ХАБУ ТА ВІКОН
+   ========================================= */
+.sys-card, #sys-fab, .modal-ctrl-btn, #modal-btn-cancel {
+    transition: all 0.2s ease !important;
+}
+
+/* Кнопки меню Хабу: без підйому */
+.sys-card:hover { background: #222 !important; border-color: #555 !important; }
+.sys-card:active { transform: scale(0.95) !important; }
+
+/* Зірка (FAB) */
+#sys-fab:hover { background: #222 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; }
+#sys-fab:active { transform: scale(0.9) !important; }
+
+/* Кнопки ОК/Підтвердити: виділяються яскравістю, без підйому */
+.modal-ctrl-btn:hover { filter: brightness(1.3) !important; transform: none !important; }
+.modal-ctrl-btn:active { transform: scale(0.96) !important; }
+
+/* Кнопка СКАСУВАТИ: непримітна червона рамка і легкий фон */
+#modal-btn-cancel:hover {
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ffb3b3 !important;
+    filter: none !important;
+    transform: none !important;
+}
+#modal-btn-cancel:active {
+    transform: scale(0.96) !important;
+}
+
 /* --- ФІКСИ ДЛЯ IOS ТА РОЗМІРІВ КНОПОК --- */
 #protocol-modal-overlay, #sys-overlay { height: 100dvh !important; }
-.modal-ctrl-btn {
-    width: 100% !important;
-}
+.modal-ctrl-btn { width: 100% !important; }
 
 body {
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
 }
+
 /* ДОЗВІЛ ЛИШЕ ДЛЯ ПОЛІВ ВВОДУ */
 input, textarea, [contenteditable="true"] {
     -webkit-touch-callout: default !important;
@@ -244,5 +225,6 @@ input, textarea, [contenteditable="true"] {
     user-select: text !important;
     cursor: text !important;
 }
+
 /* Фікс однакового розміру кнопок у модалці */
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
