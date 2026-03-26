@@ -68,11 +68,11 @@
         
         /* --- ВИНЯТОК: Дозволяємо виділяти там, де треба писати --- */
         input, textarea, [contenteditable="true"] {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-            cursor: text;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            cursor: text !important;
         }
 
         .app-container { width: 100%; max-width: 1400px; padding-bottom: 120px; }
@@ -843,8 +843,10 @@
         #undoFloat.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
 
         /* --- АПТЕЧКА (Повернуті рамки та блокування виділення) --- */
-        .pharm-card, .med-card {
-            -webkit-user-select: none; -moz-user-select: none; user-select: none; /* БЛОКУЄМО ВИДІЛЕННЯ */
+        .med-card, .pharm-card {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            user-select: none !important;
         }
         .pharm-card {
             background: var(--bg-panel);
