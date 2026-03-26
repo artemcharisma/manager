@@ -160,6 +160,27 @@ body {
 
 #protocol-modal-footer { display: grid; gap: 12px; }
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
+@media (hover: hover) {
+    /* Легка динаміка для кнопок Хабу (які вилітають із зірки) */
+    .hub-action, .fab-action {
+        transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hub-action:hover, .fab-action:hover {
+        transform: scale(1.05) translateY(-2px);
+        background: #1a1a1a !important;
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+    }
+
+    /* Динаміка для кнопок у системних модалках (Hard Reset: Скасувати / Підтвердити) */
+    .sys-btn, .modal-content button, .modal-card button {
+        transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .sys-btn:hover, .modal-content button:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+}
 
 /* Кнопки всередині модалки */
 .modal-ctrl-btn {
