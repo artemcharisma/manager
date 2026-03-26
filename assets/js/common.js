@@ -1,7 +1,6 @@
 // assets/js/common.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Вбудовуємо Меню та Систему Модальних вікон на кожну сторінку
     const globalHTML = `
     <div id="sys-fab" onclick="SysSwitch.toggle()">✦</div>
     <div id="sys-overlay" onclick="SysSwitch.close()">
@@ -30,16 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div id="protocol-modal-footer">
                 <button id="modal-btn-cancel" class="modal-ctrl-btn" onclick="Modal.handleCancel()">СКАСУВАТИ</button>
-                <button id="modal-btn-ok" class="modal-ctrl-btn btn-save" onclick="Modal.handleOK()">ОК</button>
+                <button id="modal-btn-ok" class="modal-ctrl-btn" onclick="Modal.handleOK()">ОК</button>
             </div>
         </div>
     </div>`;
     
     document.body.insertAdjacentHTML('beforeend', globalHTML);
-    Modal.init(); // Ініціалізуємо модалку
+    Modal.init();
 });
 
-// КЕРУВАННЯ МЕНЮ
 const SysSwitch = {
     get el() { return document.getElementById('sys-overlay'); },
     toggle() { 
@@ -48,7 +46,7 @@ const SysSwitch = {
     },
     open() {
         this.el.style.display = 'flex';
-        this.el.offsetHeight; // Force reflow
+        this.el.offsetHeight; 
         this.el.classList.add('open');
     },
     close() {
@@ -57,7 +55,6 @@ const SysSwitch = {
     }
 };
 
-// КЕРУВАННЯ ВІБРАЦІЄЮ
 const Haptics = {
     light: () => { if(navigator.vibrate) navigator.vibrate(10); },
     medium: () => { if(navigator.vibrate) navigator.vibrate(25); },
@@ -66,21 +63,15 @@ const Haptics = {
     error: () => { if(navigator.vibrate) navigator.vibrate([50, 50, 50]); }
 };
 
-// Вібрація на всі системні кліки
 document.addEventListener('click', (e) => {
-    if (e.target.closest('button') || 
-        e.target.closest('.nav-tab') || 
-        e.target.closest('.icon-btn') ||
-        e.target.closest('.day-tab') ||
-        e.target.closest('.phase-btn') ||
-        e.target.closest('.smart-card') ||
-        e.target.closest('.modal-ctrl-btn') ||
-        e.target.closest('.ctrl-btn')) {
+    if (e.target.closest('button') || e.target.closest('.nav-tab') || 
+        e.target.closest('.icon-btn') || e.target.closest('.day-tab') ||
+        e.target.closest('.phase-btn') || e.target.closest('.smart-card') ||
+        e.target.closest('.modal-ctrl-btn') || e.target.closest('.ctrl-btn')) {
         Haptics.light();
     }
 });
 
-// КЕРУВАННЯ МОДАЛЬНИМИ ВІКНАМИ (Global)
 let modalResolve = null; 
 
 const Modal = {
@@ -111,20 +102,20 @@ const Modal = {
             this.inputWrap.style.display = 'none';
             this.btnCancel.style.display = 'none';
             this.footer.className = '';
-            this.btnOk.className = `modal-ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
+            this.btnOk.className = `modal-ctrl-btn sys-${theme === 'red' ? 'reset' : 'save'}`;
             this.btnOk.innerText = 'ОК';
-                } else if (type === 'confirm') {
+        } else if (type === 'confirm') {
             this.inputWrap.style.display = 'none';
             this.btnCancel.style.display = 'flex';
             this.footer.className = 'dual-btn';
-            this.btnOk.className = `modal-ctrl-btn btn-${theme === 'red' ? 'reset' : 'save'}`;
-            this.btnOk.innerText = 'ПІДТВЕРДИТИ'; /* Тепер текст однаковий для всіх підтверджень */
+            this.btnOk.className = `modal-ctrl-btn sys-${theme === 'red' ? 'reset' : 'save'}`;
+            this.btnOk.innerText = 'ПІДТВЕРДИТИ'; 
         } else if (type === 'prompt') {
             this.inputWrap.style.display = 'block';
             this.input.placeholder = placeholder;
             this.btnCancel.style.display = 'flex';
             this.footer.className = 'dual-btn';
-            this.btnOk.className = 'modal-ctrl-btn btn-save';
+            this.btnOk.className = 'modal-ctrl-btn sys-save';
             this.btnOk.innerText = 'ОК';
             setTimeout(() => this.input.focus(), 300);
         }
@@ -156,19 +147,19 @@ const Modal = {
     async prompt(text, title = "ВВЕДЕННЯ", placeholder = "") { return this.show({ text, title, placeholder, type: 'prompt', theme: 'gold' }); }
 };
 
-// PWA Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .catch(err => console.error('Помилка SW:', err));
     });
 }
-// Вирішення проблеми iOS: повертає сторінку на місце, коли ховається клавіатура
+
+// --- ВИРІШЕННЯ БАГА З КЛАВІАТУРОЮ iOS ---
 document.addEventListener('focusout', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
         setTimeout(() => {
-            window.scrollTo(0, Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop));
-        }, 10);
+            // Змушуємо iOS перемалювати екран після зникнення клавіатури
+            window.scrollTo({ top: window.scrollY, behavior: 'instant' });
+        }, 50);
     }
 });
-
