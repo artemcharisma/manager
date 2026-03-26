@@ -283,8 +283,8 @@
         .btn-add-pill:hover { opacity: 1; border-color: var(--green); }
         .ctrl-btn { font-size: 0.7rem; background: #222; padding: 2px 8px; border-radius: 4px; cursor: pointer; color: #ccc; border: none; }
 
-        /* ПОВНЕ БЛОКУВАННЯ ВИДІЛЕННЯ ТА ТЕКСТОВОГО КУРСОРУ */
-        .check-name, .pharm-stock, .med-desc, .med-name {
+        /* 1. ЖОРСТКЕ БЛОКУВАННЯ ВИДІЛЕННЯ ТЕКСТУ В АНАЛІЗАХ ТА АПТЕЧЦІ (За замовчуванням) */
+        .check-row, .check-name, .med-item, .pharm-stock {
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
             -ms-user-select: none !important;
@@ -292,8 +292,10 @@
             cursor: default !important;
         }
         
-        /* Повертаємо виділення ТІЛЬКИ тоді, коли увімкнено режим редагування (олівець) */
-        body.editing .pharm-stock {
+        /* 2. ПОВЕРТАЄМО ВИДІЛЕННЯ ТА "ПАЛОЧКУ" ТІЛЬКИ ПІД ЧАС РЕДАГУВАННЯ (Натиснуто олівець) */
+        body.editing .pharm-stock,
+        body.editing .check-name,
+        body.editing [contenteditable="true"] {
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
             -ms-user-select: text !important;
