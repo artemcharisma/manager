@@ -47,7 +47,9 @@ body {
     color: var(--text-main); 
     font-family: 'Inter', -apple-system, sans-serif;
     margin: 0; padding: 0; 
-    min-height: 100vh; 
+    min-height: 100vh; /* Фолбек для старих браузерів */
+    min-height: 100dvh; /* ВАЖЛИВО: Динамічна висота для iOS */
+    overflow-x: hidden; 
     -webkit-font-smoothing: antialiased; 
     -moz-osx-font-smoothing: grayscale;
 }
