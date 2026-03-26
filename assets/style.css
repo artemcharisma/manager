@@ -210,6 +210,7 @@ body {
 #protocol-modal-overlay, #sys-overlay { height: 100dvh !important; }
 .modal-ctrl-btn {
     width: 100% !important;
+}
 
 body {
     -webkit-touch-callout: none !important;
@@ -217,7 +218,7 @@ body {
     user-select: none !important;
 }
 /* ДОЗВІЛ ЛИШЕ ДЛЯ ПОЛІВ ВВОДУ */
-input, textarea, [contenteditable="true"], .pharm-stock, .check-name {
+input, textarea, [contenteditable="true"] {
     -webkit-touch-callout: default !important;
     -webkit-user-select: text !important;
     user-select: text !important;
