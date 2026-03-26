@@ -154,12 +154,27 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- ВИРІШЕННЯ БАГА З КЛАВІАТУРОЮ iOS ---
+// --- ВИРІШЕННЯ БАГА З КЛАВІАТУРОЮ iOS (Покращено) ---
+const iosScrollFix = () => {
+    setTimeout(() => {
+        window.scrollTo(0, Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop));
+    }, 10);
+};
+
 document.addEventListener('focusout', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
-        setTimeout(() => {
-            // Змушуємо iOS перемалювати екран після зникнення клавіатури
-            window.scrollTo({ top: window.scrollY, behavior: 'instant' });
-        }, 50);
+        iosScrollFix();
+    }
+});
+
+// Додатковий захист: якщо користувач просто тапнув повз поле
+document.addEventListener('touchend', (e) => {
+    if (document.activeElement && 
+        (document.activeElement.tagName === 'INPUT' || 
+         document.activeElement.tagName === 'TEXTAREA' || 
+         document.activeElement.isContentEditable) &&
+        e.target !== document.activeElement) {
+        document.activeElement.blur();
+        iosScrollFix();
     }
 });
