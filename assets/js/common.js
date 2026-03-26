@@ -170,29 +170,53 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// 1. Зняття фокусу при тапі на пусте місце (щоб клавіатура ховалась)
+// 1. Розумне зняття фокусу (НЕ перебиває кнопки)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
-        // Якщо клік не по самому інпуту
+        // КРИТИЧНО: Якщо тапнули по кнопці, ігноруємо, щоб дати кнопці самій спрацювати
+        if (e.target.closest('button') || e.target.classList.contains('btn-privacy-unlock')) return;
+        
         if (e.target !== active && !active.contains(e.target)) {
             active.blur();
         }
     }
 }, { passive: true });
 
-// 2. ФІКС ЗСУВУ IOS: Примусове повернення сторінки на місце після закриття клавіатури
-document.addEventListener('focusout', (e) => {
-    const active = e.target;
-    if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable')) {
-        // Мінімальна затримка дозволяє iOS завершити анімацію приховування клавіатури
-        setTimeout(() => {
-            // Цей метод змушує браузер перерахувати координати без візуального стрибка
-            window.scrollTo({
-                left: 0,
-                top: window.scrollY,
-                behavior: 'instant'
-            });
-        }, 10);
+// 2. Аналітичний фікс позиції сторінки після клавіатури iOS
+const IOSKeyboardFixer = {
+    initialScrollY: 0,
+    isKeyboardOpen: false,
+    init() {
+        document.addEventListener('focusin', (e) => {
+            const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
+            if (isInput && !this.isKeyboardOpen) {
+                this.initialScrollY = window.scrollY; // Зберегли рівень ДО виклику клавіатури
+                this.isKeyboardOpen = true;
+            }
+        });
+
+        document.addEventListener('focusout', (e) => {
+            const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
+            if (isInput) {
+                // Мікрозатримка: перевіряємо, чи юзер не тапнув в ІНШЕ поле вводу
+                setTimeout(() => {
+                    const active = document.activeElement;
+                    const stillInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'));
+                    
+                    if (!stillInput) {
+                        this.isKeyboardOpen = false; // Клавіатура повністю сховалась
+                        
+                        // Повертаємо на той самий рівень
+                        window.scrollTo({ top: this.initialScrollY, behavior: 'smooth' }); 
+                        
+                        // Примусовий мікро-рефлоу для зникнення білих завислих смуг внизу екрану
+                        document.body.style.transform = 'translateZ(0)';
+                        setTimeout(() => document.body.style.transform = '', 50);
+                    }
+                }, 50);
+            }
+        });
     }
-});
+};
+IOSKeyboardFixer.init();
