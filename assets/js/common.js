@@ -154,41 +154,51 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- ЖОРСТКИЙ ФІКС КЛАВІАТУРИ IOS ---
-const fixIOSKeyboard = () => {
-    setTimeout(() => {
-        window.scrollTo(0, Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop));
-    }, 10);
-};
-
-document.addEventListener('focusout', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
-        fixIOSKeyboard();
-    }
-});
-
-// Примусово знімаємо фокус при тапі повз поле
-document.addEventListener('touchend', (e) => {
-    const active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
-        if (e.target !== active && !active.contains(e.target)) {
-            active.blur();
-            fixIOSKeyboard();
-        }
-    }
-});
-// ЖОРСТКИЙ ФІКС ПЕРЕМАЛЬОВКИ ЕКРАНУ НА IOS ПІСЛЯ ЗАКРИТТЯ КЛАВІАТУРИ
+// --- ЖОРСТКИЙ ФІКС ПЕРЕМАЛЬОВКИ ЕКРАНУ НА IOS ---
 document.addEventListener('focusout', function(e) {
     const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
     if (isInput) {
         setTimeout(function() {
-            // Змушуємо браузер оновити позицію без стрибка на 0,0
+            // Змушуємо браузер оновити позицію без стрибка
             window.scrollTo({
                 top: document.documentElement.scrollTop || document.body.scrollTop,
                 left: 0,
                 behavior: 'instant'
             });
         }, 10);
+    }
+});
+
+// Примусово знімаємо фокус при тапі повз поле (щоб клавіатура закривалася)
+document.addEventListener('touchstart', (e) => {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
+        if (e.target !== active && !active.contains(e.target)) {
+            active.blur();
+        }
+    }
+});
+
+// --- ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН) ---
+document.addEventListener('click', function(e) {
+    // 1. Стандартні модалки Аптечки/Тренувань/Харчування
+    if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
+        if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
+            App.closeModal();
+        } else {
+            e.target.style.display = 'none';
+        }
+    }
+    
+    // 2. Системні модалки (Hard Reset з index.html)
+    if (e.target.id === 'sysModal') {
+        e.target.remove();
+        document.body.classList.remove('modal-active');
+    }
+    
+    // 3. Системні модалки підтверджень Protocol OS (з common.js)
+    if (e.target.id === 'protocol-modal-overlay') {
+        if (typeof Modal !== 'undefined') Modal.handleCancel(); // Закриваємо як "Скасовано"
     }
 });
 
