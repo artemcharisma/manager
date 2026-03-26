@@ -154,18 +154,16 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- ЖОРСТКИЙ ФІКС ПЕРЕМАЛЬОВКИ ЕКРАНУ НА IOS ---
 document.addEventListener('focusout', function(e) {
     const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
     if (isInput) {
+        // Даємо iOS 100ms на те, щоб повністю сховати клавіатуру, після чого примусово оновлюємо сторінку
         setTimeout(function() {
-            // Змушуємо браузер оновити позицію без стрибка
-            window.scrollTo({
-                top: document.documentElement.scrollTop || document.body.scrollTop,
-                left: 0,
-                behavior: 'instant'
-            });
-        }, 10);
+            window.scrollTo(document.body.scrollLeft, document.body.scrollTop);
+            // Примусовий рефлоу (лікує зависання пустого місця)
+            document.documentElement.style.height = '100.1vh';
+            setTimeout(() => document.documentElement.style.height = '100vh', 10);
+        }, 100);
     }
 });
 
