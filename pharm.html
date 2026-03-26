@@ -820,6 +820,15 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         }
 
+        /* Жорстке приховування для уникнення мерехтіння */
+        body.privacy-locked #mainView,
+        body.privacy-locked .week-bar,
+        body.privacy-locked .stats-grid,
+        body.privacy-locked #progBar {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: none !important;
+        }
         /* Розумний Undo з ефектом пружини (Оновлено z-index) */
         #undoFloat { 
             position: fixed; bottom: 100px; right: 20px; width: 50px; height: 50px; 
