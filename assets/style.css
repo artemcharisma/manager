@@ -189,6 +189,26 @@ body {
 #protocol-modal-overlay, #sys-overlay { height: 100dvh !important; }
 .modal-ctrl-btn {
     width: 100% !important;
+/* =========================================
+   ЗАБОРОНА ВИДІЛЕННЯ ТЕКСТУ ТА ЛУПИ (IOS Safari)
+   ========================================= */
+body {
+    -webkit-touch-callout: none !important; /* Ховає меню довгого тапу на iOS */
+    -webkit-user-select: none !important;   /* Safari */
+    -moz-user-select: none !important;      /* Firefox */
+    -ms-user-select: none !important;       /* Edge */
+    user-select: none !important;           /* Standard */
+}
+
+/* Дозволяємо виділення ТІЛЬКИ там, де є ввід тексту */
+input, textarea, [contenteditable="true"], .pharm-stock {
+    -webkit-touch-callout: default !important;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+    user-select: auto !important;
+    cursor: text !important;
+}
 }
 /* Фікс однакового розміру кнопок у модалці */
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
