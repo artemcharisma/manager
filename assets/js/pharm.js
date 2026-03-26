@@ -684,6 +684,7 @@ const App = {
             if (document.body.classList.contains('privacy-mode')) return;
             if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('gold_protocol');
+                localStorage.removeItem('pharm_manual_lock'); // <--- ОЧИЩАЄМО ЗАМОК
                 try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
                 location.reload();
             }
@@ -722,6 +723,7 @@ const App = {
             setTimeout(() => document.getElementById('privacyPassword').focus(), 100);
         } else {
             document.body.classList.add('privacy-mode', 'privacy-locked');
+            localStorage.setItem('pharm_manual_lock', 'true'); // <--- ЗАПАМ'ЯТОВУЄМО РУЧНЕ БЛОКУВАННЯ
             if(this.state.editing) this.toggleEdit();
         }
     },
@@ -753,6 +755,7 @@ const App = {
             setTimeout(() => {
                 document.getElementById('privacyModal').classList.add('fade-out');
                 document.body.classList.remove('privacy-locked', 'privacy-mode');
+                localStorage.setItem('pharm_manual_lock', 'false'); // <--- ЗНІМАЄМО РУЧНЕ БЛОКУВАННЯ
                 
                 if (isFake) {
                     this.enableFakeMode();
