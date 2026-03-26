@@ -161,6 +161,12 @@
             100% { background-position: 28px 0; } /* Рухаємо на ширину патерну */
         }
 
+        body.privacy-anim .app-container, body.privacy-anim header, body.privacy-anim .nav-tabs, 
+        body.privacy-anim .pill, body.privacy-anim .med-card, body.privacy-anim .stat-card, 
+        body.privacy-anim .chart-container, body.privacy-anim .photo-area, body.privacy-anim #mainView, 
+        body.privacy-anim .phase-scroll, body.privacy-anim .week-bar {
+            transition: filter 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
+        }
         .app-container, header, .nav-tabs, .pill, .med-card, .stat-card, 
         .chart-container, .photo-area, #mainView, .phase-scroll, .week-bar {
             transition: filter 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
