@@ -659,6 +659,7 @@ const App = {
         this.renderView();
         
         document.body.classList.add('privacy-mode', 'privacy-locked');
+        setTimeout(() => document.body.classList.add('privacy-anim'), 100);
         
         const brandBlock = document.querySelector('.brand');
         const brandIcon = document.querySelector('.brand-icon');
