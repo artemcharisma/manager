@@ -178,34 +178,42 @@ body {
 }
 
 /* =========================================
-   ДИНАМІКА КНОПОК ХАБУ ТА ВІКОН
+   ДИНАМІКА КНОПОК ХАБУ ТА ВІКОН (РОЗДІЛЕНО ДЛЯ IOS ТА PC)
    ========================================= */
 .sys-card, #sys-fab, .modal-ctrl-btn, #modal-btn-cancel {
     transition: all 0.2s ease !important;
 }
 
-/* Кнопки меню Хабу: без підйому */
-.sys-card:hover { background: #222 !important; border-color: #555 !important; }
-.sys-card:active { transform: scale(0.95) !important; }
+/* 1. МОБІЛЬНІ ПРИСТРОЇ (Тільки при утриманні пальця, без залипання) */
+.sys-card:active { transform: scale(0.95) !important; background: #222 !important; border-color: #555 !important; }
+#sys-fab:active { transform: scale(0.9) !important; background: #222 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; }
+.modal-ctrl-btn:active, #modal-btn-cancel:active { transform: scale(0.96) !important; filter: brightness(1.2) !important; }
 
-/* Зірка (FAB) */
-#sys-fab:hover { background: #222 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; }
-#sys-fab:active { transform: scale(0.9) !important; }
-
-/* Кнопки ОК/Підтвердити: виділяються яскравістю, без підйому */
-.modal-ctrl-btn:hover { filter: brightness(1.3) !important; transform: none !important; }
-.modal-ctrl-btn:active { transform: scale(0.96) !important; }
-
-/* Кнопка СКАСУВАТИ: непримітна червона рамка і легкий фон */
-#modal-btn-cancel:hover {
-    border-color: rgba(239, 68, 68, 0.5) !important;
-    background: rgba(239, 68, 68, 0.1) !important;
-    color: #ffb3b3 !important;
-    filter: none !important;
-    transform: none !important;
-}
-#modal-btn-cancel:active {
-    transform: scale(0.96) !important;
+/* 2. КОМП'ЮТЕР (Тільки при наведенні мишки) */
+@media (hover: hover) {
+    .sys-card:hover { background: #222 !important; border-color: #555 !important; transform: translateY(-2px); }
+    #sys-fab:hover { background: #222 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; transform: scale(1.05); }
+    
+    /* Нейтральне виділення для Скасувати / звичайних ОК */
+    .modal-ctrl-btn:hover { filter: brightness(1.2) !important; transform: translateY(-1px); }
+    #modal-btn-cancel:hover { background: rgba(255, 255, 255, 0.05) !important; transform: translateY(-1px); }
+    
+    /* ЕСТЕЧНИЙ БАЛАНС: Підсвітка для кнопки ПІДТВЕРДИТИ (Червона) */
+    .modal-ctrl-btn.sys-reset:hover {
+        border-color: rgba(239, 68, 68, 0.5) !important;
+        background: rgba(239, 68, 68, 0.1) !important;
+        color: #ffb3b3 !important;
+        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2) !important;
+        filter: none !important;
+    }
+    
+    /* Підсвітка для кнопки ОК (Зелена) */
+    .modal-ctrl-btn.sys-save:hover {
+        border-color: rgba(16, 185, 129, 0.5) !important;
+        background: rgba(16, 185, 129, 0.1) !important;
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2) !important;
+        filter: none !important;
+    }
 }
 
 /* --- ФІКСИ ДЛЯ IOS ТА РОЗМІРІВ КНОПОК --- */
@@ -225,6 +233,8 @@ input, textarea, [contenteditable="true"] {
     user-select: text !important;
     cursor: text !important;
 }
+
+#protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
 
 /* Фікс однакового розміру кнопок у модалці */
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
