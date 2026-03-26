@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const globalHTML = `
-    <div id="sys-fab" ontouchend="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()" onclick="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()">✦</div>
+    <div id="sys-fab" ontouchstart="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()" onclick="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()">✦</div>
     <div id="sys-overlay" onclick="SysSwitch.close()">
         <div class="sys-panel" onclick="event.stopPropagation()">
             <div class="sys-header">
@@ -152,16 +152,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Примусово знімаємо фокус при тапі повз поле (Щоб клавіатура закривалась)
-document.addEventListener('touchstart', (e) => {
-    const active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
-        if (e.target !== active && !active.contains(e.target)) {
-            active.blur();
-        }
-    }
-});
-
 // ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
@@ -179,30 +169,8 @@ document.addEventListener('click', function(e) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
-// --- ЖОРСТКИЙ ФІКС КЛАВІАТУРИ IOS (ІДЕЯ З NUTRITION: ЗБЕРЕЖЕННЯ СТАНУ) ---
-let lastKnownScrollY = 0;
 
-// Відстежуємо і запам'ятовуємо позицію ДО того, як клавіатура все зламає
-window.addEventListener('scroll', () => {
-    const currentY = window.scrollY || document.documentElement.scrollTop;
-    if (currentY > 0) lastKnownScrollY = currentY; // Не записуємо нуль від багів iOS
-}, { passive: true });
-
-document.addEventListener('focusout', function(e) {
-    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
-    if (isInput) {
-        setTimeout(function() {
-            // Замість зчитування поточної (зламаної) позиції, беремо збережену
-            window.scrollTo({
-                top: lastKnownScrollY,
-                left: 0,
-                behavior: 'instant'
-            });
-        }, 10);
-    }
-});
-
-// Примусово знімаємо фокус при тапі повз поле
+// ПРИМУСОВЕ ЗНЯТТЯ ФОКУСУ (Для закриття клавіатури без зсувів)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
