@@ -1354,13 +1354,13 @@ const App = {
                 
                 <div class="med-list" style="padding-top:10px;">
                     ${block.checks.map((chk, j) => `
-                        <div class="check-row" style="border-bottom:none; padding: 6px 0; display: flex; align-items: flex-start; gap: 8px;">
-                            <span class="check-icon" style="color:var(--blue); font-size:1.1rem; text-shadow:none; line-height: 1.2; margin-top: 2px;">🔬</span>
-<div style="flex: 1; display: flex; flex-direction: column;">
-                            <span class="check-name" contenteditable="${this.state.editing}" 
-    onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
-</div>
-                            ${this.state.editing ? `<span style="color:#ef4444; cursor:pointer; margin-left:10px; font-weight:bold;" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
+                        <div class="check-row" style="border-bottom:none; padding: 6px 0; display: flex; align-items: center; gap: 8px;">
+                            <span class="check-icon" style="color:var(--blue); font-size:1.2rem; text-shadow:none; margin: 0;">🔬</span>
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <span class="check-name" contenteditable="${this.state.editing}" 
+                                    onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
+                            </div>
+                            ${this.state.editing ? `<span style="color:#ef4444; cursor:pointer; margin-left:10px; font-weight:bold; align-self: center;" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
                         </div>
                     `).join('')}
                 </div>
