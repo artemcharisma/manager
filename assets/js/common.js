@@ -169,13 +169,3 @@ document.addEventListener('click', function(e) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
-
-// ПРИМУСОВЕ ЗНЯТТЯ ФОКУСУ (Для закриття клавіатури без зсувів)
-document.addEventListener('touchstart', (e) => {
-    const active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
-        if (e.target !== active && !active.contains(e.target)) {
-            active.blur();
-        }
-    }
-});
