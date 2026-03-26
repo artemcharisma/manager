@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const globalHTML = `
-    <div id="sys-fab" onclick="SysSwitch.toggle()">✦</div>
+    <div id="sys-fab" ontouchend="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()" onclick="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()">✦</div>
     <div id="sys-overlay" onclick="SysSwitch.close()">
         <div class="sys-panel" onclick="event.stopPropagation()">
             <div class="sys-header">
