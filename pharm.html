@@ -293,7 +293,9 @@
         body:not(.editing) .med-name,
         body:not(.editing) .med-desc,
         body:not(.editing) .category-header,
-        body:not(.editing) .phase-btn span,
+        body:not(.editing) .phase-scroll,   /* ДОДАНО: Блокує контейнер фаз */
+        body:not(.editing) .phase-btn,      /* ДОДАНО: Блокує саму кнопку фази */
+        body:not(.editing) .phase-btn *,    /* ДОДАНО: Блокує текст всередині фази */
         body:not(.editing) .check-row {
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
@@ -331,7 +333,16 @@
             .btn-new-section:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--primary); color: var(--primary); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
             .btn-privacy-unlock:hover { box-shadow: 0 5px 20px rgba(255,255,255,0.3); transform: translateY(-2px); }
             .btn-upload:hover { background: rgba(139, 92, 246, 0.2); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transform: translateY(-2px); }
+            .phase-btn:hover:not(.active) { 
+            background: rgba(255,255,255,0.05); 
+            border-color: #555; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4); 
+            transform: translateY(-2px); 
         }
+    }
+
+/* Динаміка натискання на телефоні */
+.phase-btn:active { transform: scale(0.96); background: rgba(0,0,0,0.5); }
         .btn-icon, .edit-toggle, .phase-btn, .week-btn, .pill { transition: transform 0.1s ease, background 0.2s ease; }
         .btn-icon:active, .edit-toggle:active, .phase-btn:active, .week-btn:active { transform: scale(0.94); }
         .nav-tab { position: relative; overflow: hidden; }
