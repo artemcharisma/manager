@@ -179,20 +179,26 @@ document.addEventListener('click', function(e) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
-// --- ЖОРСТКИЙ ФІКС ЗАВИСАННЯ ЕКРАНУ НА IOS (Без стрибків наверх) ---
+// --- ЖОРСТКИЙ ФІКС КЛАВІАТУРИ IOS (ІДЕЯ З NUTRITION: ЗБЕРЕЖЕННЯ СТАНУ) ---
+let lastKnownScrollY = 0;
+
+// Відстежуємо і запам'ятовуємо позицію ДО того, як клавіатура все зламає
+window.addEventListener('scroll', () => {
+    const currentY = window.scrollY || document.documentElement.scrollTop;
+    if (currentY > 0) lastKnownScrollY = currentY; // Не записуємо нуль від багів iOS
+}, { passive: true });
+
 document.addEventListener('focusout', function(e) {
     const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
     if (isInput) {
-        // Замість scrollTo (який кидає наверх), ми робимо мікро-зміну в DOM.
-        // Це змушує Safari перерахувати висоту вікна і прибрати пусте місце, 
-        // залишаючи тебе точно там, де ти був.
         setTimeout(function() {
-            const originalHeight = document.body.style.height;
-            document.body.style.height = '100.1vh'; // Мікро-зміна
-            setTimeout(() => {
-                document.body.style.height = originalHeight || ''; // Повернення
-            }, 20);
-        }, 100); // Даємо iOS час сховати клавіатуру
+            // Замість зчитування поточної (зламаної) позиції, беремо збережену
+            window.scrollTo({
+                top: lastKnownScrollY,
+                left: 0,
+                behavior: 'instant'
+            });
+        }, 10);
     }
 });
 
