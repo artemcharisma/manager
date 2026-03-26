@@ -1,5 +1,3 @@
-// assets/js/common.js
-
 document.addEventListener('DOMContentLoaded', () => {
     const globalHTML = `
     <div id="sys-fab" ontouchend="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()" onclick="event.preventDefault(); event.stopPropagation(); SysSwitch.toggle()">✦</div>
@@ -154,22 +152,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- ЖОРСТКИЙ ФІКС ПЕРЕМАЛЬОВКИ ЕКРАНУ НА IOS ---
-document.addEventListener('focusout', function(e) {
-    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
-    if (isInput) {
-        setTimeout(function() {
-            // Беремо правильний параметр висоти (scrollY), а не нульовий body.scrollTop
-            const currentScroll = window.scrollY || document.documentElement.scrollTop;
-            window.scrollTo({
-                top: currentScroll,
-                left: 0,
-                behavior: 'instant'
-            });
-        }, 10);
-    }
-});
-// Примусово знімаємо фокус при тапі повз поле (щоб клавіатура закривалася)
+// Примусово знімаємо фокус при тапі повз поле (Щоб клавіатура закривалась)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
@@ -179,9 +162,8 @@ document.addEventListener('touchstart', (e) => {
     }
 });
 
-// --- ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН) ---
+// ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
 document.addEventListener('click', function(e) {
-    // 1. Стандартні модалки Аптечки/Тренувань/Харчування
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
         if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
             App.closeModal();
@@ -189,16 +171,11 @@ document.addEventListener('click', function(e) {
             e.target.style.display = 'none';
         }
     }
-    
-    // 2. Системні модалки (Hard Reset з index.html)
     if (e.target.id === 'sysModal') {
         e.target.remove();
         document.body.classList.remove('modal-active');
     }
-    
-    // 3. Системні модалки підтверджень Protocol OS (з common.js)
     if (e.target.id === 'protocol-modal-overlay') {
-        if (typeof Modal !== 'undefined') Modal.handleCancel(); // Закриваємо як "Скасовано"
+        if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
-
