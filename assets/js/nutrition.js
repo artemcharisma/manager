@@ -150,7 +150,16 @@ const App = {
         };
         this.data.days.push(newDay);
         this.state.currentDayId = id;
-        if(!silent) { this.save(); this.render(); }
+        if(!silent) { 
+            this.save(); 
+            this.render(); 
+            
+            // ПРО-ФІКС: Плавний автоскрол до новоствореного дня
+            setTimeout(() => {
+                const bar = document.getElementById('dayBar');
+                if(bar) bar.scrollTo({ left: bar.scrollWidth, behavior: 'smooth' });
+            }, 50); // Мікрозатримка, щоб DOM встиг намалювати нову кнопку
+        }
     },
     duplicateDay() {
         const day = this.getCurrentDay();
@@ -163,7 +172,14 @@ const App = {
         newDay.meals.forEach((m, index) => m.id = id + index + 1);
         this.data.days.push(newDay);
         this.state.currentDayId = id;
-        this.save(); this.render();
+        this.save(); 
+        this.render();
+        
+        // Автоскрол і для дублювання теж
+        setTimeout(() => {
+            const bar = document.getElementById('dayBar');
+            if(bar) bar.scrollTo({ left: bar.scrollWidth, behavior: 'smooth' });
+        }, 50);
     },
 
     switchDay(id) {
