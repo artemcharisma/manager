@@ -958,14 +958,12 @@ const App = {
             const activeTab = document.querySelector('.nav-tab.active');
             const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
 
-            // ФІКС КАЛЕНДАРЯ: Повернуто на місце + Запобіжник подвійного кліку (onblur + onclick)
+            // ФІКС КАЛЕНДАРЯ: Повернуто чистий HTML. CSS-клас .date-hidden-input 
+            // розтягне нативну зону кліку на всю іконку. Працює ідеально на ПК та iOS.
             progText.innerHTML = `Week ${curW}/${maxW} 
             <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
                 <span style="font-size:1.2rem; pointer-events:none;">📅</span>
-                <input type="date" class="date-hidden-input" value="${this.data.startDate}" 
-                    onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }"
-                    onblur="App.calendarLocked = true; setTimeout(() => App.calendarLocked = false, 400);"
-                    onclick="if(App.calendarLocked) { event.preventDefault(); return false; }">
+                <input type="date" class="date-hidden-input" value="${this.data.startDate}" onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }">
             </span>`;
         }
     },
