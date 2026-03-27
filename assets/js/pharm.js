@@ -848,16 +848,25 @@ const App = {
         return d.getTime() === now.getTime();
     },
     
-        async changeStartDate() {
+        // 1. АНАЛІТИЧНИЙ ФІКС: Блокуємо подвійний клік для ПК
+    lockCalendar() {
+        this.calendarLocked = true;
+        setTimeout(() => { this.calendarLocked = false; }, 300); // Блокування на 300мс при закритті
+    },
+
+    async changeStartDate() {
         if(document.body.classList.contains('privacy-mode')) return; 
         
-        const inp = document.getElementById('startDateInput');
+        // Якщо календар щойно закрився (спрацював onblur), ігноруємо паразитичний клік
+        if (this.calendarLocked) return;
+
+        const inp = document.getElementById('hiddenDateInp');
         if (inp) {
+            // КРИТИЧНО: Примусово ставимо фокус, щоб при закритті гарантовано спрацьовував onblur
+            inp.focus(); 
             try { 
                 inp.showPicker(); 
             } catch(e) { 
-                // Фолбек для старих iOS
-                inp.focus(); 
                 inp.click(); 
             }
         }
@@ -958,12 +967,14 @@ const App = {
             const activeTab = document.querySelector('.nav-tab.active');
             const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
 
-            // ФІКС КАЛЕНДАРЯ: Повернуто чистий HTML. CSS-клас .date-hidden-input 
-            // розтягне нативну зону кліку на всю іконку. Працює ідеально на ПК та iOS.
+            // ФІКС КАЛЕНДАРЯ: Додано id="hiddenDateInp", фокус та onblur для відстеження закриття
             progText.innerHTML = `Week ${curW}/${maxW} 
-            <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
+            <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'}; cursor: pointer;" onclick="App.changeStartDate()">
                 <span style="font-size:1.2rem; pointer-events:none;">📅</span>
-                <input type="date" class="date-hidden-input" value="${this.data.startDate}" onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }">
+                <input type="date" id="hiddenDateInp" value="${this.data.startDate}" 
+                    style="position:absolute; opacity:0; width:1px; height:1px; border:none; padding:0; z-index:-1;"
+                    onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }"
+                    onblur="App.lockCalendar()">
             </span>`;
         }
     },
