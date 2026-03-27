@@ -220,15 +220,14 @@ const IOSKeyboardFixer = {
                     if (!stillInput) {
                         this.isKeyboardOpen = false;
                         
-                        // КРИТИЧНИЙ ФІКС: Перевіряємо, чи є на екрані модалки або екран приватності
                         const privModal = document.getElementById('privacyModal');
                         const isAnyModalOpen = document.body.classList.contains('modal-active') || 
                                                document.body.classList.contains('privacy-locked') ||
                                                (privModal && privModal.style.display === 'flex');
                         
-                        if (!isAnyModalOpen) {
+                        // АБСОЛЮТНИЙ ФІКС: Якщо ми закриваємо модалку через кнопку, цей блок ігнорується
+                        if (!isAnyModalOpen && !window.blockKeyboardScrollFix) {
                             window.scrollTo({ top: this.initialScrollY, behavior: 'instant' }); 
-                            // Робимо рефлоу ТІЛЬКИ на чистому екрані, щоб не ламати position: fixed у модалок
                             document.body.style.transform = 'translateZ(0)';
                             setTimeout(() => document.body.style.transform = '', 50);
                         }
