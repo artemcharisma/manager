@@ -87,7 +87,7 @@ const App = {
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
-        window.scrollTo(0, this.state.lockedScrollY || 0);
+        window.scrollTo({ left: 0, top: this.state.lockedScrollY || 0, behavior: 'instant' });
     },
     
     save() {
@@ -177,7 +177,7 @@ const App = {
         this.save(); this.render();
     },
 
-    render() {
+    render(animate = true) {
         this.renderDaysBar();
         const day = this.getCurrentDay();
         if(!day) return;
@@ -188,7 +188,7 @@ const App = {
         const list = document.getElementById('mealList');
         let mealsHtml = ''; 
         
-        day.meals.forEach(m => {
+        day.meals.forEach((m, index) => {
             let mCal = 0, mP = 0, mF = 0, mC = 0;
 
             const foodsHtml = m.foods.map((f, i) => {
@@ -219,8 +219,12 @@ const App = {
                 </div>`;
             }).join('');
 
+            // Логіка плавної каскадної появи
+            const animClass = animate ? 'animate-pop' : '';
+            const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
+
             mealsHtml += `
-            <div class="meal-block">
+            <div class="meal-block ${animClass}" style="${delayStr}">
                 <div class="meal-header">
                     <div>
                         <div class="mh-title" contenteditable="true" onblur="App.renameMeal(${m.id}, this.innerText)">${m.name}</div>
@@ -241,7 +245,9 @@ const App = {
 
         let pasteBtnHtml = '';
         if (this.state.mealBuffer) {
-            pasteBtnHtml = `<button class="btn-main-add" style="margin-top:10px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05);" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
+            const animClass = animate ? 'animate-pop' : '';
+            const delayStr = animate ? `animation-delay: ${day.meals.length * 0.05}s;` : '';
+            pasteBtnHtml = `<button class="btn-main-add ${animClass}" style="margin-top:10px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05); ${delayStr}" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
         }
 
         list.innerHTML = mealsHtml + pasteBtnHtml;
@@ -442,18 +448,20 @@ const App = {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        this.closeModal(); 
+        // ФІКС СКРОЛУ: Змінено порядок!
         this.save(); 
-        this.render(); 
+        this.render(false); // Рендеримо без анімації (щоб не мигало)
+        this.closeModal();  // Закриваємо модалку останнім кроком
     },
 
     deleteFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
         
-        this.closeModal(); 
+        // ФІКС СКРОЛУ: Змінено порядок!
         this.save(); 
-        this.render(); 
+        this.render(false); 
+        this.closeModal(); 
     },
 
     copyMeal(mid) {
@@ -587,19 +595,22 @@ const App = {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
-        this.closeModal(); 
+        // ФІКС СКРОЛУ
         this.save(); 
         this.renderBank();
-        this.render();
+        this.render(false);
+        this.closeModal(); 
     },
     
     async delFromBank() {
         if(await Modal.confirm(`Видалити "${this.state.editName}" з бази назавжди?`, "ВИДАЛЕННЯ", "red")) {
             delete this.data.bank[this.state.editName];
-            this.closeModal();
+            
+            // ФІКС СКРОЛУ
             this.save(); 
             this.renderBank();
-            this.render();
+            this.render(false);
+            this.closeModal();
         }
     },
 
@@ -629,9 +640,10 @@ const App = {
             c: parseFloat(document.getElementById('tgC').value)||0,
             k: parseFloat(document.getElementById('tgK').value)||0
         };
-        this.closeModal();
+        // ФІКС СКРОЛУ
         this.save(); 
-        this.updateStats();
+        this.updateStats(); // Тут рендер не потрібен, лише оновлення HUD
+        this.closeModal();
     },
 
     exportData() {
