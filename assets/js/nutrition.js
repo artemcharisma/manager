@@ -188,20 +188,37 @@ const App = {
         this.save(); this.render();
     },
 
-    async editWater() {
+    openWater() {
+        if(document.activeElement) document.activeElement.blur();
+        this.lockScroll();
+        this.toggleFab(false);
+        
         const day = this.getCurrentDay();
-        if(!day) return;
-        const current = day.water || 0;
-        const val = await Modal.prompt("Введіть кількість води (л):", "ВОДНИЙ БАЛАНС", current);
-        if (val !== null && val !== "") {
-            const num = parseFloat(val.replace(',', '.'));
-            if (!isNaN(num) && num >= 0) {
-                this.pushHistory();
-                day.water = num;
-                this.save();
-                this.updateStats(); // Оновлює тільки цифри, без рендеру екрану = нуль стрибків!
-            }
-        }
+        const w = day.water || 0;
+        document.getElementById('inpWater').value = w.toFixed(2);
+        
+        document.getElementById('waterModal').style.display = 'flex';
+    },
+    
+    adjustWater(amount) {
+        const inp = document.getElementById('inpWater');
+        let current = parseFloat(inp.value) || 0;
+        current += amount;
+        if (current < 0) current = 0;
+        inp.value = current.toFixed(2);
+        if(window.Haptics) window.Haptics.light();
+    },
+    
+    saveWater() {
+        const day = this.getCurrentDay();
+        const val = parseFloat(document.getElementById('inpWater').value) || 0;
+        this.pushHistory();
+        day.water = val;
+        
+        this.save();
+        this.updateStats(); // Миттєво оновлює цифру в HUD без підстрибувань!
+        this.closeModal();
+        if(window.Haptics) window.Haptics.success();
     },
 
     moveMeal(id, dir) {
@@ -476,12 +493,13 @@ const App = {
     },
     
     closeModal() { 
-        // 1. БЛОКУЄМО фіксер iOS, щоб він не кидав сторінку вверх
         window.blockKeyboardScrollFix = true;
         setTimeout(() => { window.blockKeyboardScrollFix = false; }, 150);
 
         if(document.activeElement) document.activeElement.blur(); 
-        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal'];
+        
+        // ДОДАНО waterModal
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal'];
         modalIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
