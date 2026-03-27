@@ -154,16 +154,18 @@ if ('serviceWorker' in navigator) {
 
 // ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
 document.addEventListener('click', function(e) {
-    // АБСОЛЮТНИЙ ЗАПОБІЖНИК: Якщо клік відбувся всередині контенту модалки - ігноруємо подію
+    // Якщо клік відбувся всередині вікна модалки - ігноруємо
     if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content')) return;
 
+    // Якщо клік був саме по темному фону (.modal)
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
-        if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
-            App.closeModal();
-        } else {
-            e.target.style.display = 'none';
+        e.target.style.display = 'none'; // Примусово ховаємо конкретну модалку (напр. MAP)
+        
+        if (typeof App !== 'undefined' && typeof App.unlockScroll === 'function') {
+            App.unlockScroll(); // Знімаємо блокування скролу
         }
     }
+    
     if (e.target.id === 'sysModal') {
         e.target.remove();
         document.body.classList.remove('modal-active');
@@ -172,7 +174,6 @@ document.addEventListener('click', function(e) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
-
 // 1. Розумне зняття фокусу (ФІКС ДЛЯ ЗБЕРЕЖЕННЯ КЛАВІАТУРИ В МОДАЛКАХ)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
