@@ -154,6 +154,9 @@ if ('serviceWorker' in navigator) {
 
 // ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
 document.addEventListener('click', function(e) {
+    // АБСОЛЮТНИЙ ЗАПОБІЖНИК: Якщо клік відбувся всередині контенту модалки - ігноруємо подію
+    if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content')) return;
+
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
         if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
             App.closeModal();
@@ -170,13 +173,19 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// 1. Розумне зняття фокусу (НЕ перебиває кнопки)
+// 1. Розумне зняття фокусу (ФІКС ДЛЯ ЗБЕРЕЖЕННЯ КЛАВІАТУРИ В МОДАЛКАХ)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
-        // КРИТИЧНО: Якщо тапнули по кнопці, ігноруємо, щоб дати кнопці самій спрацювати
+        
+        // Ігноруємо кліки по кнопках
         if (e.target.closest('button') || e.target.classList.contains('btn-privacy-unlock')) return;
         
+        // КРИТИЧНИЙ ФІКС: Якщо тап всередині модального вікна — ігноруємо.
+        // Клавіатура НЕ БУДЕ ховатись, якщо ти промазав повз інпут.
+        if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content')) return;
+
+        // Знімаємо фокус тільки якщо клік був по глобальному фону додатку
         if (e.target !== active && !active.contains(e.target)) {
             active.blur();
         }
