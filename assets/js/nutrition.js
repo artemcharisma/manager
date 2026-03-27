@@ -388,7 +388,11 @@ const App = {
 
         // ОНОВЛЕННЯ ВОДИ
         const dispW = document.getElementById('disp-w');
-        if(dispW) dispW.innerText = (day.water || 0).toFixed(1);
+        if(dispW) {
+            let w = day.water || 0;
+            if (w > 0 && w <= 20) w = w * 1000; // Автоміграція для HUD
+            dispW.innerText = Math.round(w);
+        }
 
         // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
