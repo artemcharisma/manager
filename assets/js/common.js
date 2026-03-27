@@ -155,14 +155,19 @@ if ('serviceWorker' in navigator) {
 // ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
 document.addEventListener('click', function(e) {
     // Якщо клік відбувся всередині вікна модалки - ігноруємо
-    if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content')) return;
+    if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content') || e.target.closest('.modal-card')) return;
 
-    // Якщо клік був саме по темному фону (.modal)
+    // Якщо клік був саме по темному фону (.modal або .modal-overlay)
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
-        e.target.style.display = 'none'; // Примусово ховаємо конкретну модалку (напр. MAP)
         
-        if (typeof App !== 'undefined' && typeof App.unlockScroll === 'function') {
-            App.unlockScroll(); // Знімаємо блокування скролу
+        // УНІВЕРСАЛЬНИЙ ФІКС: Замість простого ховання, викликаємо правильний метод закриття додатку!
+        if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
+            App.closeModal();
+        } else {
+            e.target.style.display = 'none'; 
+            if (typeof App !== 'undefined' && typeof App.unlockScroll === 'function') {
+                App.unlockScroll(); 
+            }
         }
     }
     
