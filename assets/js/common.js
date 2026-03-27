@@ -200,7 +200,7 @@ const IOSKeyboardFixer = {
         document.addEventListener('focusin', (e) => {
             const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
             if (isInput && !this.isKeyboardOpen) {
-                this.initialScrollY = window.scrollY; // Зберегли рівень ДО виклику клавіатури
+                this.initialScrollY = window.scrollY;
                 this.isKeyboardOpen = true;
             }
         });
@@ -208,20 +208,25 @@ const IOSKeyboardFixer = {
         document.addEventListener('focusout', (e) => {
             const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
             if (isInput) {
-                // Мікрозатримка: перевіряємо, чи юзер не тапнув в ІНШЕ поле вводу
                 setTimeout(() => {
                     const active = document.activeElement;
                     const stillInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'));
                     
                     if (!stillInput) {
-                        this.isKeyboardOpen = false; // Клавіатура повністю сховалась
+                        this.isKeyboardOpen = false;
                         
-                        // Повертаємо на той самий рівень
-                        window.scrollTo({ top: this.initialScrollY, behavior: 'smooth' }); 
+                        // КРИТИЧНИЙ ФІКС: Перевіряємо, чи є на екрані модалки або екран приватності
+                        const privModal = document.getElementById('privacyModal');
+                        const isAnyModalOpen = document.body.classList.contains('modal-active') || 
+                                               document.body.classList.contains('privacy-locked') ||
+                                               (privModal && privModal.style.display === 'flex');
                         
-                        // Примусовий мікро-рефлоу для зникнення білих завислих смуг внизу екрану
-                        document.body.style.transform = 'translateZ(0)';
-                        setTimeout(() => document.body.style.transform = '', 50);
+                        if (!isAnyModalOpen) {
+                            window.scrollTo({ top: this.initialScrollY, behavior: 'instant' }); 
+                            // Робимо рефлоу ТІЛЬКИ на чистому екрані, щоб не ламати position: fixed у модалок
+                            document.body.style.transform = 'translateZ(0)';
+                            setTimeout(() => document.body.style.transform = '', 50);
+                        }
                     }
                 }, 50);
             }
