@@ -197,7 +197,7 @@ const App = {
         this.save(); this.render();
     },
 
-    openWater() {
+    editWater() {
         if(document.activeElement) document.activeElement.blur();
         this.lockScroll();
         this.toggleFab(false);
@@ -225,11 +225,10 @@ const App = {
         day.water = val;
         
         this.save();
-        this.updateStats(); // Миттєво оновлює цифру в HUD без підстрибувань!
+        this.updateStats(); // Оновити відображення HUD
         this.closeModal();
         if(window.Haptics) window.Haptics.success();
     },
-
     moveMeal(id, dir) {
         const day = this.getCurrentDay();
         const idx = day.meals.findIndex(m => m.id === id);
@@ -288,28 +287,30 @@ const App = {
             }).join('');
 
             const animClass = animate ? 'animate-pop' : '';
-            const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
+        const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
-            mealsHtml += `
-            <div class="meal-block ${animClass}" style="${delayStr}">
-                <div class="meal-header">
-                    <div>
-                        <div class="mh-title" contenteditable="true" onblur="App.renameMeal(${m.id}, this.innerText)">${m.name}</div>
-                        <div class="mh-meta">
-                            <div class="mh-kcal">${mCal} ккал</div>
-                            <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
-                        </div>
+        mealsHtml += `
+        <div class="meal-block ${animClass}" style="${delayStr}">
+            <div class="meal-header">
+                <div style="flex:1;">
+                    <div class="mh-title-wrapper" onclick="App.promptRenameMeal(${m.id})">
+                        <h4 class="mh-title">${m.name}</h4>
+                        <span>✎</span>
                     </div>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <div style="color:#666; cursor:pointer; font-size:1.4rem; padding:0 5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
-                        <div style="color:#666; cursor:pointer; font-size:1.4rem; padding:0 5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
-                        <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; margin-left:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
-                        <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
+                    <div class="mh-meta">
+                        <div class="mh-kcal">${mCal} ккал</div>
+                        <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                     </div>
                 </div>
-                <div>${foodsHtml}</div>
-                <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
-            </div>`;
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
+                    <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
+                    <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
+                </div>
+            </div>
+            <div>${foodsHtml}</div>
+            <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
+        </div>`;
         });
 
         let pasteBtnHtml = '';
@@ -622,9 +623,17 @@ const App = {
         this.save(); this.render();
     },
     
-    renameMeal(id, val) {
-        this.getCurrentDay().meals.find(m=>m.id===id).name = val;
-        this.save();
+    async promptRenameMeal(id) {
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === id);
+        if(!meal) return;
+        const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
+        if (newName && newName.trim() !== "") {
+            this.pushHistory();
+            meal.name = newName.trim();
+            this.save();
+            this.render(false);
+        }
     },
 
     renderBank(filter = "") {
