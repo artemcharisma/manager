@@ -34,9 +34,13 @@ const App = {
             if(!loadedData.days) {
                 this.data.bank = loadedData.bank || DefaultBank;
                 this.data.targets = loadedData.targets;
-                this.data.days = [{id: Utils.id(), name: "Мій день", meals: loadedData.meals || []}];
+                this.data.days = [{id: Utils.id(), name: "Мій день", targets: {...loadedData.targets}, meals: loadedData.meals || []}];
             } else {
                 this.data = loadedData;
+                // АВТОМІГРАЦІЯ: Якщо в старих днях немає targets, копіюємо з глобальних
+                this.data.days.forEach(d => {
+                    if (!d.targets) d.targets = { ...this.data.targets };
+                });
             }
             this.data.bank = {...DefaultBank, ...this.data.bank};
         } else {
@@ -50,7 +54,6 @@ const App = {
         this.setupHardReset();
         this.render();
     },
-
     setupHardReset() {
         const brandBlock = document.getElementById('brandBlock');
         if(!brandBlock) return;
@@ -126,8 +129,14 @@ const App = {
             name = Utils.date();
         }
         const id = Utils.id();
+        
+        // РОЗУМНЕ УСПАДКУВАННЯ: Беремо цілі з попереднього дня (або глобальні)
+        const prevDay = this.data.days[this.data.days.length - 1];
+        const newTargets = prevDay && prevDay.targets ? { ...prevDay.targets } : { ...this.data.targets };
+
         const newDay = {
             id: id, name: name, 
+            targets: newTargets, // Тепер день має власні цілі
             meals: [
                 {id: id+1, name:"Сніданок", foods:[]},
                 {id: id+2, name:"Обід", foods:[]},
@@ -138,7 +147,6 @@ const App = {
         this.state.currentDayId = id;
         if(!silent) { this.save(); this.render(); }
     },
-
     duplicateDay() {
         const day = this.getCurrentDay();
         if(!day) return;
@@ -321,7 +329,7 @@ const App = {
                 t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
             }
         }));
-        const tg = this.data.targets;
+        const tg = day.targets || this.data.targets;
         
         const dispK = document.getElementById('disp-k');
         if(dispK) {
@@ -673,7 +681,11 @@ const App = {
         if(document.activeElement) document.activeElement.blur();
         this.lockScroll(); 
         this.toggleFab(false); 
-        const t = this.data.targets;
+        
+        // Читаємо цілі поточного дня
+        const day = this.getCurrentDay();
+        const t = day.targets || this.data.targets;
+        
         document.getElementById('tgP').value = t.p;
         document.getElementById('tgF').value = t.f;
         document.getElementById('tgC').value = t.c;
@@ -689,18 +701,43 @@ const App = {
     },
     
     saveTargets() {
-        this.data.targets = {
+        const day = this.getCurrentDay();
+        this.pushHistory();
+        
+        const newT = {
             p: parseFloat(document.getElementById('tgP').value)||0,
             f: parseFloat(document.getElementById('tgF').value)||0,
             c: parseFloat(document.getElementById('tgC').value)||0,
             k: parseFloat(document.getElementById('tgK').value)||0
         };
-        // ФІКС СКРОЛУ
+        
+        day.targets = newT;
+        this.data.targets = { ...newT }; // Оновлюємо глобальні як резерв
+        
         this.save(); 
-        this.updateStats(); // Тут рендер не потрібен, лише оновлення HUD
+        this.updateStats();
         this.closeModal();
     },
 
+    async applyTargetsToAll() {
+        if(!(await Modal.confirm("Застосувати ці макроси до ВСІХ створених днів?", "СИНХРОНІЗАЦІЯ", "gold"))) return;
+        
+        this.pushHistory();
+        const newT = {
+            p: parseFloat(document.getElementById('tgP').value)||0,
+            f: parseFloat(document.getElementById('tgF').value)||0,
+            c: parseFloat(document.getElementById('tgC').value)||0,
+            k: parseFloat(document.getElementById('tgK').value)||0
+        };
+
+        this.data.targets = { ...newT };
+        this.data.days.forEach(d => { d.targets = { ...newT }; });
+        
+        this.save();
+        this.updateStats();
+        this.closeModal();
+        if(window.Haptics) window.Haptics.success();
+    },
     exportData() {
         const a = document.createElement('a');
         a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
