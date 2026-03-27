@@ -1648,17 +1648,31 @@ const App = {
 
     updateStatsUI() {
          const container = document.getElementById('stats-container');
-         if(container) container.innerHTML = this.getStatsHtml(this.state.week);
+         // Передаємо false, щоб при ручному вводі дозувань анімація не перегравалась
+         if(container) container.innerHTML = this.getStatsHtml(this.state.week, false);
     },
-    getStatsHtml(week) {
+
+    // Додаємо параметр animate (за замовчуванням true для перемикання тижнів/вкладок)
+    getStatsHtml(week, animate = true) {
         const stats = this.calc(week);
         const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
-        let statsHtml = sortedStats.map(([k,v]) => {
+        
+        let statsHtml = sortedStats.map(([k,v], index) => {
             let color = v.c || 'yellow'; 
-            return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
+            
+            // Якщо анімація дозволена, додаємо клас і каскадну затримку (0.04s між кожною карткою)
+            let animClass = animate ? 'animate-enter' : '';
+            let delayStr = animate ? `animation-delay: ${index * 0.04}s;` : '';
+            
+            return `<div class="stat-card c-${color} ${animClass}" style="${delayStr}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
         }).join('') || '';
-        // ДОДАНО КЛАС btn-map
-        statsHtml += `<div class="stat-card btn-map" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center; transition: all 0.2s ease;" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
+        
+        // Кнопка MAP завжди з'являється останньою в каскаді
+        let mapAnimClass = animate ? 'animate-enter' : '';
+        let mapDelayStr = animate ? `animation-delay: ${sortedStats.length * 0.04}s;` : '';
+        
+        statsHtml += `<div class="stat-card btn-map ${mapAnimClass}" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center; transition: all 0.2s ease; ${mapDelayStr}" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
+        
         return statsHtml;
     },
     
