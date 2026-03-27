@@ -302,39 +302,47 @@ const App = {
                 </div>`;
             }).join('');
 
-        const animClass = animate ? 'animate-pop' : '';
-        const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
+            const animClass = animate ? 'animate-pop' : '';
+            const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
-        mealsHtml += `
-        <div class="meal-block ${animClass}" style="${delayStr}">
-            <div class="meal-header">
-                <div style="flex:1;">
-                    <div class="mh-title-wrapper" style="display:flex; align-items:center; gap:8px;">
-                        <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase;">${m.name}</h4>
-                        <div class="edit-icon-btn" onclick="App.promptRenameMeal(${m.id})">✎</div>
+            mealsHtml += `
+            <div class="meal-block ${animClass}" style="${delayStr}; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div class="meal-header" style="display:flex; flex-direction:column; gap:12px; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);">
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h4 style="margin:0; font-weight:800; font-size:1.1rem; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">${m.name}</h4>
+                            <div style="color:#888; font-size:1rem; cursor:pointer; padding:4px 10px; background:rgba(255,255,255,0.05); border-radius:8px; transition:0.2s;" onclick="App.promptRenameMeal(${m.id})" onmousedown="this.style.background='rgba(255,255,255,0.1)'" onmouseup="this.style.background='rgba(255,255,255,0.05)'">✎</div>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <div style="color:#888; cursor:pointer; font-size:1.2rem; padding:0 5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
+                            <div style="color:#888; cursor:pointer; font-size:1.2rem; padding:0 5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
+                            <div style="color:var(--theme); cursor:pointer; font-size:1.2rem; margin-left:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
+                            <div style="color:var(--danger); cursor:pointer; font-size:1.2rem; opacity:0.7; margin-left:5px;" onclick="App.deleteMealBlock(${m.id})">✕</div>
+                        </div>
                     </div>
-                    <div class="mh-meta" style="display:flex; align-items:center; gap:12px; margin-top:2px;">
-                        <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.9rem; color:var(--theme);">${mCal} ккал</div>
-                        <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
+                    
+                    <div style="display:flex; align-items:center; gap:15px; background:rgba(0,0,0,0.4); padding:10px 15px; border-radius:10px; border:1px solid #1a1a1a;">
+                        <div style="font-family:var(--font-mono); font-weight:800; font-size:1.1rem; color:var(--theme);">${mCal} <span style="font-size:0.7rem; color:#888;">ККАЛ</span></div>
+                        <div style="width:1px; height:20px; background:#333;"></div>
+                        <span style="font-size:0.8rem; color:#aaa; font-weight:600; font-family:var(--font-mono); letter-spacing:1px; flex:1; text-align:center;">
+                            Б <span style="color:#fff">${mP}</span> • 
+                            Ж <span style="color:#fff">${mF}</span> • 
+                            В <span style="color:#fff">${mC}</span>
+                        </span>
                     </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
-                    <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
-                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; margin-left:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
-                    <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
-                </div>
-            </div>
-            <div>${foodsHtml}</div>
-            <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
-        </div>`;
+                
+                <div>${foodsHtml}</div>
+                <button class="btn-action" style="width:100%; padding:16px; background:#0a0a0a; border:none; border-top:1px solid var(--border); color:#666; font-size:0.85rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer;" onclick="App.addFood(${m.id})">+ ДОДАТИ ПРОДУКТ</button>
+            </div>`;
         });
 
         let pasteBtnHtml = '';
         if (this.state.mealBuffer) {
             const animClass = animate ? 'animate-pop' : '';
             const delayStr = animate ? `animation-delay: ${day.meals.length * 0.05}s;` : '';
-            pasteBtnHtml = `<button class="btn-main-add ${animClass}" style="margin-top:10px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05); ${delayStr}" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
+            pasteBtnHtml = `<button class="btn-main-add ${animClass}" style="margin-top:10px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05); width:100%; padding:16px; border-radius:14px; font-weight:800; font-size:0.9rem; cursor:pointer; ${delayStr}" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
         }
 
         list.innerHTML = mealsHtml + pasteBtnHtml;
