@@ -153,24 +153,51 @@
             margin-bottom: 0; 
             scrollbar-width: none;
             margin-left: -10px; margin-right: -10px;
+            scroll-behavior: smooth; /* Для плавного автоскролу */
         }
+        .day-bar::-webkit-scrollbar { display: none; } /* Приховуємо скролбар на iOS/Chrome */
+
         .day-tab {
             min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s;
+            color: #555; transition: 0.2s; flex-shrink: 0;
         }
         .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); }
         .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
         
         .day-tab.active {
-            border-color: var(--theme); color: #fff; background: #1a1a1a;
-            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.15);
+            border-color: var(--theme); color: #000; background: var(--theme); /* Преміальний активний таб */
+            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2);
             transform: translateY(-3px);
             z-index: 2;
         }
-        .day-tab.active small { color: var(--theme); }
+        .day-tab.active span { color: #000; }
+        .day-tab.active small { color: rgba(0,0,0,0.7); }
 
+        /* Преміальний ПЛЮС */
+        .day-add-btn {
+            min-width: 60px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;
+        }
+        .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
+
+        /* Естетична назва дня (Ідеальне вирівнювання) */
         .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
+        .day-title-box { display: flex; align-items: center; gap: 8px; }
+        .day-title-display { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1; margin: 0; }
+        
+        .edit-icon-btn { 
+            color: #666; font-size: 1.1rem; cursor: pointer; padding: 4px 8px; 
+            border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; background: transparent;
+        }
+        .edit-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); color: var(--theme); }
+        
+        .btn-mini { 
+            background: #111; border: 1px solid #333; color: #888; 
+            font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-mini:active { background: #333; color: #fff; }
         
         /* Естетична назва дня (PRO) */
         .day-title-box { display: flex; align-items: center; gap: 10px; }
@@ -433,8 +460,8 @@
     
     <div class="day-control-panel">
         <div class="day-title-box">
-            <span class="day-title-display" id="currentDayTitle">День</span>
-            <span class="edit-icon-btn" onclick="App.promptRenameDay()">✎</span>
+            <h2 class="day-title-display" id="currentDayTitle">День</h2>
+            <div class="edit-icon-btn" onclick="App.promptRenameDay()">✎</div>
         </div>
         <div style="display:flex; gap:8px">
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
@@ -570,29 +597,29 @@
 </div>
 
 <div id="waterModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 400px; margin: 0 auto; border-radius: 20px;">
+    <div class="modal-card" style="max-width: 380px; margin: 0 auto; border-radius: 20px;">
         <div class="mc-header">
             <h3 class="mc-title" style="color:var(--p-color)">💧 ВОДНИЙ БАЛАНС</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#000; border:1px solid #333; border-radius:16px; padding:10px; margin: 25px 0;">
-            <button class="icon-btn" style="border:none; background:transparent; font-size:2rem; color:var(--danger); width:50px; height:50px;" onclick="App.adjustWater(-0.25)">-</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#050505; border:1px solid #222; border-radius:16px; padding:15px 10px; margin: 25px 0;">
+            <button class="icon-btn" style="border:none; background:rgba(239,68,68,0.1); font-size:2rem; color:var(--danger); width:55px; height:55px; border-radius:12px; flex-shrink:0;" onclick="App.adjustWater(-0.25)">-</button>
             
-            <div style="display:flex; align-items:baseline; gap:5px;">
-                <input id="inpWater" class="inp-main" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); font-size:3rem; font-weight:800; width:100px; text-align:center; outline:none; font-family:var(--font-mono);">
-                <span style="color:#666; font-weight:700; font-size:1.2rem;">Л</span>
+            <div style="display:flex; align-items:baseline; gap:4px; justify-content:center; flex:1;">
+                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:3.2rem; font-weight:800; width:100%; max-width:110px; text-align:center; outline:none; font-family:var(--font-mono); padding:0;">
+                <span style="color:#666; font-weight:700; font-size:1.2rem; font-family:var(--font-mono);">Л</span>
             </div>
             
-            <button class="icon-btn" style="border:none; background:transparent; font-size:2rem; color:var(--success); width:50px; height:50px;" onclick="App.adjustWater(0.25)">+</button>
+            <button class="icon-btn" style="border:none; background:rgba(16,185,129,0.1); font-size:2rem; color:var(--success); width:55px; height:55px; border-radius:12px; flex-shrink:0;" onclick="App.adjustWater(0.25)">+</button>
         </div>
         
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 25px;">
-            <button class="btn-mini" style="padding:15px; border-radius:10px;" onclick="App.adjustWater(0.5)">+ 0.5 л</button>
-            <button class="btn-mini" style="padding:15px; border-radius:10px;" onclick="App.adjustWater(1.0)">+ 1.0 л</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom: 25px;">
+            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px;" onclick="App.adjustWater(0.5)">+ 0.5 л</button>
+            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px;" onclick="App.adjustWater(1.0)">+ 1.0 л</button>
         </div>
 
-        <button class="btn-primary" style="background:var(--p-color); color:#fff; box-shadow: 0 4px 15px rgba(59,130,246,0.3);" onclick="App.saveWater()">ЗБЕРЕГТИ ПРОГРЕС</button>
+        <button class="btn-primary" style="background:var(--p-color); color:#fff; box-shadow: 0 4px 15px rgba(59,130,246,0.3); border-radius:14px; padding:18px;" onclick="App.saveWater()">ЗБЕРЕГТИ ПРОГРЕС</button>
     </div>
 </div>
 
