@@ -940,10 +940,8 @@ const App = {
         if (!progBar) return;
 
         if (document.body.classList.contains('privacy-locked')) {
-            // Тримаємо її порожньою, доки сторінка заблокована
             progBar.style.cssText = `width: 0px !important; transition: none !important;`;
         } else {
-            // Якщо розблоковано і лінія порожня — робимо красивий виїзд
             if (!progBar.style.width || progBar.style.width === '0px' || progBar.style.width === '0%') {
                 progBar.style.cssText = `width: 0%; transition: none !important;`;
                 setTimeout(() => {
@@ -951,7 +949,6 @@ const App = {
                     progBar.style.width = pct + '%';
                 }, 50);
             } else {
-                // Якщо просто перемикаємо тижні — плавна швидка зміна
                 progBar.style.transition = 'width 0.4s ease-out';
                 progBar.style.width = pct + '%';
             }
@@ -961,13 +958,17 @@ const App = {
             const activeTab = document.querySelector('.nav-tab.active');
             const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
 
+            // ФІКС КАЛЕНДАРЯ: Повернуто на місце + Запобіжник подвійного кліку (onblur + onclick)
             progText.innerHTML = `Week ${curW}/${maxW} 
-            <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'}; cursor: pointer;" onclick="App.changeStartDate()">
+            <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
                 <span style="font-size:1.2rem; pointer-events:none;">📅</span>
+                <input type="date" class="date-hidden-input" value="${this.data.startDate}" 
+                    onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }"
+                    onblur="App.calendarLocked = true; setTimeout(() => App.calendarLocked = false, 400);"
+                    onclick="if(App.calendarLocked) { event.preventDefault(); return false; }">
             </span>`;
         }
     },
-
     async renderProtocol(c) {
         let weekScrollPos = 0;
         const oldWeekBar = document.querySelector('.week-bar');
