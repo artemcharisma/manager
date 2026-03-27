@@ -1653,7 +1653,7 @@ const App = {
             let color = v.c || 'yellow'; 
             return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
         }).join('') || '';
-        statsHtml += `<div class="stat-card" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
+        statsHtml += `<div class="stat-card btn-map" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center; transition: all 0.2s ease;" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
         return statsHtml;
     },
     
