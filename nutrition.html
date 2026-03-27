@@ -422,12 +422,12 @@
                 <span class="k-label">ККАЛ СЬОГОДНІ</span>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
-                <div class="target-badge" onclick="App.openTargets()">
-                    🎯 ЦІЛЬ: <span id="disp-target">2700</span>
+            <div style="display:flex; flex-direction:column; gap:8px; width: 145px;">
+                <div class="target-badge" onclick="App.openTargets()" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <span>🎯 ЦІЛЬ:</span> <span id="disp-target">2700</span>
                 </div>
-                <div class="water-badge" onclick="App.editWater()">
-                    💧 ВОДА: <span id="disp-w">0.0</span> л
+                <div class="water-badge" onclick="App.editWater()" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <span>💧 ВОДА:</span> <span><span id="disp-w" style="color:var(--p-color);">0.0</span> л</span>
                 </div>
             </div>
         </div>
@@ -528,7 +528,7 @@
 <div id="targetsModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
-            <h3 class="mc-title">МОЇ ЦІЛІ</h3>
+            <h3 class="mc-title">ЦІЛЬОВЕ КБЖВ (ДЕНЬ)</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         <div class="stats-grid">
@@ -537,7 +537,8 @@
             <div class="stat-box"><label class="color-c">ВУГ</label><input id="tgC" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
             <div class="stat-box"><label>ККАЛ</label><input id="tgK" type="number" inputmode="decimal"></div>
         </div>
-        <button class="btn-primary" onclick="App.saveTargets()">ОНОВИТИ</button>
+        <button class="btn-primary" onclick="App.saveTargets()">ОНОВИТИ ДЛЯ ЦЬОГО ДНЯ</button>
+        <button class="btn-ghost" style="margin-top:10px; border-top:none; border:1px dashed #333; border-radius:12px; color:#888;" onclick="App.applyTargetsToAll()">⟳ ЗАСТОСУВАТИ ДО ВСІХ ДНІВ</button>
     </div>
 </div>
 
