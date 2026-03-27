@@ -198,10 +198,14 @@ const IOSKeyboardFixer = {
     initialScrollY: 0,
     isKeyboardOpen: false,
     init() {
+        // Шукай всередині IOSKeyboardFixer.init() у common.js і заміни focusin:
         document.addEventListener('focusin', (e) => {
             const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
             if (isInput && !this.isKeyboardOpen) {
-                this.initialScrollY = window.scrollY;
+                // КРИТИЧНИЙ ФІКС: Якщо ми в модалці, НЕ перезаписуємо початковий скрол нулем!
+                if (!document.body.classList.contains('modal-active') && !document.body.classList.contains('privacy-locked')) {
+                    this.initialScrollY = window.scrollY;
+                }
                 this.isKeyboardOpen = true;
             }
         });
