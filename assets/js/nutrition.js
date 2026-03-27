@@ -89,10 +89,15 @@ const App = {
     unlockScroll() {
         if (!document.body.classList.contains('modal-active')) return;
         const scrollY = this.state.lockedScrollY || 0;
+        
         document.body.classList.remove('modal-active');
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
+        
+        // ФІКС 1: Змушуємо браузер перерахувати макет перед скролом!
+        void document.body.offsetHeight; 
+        
         window.scrollTo({ left: 0, top: scrollY, behavior: 'instant' });
     },
     
@@ -166,12 +171,16 @@ const App = {
         this.render();
     },
 
-    renameDay(newName) {
-        const d = this.getCurrentDay();
-        if(d) {
-            d.name = newName;
+    async promptRenameDay() {
+        const day = this.getCurrentDay();
+        if(!day) return;
+        const newName = await Modal.prompt("Введіть нову назву для цього дня:", "НАЗВА ДНЯ", day.name);
+        if (newName && newName.trim() !== "") {
+            this.pushHistory();
+            day.name = newName.trim();
             this.save();
             this.renderDaysBar();
+            document.getElementById('currentDayTitle').innerText = day.name;
         }
     },
 
@@ -493,12 +502,12 @@ const App = {
     },
     
     closeModal() { 
+        // ФІКС 2: Блокуємо iOS-фіксер довше, щоб клавіатура точно встигла сховатись
         window.blockKeyboardScrollFix = true;
-        setTimeout(() => { window.blockKeyboardScrollFix = false; }, 150);
+        setTimeout(() => { window.blockKeyboardScrollFix = false; }, 400);
 
         if(document.activeElement) document.activeElement.blur(); 
         
-        // ДОДАНО waterModal
         const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal'];
         modalIds.forEach(id => {
             const el = document.getElementById(id);
@@ -507,7 +516,11 @@ const App = {
 
         document.querySelectorAll('.modal-overlay, .modal').forEach(el => el.style.display='none');
         this.toggleFab(true); 
-        this.unlockScroll(); 
+        
+        // ФІКС 3: Відпускаємо екран із мікрозатримкою (щоб iOS завершив анімацію клавіатури)
+        setTimeout(() => {
+            this.unlockScroll(); 
+        }, 20);
     },
 
     saveFood() {
