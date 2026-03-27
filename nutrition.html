@@ -275,21 +275,10 @@
         .meal-header {
             padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
             background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
-            display: flex; justify-content: space-between; align-items: center; /* Центрування */
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .mh-title-wrapper {
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-            padding: 2px 5px; border-radius: 5px; margin-left: -5px;
-        }
-        .mh-title-wrapper:active { background: rgba(255,255,255,0.05); }
-        .mh-title-wrapper .mh-title { font-weight: 800; font-size: 0.95rem; color: #fff; text-transform: uppercase; margin:0;}
-        .mh-title-wrapper span { color: #555; font-size: 0.8rem; }
-        
-        .mh-meta { display: flex; align-items: center; gap: 12px; }
-        .mh-kcal { font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem; color: var(--theme); }
         .mh-del { color: var(--danger); opacity: 0.3; font-size: 16px; padding: 5px; transition: 0.2s; }
         .mh-del:hover { opacity: 1; }
-
         .food-row {
             display: flex; justify-content: space-between; align-items: center;
             padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;
@@ -597,26 +586,24 @@
 </div>
 
 <div id="waterModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 380px; margin: 0 auto; border-radius: 20px;">
+    <div class="modal-card" style="max-width: 360px; margin: 0 auto; border-radius: 20px;">
         <div class="mc-header">
             <h3 class="mc-title" style="color:var(--p-color)">💧 ВОДНИЙ БАЛАНС</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#050505; border:1px solid #222; border-radius:16px; padding:15px 10px; margin: 25px 0;">
-            <button class="icon-btn" style="border:none; background:rgba(239,68,68,0.1); font-size:2rem; color:var(--danger); width:55px; height:55px; border-radius:12px; flex-shrink:0;" onclick="App.adjustWater(-0.25)">-</button>
-            
-            <div style="display:flex; align-items:baseline; gap:4px; justify-content:center; flex:1;">
-                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:3.2rem; font-weight:800; width:100%; max-width:110px; text-align:center; outline:none; font-family:var(--font-mono); padding:0;">
-                <span style="color:#666; font-weight:700; font-size:1.2rem; font-family:var(--font-mono);">Л</span>
+        <div style="text-align:center; padding: 25px 0;">
+            <div style="display:inline-flex; align-items:baseline; justify-content:center; border-bottom: 2px solid #333; padding-bottom:5px;">
+                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:4rem; font-weight:800; width:130px; text-align:center; outline:none; font-family:var(--font-mono); padding:0; line-height:1;">
+                <span style="color:#666; font-weight:700; font-size:1.4rem; font-family:var(--font-mono); margin-left:5px;">Л</span>
             </div>
-            
-            <button class="icon-btn" style="border:none; background:rgba(16,185,129,0.1); font-size:2rem; color:var(--success); width:55px; height:55px; border-radius:12px; flex-shrink:0;" onclick="App.adjustWater(0.25)">+</button>
+            <div style="color:#555; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-top:12px;">Введіть вручну або використайте кнопки</div>
         </div>
         
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom: 25px;">
-            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px;" onclick="App.adjustWater(0.5)">+ 0.5 л</button>
-            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px;" onclick="App.adjustWater(1.0)">+ 1.0 л</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom: 25px;">
+            <button class="btn-action" style="border-radius:12px; border:1px solid rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); color:var(--danger); padding:15px 5px;" onclick="App.adjustWater(-0.25)">- 0.25</button>
+            <button class="btn-action" style="border-radius:12px; border:1px solid rgba(59,130,246,0.3); background:rgba(59,130,246,0.05); color:var(--p-color); padding:15px 5px;" onclick="App.adjustWater(0.25)">+ 0.25</button>
+            <button class="btn-action" style="border-radius:12px; border:1px solid rgba(59,130,246,0.3); background:rgba(59,130,246,0.05); color:var(--p-color); padding:15px 5px;" onclick="App.adjustWater(0.5)">+ 0.5</button>
         </div>
 
         <button class="btn-primary" style="background:var(--p-color); color:#fff; box-shadow: 0 4px 15px rgba(59,130,246,0.3); border-radius:14px; padding:18px;" onclick="App.saveWater()">ЗБЕРЕГТИ ПРОГРЕС</button>
