@@ -335,6 +335,18 @@
         .brand-icon.hint-active { animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         .day-card, .stat-card, .med-card { transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, border-color 0.25s ease; }
+        /* =======================================
+           АНІМАЦІЯ ПОЯВИ ДОЗУВАНЬ (STAGGERED POP)
+           ======================================= */
+        @keyframes statCardEnter {
+            0% { opacity: 0; transform: translateY(15px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .stat-card.animate-enter {
+            opacity: 0; /* Тримаємо прихованими до старту анімації */
+            /* Використовуємо cubic-bezier для ефекту преміальної мікро-пружини (Apple-style) */
+            animation: statCardEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
         @media (hover: hover) {
             .btn-icon:hover, .edit-toggle:hover { 
                 background: var(--bg-element); 
