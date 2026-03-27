@@ -302,25 +302,26 @@ const App = {
                 </div>`;
             }).join('');
 
-            const animClass = animate ? 'animate-pop' : '';
+        const animClass = animate ? 'animate-pop' : '';
         const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
         mealsHtml += `
         <div class="meal-block ${animClass}" style="${delayStr}">
             <div class="meal-header">
                 <div style="flex:1;">
-                    <div class="mh-title-wrapper" onclick="App.promptRenameMeal(${m.id})">
-                        <h4 class="mh-title">${m.name}</h4>
-                        <span>✎</span>
+                    <div class="mh-title-wrapper" style="display:flex; align-items:center; gap:8px;">
+                        <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase;">${m.name}</h4>
+                        <div class="edit-icon-btn" onclick="App.promptRenameMeal(${m.id})">✎</div>
                     </div>
-                    <div class="mh-meta">
-                        <div class="mh-kcal">${mCal} ккал</div>
+                    <div class="mh-meta" style="display:flex; align-items:center; gap:12px; margin-top:2px;">
+                        <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.9rem; color:var(--theme);">${mCal} ккал</div>
                         <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
                     <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
+                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; margin-left:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
                     <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
                 </div>
             </div>
