@@ -853,17 +853,12 @@ const App = {
         
         const inp = document.getElementById('startDateInput');
         if (inp) {
-            inp.value = this.data.startDate;
             try { 
                 inp.showPicker(); 
             } catch(e) { 
+                // Фолбек для старих iOS
                 inp.focus(); 
                 inp.click(); 
-            }
-        } else {
-            const newDate = await Modal.prompt("Введи дату початку курсу (YYYY-MM-DD):", "ДАТА СТАРТУ", this.data.startDate);
-            if(newDate && newDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                this.setStartDate(newDate);
             }
         }
     },
@@ -967,9 +962,8 @@ const App = {
             const isProtocol = activeTab ? activeTab.innerText.toLowerCase().includes('protocol') : true;
 
             progText.innerHTML = `Week ${curW}/${maxW} 
-            <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'};">
+            <span class="date-picker-wrapper" title="Змінити дату старту курсу" style="display: ${isProtocol ? 'inline-flex' : 'none'}; cursor: pointer;" onclick="App.changeStartDate()">
                 <span style="font-size:1.2rem; pointer-events:none;">📅</span>
-                <input type="date" class="date-hidden-input" value="${this.data.startDate}" onchange="if(!document.body.classList.contains('privacy-mode')) { App.setStartDate(this.value); }">
             </span>`;
         }
     },
@@ -1653,6 +1647,7 @@ const App = {
             let color = v.c || 'yellow'; 
             return `<div class="stat-card c-${color}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
         }).join('') || '';
+        // ДОДАНО КЛАС btn-map
         statsHtml += `<div class="stat-card btn-map" style="border-color:#444; cursor:pointer; align-items:center; justify-content:center; transition: all 0.2s ease;" onclick="App.openBodyMap()"><span style="font-size:1.5rem">🧍</span><span class="stat-label">MAP</span></div>`;
         return statsHtml;
     },
