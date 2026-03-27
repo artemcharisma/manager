@@ -180,15 +180,20 @@ const App = {
         this.save(); this.render();
     },
 
-    addWater() {
+    async editWater() {
         const day = this.getCurrentDay();
         if(!day) return;
-        this.pushHistory();
-        day.water = (day.water || 0) + 0.5;
-        if(day.water > 10) day.water = 0; // Скидання після 10 літрів
-        this.save();
-        this.updateStats();
-        if(window.Haptics) window.Haptics.light();
+        const current = day.water || 0;
+        const val = await Modal.prompt("Введіть кількість води (л):", "ВОДНИЙ БАЛАНС", current);
+        if (val !== null && val !== "") {
+            const num = parseFloat(val.replace(',', '.'));
+            if (!isNaN(num) && num >= 0) {
+                this.pushHistory();
+                day.water = num;
+                this.save();
+                this.updateStats(); // Оновлює тільки цифри, без рендеру екрану = нуль стрибків!
+            }
+        }
     },
 
     moveMeal(id, dir) {
@@ -258,9 +263,7 @@ const App = {
                         <div class="mh-title" contenteditable="true" onblur="App.renameMeal(${m.id}, this.innerText)">${m.name}</div>
                         <div class="mh-meta">
                             <div class="mh-kcal">${mCal} ккал</div>
-                            <span style="font-size:0.75rem; color:#888; font-family:var(--font-mono); font-weight:700;">
-                                <span class="color-p">Б${mP}</span> <span class="color-f">Ж${mF}</span> <span class="color-c">В${mC}</span>
-                            </span>
+                            <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                         </div>
                     </div>
                     <div style="display:flex; gap:8px; align-items:center;">
@@ -465,6 +468,10 @@ const App = {
     },
     
     closeModal() { 
+        // 1. БЛОКУЄМО фіксер iOS, щоб він не кидав сторінку вверх
+        window.blockKeyboardScrollFix = true;
+        setTimeout(() => { window.blockKeyboardScrollFix = false; }, 150);
+
         if(document.activeElement) document.activeElement.blur(); 
         const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal'];
         modalIds.forEach(id => {
