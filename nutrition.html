@@ -98,12 +98,14 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center;
-            padding-bottom: 20px; 
+            padding-bottom: 15px; 
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border);
+            gap: 15px; /* Запобігає налипанню кнопок на текст */
+            flex-wrap: wrap; /* Адаптація під різні екрани */
         }
         
-        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
         
         .brand-icon {
             width: 44px; height: 44px; 
@@ -125,13 +127,12 @@
             letter-spacing: 1px; 
             display: block; 
         }
-        .controls { display: flex; gap: 10px; align-items: center; }
+        .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
         .icon-btn {
-            width: 42px; height: 42px; border-radius: 12px; 
-            border: 1px solid #333; background: #121212; color: #888;
+            width: 38px; height: 38px; border-radius: 10px; 
+            border: 1px solid #333; background: var(--bg-panel); color: #888;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: 0.2s;
-            padding: 0; margin: 0;
+            font-size: 1.1rem; transition: 0.2s; padding: 0; margin: 0;
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
@@ -188,12 +189,20 @@
         .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
         .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
 
+        /* Естетичні беджі для ЦІЛІ та ВОДИ */
         .target-badge {
-            background: #000; border: 1px solid #333; padding: 6px 12px; border-radius: 8px;
-            font-family: var(--font-mono); font-size: 0.75rem; color: #666; transition: 0.2s;
+            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 6px 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.75rem; color: #888; transition: 0.2s; cursor: pointer;
         }
         .target-badge span { color: var(--theme); font-weight: 700; }
-        .target-badge:active { transform: scale(0.95); border-color: var(--theme); }
+        .target-badge:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); }
+
+        .water-badge {
+            background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 6px 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.75rem; color: #888; transition: 0.2s; cursor: pointer;
+        }
+        .water-badge span { color: var(--p-color); font-weight: 700; }
+        .water-badge:active { transform: scale(0.95); background: rgba(59, 130, 246, 0.1); }
 
         .hud-macros { display: flex; flex-direction: column; gap: 10px; }
         .macro-row { display: grid; grid-template-columns: 35px 1fr 60px; align-items: center; gap: 10px; }
@@ -413,16 +422,13 @@
                 <span class="k-label">ККАЛ СЬОГОДНІ</span>
             </div>
             
-            <div class="k-group" style="align-items:center; cursor:pointer; background: rgba(59, 130, 246, 0.1); padding: 5px 15px; border-radius: 12px; border: 1px dashed var(--p-color); transition: 0.2s;" onclick="App.addWater()" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" ontouchend="this.style.transform='scale(1)'">
-                <div style="display:flex; align-items:baseline; gap:2px">
-                    <span class="k-val" id="disp-w" style="color:var(--p-color); font-size:2.2rem;">0.0</span>
-                    <span style="color:var(--p-color); font-weight:800; font-size:1rem">L</span>
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                <div class="target-badge" onclick="App.openTargets()">
+                    🎯 ЦІЛЬ: <span id="disp-target">2700</span>
                 </div>
-                <span class="k-label" style="color:var(--p-color)">ВОДА (+0.5)</span>
-            </div>
-
-            <div class="target-badge" onclick="App.openTargets()" style="align-self: flex-start;">
-                ЦІЛЬ: <span id="disp-target">2700</span>
+                <div class="water-badge" onclick="App.editWater()">
+                    💧 ВОДА: <span id="disp-w">0.0</span> л
+                </div>
             </div>
         </div>
         
@@ -433,7 +439,7 @@
                 <span class="mr-val" id="disp-p">0g</span>
             </div>
             <div class="macro-row">
-                <span class="mr-label color-f">FAT</span>
+                <span class="mr-label color-f">FATS</span>
                 <div class="mr-track"><div class="mr-fill" id="bar-f" style="width:0%; background:var(--f-color)"></div></div>
                 <span class="mr-val" id="disp-f">0g</span>
             </div>
