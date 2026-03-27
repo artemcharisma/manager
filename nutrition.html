@@ -128,22 +128,6 @@
             letter-spacing: 1px; 
             display: block; 
         }
-        /* Естетична назва дня (PRO) */
-        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
-        .day-title-box { display: flex; align-items: center; gap: 8px; }
-        .day-title-display { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1; margin: 0; }
-        
-        .edit-icon-btn { 
-            color: #666; font-size: 1.1rem; cursor: pointer; padding: 4px; 
-            border-radius: 6px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; background: transparent;
-        }
-        .edit-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); color: var(--theme); }
-
-        /* ПРЕМІАЛЬНІ ВІДЖЕТИ ХЕДЕРА */
-        .hud-badges {
-            display: flex; flex-direction: column; gap: 8px;
-            min-width: 135px; /* Гнучка адаптація ширини */
-        }
         .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
         .icon-btn {
             width: 38px; height: 38px; border-radius: 10px; 
@@ -154,6 +138,7 @@
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
         /* Естетична назва дня (НОВА) */
+        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
         .day-title-wrapper {
             display: flex; align-items: center; gap: 10px; cursor: pointer;
             padding: 5px 8px; border-radius: 8px; transition: 0.2s; margin-left: -8px;
@@ -168,52 +153,87 @@
             margin-bottom: 0; 
             scrollbar-width: none;
             margin-left: -10px; margin-right: -10px;
-            scroll-behavior: smooth;
+            scroll-behavior: smooth; /* Для плавного автоскролу */
         }
-        .day-bar::-webkit-scrollbar { display: none; }
+        .day-bar::-webkit-scrollbar { display: none; } /* Приховуємо скролбар на iOS/Chrome */
 
         .day-tab {
             min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s; flex-shrink: 0; cursor: pointer;
+            color: #555; transition: 0.2s; flex-shrink: 0;
         }
         .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); }
         .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
         
         .day-tab.active {
-            border-color: var(--theme); color: #000; background: var(--theme);
+            border-color: var(--theme); color: #000; background: var(--theme); /* Преміальний активний таб */
             box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2);
-            transform: translateY(-3px); z-index: 2;
+            transform: translateY(-3px);
+            z-index: 2;
         }
         .day-tab.active span { color: #000; }
         .day-tab.active small { color: rgba(0,0,0,0.7); }
 
-        /* ПРЕМІАЛЬНИЙ ПЛЮС */
+        /* Преміальний ПЛЮС */
         .day-add-btn {
-            min-width: 60px; border-radius: 12px; background: rgba(212, 175, 55, 0.1); border: 1px dashed rgba(212, 175, 55, 0.4);
-            color: var(--theme); font-size: 1.8rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; cursor: pointer;
+            min-width: 60px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;
         }
-        .day-add-btn:active { background: var(--theme); color: #000; border: solid 1px var(--theme); transform: scale(0.95); }
+        .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
 
-        /* --- 4. HUD (АДАПТИВНИЙ) --- */
+        /* Естетична назва дня (Ідеальне вирівнювання) */
+        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
+        .day-title-box { display: flex; align-items: center; gap: 8px; }
+        .day-title-display { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1; margin: 0; }
+        
+        .edit-icon-btn { 
+            color: #666; font-size: 1.1rem; cursor: pointer; padding: 4px 8px; 
+            border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; background: transparent;
+        }
+        .edit-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); color: var(--theme); }
+        
+        .btn-mini { 
+            background: #111; border: 1px solid #333; color: #888; 
+            font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-mini:active { background: #333; color: #fff; }
+        
+        /* Естетична назва дня (PRO) */
+        .day-title-box { display: flex; align-items: center; gap: 10px; }
+        .day-title-display { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        .edit-icon-btn { color: #666; font-size: 1.2rem; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .edit-icon-btn:active { transform: scale(0.9); color: var(--theme); }
+        
+        .btn-mini { 
+            background: #111; border: 1px solid #333; color: #888; 
+            font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-mini:active { background: #333; color: #fff; }
+
+        /* --- 4. HUD --- */
         .hud {
             background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
             padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
-        .hud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
+        .hud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
         
-        .k-group { display: flex; flex-direction: column; flex: 1; }
-        /* clamp() не дає величезним цифрам зламати екран на малих телефонах */
-        .k-val { font-family: var(--font-mono); font-size: clamp(2.5rem, 8vw, 3.5rem); font-weight: 700; line-height: 1; color: #fff; letter-spacing: -2px; }
+        .k-group { display: flex; flex-direction: column; }
+        .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
         .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
 
-        /* ПРЕМІАЛЬНІ ВІДЖЕТИ ХЕДЕРА (Ідеальна симетрія) */
+        /* ПРО-ВІДЖЕТИ ХЕДЕРА (Ідеальна симетрія та фіксована ширина) */
+        .hud-badges {
+            display: flex; flex-direction: column; gap: 8px;
+            width: 145px; /* Жорстка фіксація ширини */
+        }
         .target-badge, .water-badge {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; box-sizing: border-box;
             background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 10px 12px; border-radius: 12px; font-family: var(--font-mono); 
+            padding: 8px 12px; border-radius: 12px; font-family: var(--font-mono); 
             font-size: 0.75rem; color: #888; transition: 0.2s; cursor: pointer;
         }
         .target-badge span:last-child { color: var(--theme); font-weight: 800; font-size: 0.95rem; }
@@ -222,13 +242,21 @@
         .water-badge span:last-child { color: var(--p-color); font-weight: 800; font-size: 0.95rem; }
         
         .target-badge:active, .water-badge:active { transform: scale(0.95); filter: brightness(1.2); }
-        
-        .btn-mini { 
-            background: #111; border: 1px solid #333; color: #888; 
-            font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
-            text-transform: uppercase; transition: 0.2s; cursor: pointer;
+        /* Преміальна кнопка синхронізації */
+        .btn-sync {
+            width: 100%; background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), transparent);
+            border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme);
+            padding: 14px; border-radius: 12px; font-weight: 800; font-family: var(--font-mono);
+            font-size: 0.8rem; letter-spacing: 1px; margin-top: 10px; cursor: pointer; transition: 0.2s;
         }
-        .btn-mini:active { background: #333; color: #fff; transform: scale(0.95); }
+        .btn-sync:active { transform: scale(0.98); background: rgba(212, 175, 55, 0.2); }
+
+        .hud-macros { display: flex; flex-direction: column; gap: 10px; }
+        .macro-row { display: grid; grid-template-columns: 35px 1fr 60px; align-items: center; gap: 10px; }
+        .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #555; }
+        .mr-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+        .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; }
 
         /* --- 5. MEALS LIST --- */
         @keyframes popIn {
@@ -419,10 +447,10 @@
 
     <div class="day-bar" id="dayBar"></div>
     
-    <div class="day-control-panel" style="display:flex; justify-content:space-between; align-items:center; padding: 0 5px 15px 5px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <h2 id="currentDayTitle" style="margin:0; font-size:1.6rem; font-weight:800; color:#fff; letter-spacing:-0.5px;">День</h2>
-            <div style="background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:8px; cursor:pointer; color:#888; font-size:1.1rem; transition:0.2s;" onclick="App.promptRenameDay()" onmousedown="this.style.background='rgba(255,255,255,0.1)'" onmouseup="this.style.background='rgba(255,255,255,0.05)'">✎</div>
+    <div class="day-control-panel">
+        <div class="day-title-box">
+            <h2 class="day-title-display" id="currentDayTitle">День</h2>
+            <div class="edit-icon-btn" onclick="App.promptRenameDay()">✎</div>
         </div>
         <div style="display:flex; gap:8px">
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
@@ -442,7 +470,7 @@
                     <span>🎯 ЦІЛЬ:</span> <span id="disp-target">2700</span>
                 </div>
                 <div class="water-badge" onclick="App.editWater()">
-                    <span>💧 ВОДА:</span> <span><span id="disp-w" style="color:var(--p-color);">0</span> мл</span>
+                    <span>💧 ВОДА:</span> <span><span id="disp-w" style="color:var(--p-color);">0.0</span> л</span>
                 </div>
             </div>
         </div>
@@ -558,32 +586,30 @@
 </div>
 
 <div id="waterModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 360px; margin: 0 auto; border-radius: 24px 24px 0 0;">
-        <div class="mc-header" style="margin-bottom: 15px;">
-            <h3 class="mc-title" style="color:var(--p-color)">💧 ВОДА (МЛ)</h3>
+    <div class="modal-card" style="max-width: 360px; margin: 0 auto; border-radius: 20px;">
+        <div class="mc-header">
+            <h3 class="mc-title" style="color:var(--p-color)">💧 ВОДНИЙ БАЛАНС</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-bottom:25px;">
-            <button class="icon-btn" style="border:none; background:rgba(239,68,68,0.1); color:var(--danger); width:50px; height:50px; font-size:1.8rem; border-radius:14px;" onclick="App.adjustWater(-250)">-</button>
-            
-            <div style="display:flex; align-items:baseline; border-bottom: 2px solid var(--p-color); padding:0 10px;">
-                <input id="inpWater" type="number" inputmode="numeric" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:3.5rem; font-weight:800; width:120px; text-align:center; outline:none; font-family:var(--font-mono); padding:0;">
+        <div style="text-align:center; padding: 25px 0;">
+            <div style="display:inline-flex; align-items:baseline; justify-content:center; border-bottom: 2px solid #333; padding-bottom:5px;">
+                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:4rem; font-weight:800; width:130px; text-align:center; outline:none; font-family:var(--font-mono); padding:0; line-height:1;">
+                <span style="color:#666; font-weight:700; font-size:1.4rem; font-family:var(--font-mono); margin-left:5px;">Л</span>
             </div>
-            
-            <button class="icon-btn" style="border:none; background:rgba(16,185,129,0.1); color:var(--success); width:50px; height:50px; font-size:1.8rem; border-radius:14px;" onclick="App.adjustWater(250)">+</button>
+            <div style="color:#555; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-top:12px;">Введіть вручну або використайте кнопки</div>
         </div>
         
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom: 25px;">
-            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px 5px;" onclick="App.adjustWater(250)">+ 250</button>
-            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px 5px;" onclick="App.adjustWater(500)">+ 500</button>
-            <button class="btn-action" style="border-radius:12px; border:1px dashed #333; background:#0a0a0a; padding:15px 5px;" onclick="App.adjustWater(1000)">+ 1000</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom: 25px;">
+            <button class="btn-action" style="border-radius:12px; border:1px solid rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); color:var(--danger); padding:15px 5px;" onclick="App.adjustWater(-0.25)">- 0.25</button>
+            <button class="btn-action" style="border-radius:12px; border:1px solid rgba(59,130,246,0.3); background:rgba(59,130,246,0.05); color:var(--p-color); padding:15px 5px;" onclick="App.adjustWater(0.25)">+ 0.25</button>
+            <button class="btn-action" style="border-radius:12px; border:1px solid rgba(59,130,246,0.3); background:rgba(59,130,246,0.05); color:var(--p-color); padding:15px 5px;" onclick="App.adjustWater(0.5)">+ 0.5</button>
         </div>
 
-        <button class="btn-primary" style="background:var(--p-color); color:#fff; border-radius:14px;" onclick="App.saveWater()">ЗБЕРЕГТИ ПРОГРЕС</button>
+        <button class="btn-primary" style="background:var(--p-color); color:#fff; box-shadow: 0 4px 15px rgba(59,130,246,0.3); border-radius:14px; padding:18px;" onclick="App.saveWater()">ЗБЕРЕГТИ ПРОГРЕС</button>
     </div>
 </div>
-    
+
 <script src="assets/js/utils.js"></script>  
 <script src="assets/js/nutrition.js"></script> 
 <script src="assets/js/common.js"></script>
