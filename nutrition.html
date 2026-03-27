@@ -184,7 +184,7 @@
             padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
-        .hud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+        .hud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         
         .k-group { display: flex; flex-direction: column; }
         .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
@@ -454,8 +454,8 @@
                     <span>🎯 ЦІЛЬ:</span> <span id="disp-target">2700</span>
                 </div>
                 <div class="water-badge" onclick="App.openWater()">
-                    <span>💧 ВОДА:</span> <span><span id="disp-w" style="color:var(--p-color);">0.0</span> л</span>
-                </div>
+                <span>💧 ВОДА:</span> <span><span id="disp-w">0.0</span> л</span>
+            </div>
             </div>
         </div>
         
@@ -580,7 +580,7 @@
             <button class="icon-btn" style="border:none; background:rgba(239,68,68,0.1); font-size:2rem; color:var(--danger); width:60px; height:60px; border-radius:14px;" onclick="App.adjustWater(-0.25)">-</button>
             
             <div style="display:flex; align-items:baseline; gap:5px; justify-content:center; flex:1;">
-                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); font-size:3.5rem; font-weight:800; width:120px; text-align:center; outline:none; font-family:var(--font-mono); padding:0; box-shadow:none;">
+                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:3.5rem; font-weight:800; width:120px; text-align:center; outline:none; font-family:var(--font-mono); padding:0; box-shadow:none;">
                 <span style="color:#666; font-weight:700; font-size:1.2rem; font-family:var(--font-mono);">Л</span>
             </div>
             
