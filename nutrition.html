@@ -412,14 +412,23 @@
                 <span class="k-val" id="disp-k">0</span>
                 <span class="k-label">ККАЛ СЬОГОДНІ</span>
             </div>
-            <div class="target-badge" onclick="App.openTargets()">
+            
+            <div class="k-group" style="align-items:center; cursor:pointer; background: rgba(59, 130, 246, 0.1); padding: 5px 15px; border-radius: 12px; border: 1px dashed var(--p-color); transition: 0.2s;" onclick="App.addWater()" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" ontouchend="this.style.transform='scale(1)'">
+                <div style="display:flex; align-items:baseline; gap:2px">
+                    <span class="k-val" id="disp-w" style="color:var(--p-color); font-size:2.2rem;">0.0</span>
+                    <span style="color:var(--p-color); font-weight:800; font-size:1rem">L</span>
+                </div>
+                <span class="k-label" style="color:var(--p-color)">ВОДА (+0.5)</span>
+            </div>
+
+            <div class="target-badge" onclick="App.openTargets()" style="align-self: flex-start;">
                 ЦІЛЬ: <span id="disp-target">2700</span>
             </div>
         </div>
         
         <div class="hud-macros">
             <div class="macro-row">
-                <span class="mr-label color-p">PRO</span>
+                <span class="mr-label color-p">PROT</span>
                 <div class="mr-track"><div class="mr-fill" id="bar-p" style="width:0%; background:var(--p-color)"></div></div>
                 <span class="mr-val" id="disp-p">0g</span>
             </div>
@@ -433,6 +442,11 @@
                 <div class="mr-track"><div class="mr-fill" id="bar-c" style="width:0%; background:var(--c-color)"></div></div>
                 <span class="mr-val" id="disp-c">0g</span>
             </div>
+        </div>
+
+        <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #333; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:var(--font-mono); font-size:0.7rem; color:#666; font-weight:700; letter-spacing:1px;">БАЛАНС Б/Ж/В:</span>
+            <span id="macro-ratio" style="font-family:var(--font-mono); font-size:0.8rem; font-weight:800; color:#fff;">0% : 0% : 0%</span>
         </div>
     </div>
 
