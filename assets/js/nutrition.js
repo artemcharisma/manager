@@ -75,19 +75,22 @@ const App = {
     },
 
     lockScroll() {
-        if (document.body.style.position === 'fixed') return; 
+        if (document.body.classList.contains('modal-active')) return; 
         this.state.lockedScrollY = window.scrollY; 
+        document.body.classList.add('modal-active'); // Тепер фіксер бачить модалку!
         document.body.style.position = 'fixed';
         document.body.style.top = `-${this.state.lockedScrollY}px`;
         document.body.style.width = '100%';
     },
 
     unlockScroll() {
-        if (document.body.style.position !== 'fixed') return;
+        if (!document.body.classList.contains('modal-active')) return;
+        const scrollY = this.state.lockedScrollY || 0;
+        document.body.classList.remove('modal-active');
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
-        window.scrollTo({ left: 0, top: this.state.lockedScrollY || 0, behavior: 'instant' });
+        window.scrollTo({ left: 0, top: scrollY, behavior: 'instant' });
     },
     
     save() {
@@ -177,6 +180,32 @@ const App = {
         this.save(); this.render();
     },
 
+    addWater() {
+        const day = this.getCurrentDay();
+        if(!day) return;
+        this.pushHistory();
+        day.water = (day.water || 0) + 0.5;
+        if(day.water > 10) day.water = 0; // Скидання після 10 літрів
+        this.save();
+        this.updateStats();
+        if(window.Haptics) window.Haptics.light();
+    },
+
+    moveMeal(id, dir) {
+        const day = this.getCurrentDay();
+        const idx = day.meals.findIndex(m => m.id === id);
+        if (idx < 0) return;
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= day.meals.length) return;
+        
+        this.pushHistory();
+        const temp = day.meals[idx];
+        day.meals[idx] = day.meals[newIdx];
+        day.meals[newIdx] = temp;
+        
+        this.save();
+        this.render(false);
+    },
     render(animate = true) {
         this.renderDaysBar();
         const day = this.getCurrentDay();
@@ -219,7 +248,6 @@ const App = {
                 </div>`;
             }).join('');
 
-            // Логіка плавної каскадної появи
             const animClass = animate ? 'animate-pop' : '';
             const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
@@ -230,11 +258,15 @@ const App = {
                         <div class="mh-title" contenteditable="true" onblur="App.renameMeal(${m.id}, this.innerText)">${m.name}</div>
                         <div class="mh-meta">
                             <div class="mh-kcal">${mCal} ккал</div>
-                            <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
+                            <span style="font-size:0.75rem; color:#888; font-family:var(--font-mono); font-weight:700;">
+                                <span class="color-p">Б${mP}</span> <span class="color-f">Ж${mF}</span> <span class="color-c">В${mC}</span>
+                            </span>
                         </div>
                     </div>
-                    <div style="display:flex; gap:15px; align-items:center;">
-                        <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати прийом їжі">📋</div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <div style="color:#666; cursor:pointer; font-size:1.4rem; padding:0 5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
+                        <div style="color:#666; cursor:pointer; font-size:1.4rem; padding:0 5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
+                        <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; margin-left:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
                         <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
                     </div>
                 </div>
@@ -296,6 +328,23 @@ const App = {
         
         const dispT = document.getElementById('disp-target');
         if(dispT) dispT.innerText = tg.k;
+
+        // ОНОВЛЕННЯ ВОДИ
+        const dispW = document.getElementById('disp-w');
+        if(dispW) dispW.innerText = (day.water || 0).toFixed(1);
+
+        // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ
+        const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
+        let pPct = 0, fPct = 0, cPct = 0;
+        if (totalMacroKcal > 0) {
+            pPct = Math.round(((t.p * 4) / totalMacroKcal) * 100);
+            fPct = Math.round(((t.f * 9) / totalMacroKcal) * 100);
+            cPct = Math.round(((t.c * 4) / totalMacroKcal) * 100);
+        }
+        const ratioEl = document.getElementById('macro-ratio');
+        if(ratioEl) {
+            ratioEl.innerHTML = `<span class="color-p">${pPct}%</span> : <span class="color-f">${fPct}%</span> : <span class="color-c">${cPct}%</span>`;
+        }
         
         const updateBar = (id, val, max) => {
             const el = document.getElementById('bar-'+id);
@@ -308,7 +357,6 @@ const App = {
         };
         updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
     },
-
     searchFood(q) {
         const list = document.getElementById('sugg-list');
         list.innerHTML = '';
