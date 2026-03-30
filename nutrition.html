@@ -137,15 +137,6 @@
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
-        /* Естетична назва дня (НОВА) */
-        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
-        .day-title-wrapper {
-            display: flex; align-items: center; gap: 10px; cursor: pointer;
-            padding: 5px 8px; border-radius: 8px; transition: 0.2s; margin-left: -8px;
-        }
-        .day-title-wrapper:active { background: rgba(255,255,255,0.05); }
-        .day-title-wrapper h2 { margin: 0; font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-        .day-title-wrapper span { color: #666; font-size: 1.2rem; }
         /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
@@ -181,32 +172,14 @@
         }
         .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
 
-        /* Естетична назва дня (Ідеальне вирівнювання) */
-        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
-        .day-title-box { display: flex; align-items: center; gap: 8px; }
-        .day-title-display { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1; margin: 0; }
-        
-        .edit-icon-btn { 
-            color: #666; font-size: 1.1rem; cursor: pointer; padding: 4px 8px; 
-            border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; background: transparent;
-        }
-        .edit-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); color: var(--theme); }
-        
-        .btn-mini { 
-            background: #111; border: 1px solid #333; color: #888; 
-            font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
-            text-transform: uppercase; transition: 0.2s;
-        }
-        .btn-mini:active { background: #333; color: #fff; }
-        
         /* Естетична назва дня (PRO) */
-        /* --- ФІКС НАЗВИ ДНЯ ТА ОЛІВЦЯ --- */
+        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
         .day-title-box { 
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            min-width: 0; /* КРИТИЧНО: дозволяє дочірнім елементам стискатись */
-            flex: 1;      /* Займає доступний простір, не виштовхуючи інші кнопки */
+            min-width: 0; 
+            flex: 1;      
         }
         
         .day-title-display { 
@@ -214,9 +187,9 @@
             font-weight: 800; 
             color: #fff; 
             letter-spacing: -0.5px; 
-            white-space: nowrap;      /* Забороняє перенесення на новий рядок */
-            overflow: hidden;         /* Ховає текст, що не вліз */
-            text-overflow: ellipsis;  /* Додає "..." в кінці */
+            white-space: nowrap;      
+            overflow: hidden;         
+            text-overflow: ellipsis;  
         }
         
         .edit-icon-btn { 
@@ -225,9 +198,9 @@
             cursor: pointer; 
             padding: 5px; 
             transition: 0.2s; 
-            flex-shrink: 0; /* КРИТИЧНО: забороняє олівцю стискатись */
+            flex-shrink: 0; 
         }
-        .edit-icon-btn:active { transform: scale(0.9); color: var(--theme); }
+        .edit-icon-btn:active { transform: scale(0.9); color: var(--theme); background: rgba(255,255,255,0.1); }
         
         .btn-mini { 
             background: #111; border: 1px solid #333; color: #888; 
@@ -248,10 +221,10 @@
         .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
         .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
 
-        /* ПРО-ВІДЖЕТИ ХЕДЕРА (Ідеальна симетрія та фіксована ширина) */
+        /* ПРО-ВІДЖЕТИ ХЕДЕРА */
         .hud-badges {
             display: flex; flex-direction: column; gap: 8px;
-            width: 145px; /* Жорстка фіксація ширини */
+            width: 145px;
         }
         .target-badge, .water-badge {
             display: flex; justify-content: space-between; align-items: center;
@@ -266,6 +239,7 @@
         .water-badge span:last-child { color: var(--p-color); font-weight: 800; font-size: 0.95rem; }
         
         .target-badge:active, .water-badge:active { transform: scale(0.95); filter: brightness(1.2); }
+        
         /* Преміальна кнопка синхронізації */
         .btn-sync {
             width: 100%; background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), transparent);
@@ -329,35 +303,15 @@
             margin-top: 20px; transition: 0.2s;
         }
         .btn-main-add:active { border-color: var(--theme); color: var(--theme); background: rgba(212, 175, 55, 0.05); }
-        <div id="dayEditModal" class="modal-overlay">
-            <div class="modal-card">
-                <div class="mc-header">
-                    <h3 class="mc-title">НАЛАШТУВАННЯ ЕТАПУ</h3>
-                    <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
-                </div>
-                
-                <div style="margin-bottom: 15px; margin-top: 10px;">
-                    <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
-                    <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
-                </div>
-                
-                <div>
-                    <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ПІДПИС (ДЕТАЛІ АБО ТАЙМІНГ)</label>
-                    <input id="inpDaySub" class="inp-main" placeholder="Наприклад: Тиждень 3 (Треня)" autocomplete="off">
-                </div>
-                
-                <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
-            </div>
-        </div>
 
-        /* --- 6. ЛОКАЛЬНІ МОДАЛКИ (Оновлені під Protocol OS) --- */
+        /* --- 6. ЛОКАЛЬНІ МОДАЛКИ --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
             z-index: 100; display: none; 
             align-items: flex-end; justify-content: center;
-            overflow-y: auto; /* ДОДАНО: дозволяє скролити, якщо не влазить */
-            -webkit-overflow-scrolling: touch; /* ДОДАНО: плавний скрол на iOS */
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
         }
         .modal-card {
             background: #121212; width: 100%; max-width: 600px;
@@ -366,23 +320,25 @@
             box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
             animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        /* ДОДАТИ СПЕЦІАЛЬНО ДЛЯ ВОДИ */
+        
         #waterModal {
-            align-items: center !important; /* Центруємо по вертикалі */
-            padding-bottom: 15vh; /* Піднімаємо вище, щоб клавіатура гарантовано не дістала */
+            align-items: center !important; 
+            padding-bottom: 15vh; 
         }
+        
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
         @media (hover: hover) {
-        .icon-btn:hover { background: #1a1a1a; border-color: var(--theme); color: var(--theme); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
-        .day-tab:hover:not(.active) { border-color: #555; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .btn-mini:hover { background: #333; color: #fff; transform: translateY(-1px); }
-        .day-add-btn:hover { border-color: #888; color: #fff; transform: translateY(-2px); }
-        .btn-primary:hover { background: #fcd34d; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
-        .btn-danger:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); box-shadow: 0 4px 15px rgba(239,68,68,0.2); transform: translateY(-2px); }
-        .btn-main-add:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--theme); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-2px); }
-        .btn-action:hover { background: #151515; color: var(--theme); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .target-badge:hover, .water-badge:hover { filter: brightness(1.2); transform: translateY(-1px); }
-        .btn-sync:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
+            .icon-btn:hover { background: #1a1a1a; border-color: var(--theme); color: var(--theme); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
+            .day-tab:hover:not(.active) { border-color: #555; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .btn-mini:hover { background: #333; color: #fff; transform: translateY(-1px); }
+            .day-add-btn:hover { border-color: #888; color: #fff; transform: translateY(-2px); }
+            .btn-primary:hover { background: #fcd34d; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
+            .btn-danger:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); box-shadow: 0 4px 15px rgba(239,68,68,0.2); transform: translateY(-2px); }
+            .btn-main-add:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--theme); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-2px); }
+            .btn-action:hover { background: #151515; color: var(--theme); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+            .target-badge:hover, .water-badge:hover { filter: brightness(1.2); transform: translateY(-1px); }
+            .btn-sync:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
         }
 
         .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
@@ -641,6 +597,27 @@
     </div>
 </div>
 
+<div id="dayEditModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">НАЛАШТУВАННЯ ЕТАПУ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        
+        <div style="margin-bottom: 15px; margin-top: 10px;">
+            <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
+            <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
+        </div>
+        
+        <div>
+            <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ПІДПИС (ДЕТАЛІ АБО ТАЙМІНГ)</label>
+            <input id="inpDaySub" class="inp-main" placeholder="Наприклад: Тиждень 3 (Треня)" autocomplete="off">
+        </div>
+        
+        <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
+    </div>
+</div>
+
 <div id="waterModal" class="modal-overlay">
     <div class="modal-card" style="max-width: 360px; margin: 0 auto; border-radius: 20px;">
         <div class="mc-header">
@@ -666,6 +643,7 @@
                 
                 <span style="color:#666; font-weight:700; font-size:1.4rem; font-family:var(--font-mono); margin-left:5px;">Л</span>
             </div>
+        </div>
         
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom: 25px;">
             <button class="btn-action" style="border-radius:12px; border:1px solid rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); color:var(--danger); padding:15px 5px;" onclick="App.adjustWater(-0.25)">- 0.25</button>
