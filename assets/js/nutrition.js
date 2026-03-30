@@ -187,17 +187,46 @@ const App = {
         this.render();
     },
 
-    async promptRenameDay() {
+    promptRenameDay() {
         const day = this.getCurrentDay();
         if(!day) return;
-        const newName = await Modal.prompt("Введіть назву.<br><span style='font-size:0.75rem; color:#888'>Перше слово — головна назва, все інше — підпис знизу.<br>Наприклад: <b>Сушка 1-4 (ТРЕН)</b></span>", "НАЗВА ТА ПІДПИС", day.name);
-        if (newName && newName.trim() !== "") {
-            this.pushHistory();
-            day.name = newName.trim();
-            this.save();
-            this.renderDaysBar();
-            this.render(false); // Оновлюємо без анімації
+        this.lockScroll();
+        this.toggleFab(false);
+        
+        let title = day.name;
+        let sub = "";
+        
+        // Читаємо новий формат "Назва|Підпис" або парсимо старий "Назва Підпис"
+        if (day.name.includes('|')) {
+            const parts = day.name.split('|');
+            title = parts[0];
+            sub = parts[1] || "";
+        } else {
+             const parts = day.name.split(' ');
+             title = parts[0];
+             sub = parts.slice(1).join(' ');
         }
+        
+        document.getElementById('inpDayTitle').value = title;
+        document.getElementById('inpDaySub').value = sub;
+        document.getElementById('dayEditModal').style.display = 'flex';
+    },
+
+    saveDayName() {
+        const day = this.getCurrentDay();
+        const t = document.getElementById('inpDayTitle').value.trim();
+        const s = document.getElementById('inpDaySub').value.trim();
+        
+        if(!t) return; // Головна назва обов'язкова
+        
+        this.pushHistory();
+        // Зберігаємо в базу жорстко через розділювач
+        day.name = s ? `${t}|${s}` : t;
+        
+        this.save();
+        this.renderDaysBar();
+        this.render(false);
+        this.closeModal();
     },
 
     async deleteDay() {
@@ -280,9 +309,20 @@ const App = {
         const titleEl = document.getElementById('currentDayTitleMain');
         const subEl = document.getElementById('currentDaySubtitle');
         if(titleEl && subEl) {
-            const nameParts = day.name.split(' ');
-            titleEl.innerText = nameParts[0]; // Перше слово - головна назва (напр. Сушка)
-            const subText = nameParts.slice(1).join(' '); // Все інше - підпис (напр. 1-4 (ТРЕН))
+            let titleText = day.name;
+            let subText = "";
+            
+            if (day.name.includes('|')) {
+                const parts = day.name.split('|');
+                titleText = parts[0];
+                subText = parts[1] || "";
+            } else {
+                 const parts = day.name.split(' ');
+                 titleText = parts[0];
+                 subText = parts.slice(1).join(' ');
+            }
+
+            titleEl.innerText = titleText;
             if (subText) {
                 subEl.innerText = subText;
                 subEl.style.display = 'inline-block';
@@ -371,8 +411,18 @@ const App = {
         this.data.days.forEach(d => {
             const el = document.createElement('div');
             el.className = `day-tab ${d.id === this.state.currentDayId ? 'active' : ''}`;
-            const nameParts = d.name.split(' ');
-            el.innerHTML = `<span>${nameParts[0]}</span><small>${nameParts.slice(1).join(' ') || '•'}</small>`;
+            let t = d.name;
+            let s = '•';
+            if (d.name.includes('|')) {
+                const parts = d.name.split('|');
+                t = parts[0];
+                s = parts[1] || '•';
+            } else {
+                const parts = d.name.split(' ');
+                t = parts[0];
+                s = parts.slice(1).join(' ') || '•';
+            }
+            el.innerHTML = `<span>${t}</span><small>${s}</small>`;
             el.onclick = () => App.switchDay(d.id);
             bar.appendChild(el);
         });
@@ -549,7 +599,7 @@ const App = {
 
         if(document.activeElement) document.activeElement.blur(); 
         
-        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal'];
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal'];
         modalIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
