@@ -200,9 +200,33 @@
         .btn-mini:active { background: #333; color: #fff; }
         
         /* Естетична назва дня (PRO) */
-        .day-title-box { display: flex; align-items: center; gap: 10px; }
-        .day-title-display { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-        .edit-icon-btn { color: #666; font-size: 1.2rem; cursor: pointer; padding: 5px; transition: 0.2s; }
+        /* --- ФІКС НАЗВИ ДНЯ ТА ОЛІВЦЯ --- */
+        .day-title-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            min-width: 0; /* КРИТИЧНО: дозволяє дочірнім елементам стискатись */
+            flex: 1;      /* Займає доступний простір, не виштовхуючи інші кнопки */
+        }
+        
+        .day-title-display { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            color: #fff; 
+            letter-spacing: -0.5px; 
+            white-space: nowrap;      /* Забороняє перенесення на новий рядок */
+            overflow: hidden;         /* Ховає текст, що не вліз */
+            text-overflow: ellipsis;  /* Додає "..." в кінці */
+        }
+        
+        .edit-icon-btn { 
+            color: #666; 
+            font-size: 1.2rem; 
+            cursor: pointer; 
+            padding: 5px; 
+            transition: 0.2s; 
+            flex-shrink: 0; /* КРИТИЧНО: забороняє олівцю стискатись */
+        }
         .edit-icon-btn:active { transform: scale(0.9); color: var(--theme); }
         
         .btn-mini { 
@@ -310,7 +334,10 @@
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 100; display: none; align-items: flex-end; justify-content: center;
+            z-index: 100; display: none; 
+            align-items: flex-end; justify-content: center;
+            overflow-y: auto; /* ДОДАНО: дозволяє скролити, якщо не влазить */
+            -webkit-overflow-scrolling: touch; /* ДОДАНО: плавний скрол на iOS */
         }
         .modal-card {
             background: #121212; width: 100%; max-width: 600px;
@@ -318,6 +345,11 @@
             padding: 25px; padding-bottom: 50px; display: flex; flex-direction: column; gap: 15px;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
             animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        /* ДОДАТИ СПЕЦІАЛЬНО ДЛЯ ВОДИ */
+        #waterModal {
+            align-items: center !important; /* Центруємо по вертикалі */
+            padding-bottom: 15vh; /* Піднімаємо вище, щоб клавіатура гарантовано не дістала */
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @media (hover: hover) {
@@ -594,7 +626,7 @@
         
         <div style="text-align:center; padding: 25px 0;">
             <div style="display:inline-flex; align-items:baseline; justify-content:center; border-bottom: 2px solid #333; padding-bottom:5px;">
-                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:4rem; font-weight:800; width:130px; text-align:center; outline:none; font-family:var(--font-mono); padding:0; line-height:1;">
+                <input id="inpWater" type="number" inputmode="decimal" style="background:transparent; border:none; color:var(--p-color); caret-color:var(--p-color); font-size:3.5rem; font-weight:800; width:100%; max-width:200px; text-align:center; outline:none; font-family:var(--font-mono); padding:0; line-height:1;">
                 <span style="color:#666; font-weight:700; font-size:1.4rem; font-family:var(--font-mono); margin-left:5px;">Л</span>
             </div>
             <div style="color:#555; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-top:12px;">Введіть вручну або використайте кнопки</div>
