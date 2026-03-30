@@ -190,13 +190,13 @@ const App = {
     async promptRenameDay() {
         const day = this.getCurrentDay();
         if(!day) return;
-        const newName = await Modal.prompt("Введіть нову назву для цього дня:", "НАЗВА ДНЯ", day.name);
+        const newName = await Modal.prompt("Введіть назву.<br><span style='font-size:0.75rem; color:#888'>Перше слово — головна назва, все інше — підпис знизу.<br>Наприклад: <b>Сушка 1-4 (ТРЕН)</b></span>", "НАЗВА ТА ПІДПИС", day.name);
         if (newName && newName.trim() !== "") {
             this.pushHistory();
             day.name = newName.trim();
             this.save();
             this.renderDaysBar();
-            document.getElementById('currentDayTitle').innerText = day.name;
+            this.render(false); // Оновлюємо без анімації
         }
     },
 
@@ -265,8 +265,19 @@ const App = {
         const day = this.getCurrentDay();
         if(!day) return;
 
-        const titleEl = document.getElementById('currentDayTitle');
-        if(titleEl) titleEl.innerText = day.name;
+        const titleEl = document.getElementById('currentDayTitleMain');
+        const subEl = document.getElementById('currentDaySubtitle');
+        if(titleEl && subEl) {
+            const nameParts = day.name.split(' ');
+            titleEl.innerText = nameParts[0]; // Перше слово - головна назва (напр. Сушка)
+            const subText = nameParts.slice(1).join(' '); // Все інше - підпис (напр. 1-4 (ТРЕН))
+            if (subText) {
+                subEl.innerText = subText;
+                subEl.style.display = 'inline-block';
+            } else {
+                subEl.style.display = 'none';
+            }
+        }
         
         const list = document.getElementById('mealList');
         let mealsHtml = ''; 
