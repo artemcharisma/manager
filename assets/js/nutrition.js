@@ -213,6 +213,12 @@ const App = {
         this.save(); this.render();
     },
 
+    getWaterFromInputs() {
+        const l = document.getElementById('inpWaterL').value || '0';
+        const ml = document.getElementById('inpWaterMl').value || '0';
+        return parseFloat(l + '.' + ml);
+    },
+
     editWater() {
         if(document.activeElement) document.activeElement.blur();
         this.lockScroll();
@@ -220,28 +226,34 @@ const App = {
         
         const day = this.getCurrentDay();
         const w = day.water || 0;
-        document.getElementById('inpWater').value = w.toFixed(2);
+        const parts = w.toFixed(2).split('.');
+        
+        document.getElementById('inpWaterL').value = parts[0] === '0' ? '' : parts[0];
+        document.getElementById('inpWaterMl').value = parts[1] === '00' ? '' : parts[1];
         
         document.getElementById('waterModal').style.display = 'flex';
     },
     
     adjustWater(amount) {
-        const inp = document.getElementById('inpWater');
-        let current = parseFloat(inp.value) || 0;
+        let current = this.getWaterFromInputs();
         current += amount;
         if (current < 0) current = 0;
-        inp.value = current.toFixed(2);
+        
+        const parts = current.toFixed(2).split('.');
+        document.getElementById('inpWaterL').value = parts[0] === '0' ? '' : parts[0];
+        document.getElementById('inpWaterMl').value = parts[1] === '00' ? '' : parts[1];
+        
         if(window.Haptics) window.Haptics.light();
     },
     
     saveWater() {
         const day = this.getCurrentDay();
-        const val = parseFloat(document.getElementById('inpWater').value) || 0;
+        const val = this.getWaterFromInputs();
         this.pushHistory();
         day.water = val;
         
         this.save();
-        this.updateStats(); // Оновити відображення HUD
+        this.updateStats();
         this.closeModal();
         if(window.Haptics) window.Haptics.success();
     },
