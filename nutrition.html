@@ -480,11 +480,17 @@
     <div class="day-bar" id="dayBar"></div>
     
     <div class="day-control-panel">
-        <div class="day-title-box">
-            <h2 class="day-title-display" id="currentDayTitle">День</h2>
-            <div class="edit-icon-btn" onclick="App.promptRenameDay()">✎</div>
+        <div class="day-title-box" style="flex:1; min-width:0; margin-left:5px;">
+            <div class="day-title-wrapper" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; cursor:pointer; width:100%;" onclick="App.promptRenameDay()">
+                <div style="font-size:0.65rem; color:var(--theme); font-family:var(--font-mono); font-weight:800; letter-spacing:1.5px; text-transform:uppercase;">Поточний етап</div>
+                <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <h2 class="day-title-display" id="currentDayTitle" style="margin:0; font-size:1.6rem; font-weight:800; color:#fff; letter-spacing:-0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">День</h2>
+                    <div class="edit-icon-btn" style="background:rgba(255,255,255,0.05); border-radius:8px;">✎</div>
+                </div>
+            </div>
         </div>
-        <div style="display:flex; gap:8px">
+        
+        <div style="display:flex; gap:8px; flex-shrink:0;">
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
              <button class="btn-mini" onclick="App.deleteDay()" style="border-color:rgba(239, 68, 68, 0.4); color:var(--danger)">🗑</button>
         </div>
