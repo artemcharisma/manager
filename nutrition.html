@@ -18,15 +18,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-        
+            input::-webkit-outer-spin-button,
+            input::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type=number] {
+                -moz-appearance: textfield;
+            }
         /* --- 1. GLOBAL SETTINGS --- */
         :root {
             --bg-app: #000000;
@@ -49,7 +48,7 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        *, *::before, *::after {
+       *, *::before, *::after {
             -webkit-tap-highlight-color: transparent !important;
             box-sizing: border-box; outline: none;
         }
@@ -430,6 +429,7 @@
         .brand-icon.hint-active {
             animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
     </style>
 </head>
 <body ontouchstart="">
@@ -448,7 +448,7 @@
             <button class="icon-btn" onclick="App.undo()" id="undoBtn" style="display:none; color:var(--theme)">↩</button>
             <button class="icon-btn" onclick="App.exportData()">💾</button>
             <button class="icon-btn" onclick="document.getElementById('fileInput').click()">📂</button>
-            <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
+            <button class="icon-btn" onclick="App.openSchedule()" style="color:var(--theme)">📅</button>
             <button class="icon-btn" onclick="App.openBank()" style="color:var(--theme)">📚</button>
         </div>
     </header>
@@ -615,6 +615,24 @@
         </div>
         
         <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
+    </div>
+</div>
+
+<div id="scheduleModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">ТИЖНЕВИЙ МІКРОЦИКЛ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        
+        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; font-family:var(--font-mono); letter-spacing:0.5px;">
+            Прив'яжіть створені етапи до днів тижня. Додаток автоматично завантажить потрібний раціон сьогодні.
+        </div>
+        
+        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px;">
+            </div>
+        
+        <button class="btn-primary" style="margin-top:20px;" onclick="App.saveSchedule()">ЗБЕРЕГТИ РОЗКЛАД</button>
     </div>
 </div>
 
