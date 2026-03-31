@@ -145,6 +145,8 @@
             scrollbar-width: none;
             margin-left: -10px; margin-right: -10px;
             scroll-behavior: smooth; /* Для плавного автоскролу */
+            -webkit-overflow-scrolling: touch; /* ФІКС СКРОЛУ НА iOS */
+            touch-action: pan-x; /* ФІКС СКРОЛУ: Дозволяє лише горизонтальний свайп */
         }
         .day-bar::-webkit-scrollbar { display: none; } /* Приховуємо скролбар на iOS/Chrome */
 
@@ -683,7 +685,7 @@
 /* Стилі для плаваючої кнопки Undo (як у pharm.html) */
 #undoFloat { 
     position: fixed; 
-    bottom: 90px; /* Трохи вище, щоб не перекривала нижню панель, якщо вона є */
+    bottom: 160px; /* Трохи вище, щоб не перекривала нижню панель, якщо вона є */
     right: 20px; 
     width: 50px; 
     height: 50px; 
