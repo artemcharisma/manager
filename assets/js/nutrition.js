@@ -22,7 +22,8 @@ const App = {
     data: { 
         bank: DefaultBank, 
         targets: {p:200, f:80, c:300, k:2700}, 
-        days: [] 
+        days: []
+        schedule: {}
     },
     state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
     history: [],
@@ -47,8 +48,17 @@ const App = {
             this.addDay("Мій день", true);
         }
         
-        if(!this.state.currentDayId && this.data.days.length > 0) {
-            this.state.currentDayId = this.data.days[0].id;
+        // АВТОЗАВАНТАЖЕННЯ ДНЯ ЗГІДНО РОЗКЛАДУ
+        if (!this.data.schedule) this.data.schedule = {};
+        
+        const todayNum = new Date().getDay(); // 0 (Неділя) - 6 (Субота)
+        const mapDay = todayNum === 0 ? 7 : todayNum; // Переводимо у формат 1 (Пн) - 7 (Нд)
+        const schedDayId = this.data.schedule[mapDay.toString()]; // Шукаємо ID дня для сьогодні
+
+        if (schedDayId && this.data.days.find(d => d.id === schedDayId)) {
+            this.state.currentDayId = schedDayId; // Завантажуємо день з розкладу
+        } else if(!this.state.currentDayId && this.data.days.length > 0) {
+            this.state.currentDayId = this.data.days[0].id; // Якщо розклад пустий, вантажимо перший-ліпший
         }
         
         this.setupHardReset();
@@ -239,13 +249,62 @@ const App = {
         if(document.activeElement) document.activeElement.blur();
         this.lockScroll();
         this.toggleFab(false);
-        // Тут пізніше допишемо логіку рендеру розкладу
+        
+        const container = document.getElementById('scheduleContainer');
+        const daysOfWeek = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота', 'Неділя'];
+        let html = '';
+        const schedule = this.data.schedule || {};
+
+        daysOfWeek.forEach((dName, idx) => {
+            const dayNum = (idx + 1).toString();
+            const selectedId = schedule[dayNum] || '';
+
+            // Формуємо список створених днів для випадаючого меню
+            let options = `<option value="">-- Вільно --</option>`;
+            this.data.days.forEach(d => {
+                const isSelected = d.id === selectedId ? 'selected' : '';
+                // Якщо є підпис, форматуємо красиво для меню: Назва (Підпис)
+                let t = d.name.includes('|') ? d.name.replace('|', ' (') + ')' : d.name;
+                options += `<option value="${d.id}" ${isSelected}>${t}</option>`;
+            });
+
+            html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid #333;">
+                <span style="color:#fff; font-weight:700; font-size:0.9rem; width:100px;">${dName}</span>
+                <select id="sched_day_${dayNum}" style="flex:1; background:#000; color:var(--theme); border:1px solid #444; padding:8px; border-radius:8px; outline:none; font-family:var(--font-mono); font-size:0.8rem; font-weight:700;">
+                    ${options}
+                </select>
+            </div>`;
+        });
+
+        container.innerHTML = html;
         document.getElementById('scheduleModal').style.display = 'flex';
     },
 
     saveSchedule() {
-        // Тут пізніше допишемо логіку збереження розкладу
+        this.pushHistory();
+        if(!this.data.schedule) this.data.schedule = {};
+
+        // Збираємо значення з усіх 7 селектів
+        for(let i=1; i<=7; i++) {
+            const val = document.getElementById('sched_day_' + i).value;
+            if(val) this.data.schedule[i.toString()] = val;
+            else delete this.data.schedule[i.toString()];
+        }
+
+        this.save();
+        
+        // Одразу перемикаємо додаток на новий день, якщо ми змінили розклад на сьогодні
+        const todayNum = new Date().getDay();
+        const mapDay = todayNum === 0 ? 7 : todayNum;
+        const schedDayId = this.data.schedule[mapDay.toString()];
+        
+        if (schedDayId && this.data.days.find(d => d.id === schedDayId)) {
+            this.switchDay(schedDayId);
+        }
+
         this.closeModal();
+        if(window.Haptics) window.Haptics.success();
     },
     async deleteDay() {
         if(this.data.days.length <= 1) {
