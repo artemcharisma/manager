@@ -136,10 +136,15 @@ const App = {
             if(undoFloat) undoFloat.classList.remove('visible');
         }
         
+        // Безпечна перевірка існування дня
         if(!this.data.days.find(d => d.id === this.state.currentDayId)) {
-            this.state.currentDayId = this.data.days[0]?.id || null;
+            this.state.currentDayId = this.data.days.length > 0 ? this.data.days[0].id : null;
         }
-        this.save(); this.render();
+        
+        this.save(); 
+        this.renderDaysBar(); // КРИТИЧНО: Перемальовуємо панель днів (для ПК скролу)
+        this.render(false);   // Перемальовуємо контент без анімації стрибків
+        
         if(window.Haptics) window.Haptics.light();
     },
 
