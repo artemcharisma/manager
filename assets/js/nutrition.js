@@ -208,9 +208,9 @@ const App = {
             title = parts[0];
             sub = parts[1] || "";
         } else {
-             const parts = day.name.split(' ');
-             title = parts[0];
-             sub = parts.slice(1).join(' ');
+            // Якщо це формат без |, то вся назва йде в головний тайтл
+            title = day.name;
+            sub = "";
         }
         
         document.getElementById('inpDayTitle').value = title;
@@ -235,6 +235,18 @@ const App = {
         this.closeModal();
     },
 
+    openSchedule() {
+        if(document.activeElement) document.activeElement.blur();
+        this.lockScroll();
+        this.toggleFab(false);
+        // Тут пізніше допишемо логіку рендеру розкладу
+        document.getElementById('scheduleModal').style.display = 'flex';
+    },
+
+    saveSchedule() {
+        // Тут пізніше допишемо логіку збереження розкладу
+        this.closeModal();
+    },
     async deleteDay() {
         if(this.data.days.length <= 1) {
             await Modal.alert("Останній день видалити неможливо.", "ПОМИЛКА", "red");
@@ -323,11 +335,10 @@ const App = {
                 titleText = parts[0];
                 subText = parts[1] || "";
             } else {
-                 const parts = day.name.split(' ');
-                 titleText = parts[0];
-                 subText = parts.slice(1).join(' ');
+                titleText = day.name;
+                subText = "";
             }
-
+            
             titleEl.innerText = titleText;
             if (subText) {
                 subEl.innerText = subText;
@@ -426,9 +437,8 @@ const App = {
                 t = parts[0];
                 s = parts[1] || '•';
             } else {
-                const parts = d.name.split(' ');
-                t = parts[0];
-                s = parts.slice(1).join(' ') || '•';
+                t = d.name;
+                s = '•';
             }
             
             // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
@@ -616,7 +626,7 @@ const App = {
 
         if(document.activeElement) document.activeElement.blur(); 
         
-        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal'];
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal'];
         modalIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
