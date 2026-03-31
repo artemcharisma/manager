@@ -157,38 +157,44 @@
         /* ІДЕАЛЬНЕ ВИРІВНЮВАННЯ ОЛІВЦЯ (PRO) */
         .day-title-box { 
             display: flex; 
-            align-items: center; /* Центрування по вертикалі відносно тексту */
+            align-items: center; /* Центрування по вертикалі */
             gap: 12px; 
-            min-width: 0; 
-            flex: 1;
+            min-width: 0; /* Дозволяє тексту стискатись, а не вилазити */
+            flex: 1; /* Займає весь вільний простір до кнопок Копія/Смітник */
+            max-width: 100%;
         }
         
         .day-title-display { 
-            font-size: 1.8rem; /* Збільшив розмір як на фото */
+            font-size: 1.8rem; 
             font-weight: 900; 
             color: #fff; 
             letter-spacing: -0.8px; 
             white-space: nowrap;      
             overflow: hidden;         
             text-overflow: ellipsis;
-            line-height: 1.1; /* Щоб хвостики літер не обрізались */
+            line-height: 1.1; 
+            margin: 0;
+            padding-bottom: 2px; /* Візуальна компенсація висоти шрифту */
         }
         
         .edit-icon-btn { 
-            color: var(--theme); /* Олівець у колір теми виглядає дорожче */
+            color: var(--theme); 
             background: rgba(212, 175, 55, 0.1);
             border: 1px solid rgba(212, 175, 55, 0.2);
             font-size: 1rem; 
             cursor: pointer; 
-            width: 34px;
-            height: 34px;
+            /* ЖОРСТКІ РОЗМІРИ, ЩОБ НЕ РОЗТЯГУВАЛОСЬ В ОВАЛ */
+            width: 32px;
+            min-width: 32px;
+            height: 32px;
+            max-height: 32px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            flex-shrink: 0; /* ЗАБОРОНА стискатися, якщо тексту забагато */
             transition: 0.2s;
-            margin-bottom: 2px; /* Мікро-корекція положення */
+            margin-top: 2px; /* Опускаємо трошки, щоб бути по центру великих літер */
         }
         
         .btn-mini { 
