@@ -23,7 +23,6 @@ const App = {
         bank: DefaultBank, 
         targets: {p:200, f:80, c:300, k:2700}, 
         days: [] 
-        schedule: {}
     },
     state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
     history: [],
@@ -48,16 +47,8 @@ const App = {
             this.addDay("Мій день", true);
         }
         
-        // АВТОЗАВАНТАЖЕННЯ ДНЯ ЗГІДНО РОЗКЛАДУ
-        if (!this.data.schedule) this.data.schedule = {};
-        const todayNum = new Date().getDay(); // 0 - Неділя, 1 - Понеділок...
-        const mapDay = todayNum === 0 ? 7 : todayNum; // Робимо 1=Пн ... 7=Нд
-        const schedDayId = this.data.schedule[mapDay.toString()];
-
-        if (schedDayId && this.data.days.find(d => d.id === schedDayId)) {
-            this.state.currentDayId = schedDayId; // Вантажимо день з розкладу
-        } else if(!this.state.currentDayId && this.data.days.length > 0) {
-            this.state.currentDayId = this.data.days[0].id; // Або перший ліпший, якщо розклад пустий
+        if(!this.state.currentDayId && this.data.days.length > 0) {
+            this.state.currentDayId = this.data.days[0].id;
         }
         
         this.setupHardReset();
@@ -211,10 +202,15 @@ const App = {
         let title = day.name;
         let sub = "";
         
+        // Читаємо новий формат "Назва|Підпис" або парсимо старий "Назва Підпис"
         if (day.name.includes('|')) {
             const parts = day.name.split('|');
             title = parts[0];
             sub = parts[1] || "";
+        } else {
+            // Якщо це формат без |, то вся назва йде в головний тайтл
+            title = day.name;
+            sub = "";
         }
         
         document.getElementById('inpDayTitle').value = title;
@@ -227,9 +223,10 @@ const App = {
         const t = document.getElementById('inpDayTitle').value.trim();
         const s = document.getElementById('inpDaySub').value.trim();
         
-        if(!t) return; 
+        if(!t) return; // Головна назва обов'язкова
         
         this.pushHistory();
+        // Зберігаємо в базу жорстко через розділювач
         day.name = s ? `${t}|${s}` : t;
         
         this.save();
@@ -242,58 +239,13 @@ const App = {
         if(document.activeElement) document.activeElement.blur();
         this.lockScroll();
         this.toggleFab(false);
-
-        const container = document.getElementById('scheduleContainer');
-        const daysOfWeek = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота', 'Неділя'];
-        let html = '';
-        const schedule = this.data.schedule || {};
-
-        daysOfWeek.forEach((dName, idx) => {
-            const dayNum = (idx + 1).toString();
-            const selectedId = schedule[dayNum] || '';
-
-            let options = `<option value="">-- Вільно --</option>`;
-            this.data.days.forEach(d => {
-                const isSelected = d.id === selectedId ? 'selected' : '';
-                let t = d.name.includes('|') ? d.name.replace('|', ' (') + ')' : d.name;
-                options += `<option value="${d.id}" ${isSelected}>${t}</option>`;
-            });
-
-            html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid #333;">
-                <span style="color:#fff; font-weight:700; font-size:0.9rem; width:100px;">${dName}</span>
-                <select id="sched_day_${dayNum}" style="flex:1; background:#000; color:var(--theme); border:1px solid #444; padding:8px; border-radius:8px; outline:none; font-family:var(--font-mono); font-size:0.8rem; font-weight:700;">
-                    ${options}
-                </select>
-            </div>`;
-        });
-
-        container.innerHTML = html;
+        // Тут пізніше допишемо логіку рендеру розкладу
         document.getElementById('scheduleModal').style.display = 'flex';
     },
 
     saveSchedule() {
-        this.pushHistory();
-        if(!this.data.schedule) this.data.schedule = {};
-
-        for(let i=1; i<=7; i++) {
-            const val = document.getElementById('sched_day_' + i).value;
-            if(val) this.data.schedule[i.toString()] = val;
-            else delete this.data.schedule[i.toString()];
-        }
-
-        this.save();
-        
-        // Одразу застосовуємо, якщо сьогодні змінився розклад
-        const todayNum = new Date().getDay();
-        const mapDay = todayNum === 0 ? 7 : todayNum;
-        const schedDayId = this.data.schedule[mapDay.toString()];
-        if (schedDayId && this.data.days.find(d => d.id === schedDayId)) {
-            this.switchDay(schedDayId);
-        }
-
+        // Тут пізніше допишемо логіку збереження розкладу
         this.closeModal();
-        if(window.Haptics) window.Haptics.success();
     },
     async deleteDay() {
         if(this.data.days.length <= 1) {
@@ -382,8 +334,11 @@ const App = {
                 const parts = day.name.split('|');
                 titleText = parts[0];
                 subText = parts[1] || "";
+            } else {
+                titleText = day.name;
+                subText = "";
             }
-
+            
             titleEl.innerText = titleText;
             if (subText) {
                 subEl.innerText = subText;
@@ -481,7 +436,12 @@ const App = {
                 const parts = d.name.split('|');
                 t = parts[0];
                 s = parts[1] || '•';
+            } else {
+                t = d.name;
+                s = '•';
             }
+            
+            // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
             el.innerHTML = `<span style="pointer-events:none;">${t}</span><small style="pointer-events:none;">${s}</small>`;
             
             el.onclick = () => {
