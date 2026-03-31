@@ -137,72 +137,59 @@
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
-        /* --- 3. DAY NAVIGATION --- */
+        /* Фікс скролу для ПК (мишкою) та телефонів */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
             padding: 10px 10px 20px 10px; 
             margin-bottom: 0; 
-            scrollbar-width: none;
+            scrollbar-width: thin; /* Тонкий скролл для ПК */
+            scrollbar-color: var(--theme) transparent;
             margin-left: -10px; margin-right: -10px;
-            scroll-behavior: smooth; /* Для плавного автоскролу */
-            -webkit-overflow-scrolling: touch; /* ФІКС СКРОЛУ НА iOS */
-            touch-action: pan-x; /* ФІКС СКРОЛУ: Дозволяє лише горизонтальний свайп */
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
         }
-        .day-bar::-webkit-scrollbar { display: none; } /* Приховуємо скролбар на iOS/Chrome */
+        /* Робимо скролбар видимим при наведенні на ПК, щоб було зрозуміло, що можна гортати */
+        .day-bar::-webkit-scrollbar { height: 4px; display: block; }
+        .day-bar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .day-bar:hover::-webkit-scrollbar-thumb { background: var(--theme); }
 
-        .day-tab {
-            min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
-            border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s; flex-shrink: 0;
-        }
-        .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); }
-        .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
-        
-        .day-tab.active {
-            border-color: var(--theme); color: #000; background: var(--theme); /* Преміальний активний таб */
-            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2);
-            transform: translateY(-3px);
-            z-index: 2;
-        }
-        .day-tab.active span { color: #000; }
-        .day-tab.active small { color: rgba(0,0,0,0.7); }
-
-        /* Преміальний ПЛЮС */
-        .day-add-btn {
-            min-width: 60px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;
-        }
-        .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
-
-        /* Естетична назва дня (PRO) */
-        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: center; }
+        /* ІДЕАЛЬНЕ ВИРІВНЮВАННЯ ОЛІВЦЯ (PRO) */
         .day-title-box { 
             display: flex; 
-            align-items: center; 
-            gap: 10px; 
+            align-items: center; /* Центрування по вертикалі відносно тексту */
+            gap: 12px; 
             min-width: 0; 
-            flex: 1;      
+            flex: 1;
         }
         
         .day-title-display { 
-            font-size: 1.4rem; 
-            font-weight: 800; 
+            font-size: 1.8rem; /* Збільшив розмір як на фото */
+            font-weight: 900; 
             color: #fff; 
-            letter-spacing: -0.5px; 
+            letter-spacing: -0.8px; 
             white-space: nowrap;      
             overflow: hidden;         
-            text-overflow: ellipsis;  
+            text-overflow: ellipsis;
+            line-height: 1.1; /* Щоб хвостики літер не обрізались */
         }
         
         .edit-icon-btn { 
-            color: #666; 
-            font-size: 1.2rem; 
+            color: var(--theme); /* Олівець у колір теми виглядає дорожче */
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            font-size: 1rem; 
             cursor: pointer; 
-            padding: 5px; 
-            transition: 0.2s; 
-            flex-shrink: 0; 
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: 0.2s;
+            margin-bottom: 2px; /* Мікро-корекція положення */
         }
-        .edit-icon-btn:active { transform: scale(0.9); color: var(--theme); background: rgba(255,255,255,0.1); }
         
         .btn-mini { 
             background: #111; border: 1px solid #333; color: #888; 
