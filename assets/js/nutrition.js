@@ -109,19 +109,25 @@ const App = {
     pushHistory() {
         if(this.history.length > 10) this.history.shift();
         this.history.push(JSON.stringify(this.data));
-        const undoBtn = document.getElementById('undoBtn');
-        if(undoBtn) undoBtn.style.display='flex';
+        const undoFloat = document.getElementById('undoFloat');
+        if(undoFloat) undoFloat.classList.add('visible'); // Показуємо плаваючу кнопку
     },
     
     undo() {
         if(!this.history.length) return;
         this.data = JSON.parse(this.history.pop());
-        if(!this.history.length) document.getElementById('undoBtn').style.display='none';
+        
+        // Ховаємо кнопку, якщо історія пуста
+        if(!this.history.length) {
+            const undoFloat = document.getElementById('undoFloat');
+            if(undoFloat) undoFloat.classList.remove('visible');
+        }
         
         if(!this.data.days.find(d => d.id === this.state.currentDayId)) {
             this.state.currentDayId = this.data.days[0]?.id || null;
         }
         this.save(); this.render();
+        if(window.Haptics) window.Haptics.light();
     },
 
     getCurrentDay() {
@@ -411,6 +417,8 @@ const App = {
         this.data.days.forEach(d => {
             const el = document.createElement('div');
             el.className = `day-tab ${d.id === this.state.currentDayId ? 'active' : ''}`;
+            el.style.cursor = 'pointer'; // ГАРАНТІЯ клікабельності
+            
             let t = d.name;
             let s = '•';
             if (d.name.includes('|')) {
@@ -422,17 +430,26 @@ const App = {
                 t = parts[0];
                 s = parts.slice(1).join(' ') || '•';
             }
-            el.innerHTML = `<span>${t}</span><small>${s}</small>`;
-            el.onclick = () => App.switchDay(d.id);
+            
+            // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
+            el.innerHTML = `<span style="pointer-events:none;">${t}</span><small style="pointer-events:none;">${s}</small>`;
+            
+            el.onclick = () => {
+                if(this.state.currentDayId !== d.id) {
+                    if(window.Haptics) window.Haptics.light();
+                    App.switchDay(d.id);
+                }
+            };
             bar.appendChild(el);
         });
+        
         const addBtn = document.createElement('div');
         addBtn.className = 'day-add-btn';
         addBtn.innerText = '+';
+        addBtn.style.cursor = 'pointer';
         addBtn.onclick = () => App.addDay();
         bar.appendChild(addBtn);
     },
-
     updateStats() {
         const day = this.getCurrentDay();
         if(!day) return;
