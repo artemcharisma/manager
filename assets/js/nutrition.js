@@ -32,13 +32,15 @@ const App = {
         const loadedData = Utils.load(DB_KEY, null);
 
         if(loadedData) {
+            this.data = loadedData;
+            // ГАРАНТІЯ: Якщо після лоаду немає поля schedule, створюємо його
+            if (!this.data.schedule) this.data.schedule = {};
+            
             if(!loadedData.days) {
                 this.data.bank = loadedData.bank || DefaultBank;
                 this.data.targets = loadedData.targets;
                 this.data.days = [{id: Utils.id(), name: "Мій день", targets: {...loadedData.targets}, meals: loadedData.meals || []}];
             } else {
-                this.data = loadedData;
-                // АВТОМІГРАЦІЯ: Якщо в старих днях немає targets, копіюємо з глобальних
                 this.data.days.forEach(d => {
                     if (!d.targets) d.targets = { ...this.data.targets };
                 });
@@ -46,6 +48,7 @@ const App = {
             this.data.bank = {...DefaultBank, ...this.data.bank};
         } else {
             this.addDay("Мій день", true);
+            this.data.schedule = {};
         }
         
         // АВТОЗАВАНТАЖЕННЯ ДНЯ ЗГІДНО РОЗКЛАДУ
@@ -285,16 +288,15 @@ const App = {
         this.pushHistory();
         if(!this.data.schedule) this.data.schedule = {};
 
-        // Збираємо значення з усіх 7 селектів
         for(let i=1; i<=7; i++) {
             const val = document.getElementById('sched_day_' + i).value;
             if(val) this.data.schedule[i.toString()] = val;
             else delete this.data.schedule[i.toString()];
         }
 
-        this.save();
+        // Жорстке збереження всієї структури data
+        Utils.save(DB_KEY, this.data);
         
-        // Одразу перемикаємо додаток на новий день, якщо ми змінили розклад на сьогодні
         const todayNum = new Date().getDay();
         const mapDay = todayNum === 0 ? 7 : todayNum;
         const schedDayId = this.data.schedule[mapDay.toString()];
@@ -499,6 +501,19 @@ const App = {
                 t = d.name;
                 s = '•';
             }
+            // Додати в самий кінець renderDaysBar()
+            const bar = document.getElementById('dayBar');
+            let isDown = false; let startX; let scrollLeft;
+            bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
+            bar.addEventListener('mouseleave', () => { isDown = false; });
+            bar.addEventListener('mouseup', () => { isDown = false; });
+            bar.addEventListener('mousemove', (e) => {
+                if(!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - bar.offsetLeft;
+                const walk = (x - startX) * 2;
+                bar.scrollLeft = scrollLeft - walk;
+            });
             
             // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
             el.innerHTML = `<span style="pointer-events:none;">${t}</span><small style="pointer-events:none;">${s}</small>`;
