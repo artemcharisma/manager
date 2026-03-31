@@ -22,7 +22,7 @@ const App = {
     data: { 
         bank: DefaultBank, 
         targets: {p:200, f:80, c:300, k:2700}, 
-        days: []
+        days: [],
         schedule: {}
     },
     state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
