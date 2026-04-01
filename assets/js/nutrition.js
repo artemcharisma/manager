@@ -459,7 +459,7 @@ const App = {
                 <div style="flex:1;">
                     <div class="mh-title-wrapper" style="display:flex; align-items:center; gap:8px;">
                         <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase;">${m.name}</h4>
-                        <div class="edit-icon-btn" onclick="App.promptRenameMeal(${m.id})">✎</div>
+                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})">✎</div>
                     </div>
                     <div class="mh-meta" style="display:flex; align-items:center; gap:12px; margin-top:2px;">
                         <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.9rem; color:var(--theme);">${mCal} ккал</div>
