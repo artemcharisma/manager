@@ -187,9 +187,10 @@
         }
         .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
 
-        /* ЕСТЕЧНА НАЗВА ДНЯ ТА ОЛІВЕЦЬ */
+        /* --- ШАПКА ДНЯ ТА КНОПКИ ДІЙ --- */
         .day-control-panel { 
-            display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: flex-start; 
+            display: flex; justify-content: space-between; padding: 0 5px 15px 5px; 
+            align-items: flex-start; gap: 15px; /* Захисний відступ між текстом і кнопками */
         }
         
         .day-title-box { 
@@ -197,49 +198,11 @@
             flex: 1; min-width: 0; 
         }
         
-        .day-title-main-wrapper {
-            display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0;
-            height: 32px; /* КРИТИЧНО: Жорстка висота для ідеального вирівнювання з кнопками */
-        }
-        
         .day-title-display { 
             font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; 
-            line-height: 1; flex: 0 1 auto; min-width: 0; 
-            padding-bottom: 2px; /* Візуальне центрування шрифту */
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1;
+            width: 100%; /* Дозволяє тексту стискатись */
         }
-        
-        /* ГОЛОВНИЙ ОЛІВЕЦЬ ДНЯ (Квадрат 32x32) */
-        .edit-day-btn { 
-            background: #111; border: 1px solid #333; color: var(--theme);
-            width: 32px; height: 32px; border-radius: 8px; font-size: 0.9rem;
-            cursor: pointer; transition: 0.2s; padding: 0; margin: 0;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; 
-        }
-        .edit-day-btn:active { background: #333; color: #fff; transform: scale(0.95); }
-
-        /* МАЛЕНЬКИЙ ОЛІВЕЦЬ ПРИЙОМУ ЇЖІ (Квадратик 24x24) */
-        .edit-meal-btn {
-            color: #666; font-size: 0.85rem; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; justify-content: center;
-            width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px;
-            background: transparent; border: 1px solid transparent;
-        }
-        .edit-meal-btn:active { color: var(--theme); transform: scale(1.1); }
-        
-        .day-action-buttons {
-            display: flex; gap: 8px; flex-shrink: 0; align-items: center; 
-        }
-        
-        /* КНОПКИ КОПІЯ / ВИДАЛИТИ (Висота 32px) */
-        .btn-mini { 
-            background: #111; border: 1px solid #333; color: #888; 
-            font-size: 0.7rem; padding: 0 12px; height: 32px; border-radius: 8px; font-weight: 700;
-            text-transform: uppercase; transition: 0.2s; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; margin: 0;
-        }
-        .btn-mini:active { background: #333; color: #fff; }
         
         .day-subtitle-display {
             font-size: 0.75rem; color: var(--theme); font-family: var(--font-mono); font-weight: 800;
@@ -247,6 +210,34 @@
             padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
         }
+
+        /* КОНТЕЙНЕР ДЛЯ ВСІХ ТРЬОХ КНОПОК */
+        .day-action-buttons {
+            display: flex; gap: 8px; flex-shrink: 0; align-items: center; margin-top: 4px;
+        }
+
+        /* УНІВЕРСАЛЬНА КНОПКА */
+        .btn-mini { 
+            background: #111; border: 1px solid #333; color: #888; 
+            font-size: 0.7rem; padding: 0 12px; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s; cursor: pointer;
+            height: 32px; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-mini:active { background: #333; color: #fff; transform: scale(0.95); }
+        
+        /* СПЕЦІАЛЬНИЙ СТИЛЬ ДЛЯ ОЛІВЦЯ ТА СМІТНИКА (Квадратні) */
+        .btn-mini.icon-only {
+            width: 32px; padding: 0; font-size: 1.1rem;
+        }
+        .btn-mini.edit-day {
+            color: var(--theme); background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.3);
+        }
+        .btn-mini.edit-day:active { background: rgba(212, 175, 55, 0.2); }
+        
+        .btn-mini.del-day {
+            color: var(--danger); border-color: rgba(239, 68, 68, 0.4); 
+        }
+        .btn-mini.del-day:active { background: rgba(239, 68, 68, 0.2); }
         /* --- 4. HUD --- */
         .hud {
             background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
@@ -495,16 +486,14 @@
     
         <div class="day-control-panel">
         <div class="day-title-box">
-            <div class="day-title-main-wrapper">
-                <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
-                <button class="edit-day-btn" onclick="App.promptRenameDay()">✎</button>
-            </div>
+            <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
             <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
         </div>
         
         <div class="day-action-buttons">
+             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()">✎</button>
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
-             <button class="btn-mini" onclick="App.deleteDay()" style="border-color:rgba(239, 68, 68, 0.4); color:var(--danger)">🗑</button>
+             <button class="btn-mini icon-only del-day" onclick="App.deleteDay()">🗑</button>
         </div>
     </div>
 
