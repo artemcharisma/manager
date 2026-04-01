@@ -187,7 +187,7 @@
         }
         .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
 
-        /* --- 3A. DAY TITLE & ACTIONS (UPDATED) --- */
+        /* ЕСТЕЧНА НАЗВА ДНЯ ТА ОЛІВЕЦЬ */
         .day-control-panel { 
             display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: flex-start; 
         }
@@ -204,20 +204,30 @@
         .day-title-display { 
             font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; 
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1;
+            flex: 0 1 auto; min-width: 0; /* КРИТИЧНО: Дозволяє тексту обрізатись (...), а не виштовхувати олівець */
         }
         
-        /* ГЛОБАЛЬНИЙ СТИЛЬ ОЛІВЦЯ (✎) - Мікро-розмір */
-        .edit-icon-btn { 
-            color: var(--text-muted); opacity: 0.6; font-size: 0.8rem; cursor: pointer; transition: 0.2s;
-            line-height: 1; margin: 0; padding: 0; display: inline-block;
+        /* ГОЛОВНИЙ ОЛІВЕЦЬ ДНЯ (Стиль ідентичний до кнопок Копія/Видалити) */
+        .edit-day-btn { 
+            background: #111; border: 1px solid #333; color: var(--theme);
+            padding: 8px 12px; border-radius: 8px; font-size: 0.8rem;
+            cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; /* КРИТИЧНО: Забороняє кнопці зменшуватись */
         }
-        .edit-icon-btn:active { opacity: 1; color: var(--theme); transform: scale(1.1); }
+        .edit-day-btn:active { background: #333; color: #fff; transform: scale(0.95); }
+
+        /* МАЛЕНЬКИЙ ОЛІВЕЦЬ ПРИЙОМУ ЇЖІ */
+        .edit-meal-btn {
+            color: #666; font-size: 0.7rem; cursor: pointer; transition: 0.2s;
+            padding: 4px; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .edit-meal-btn:active { color: var(--theme); transform: scale(1.1); }
         
-        /* КОНТЕЙНЕР ДЛЯ МАЛЕНЬКИХ КНОПОК ДІЙ (Копія/🗑) */
         .day-action-buttons {
             display: flex; gap: 8px; flex-shrink: 0; align-items: flex-start; margin-top: 4px;
         }
-
         .btn-mini { 
             background: #111; border: 1px solid #333; color: #888; 
             font-size: 0.7rem; padding: 8px 12px; border-radius: 8px; font-weight: 700;
@@ -482,7 +492,7 @@
         <div class="day-title-box">
             <div class="day-title-main-wrapper">
                 <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
-                <div class="edit-icon-btn" onclick="App.promptRenameDay()">✎</div>
+                <button class="edit-day-btn" onclick="App.promptRenameDay()">✎</button>
             </div>
             <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
         </div>
