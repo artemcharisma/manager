@@ -56,12 +56,13 @@ const App = {
         
         const todayNum = new Date().getDay(); // 0 (Неділя) - 6 (Субота)
         const mapDay = todayNum === 0 ? 7 : todayNum; // Переводимо у формат 1 (Пн) - 7 (Нд)
-        const schedDayId = this.data.schedule[mapDay.toString()]; // Шукаємо ID дня для сьогодні
+        const schedDayId = this.data.schedule[mapDay.toString()];
 
-        if (schedDayId && this.data.days.find(d => d.id === schedDayId)) {
-            this.state.currentDayId = schedDayId; // Завантажуємо день з розкладу
+        // ФІКС: Порівнюємо як рядки String(), щоб уникнути багу типів
+        if (schedDayId && this.data.days.find(d => String(d.id) === String(schedDayId))) {
+            this.state.currentDayId = Number(schedDayId); // Повертаємо у формат числа
         } else if(!this.state.currentDayId && this.data.days.length > 0) {
-            this.state.currentDayId = this.data.days[0].id; // Якщо розклад пустий, вантажимо перший-ліпший
+            this.state.currentDayId = this.data.days[0].id;
         }
         
         this.setupHardReset();
@@ -270,8 +271,8 @@ const App = {
             // Формуємо список створених днів для випадаючого меню
             let options = `<option value="">-- Вільно --</option>`;
             this.data.days.forEach(d => {
-                const isSelected = d.id === selectedId ? 'selected' : '';
-                // Якщо є підпис, форматуємо красиво для меню: Назва (Підпис)
+                // ФІКС: Порівнюємо як рядки String()
+                const isSelected = String(d.id) === String(selectedId) ? 'selected' : '';
                 let t = d.name.includes('|') ? d.name.replace('|', ' (') + ')' : d.name;
                 options += `<option value="${d.id}" ${isSelected}>${t}</option>`;
             });
@@ -306,8 +307,9 @@ const App = {
         const mapDay = todayNum === 0 ? 7 : todayNum;
         const schedDayId = this.data.schedule[mapDay.toString()];
         
-        if (schedDayId && this.data.days.find(d => d.id === schedDayId)) {
-            this.switchDay(schedDayId);
+        // ФІКС: Порівнюємо як рядки String()
+        if (schedDayId && this.data.days.find(d => String(d.id) === String(schedDayId))) {
+            this.switchDay(Number(schedDayId));
         }
 
         this.closeModal();
