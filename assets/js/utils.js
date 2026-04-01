@@ -1,7 +1,7 @@
 // assets/js/utils.js
 
 const Utils = {
-    // Безпечне завантаження даних (повертає defaultData, якщо нічого немає або помилка)
+    // Безпечне завантаження даних
     load(key, defaultData) {
         try {
             const data = localStorage.getItem(key);
@@ -22,7 +22,7 @@ const Utils = {
         }
     },
 
-    // Генерація унікального ID (для нових записів)
+    // Генерація унікального ID
     id() {
         return Date.now();
     },
@@ -32,6 +32,46 @@ const Utils = {
         return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
     }
 };
+
+// ГЛОБАЛЬНИЙ СЕРВІС ЖИТТЄВИХ ПОКАЗНИКІВ
+const GlobalVitals = {
+    key: 'protocol_global_vitals',
+    
+    // Форматування будь-якого Date об'єкта у строгий формат YYYY-MM-DD
+    formatDate(dateObj) {
+        const d = new Date(dateObj);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    },
+
+    getAll() {
+        return Utils.load(this.key, {});
+    },
+
+    get(dateString) {
+        const all = this.getAll();
+        return all[dateString] || { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
+    },
+
+    save(dateString, field, value) {
+        const all = this.getAll();
+        if (!all[dateString]) {
+            all[dateString] = { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
+        }
+        all[dateString][field] = value;
+        Utils.save(this.key, all);
+    },
+
+    // Отримання останньої введеної ваги (для Хабу та розрахунків дозувань)
+    getLatestWeight() {
+        const all = this.getAll();
+        const dates = Object.keys(all).sort((a, b) => new Date(b) - new Date(a));
+        for (let d of dates) {
+            if (all[d].w) return parseFloat(all[d].w);
+        }
+        return null;
+    }
+};
+
 class StateManager {
     constructor(key, defaultData) {
         this.key = key;
@@ -44,7 +84,6 @@ class StateManager {
         const s = localStorage.getItem(this.key);
         if (s) {
             try {
-                // Об'єднуємо збережені дані з дефолтними (щоб нові поля не ламали старі сейви)
                 return { ...this.defaultData, ...JSON.parse(s) };
             } catch (e) {
                 console.error("Error parsing data", e);
@@ -65,9 +104,9 @@ class StateManager {
 
     // Додати в історію (для Undo)
     push(data) {
-        if (this.history.length > 20) this.history.shift(); // Тримаємо останні 20 кроків
+        if (this.history.length > 20) this.history.shift();
         this.history.push(JSON.stringify(data));
-        return true; // Повертає true, щоб ми знали, що можна показати кнопку Undo
+        return true;
     }
 
     // Повернути назад
