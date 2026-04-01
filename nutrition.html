@@ -187,7 +187,7 @@
         }
         .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
 
-        /* ЕСТЕЧНА НАЗВА ДНЯ ТА ОЛІВЕЦЬ */
+        /* --- 3A. DAY TITLE & ACTIONS (UPDATED) --- */
         .day-control-panel { 
             display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: flex-start; 
         }
@@ -206,22 +206,14 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1;
         }
         
-        /* Жорсткий розмір для олівця, щоб не ставав овалом */
+        /* ГЛОБАЛЬНИЙ СТИЛЬ ОЛІВЦЯ (✎) - Мікро-розмір */
         .edit-icon-btn { 
-            color: var(--theme); background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 8px; width: 34px; height: 34px; min-width: 34px; max-width: 34px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-            margin-bottom: 2px;
+            color: var(--text-muted); opacity: 0.6; font-size: 0.8rem; cursor: pointer; transition: 0.2s;
+            line-height: 1; margin: 0; padding: 0; display: inline-block;
         }
-        .edit-icon-btn:active { transform: scale(0.9); background: rgba(212, 175, 55, 0.2); }
+        .edit-icon-btn:active { opacity: 1; color: var(--theme); transform: scale(1.1); }
         
-        .day-subtitle-display {
-            font-size: 0.75rem; color: var(--theme); font-family: var(--font-mono); font-weight: 800;
-            letter-spacing: 1px; text-transform: uppercase; background: rgba(212, 175, 55, 0.1);
-            padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-        }
-        
+        /* КОНТЕЙНЕР ДЛЯ МАЛЕНЬКИХ КНОПОК ДІЙ (Копія/🗑) */
         .day-action-buttons {
             display: flex; gap: 8px; flex-shrink: 0; align-items: flex-start; margin-top: 4px;
         }
@@ -232,7 +224,13 @@
             text-transform: uppercase; transition: 0.2s; cursor: pointer;
         }
         .btn-mini:active { background: #333; color: #fff; }
-
+        
+        .day-subtitle-display {
+            font-size: 0.75rem; color: var(--theme); font-family: var(--font-mono); font-weight: 800;
+            letter-spacing: 1px; text-transform: uppercase; background: rgba(212, 175, 55, 0.1);
+            padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+        }
 
         /* --- 4. HUD --- */
         .hud {
@@ -480,19 +478,16 @@
 
     <div class="day-bar" id="dayBar"></div>
     
-        <div class="day-control-panel" style="align-items: flex-start;">
-        <div class="day-title-box" style="flex:1; min-width:0; flex-direction:column; align-items:flex-start; gap:4px;">
-            <div style="display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-width:0;">
-                
-                <h2 class="day-title-display" id="currentDayTitleMain" style="flex:0 1 auto; min-width:0; margin:0; font-size:1.8rem; font-weight:900; color:#fff; letter-spacing:-0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.1;">День</h2>
-                
-                <div class="edit-icon-btn" onclick="App.promptRenameDay()" style="background:transparent; width:32px; min-width:32px; height:32px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--theme); font-size:1.3rem; cursor:pointer; opacity:0.9; padding-bottom:2px; transition:0.2s;">✎</div>
+        <div class="day-control-panel">
+        <div class="day-title-box">
+            <div class="day-title-main-wrapper">
+                <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
+                <div class="edit-icon-btn" onclick="App.promptRenameDay()">✎</div>
             </div>
-            
-            <div id="currentDaySubtitle" style="font-size:0.75rem; color:var(--theme); font-family:var(--font-mono); font-weight:800; letter-spacing:1px; text-transform:uppercase; background: rgba(212, 175, 55, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2); display:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">Підпис</div>
+            <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
         </div>
         
-        <div style="display:flex; gap:8px; flex-shrink:0; align-items: flex-start; margin-top: 4px;">
+        <div class="day-action-buttons">
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
              <button class="btn-mini" onclick="App.deleteDay()" style="border-color:rgba(239, 68, 68, 0.4); color:var(--danger)">🗑</button>
         </div>
