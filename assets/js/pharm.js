@@ -636,6 +636,10 @@ const App = {
 
         await PhotoDB.init();
         this.load();
+        
+        // --- ЗАПУСК МІГРАЦІЇ НА ГЛОБАЛЬНІ ПОКАЗНИКИ ---
+        this.migrateVitals();
+        
         await this.refreshPhotos();
         
         this.initCustomDropdown();
@@ -658,13 +662,10 @@ const App = {
         this.renderNav(); 
         this.renderView();
         
-        // --- ПРАВИЛЬНА ЛОГІКА ПРИВАТНОСТІ ---
-        // Тепер Фарма блокується ТІЛЬКИ якщо ти поставив галочку в налаштуваннях
         if (this.data.privacyEnabled) {
             document.body.classList.add('privacy-mode', 'privacy-locked');
         }
         
-        // Синхронізуємо візуал галочки в модалці при старті
         setTimeout(() => {
             const cb = document.getElementById('privacyAutoLock');
             if (cb) cb.checked = this.data.privacyEnabled || false;
@@ -684,11 +685,52 @@ const App = {
             if (document.body.classList.contains('privacy-mode')) return;
             if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('gold_protocol');
-                localStorage.removeItem('pharm_manual_lock'); // <--- ОЧИЩАЄМО ЗАМОК
+                localStorage.removeItem('pharm_manual_lock');
+                localStorage.removeItem('protocol_global_vitals'); // Очищення глобальної бази
                 try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
                 location.reload();
             }
         };
+    },
+
+    // НОВА ФУНКЦІЯ: Міграція старих даних у GlobalVitals
+    migrateVitals() {
+        let migrated = false;
+
+        // 1. Міграція тиску, пульсу та ваги
+        if (this.data.vitals && Object.keys(this.data.vitals).length > 0) {
+            for (let key in this.data.vitals) {
+                const [w, d] = key.split('-');
+                const realDateObj = this.getRealDateObj(parseInt(w), parseInt(d));
+                const dateStr = GlobalVitals.formatDate(realDateObj);
+                const v = this.data.vitals[key];
+                
+                if (v.w) GlobalVitals.save(dateStr, 'w', v.w);
+                if (v.bp) GlobalVitals.save(dateStr, 'bp', v.bp);
+                if (v.hr) GlobalVitals.save(dateStr, 'hr', v.hr);
+            }
+            this.data.vitals = {}; // Очищаємо старі дані
+            migrated = true;
+        }
+
+        // 2. Міграція замірів (прив'язуємо до понеділка відповідного тижня)
+        if (this.data.measurements && Object.keys(this.data.measurements).length > 0) {
+            for (let w in this.data.measurements) {
+                const realDateObj = this.getRealDateObj(parseInt(w), 0); // Понеділок
+                const dateStr = GlobalVitals.formatDate(realDateObj);
+                const m = this.data.measurements[w];
+                
+                if (m.chest) GlobalVitals.save(dateStr, 'chest', m.chest);
+                if (m.waist) GlobalVitals.save(dateStr, 'waist', m.waist);
+                if (m.arm) GlobalVitals.save(dateStr, 'arm', m.arm);
+                if (m.leg) GlobalVitals.save(dateStr, 'leg', m.leg);
+                if (m.calf) GlobalVitals.save(dateStr, 'calf', m.calf);
+            }
+            this.data.measurements = {}; // Очищаємо старі дані
+            migrated = true;
+        }
+
+        if (migrated) this.save();
     },
 
     load() {
@@ -997,8 +1039,8 @@ const App = {
             const realDate = this.getRealDate(this.state.week, i);
             const isToday = this.isToday(this.state.week, i);
             const pills = this.data.schedule[this.state.week]?.[i] || [];
-            const v = this.data.vitals[`${this.state.week}-${i}`] || { bp: "", hr: "", w: "" };
-
+            const dateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, i));
+            const v = GlobalVitals.get(dateStr);
             let sys = "", dia = "";
             if (v.bp && v.bp.includes('/')) {
                 const parts = v.bp.split('/');
@@ -1077,8 +1119,8 @@ const App = {
         const photos = await PhotoDB.get(this.state.week);
         const pHtml = photos.map((p, idx) => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${idx})"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
-        const meas = (this.data.measurements && this.data.measurements[this.state.week]) || { chest: '', waist: '', arm: '', leg: '', calf: '' };
-
+        const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, 0));
+        const meas = GlobalVitals.get(mondayDateStr);
         const statsHtml = this.getStatsHtml(this.state.week);
 
         c.innerHTML = `
@@ -1197,7 +1239,8 @@ const App = {
     
             let weightSum = 0; let weightCount = 0;
             for(let d=0; d<7; d++) {
-                const v = this.data.vitals[`${w}-${d}`];
+                const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
+                const v = GlobalVitals.get(dateStr);
                 if(v && v.w) { 
                     const val = parseFloat(v.w.toString().replace(',','.'));
                     weightSum += val; 
@@ -1208,7 +1251,8 @@ const App = {
             }
             dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
 
-            const meas = (this.data.measurements && this.data.measurements[w]) || {};
+            const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0));
+            const meas = GlobalVitals.get(mondayDateStr);
             dataChest.push(meas.chest ? parseFloat(meas.chest) : null);
             dataWaist.push(meas.waist ? parseFloat(meas.waist) : null);
             dataArm.push(meas.arm ? parseFloat(meas.arm) : null);
@@ -1683,46 +1727,31 @@ const App = {
     },
     
     saveBP(w, d, type, val) {
-        this.pushHistory();
-        const key = `${w}-${d}`;
-        if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""};
+        const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
+        const v = GlobalVitals.get(dateStr);
 
-        let currentBP = this.data.vitals[key].bp || "/";
+        let currentBP = v.bp || "/";
         let parts = currentBP.split('/');
         if (parts.length !== 2) parts = ["", ""];
 
         if (type === 'sys') parts[0] = val;
         if (type === 'dia') parts[1] = val;
 
-        if (parts[0] === "" && parts[1] === "") {
-            this.data.vitals[key].bp = "";
-        } else {
-            this.data.vitals[key].bp = `${parts[0]}/${parts[1]}`;
-        }
-
-        this.save();
+        let finalBP = (parts[0] === "" && parts[1] === "") ? "" : `${parts[0]}/${parts[1]}`;
+        GlobalVitals.save(dateStr, 'bp', finalBP);
     },
     
-    saveVital(w,d,k,v) { 
-        this.pushHistory();
-        const key = `${w}-${d}`; 
-        if(!this.data.vitals[key]) this.data.vitals[key] = {bp:"", hr:"", w:""}; 
-        
+    saveVital(w, d, k, v) { 
+        const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
         if (k === 'w' && v) v = v.replace(',', '.'); 
-
-        this.data.vitals[key][k] = v; 
-        this.save(); 
+        GlobalVitals.save(dateStr, k, v); 
     },
 
     saveMeas(w, k, v) {
-        this.pushHistory();
-        if(!this.data.measurements) this.data.measurements = {};
-        if(!this.data.measurements[w]) this.data.measurements[w] = { chest: '', waist: '', arm: '', leg: '', calf: '' };
-        
+        // Заміри тіла прив'язуємо до понеділка поточного тижня
+        const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0)); 
         if (v) v = v.replace(',', '.');
-        
-        this.data.measurements[w][k] = v;
-        this.save();
+        GlobalVitals.save(dateStr, k, v);
     },
     
         async copyDay(w, d) {
@@ -2062,12 +2091,6 @@ const App = {
         for(let w = maxW; w > lastWeek; w--) { 
             this.data.schedule[w+1] = this.data.schedule[w]; 
             this.data.notes[w+1] = this.data.notes[w]; 
-            for(let d=0; d<7; d++) { 
-                if(this.data.vitals[`${w}-${d}`]) {
-                    this.data.vitals[`${w+1}-${d}`] = this.data.vitals[`${w}-${d}`];
-                    delete this.data.vitals[`${w}-${d}`];
-                }
-            } 
         } 
         
         this.data.schedule[lastWeek + 1] = copyOfLastWeek;
@@ -2096,10 +2119,6 @@ const App = {
         for(let w = maxW; w >= 1; w--) {
             this.data.schedule[w+1] = this.data.schedule[w];
             this.data.notes[w+1] = this.data.notes[w];
-            for(let d=0; d<7; d++) {
-                if(this.data.vitals[`${w}-${d}`]) this.data.vitals[`${w+1}-${d}`] = this.data.vitals[`${w}-${d}`];
-            }
-        }
         
         this.data.schedule[1] = [[],[],[],[],[],[],[]];
         this.data.notes[1] = "";
@@ -2131,10 +2150,6 @@ const App = {
         for(let w = lastWeek; w < maxW; w++) { 
             this.data.schedule[w] = this.data.schedule[w+1]; 
             this.data.notes[w] = this.data.notes[w+1]; 
-            for(let d=0; d<7; d++) { 
-                if(this.data.vitals[`${w+1}-${d}`]) this.data.vitals[`${w}-${d}`] = this.data.vitals[`${w+1}-${d}`]; 
-            } 
-        } 
         delete this.data.schedule[maxW]; 
         for(let i = pIdx + 1; i < this.data.phases.length; i++) {
              this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - 1); 
@@ -2244,12 +2259,6 @@ const App = {
         for (let w = maxW; w >= startWeek; w--) {
             this.data.schedule[w + duration] = this.data.schedule[w];
             this.data.notes[w + duration] = this.data.notes[w];
-            for(let d=0; d<7; d++) {
-                if(this.data.vitals[`${w}-${d}`]) {
-                    this.data.vitals[`${w+duration}-${d}`] = this.data.vitals[`${w}-${d}`];
-                    delete this.data.vitals[`${w}-${d}`];
-                }
-            }
             delete this.data.schedule[w];
             delete this.data.notes[w];
         }
