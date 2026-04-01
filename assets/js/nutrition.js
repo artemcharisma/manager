@@ -499,15 +499,16 @@ const App = {
             el.style.cursor = 'pointer'; // ГАРАНТІЯ клікабельності
             
             let t = d.name;
-            let s = '•';
+            let s = ''; // За замовчуванням пусто! Ніяких крапок. (Підпис)
             if (d.name.includes('|')) {
                 const parts = d.name.split('|');
                 t = parts[0];
-                s = parts[1] || '•';
-            } else {
-                t = d.name;
-                s = '•';
+                s = parts[1] || '';
             }
+            
+            // Якщо підпис є - малюємо тег <small>. Якщо ні - малюємо тільки головну назву.
+            const subHtml = s ? `<small style="pointer-events:none;">${s}</small>` : '';
+            el.innerHTML = `<span style="pointer-events:none;">${t}</span>${subHtml}`;
             // Додати в самий кінець renderDaysBar()
             const bar = document.getElementById('dayBar');
             let isDown = false; let startX; let scrollLeft;
