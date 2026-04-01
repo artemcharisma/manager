@@ -155,11 +155,13 @@
         .day-bar:hover::-webkit-scrollbar-thumb { background: var(--theme); }
 
         .day-tab {
-            min-width: 75px; max-width: 110px; /* Обмеження ширини */
-            padding: 10px 5px; /* Менші відступи по боках */
-            display: flex; flex-direction: column; align-items: center;
+            min-width: 75px; max-width: 110px; 
+            padding: 8px 5px; /* Зменшили відступи, щоб звільнити місце */
+            min-height: 56px; /* ЖОРСТКА ВИСОТА: всі таби будуть однаковими */
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; /* ІДЕАЛЬНЕ ЦЕНТРУВАННЯ по вертикалі */
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s; flex-shrink: 0;
+            color: #555; transition: 0.2s; flex-shrink: 0; cursor: pointer;
         }
         .day-tab span { 
             font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); 
