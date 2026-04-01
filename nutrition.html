@@ -155,12 +155,22 @@
         .day-bar:hover::-webkit-scrollbar-thumb { background: var(--theme); }
 
         .day-tab {
-            min-width: 75px; padding: 10px 0; display: flex; flex-direction: column; align-items: center;
+            min-width: 75px; max-width: 110px; /* Обмеження ширини */
+            padding: 10px 5px; /* Менші відступи по боках */
+            display: flex; flex-direction: column; align-items: center;
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
-            color: #555; transition: 0.2s; flex-shrink: 0; cursor: pointer;
+            color: #555; transition: 0.2s; flex-shrink: 0;
         }
-        .day-tab span { font-weight: 800; font-size: 1rem; font-family: var(--font-ui); pointer-events: none; }
-        .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; pointer-events: none; }
+        .day-tab span { 
+            font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); 
+            width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            pointer-events: none; 
+        }
+        .day-tab small { 
+            font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; 
+            width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            pointer-events: none; 
+        }
         
         .day-tab.active {
             border-color: var(--theme); color: #000; background: var(--theme);
@@ -470,16 +480,16 @@
 
     <div class="day-bar" id="dayBar"></div>
     
-        <div class="day-control-panel">
-        <div class="day-title-box">
-            <div class="day-title-main-wrapper">
-                <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
-                <div class="edit-icon-btn" onclick="App.promptRenameDay()">✎</div>
+        <div class="day-control-panel" style="align-items: flex-start;">
+        <div class="day-title-box" style="flex:1; min-width:0; flex-direction:column; align-items:flex-start; gap:6px;">
+            <div style="display:flex; align-items:center; gap:10px; width:100%; min-width:0;">
+                <h2 class="day-title-display" id="currentDayTitleMain" style="flex:1; min-width:0; margin:0; font-size:1.8rem; font-weight:900; color:#fff; letter-spacing:-0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">День</h2>
+                <div class="edit-icon-btn" onclick="App.promptRenameDay()" style="background:rgba(212, 175, 55, 0.1); border:1px solid rgba(212, 175, 55, 0.2); border-radius:8px; width:34px; min-width:34px; height:34px; max-height:34px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--theme); cursor:pointer;">✎</div>
             </div>
-            <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
+            <div id="currentDaySubtitle" style="font-size:0.75rem; color:var(--theme); font-family:var(--font-mono); font-weight:800; letter-spacing:1px; text-transform:uppercase; background: rgba(212, 175, 55, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2); display:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">Підпис</div>
         </div>
         
-        <div class="day-action-buttons">
+        <div style="display:flex; gap:8px; flex-shrink:0; align-items: flex-start; margin-top: 4px;">
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
              <button class="btn-mini" onclick="App.deleteDay()" style="border-color:rgba(239, 68, 68, 0.4); color:var(--danger)">🗑</button>
         </div>
