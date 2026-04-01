@@ -2086,19 +2086,25 @@ const App = {
         const phase = this.data.phases[pIdx]; 
         const lastWeek = phase.weeks[phase.weeks.length - 1]; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
+        
         const copyOfLastWeek = JSON.parse(JSON.stringify(this.data.schedule[lastWeek]));
         
+        // Зсуваємо розклад і нотатки ВПЕРЕД
         for(let w = maxW; w > lastWeek; w--) { 
             this.data.schedule[w+1] = this.data.schedule[w]; 
             this.data.notes[w+1] = this.data.notes[w]; 
         } 
         
         this.data.schedule[lastWeek + 1] = copyOfLastWeek;
+        this.data.notes[lastWeek + 1] = ""; // Пуста нотатка для нового тижня
+        
         await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
         phase.weeks.push(lastWeek + 1); 
+        
         for(let i = pIdx + 1; i < this.data.phases.length; i++) {
             this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + 1);
         }
+        
         this.save(); 
         this.refreshPhotos(); 
         this.renderNav(); 
@@ -2116,9 +2122,11 @@ const App = {
         const phase = this.data.phases[0];
         
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
+        // Зсуваємо розклад і нотатки ВПЕРЕД
         for(let w = maxW; w >= 1; w--) {
             this.data.schedule[w+1] = this.data.schedule[w];
             this.data.notes[w+1] = this.data.notes[w];
+        }
         
         this.data.schedule[1] = [[],[],[],[],[],[],[]];
         this.data.notes[1] = "";
@@ -2135,26 +2143,40 @@ const App = {
         d.setDate(d.getDate() - 7);
         this.data.startDate = d.toISOString().split('T')[0];
         
-        this.save(); this.refreshPhotos(); this.renderNav(); this.renderView();
+        this.save(); 
+        this.refreshPhotos(); 
+        this.renderNav(); 
+        this.renderView();
     },
 
     async removePhaseWeek(pId) { 
         const pIdx = this.data.phases.findIndex(p => p.id === pId); 
         const phase = this.data.phases[pIdx]; 
         if(phase.weeks.length <= 1) return await Modal.alert("Фаза повинна мати мінімум 1 тиждень!", "ПОМИЛКА", "red"); 
+        
         this.pushHistory(); 
+        
         const lastWeek = phase.weeks[phase.weeks.length - 1]; 
         delete this.data.schedule[lastWeek]; 
         phase.weeks.pop(); 
+        
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
+        
+        // Зсуваємо розклад і нотатки НАЗАД
         for(let w = lastWeek; w < maxW; w++) { 
             this.data.schedule[w] = this.data.schedule[w+1]; 
             this.data.notes[w] = this.data.notes[w+1]; 
+        } 
+        
         delete this.data.schedule[maxW]; 
+        delete this.data.notes[maxW];
+        
         for(let i = pIdx + 1; i < this.data.phases.length; i++) {
              this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - 1); 
         }
+        
         await PhotoDB.shiftWeeks(lastWeek + 1, -1);
+        
         this.save(); 
         this.refreshPhotos(); 
         this.renderNav(); 
@@ -2180,13 +2202,22 @@ const App = {
         const len = p.weeks.length; 
         const start = p.weeks[0]; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
+        
+        // Зсуваємо розклад і нотатки НАЗАД
         for(let w = start; w <= maxW - len; w++) { 
             this.data.schedule[w] = this.data.schedule[w+len]; 
             this.data.notes[w] = this.data.notes[w+len]; 
         } 
-        for(let i=0; i<len; i++) delete this.data.schedule[maxW-i]; 
+        for(let i=0; i<len; i++) {
+            delete this.data.schedule[maxW-i];
+            delete this.data.notes[maxW-i];
+        }
+        
         this.data.phases.splice(pIdx, 1); 
-        for(let i = pIdx; i < this.data.phases.length; i++) this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - len); 
+        for(let i = pIdx; i < this.data.phases.length; i++) {
+            this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - len); 
+        }
+        
         this.save(); 
         this.renderNav(); 
         this.setPhase(this.data.phases[0]?.id || 1); 
@@ -2256,6 +2287,7 @@ const App = {
         const duration = 4; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number), 0);
 
+        // Зсуваємо розклад і нотатки ВПЕРЕД на 4 тижні
         for (let w = maxW; w >= startWeek; w--) {
             this.data.schedule[w + duration] = this.data.schedule[w];
             this.data.notes[w + duration] = this.data.notes[w];
@@ -2265,6 +2297,7 @@ const App = {
 
         for (let i = 0; i < duration; i++) {
             this.data.schedule[startWeek + i] = [[],[],[],[],[],[],[]];
+            this.data.notes[startWeek + i] = "";
         }
 
         await PhotoDB.shiftWeeks(startWeek, duration);
