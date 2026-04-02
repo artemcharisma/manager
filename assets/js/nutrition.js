@@ -331,7 +331,7 @@ const App = {
     getWaterFromInputs() {
         const l = parseInt(document.getElementById('inpWaterL').value) || 0;
         const ml = parseInt(document.getElementById('inpWaterMl').value) || 0;
-        return l + (ml / 1000); // Правильна математика: 2л і 500мл = 2.5
+        return l + (ml / 1000); // Тепер 2 л і 50 мл = 2.05
     },
 
     editWater() {
@@ -347,6 +347,7 @@ const App = {
         const ml = Math.round((w - l) * 1000);
         
         document.getElementById('inpWaterL').value = l === 0 ? '' : l;
+        document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
         
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
@@ -575,8 +576,8 @@ const App = {
             if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
         }
         
-        const dispT = document.getElementById('disp-target');
-        if(dispT) dispT.innerText = tg.k;
+        const dispW = document.getElementById('disp-w');
+        if(dispW) dispW.innerText = (day.water || 0).toFixed(2); // Показуємо 2 знаки (напр. 2.50)
 
         // ОНОВЛЕННЯ ЕЛЕКТРОЛІТІВ (якщо є елементи в UI для їх показу, інакше просто зберігаємо в об'єкті)
         const dispNa = document.getElementById('disp-na');
@@ -980,7 +981,11 @@ const App = {
         const weight = GlobalVitals.getLatestWeight();
         if (!weight) return;
 
-        // БАЗА ДЛЯ БОДІБІЛДИНГУ:
+        // ЖОРСТКА БАЗА ДЛЯ БОДІБІЛДИНГУ:
+        // Білок: 2.5г на 1кг
+        // Жири: 0.8г на 1кг
+        // Вуглеводи: 3.5г на 1кг (база, потім коригується пресетами)
+        
         const p = Math.round(weight * 2.5);
         const f = Math.round(weight * 0.8);
         const c = Math.round(weight * 3.5);
