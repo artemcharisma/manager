@@ -490,7 +490,7 @@
         <div class="day-control-panel">
         <div class="day-title-box">
             <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
-            ="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
+            <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
         </div>
         
         <div class="day-action-buttons">
@@ -638,11 +638,11 @@
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; font-family:var(--font-mono); letter-spacing:0.5px;">
-            Прив'яжіть створені етапи до днів тижня. Додаток автоматично завантажить потрібний раціон сьогодні.
+        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; font-family:var(--font-mono); letter-spacing:0.5px; text-align:center;">
+            Прив'яжіть створені етапи до днів тижня. Додаток автоматично завантажить потрібний раціон.
         </div>
         
-        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-bottom:10px;"></div>
         
         <button class="btn-primary" style="margin-top:20px;" onclick="App.saveSchedule()">ЗБЕРЕГТИ РОЗКЛАД</button>
     </div>
