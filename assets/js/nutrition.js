@@ -991,7 +991,7 @@ const App = {
         this.calcTargetKcal();
         
         if(window.Haptics) window.Haptics.success();
-    },,
+    },
 
     calcTargetKcal() {
         const p = parseFloat(document.getElementById('tgP').value)||0;
