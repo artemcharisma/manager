@@ -346,6 +346,9 @@ const App = {
         document.getElementById('inpWaterL').value = parts[0] === '0' ? '' : parts[0];
         document.getElementById('inpWaterMl').value = parts[1] === '00' ? '' : parts[1];
         
+        document.getElementById('inpSodium').value = day.na || '';
+        document.getElementById('inpPotassium').value = day.k_el || '';
+        
         document.getElementById('waterModal').style.display = 'flex';
     },
     
@@ -364,8 +367,13 @@ const App = {
     saveWater() {
         const day = this.getCurrentDay();
         const val = this.getWaterFromInputs();
+        const na = parseInt(document.getElementById('inpSodium').value) || 0;
+        const k_el = parseInt(document.getElementById('inpPotassium').value) || 0;
+
         this.pushHistory();
         day.water = val;
+        day.na = na;
+        day.k_el = k_el;
         
         this.save();
         this.updateStats();
@@ -566,10 +574,11 @@ const App = {
         const dispT = document.getElementById('disp-target');
         if(dispT) dispT.innerText = tg.k;
 
-        // ОНОВЛЕННЯ ВОДИ
-        const dispW = document.getElementById('disp-w');
-        if(dispW) dispW.innerText = (day.water || 0).toFixed(1);
-
+        // ОНОВЛЕННЯ ЕЛЕКТРОЛІТІВ (якщо є елементи в UI для їх показу, інакше просто зберігаємо в об'єкті)
+        const dispNa = document.getElementById('disp-na');
+        const dispK_el = document.getElementById('disp-k-el');
+        if(dispNa) dispNa.innerText = day.na || 0;
+        if(dispK_el) dispK_el.innerText = day.k_el || 0;
         // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
         let pPct = 0, fPct = 0, cPct = 0;
@@ -921,7 +930,6 @@ const App = {
         this.lockScroll(); 
         this.toggleFab(false); 
         
-        // Читаємо цілі поточного дня
         const day = this.getCurrentDay();
         const t = day.targets || this.data.targets;
         
@@ -929,8 +937,61 @@ const App = {
         document.getElementById('tgF').value = t.f;
         document.getElementById('tgC').value = t.c;
         document.getElementById('tgK').value = t.k;
+
+        // ПЕРЕВІРКА ГЛОБАЛЬНОЇ ВАГИ
+        if (typeof GlobalVitals !== 'undefined') {
+            const weight = GlobalVitals.getLatestWeight();
+            const btn = document.getElementById('weightAutoCalcBtn');
+            const span = document.getElementById('calcWeightSpan');
+            if (weight && btn && span) {
+                span.innerText = weight;
+                btn.style.display = 'block';
+            } else if (btn) {
+                btn.style.display = 'none';
+            }
+        }
+
         document.getElementById('targetsModal').style.display='flex';
     },
+
+    applyPreset(type) {
+        let p = parseInt(document.getElementById('tgP').value) || 200; // Беремо поточні білки як базу
+        let f = parseInt(document.getElementById('tgF').value) || 80;
+        let c = 0;
+
+        switch(type) {
+            case 'high': c = 400; break;
+            case 'med': c = 250; break;
+            case 'low': c = 100; break;
+            case 'zero': c = 30; break; // Слідові з овочів
+        }
+
+        document.getElementById('tgC').value = c;
+        this.calcTargetKcal();
+        if(window.Haptics) window.Haptics.light();
+    },
+
+    calcFromWeight() {
+        if (typeof GlobalVitals === 'undefined') return;
+        const weight = GlobalVitals.getLatestWeight();
+        if (!weight) return;
+
+        // ЖОРСТКА БАЗА ДЛЯ БОДІБІЛДИНГУ:
+        // Білок: 2.5г на 1кг
+        // Жири: 0.8г на 1кг
+        // Вуглеводи: 3.5г на 1кг (база, потім коригується пресетами)
+        
+        const p = Math.round(weight * 2.5);
+        const f = Math.round(weight * 0.8);
+        const c = Math.round(weight * 3.5);
+
+        document.getElementById('tgP').value = p;
+        document.getElementById('tgF').value = f;
+        document.getElementById('tgC').value = c;
+        this.calcTargetKcal();
+        
+        if(window.Haptics) window.Haptics.success();
+    },,
 
     calcTargetKcal() {
         const p = parseFloat(document.getElementById('tgP').value)||0;
