@@ -67,6 +67,7 @@ const App = {
         
         this.setupHardReset();
         this.render();
+        document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
     },
     setupHardReset() {
         const brandBlock = document.getElementById('brandBlock');
@@ -84,6 +85,27 @@ const App = {
                 location.reload();
             }
         };
+    },
+    // НОВА ФУНКЦІЯ: Обробка Enter для ВСІХ модалок
+    handleGlobalKeydown(e) {
+        if (e.key === 'Enter') {
+            const isVisible = (id) => {
+                const el = document.getElementById(id);
+                return el && window.getComputedStyle(el).display !== 'none';
+            };
+            
+            if (isVisible('dayEditModal')) { e.preventDefault(); this.saveDayName(); }
+            else if (isVisible('scheduleModal')) { e.preventDefault(); this.saveSchedule(); }
+            else if (isVisible('waterModal')) { e.preventDefault(); this.saveWater(); }
+            else if (isVisible('targetsModal')) { e.preventDefault(); this.saveTargets(); }
+            else if (isVisible('foodModal')) { 
+                // Не зберігаємо на Enter, якщо ми просто вводимо назву для пошуку продукту
+                if(document.activeElement && document.activeElement.id !== 'inpName') {
+                    e.preventDefault(); this.saveFood(); 
+                }
+            }
+            else if (isVisible('bankEditModal')) { e.preventDefault(); this.saveBankItem(); }
+        }
     },
 
     toggleFab(show) {
@@ -213,21 +235,22 @@ const App = {
     },
 
     promptRenameDay() {
+        if(document.activeElement) document.activeElement.blur(); // Жорстко ховаємо клавіатуру
+        
         const day = this.getCurrentDay();
         if(!day) return;
+        
         this.lockScroll();
         this.toggleFab(false);
         
         let title = day.name;
         let sub = "";
         
-        // Читаємо новий формат "Назва|Підпис" або парсимо старий "Назва Підпис"
         if (day.name.includes('|')) {
             const parts = day.name.split('|');
             title = parts[0];
             sub = parts[1] || "";
         } else {
-            // Якщо це формат без |, то вся назва йде в головний тайтл
             title = day.name;
             sub = "";
         }
@@ -235,8 +258,10 @@ const App = {
         document.getElementById('inpDayTitle').value = title;
         document.getElementById('inpDaySub').value = sub;
         document.getElementById('dayEditModal').style.display = 'flex';
+        
+        // Плавний автофокус на поле вводу
+        setTimeout(() => document.getElementById('inpDayTitle').focus(), 150);
     },
-
     saveDayName() {
         const day = this.getCurrentDay();
         const t = document.getElementById('inpDayTitle').value.trim();
@@ -255,11 +280,13 @@ const App = {
     },
 
     openSchedule() {
-        if(document.activeElement) document.activeElement.blur();
+        if(document.activeElement) document.activeElement.blur(); // Жорстко ховаємо клавіатуру
         this.lockScroll();
         this.toggleFab(false);
         
         const container = document.getElementById('scheduleContainer');
+        if(!container) return; // Захист від помилки DOM
+        
         const daysOfWeek = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота', 'Неділя'];
         let html = '';
         const schedule = this.data.schedule || {};
@@ -268,10 +295,8 @@ const App = {
             const dayNum = (idx + 1).toString();
             const selectedId = schedule[dayNum] || '';
 
-            // Формуємо список створених днів для випадаючого меню
             let options = `<option value="">-- Вільно --</option>`;
             this.data.days.forEach(d => {
-                // ФІКС: Порівнюємо як рядки String()
                 const isSelected = String(d.id) === String(selectedId) ? 'selected' : '';
                 let t = d.name.includes('|') ? d.name.replace('|', ' (') + ')' : d.name;
                 options += `<option value="${d.id}" ${isSelected}>${t}</option>`;
