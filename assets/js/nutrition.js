@@ -329,9 +329,9 @@ const App = {
     },
 
     getWaterFromInputs() {
-        const l = document.getElementById('inpWaterL').value || '0';
-        const ml = document.getElementById('inpWaterMl').value || '0';
-        return parseFloat(l + '.' + ml);
+        const l = parseInt(document.getElementById('inpWaterL').value) || 0;
+        const ml = parseInt(document.getElementById('inpWaterMl').value) || 0;
+        return l + (ml / 1000); // Правильна математика: 2л і 500мл = 2.5
     },
 
     editWater() {
@@ -341,10 +341,13 @@ const App = {
         
         const day = this.getCurrentDay();
         const w = day.water || 0;
-        const parts = w.toFixed(2).split('.');
         
-        document.getElementById('inpWaterL').value = parts[0] === '0' ? '' : parts[0];
-        document.getElementById('inpWaterMl').value = parts[1] === '00' ? '' : parts[1];
+        // Правильно розбиваємо збережене значення на L та ml
+        const l = Math.floor(w);
+        const ml = Math.round((w - l) * 1000);
+        
+        document.getElementById('inpWaterL').value = l === 0 ? '' : l;
+        document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
         
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
@@ -357,9 +360,11 @@ const App = {
         current += amount;
         if (current < 0) current = 0;
         
-        const parts = current.toFixed(2).split('.');
-        document.getElementById('inpWaterL').value = parts[0] === '0' ? '' : parts[0];
-        document.getElementById('inpWaterMl').value = parts[1] === '00' ? '' : parts[1];
+        const l = Math.floor(current);
+        const ml = Math.round((current - l) * 1000);
+        
+        document.getElementById('inpWaterL').value = l === 0 ? '' : l;
+        document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
         
         if(window.Haptics) window.Haptics.light();
     },
@@ -976,11 +981,7 @@ const App = {
         const weight = GlobalVitals.getLatestWeight();
         if (!weight) return;
 
-        // ЖОРСТКА БАЗА ДЛЯ БОДІБІЛДИНГУ:
-        // Білок: 2.5г на 1кг
-        // Жири: 0.8г на 1кг
-        // Вуглеводи: 3.5г на 1кг (база, потім коригується пресетами)
-        
+        // БАЗА ДЛЯ БОДІБІЛДИНГУ:
         const p = Math.round(weight * 2.5);
         const f = Math.round(weight * 0.8);
         const c = Math.round(weight * 3.5);
