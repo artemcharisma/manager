@@ -610,20 +610,34 @@
     </div>
 </div>
 
-<div id="targetsModal" class="modal-overlay">
-    <div class="modal-card">
-        <div class="mc-header">
-            <h3 class="mc-title">ЦІЛЬОВЕ КБЖВ (ДЕНЬ)</h3>
-            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+<div class="modal-overlay" id="targetsModal">
+    <div class="modal">
+        <h3>🎯 ЦІЛІ ДНЯ</h3>
+        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Макроси для поточного дня</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
+            <button class="btn-ghost" style="font-size:0.75rem; padding:8px;" onclick="App.applyPreset('high')">HIGH CARB (Наповнення)</button>
+            <button class="btn-ghost" style="font-size:0.75rem; padding:8px;" onclick="App.applyPreset('med')">MED CARB (База)</button>
+            <button class="btn-ghost" style="font-size:0.75rem; padding:8px;" onclick="App.applyPreset('low')">LOW CARB (Дефіцит)</button>
+            <button class="btn-ghost" style="font-size:0.75rem; padding:8px;" onclick="App.applyPreset('zero')">ZERO CARB (Яма)</button>
         </div>
-        <div class="stats-grid">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input id="tgP" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input id="tgF" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input id="tgC" type="number" inputmode="decimal" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label>ККАЛ</label><input id="tgK" type="number" inputmode="decimal"></div>
+
+        <div id="weightAutoCalcBtn" style="background: rgba(212, 175, 55, 0.1); border: 1px dashed var(--theme); color: var(--theme); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; cursor: pointer; font-weight: bold; font-size: 0.8rem; display:none;" onclick="App.calcFromWeight()">
+            🤖 АВТОРОЗРАХУНОК ПО ВАЗІ (<span id="calcWeightSpan"></span> кг)
         </div>
-        <button class="btn-primary" onclick="App.saveTargets()">ОНОВИТИ ДЛЯ ЦЬОГО ДНЯ</button>
-        <button class="btn-sync" onclick="App.applyTargetsToAll()">⟳ СИНХРОНІЗУВАТИ НА ВСІ ДНІ</button>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+            <div><label>Білки (г)</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div><label>Жири (г)</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div><label>Вуглеводи (г)</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div><label>ККАЛ (Авто)</label><input type="number" id="tgK" inputmode="numeric"></div>
+        </div>
+        
+        <div style="display:flex; gap:10px;">
+            <button class="btn-action" style="background:#2a2a2a; color:#fff" onclick="App.closeModal()">Скасувати</button>
+            <button class="btn-action" onclick="App.saveTargets()">Зберегти</button>
+        </div>
+        <button class="btn-ghost" style="margin-top:15px; border-color:#444; color:#888;" onclick="App.applyTargetsToAll()">Застосувати до всіх днів</button>
     </div>
 </div>
 
