@@ -347,7 +347,6 @@ const App = {
         const ml = Math.round((w - l) * 1000);
         
         document.getElementById('inpWaterL').value = l === 0 ? '' : l;
-        document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
         
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
