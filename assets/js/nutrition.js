@@ -968,19 +968,6 @@ const App = {
         document.getElementById('tgC').value = t.c;
         document.getElementById('tgK').value = t.k;
 
-        // ПЕРЕВІРКА ГЛОБАЛЬНОЇ ВАГИ
-        if (typeof GlobalVitals !== 'undefined') {
-            const weight = GlobalVitals.getLatestWeight();
-            const btn = document.getElementById('weightAutoCalcBtn');
-            const span = document.getElementById('calcWeightSpan');
-            if (weight && btn && span) {
-                span.innerText = weight;
-                btn.style.display = 'block';
-            } else if (btn) {
-                btn.style.display = 'none';
-            }
-        }
-
         document.getElementById('targetsModal').style.display='flex';
     },
 
@@ -1000,7 +987,6 @@ const App = {
         this.calcTargetKcal();
         if(window.Haptics) window.Haptics.light();
     },
-
     calcFromWeight() {
         if (typeof GlobalVitals === 'undefined') return;
         const weight = GlobalVitals.getLatestWeight();
