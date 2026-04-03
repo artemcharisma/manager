@@ -662,10 +662,6 @@
             <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('zero')">ZERO CARB (Яма)</button>
         </div>
 
-        <div id="weightAutoCalcBtn" style="background: rgba(212, 175, 55, 0.1); border: 1px dashed var(--theme); color: var(--theme); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px; cursor: pointer; font-weight: bold; font-size: 0.8rem; display:none;" onclick="App.calcFromWeight()">
-            🤖 АВТОРОЗРАХУНОК ПО ВАЗІ (<span id="calcWeightSpan"></span> кг)
-        </div>
-
         <div class="stats-grid" style="margin-bottom:20px;">
             <div class="stat-box"><label class="color-p">БІЛ</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
             <div class="stat-box"><label class="color-f">ЖИР</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
@@ -681,38 +677,45 @@
 <div class="modal-overlay" id="waterModal">
     <div class="modal-card">
         <div class="mc-header">
-            <h3 class="mc-title">💧 БАЛАНС</h3>
+            <h3 class="mc-title" style="display:flex; align-items:center; gap:6px;"><span style="font-size:1.2rem; line-height:1;">💧</span> БАЛАНС</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
-        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Контроль набряклості та наповненості</p>
+        <p style="text-align:center; color:#888; font-size:0.75rem; margin-bottom:20px; text-transform:uppercase; letter-spacing:1px;">Гідратація та електроліти</p>
         
-        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:20px;">
-            <input type="number" id="inpWaterL" inputmode="numeric" placeholder="0" class="inp-main" style="width:80px; text-align:center; font-size:1.5rem;">
-            <span style="font-size:1.2rem; color:var(--text-dim)">L</span>
-            <input type="number" id="inpWaterMl" inputmode="numeric" placeholder="00" class="inp-main" style="width:80px; text-align:center; font-size:1.5rem;">
-            <span style="font-size:1.2rem; color:var(--text-dim)">ml</span>
+        <div style="display:flex; justify-content:center; align-items:baseline; gap:10px; margin-bottom:15px;">
+            <input type="number" id="inpWaterL" inputmode="numeric" placeholder="0" class="inp-main" style="width:80px; text-align:center; font-size:1.8rem; font-weight:800; padding:10px;">
+            <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">L</span>
+            <input type="number" id="inpWaterMl" inputmode="numeric" placeholder="00" class="inp-main" style="width:80px; text-align:center; font-size:1.8rem; font-weight:800; padding:10px;">
+            <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">ml</span>
         </div>
         
-        <div style="display:flex; gap:10px; margin-bottom:25px;">
-            <button class="btn-action" style="flex:1; border-radius:8px;" onclick="App.adjustWater(0.25)">+250</button>
-            <button class="btn-action" style="flex:1; border-radius:8px;" onclick="App.adjustWater(0.50)">+500</button>
-            <button class="btn-action" style="flex:1; border-radius:8px;" onclick="App.adjustWater(1.00)">+1L</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+            <button class="btn-action" style="padding:10px; border-radius:8px;" onclick="App.adjustWater(0.25)">+250 ml</button>
+            <button class="btn-action" style="padding:10px; border-radius:8px;" onclick="App.adjustWater(0.50)">+500 ml</button>
+            <button class="btn-action" style="padding:10px; border-radius:8px;" onclick="App.adjustWater(1.00)">+1 L</button>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:25px;">
+            <button class="btn-action" style="padding:10px; border-radius:8px; opacity:0.6;" onclick="App.adjustWater(-0.25)">-250 ml</button>
+            <button class="btn-action" style="padding:10px; border-radius:8px; opacity:0.6;" onclick="App.adjustWater(-0.50)">-500 ml</button>
+            <button class="btn-action" style="padding:10px; border-radius:8px; opacity:0.6;" onclick="App.adjustWater(-1.00)">-1 L</button>
         </div>
 
-        <h4 style="color:#fff; font-size:0.9rem; margin-bottom:10px; text-align:center; border-bottom:1px dashed #333; padding-bottom:5px;">⚖️ ЕЛЕКТРОЛІТИ (mg)</h4>
+        <h4 style="color:#fff; font-size:0.85rem; margin-bottom:15px; text-align:center; border-bottom:1px dashed #333; padding-bottom:5px; letter-spacing:1px;">⚖️ МІНЕРАЛИ</h4>
         
-        <div style="display:flex; gap:15px; justify-content:center; margin-bottom:20px;">
-            <div style="flex:1;">
+        <div style="display:flex; gap:15px; justify-content:center; margin-bottom:25px;">
+            <div style="flex:1; position:relative;">
                 <label style="color:#888; font-size:0.7rem; font-weight:bold; display:block; margin-bottom:5px; text-align:center;">НАТРІЙ (Na)</label>
-                <input type="number" id="inpSodium" inputmode="numeric" placeholder="-" class="inp-main" style="text-align:center; font-size:1.2rem;">
+                <input type="number" id="inpSodium" inputmode="numeric" placeholder="0" class="inp-main" style="text-align:center; font-size:1.2rem; padding-right:30px;">
+                <span style="position:absolute; right:10px; bottom:16px; color:#555; font-size:0.8rem; font-weight:bold; pointer-events:none;">mg</span>
             </div>
-            <div style="flex:1;">
+            <div style="flex:1; position:relative;">
                 <label style="color:#888; font-size:0.7rem; font-weight:bold; display:block; margin-bottom:5px; text-align:center;">КАЛІЙ (K)</label>
-                <input type="number" id="inpPotassium" inputmode="numeric" placeholder="-" class="inp-main" style="text-align:center; font-size:1.2rem;">
+                <input type="number" id="inpPotassium" inputmode="numeric" placeholder="0" class="inp-main" style="text-align:center; font-size:1.2rem; padding-right:30px;">
+                <span style="position:absolute; right:10px; bottom:16px; color:#555; font-size:0.8rem; font-weight:bold; pointer-events:none;">mg</span>
             </div>
         </div>
 
-        <button class="btn-primary" onclick="App.saveWater()">ЗБЕРЕГТИ</button>
+        <button class="btn-primary" onclick="App.saveWater()">ЗБЕРЕГТИ БАЛАНС</button>
     </div>
 </div>
 <script src="assets/js/utils.js"></script>  
