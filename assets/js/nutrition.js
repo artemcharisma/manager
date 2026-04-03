@@ -601,9 +601,13 @@ const App = {
             if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
         }
         
+        // --- ВІДНОВЛЕНИЙ КОД: ОНОВЛЕННЯ ЦІЛІ НА ЕКРАНІ ---
+        const dispT = document.getElementById('disp-target');
+        if(dispT) dispT.innerText = tg.k;
+        // -------------------------------------------------
+        
         const dispW = document.getElementById('disp-w');
         if(dispW) dispW.innerText = (day.water || 0).toFixed(2); // Показуємо 2 знаки (напр. 2.50)
-
         // ОНОВЛЕННЯ ЕЛЕКТРОЛІТІВ (якщо є елементи в UI для їх показу, інакше просто зберігаємо в об'єкті)
         const dispNa = document.getElementById('disp-na');
         const dispK_el = document.getElementById('disp-k-el');
