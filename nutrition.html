@@ -64,22 +64,9 @@
         }
 
         /* 3. ПАЛЕЦЬ (Тільки на реальних кнопках і клікабельних рядках) */
-        button, 
-        select, 
-        label, 
-        a, 
-        input[type="checkbox"],
-        [class*="btn"],  
-        .day-tab,        
-        .mh-del,         
-        .target-badge,   
-        .water-badge,
-        .food-row,       
-        .bank-row,       
-        .sugg-item,      
-        .sys-card, 
-        .sys-close, 
-        .mc-header span  
+        button, select, label, a, input[type="checkbox"], [class*="btn"],  
+        .day-tab, .mh-del, .target-badge, .water-badge, .food-row,       
+        .bank-row, .sugg-item, .sys-card, .sys-close, .mc-header span  
         {
             cursor: pointer !important;
         }
@@ -92,18 +79,14 @@
             padding-bottom: 80px;
         }
 
-        .app-container { width: 100%; max-width: 800px; margin: 0 auto; }
+        .app-container { width: 100%; max-width: 800px; margin: 0 auto; position: relative; }
 
         /* --- 2. HEADER --- */
         header {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            padding-bottom: 15px; 
-            margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 15px; margin-bottom: 20px;
             border-bottom: 1px solid var(--border);
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 15px; flex-wrap: wrap;
         }
         
         .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -114,20 +97,12 @@
             border-radius: 12px; display: flex; align-items: center; justify-content: center; 
             font-size: 22px; 
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
-            transition: transform 0.2s ease;
-            cursor: pointer; 
+            transition: transform 0.2s ease; cursor: pointer; 
         }
         
         .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
+        .brand-text span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
         
-        .brand-text span { 
-            font-size: 0.7rem; 
-            color: var(--text-muted); 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            display: block; 
-        }
         .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
         .icon-btn {
             width: 38px; height: 38px; border-radius: 10px; 
@@ -137,17 +112,13 @@
         }
         .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
-                /* --- 3. DAY NAVIGATION --- */
+        /* --- 3. DAY NAVIGATION --- */
         .day-bar {
             display: flex; overflow-x: auto; gap: 8px; 
-            padding: 10px 10px 20px 10px; 
-            margin-bottom: 0; 
-            scrollbar-width: thin;
-            scrollbar-color: var(--theme) transparent;
-            margin-left: -10px; margin-right: -10px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-x;
+            padding: 10px 10px 20px 10px; margin-bottom: 0; 
+            scrollbar-width: thin; scrollbar-color: var(--theme) transparent;
+            margin-left: -10px; margin-right: -10px; scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch; touch-action: pan-x;
         }
         .day-bar::-webkit-scrollbar { height: 4px; display: block; }
         .day-bar::-webkit-scrollbar-track { background: transparent; }
@@ -155,30 +126,17 @@
         .day-bar:hover::-webkit-scrollbar-thumb { background: var(--theme); }
 
         .day-tab {
-            min-width: 75px; max-width: 110px; 
-            padding: 8px 5px; /* Зменшили відступи, щоб звільнити місце */
-            min-height: 56px; /* ЖОРСТКА ВИСОТА: всі таби будуть однаковими */
-            display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; /* ІДЕАЛЬНЕ ЦЕНТРУВАННЯ по вертикалі */
+            min-width: 75px; max-width: 110px; padding: 8px 5px; min-height: 56px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
             border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
             color: #555; transition: 0.2s; flex-shrink: 0; cursor: pointer;
         }
-        .day-tab span { 
-            font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); 
-            width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            pointer-events: none; 
-        }
-        .day-tab small { 
-            font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; 
-            width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            pointer-events: none; 
-        }
+        .day-tab span { font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
         
         .day-tab.active {
             border-color: var(--theme); color: #000; background: var(--theme);
-            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2);
-            transform: translateY(-3px);
-            z-index: 2;
+            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2); transform: translateY(-3px); z-index: 2;
         }
         .day-tab.active span { color: #000; }
         .day-tab.active small { color: rgba(0,0,0,0.7); }
@@ -190,22 +148,9 @@
         .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
 
         /* --- ШАПКА ДНЯ ТА КНОПКИ ДІЙ --- */
-        .day-control-panel { 
-            display: flex; justify-content: space-between; padding: 0 5px 15px 5px; 
-            align-items: flex-start; gap: 15px; /* Захисний відступ між текстом і кнопками */
-        }
-        
-        .day-title-box { 
-            display: flex; flex-direction: column; align-items: flex-start; gap: 6px; 
-            flex: 1; min-width: 0; 
-        }
-        
-        .day-title-display { 
-            font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1;
-            width: 100%; /* Дозволяє тексту стискатись */
-        }
-        
+        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: flex-start; gap: 15px; }
+        .day-title-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; flex: 1; min-width: 0; }
+        .day-title-display { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1; width: 100%; }
         .day-subtitle-display {
             font-size: 0.75rem; color: var(--theme); font-family: var(--font-mono); font-weight: 800;
             letter-spacing: 1px; text-transform: uppercase; background: rgba(212, 175, 55, 0.1);
@@ -213,12 +158,8 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
         }
 
-        /* КОНТЕЙНЕР ДЛЯ ВСІХ ТРЬОХ КНОПОК */
-        .day-action-buttons {
-            display: flex; gap: 8px; flex-shrink: 0; align-items: center; margin-top: 4px;
-        }
+        .day-action-buttons { display: flex; gap: 8px; flex-shrink: 0; align-items: center; margin-top: 4px; }
 
-        /* УНІВЕРСАЛЬНА КНОПКА */
         .btn-mini { 
             background: #111; border: 1px solid #333; color: #888; 
             font-size: 0.7rem; padding: 0 12px; border-radius: 8px; font-weight: 700;
@@ -226,20 +167,12 @@
             height: 32px; display: flex; align-items: center; justify-content: center;
         }
         .btn-mini:active { background: #333; color: #fff; transform: scale(0.95); }
-        
-        /* СПЕЦІАЛЬНИЙ СТИЛЬ ДЛЯ ОЛІВЦЯ ТА СМІТНИКА (Квадратні) */
-        .btn-mini.icon-only {
-            width: 32px; padding: 0; font-size: 1.1rem;
-        }
-        .btn-mini.edit-day {
-            color: var(--theme); background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.3);
-        }
+        .btn-mini.icon-only { width: 32px; padding: 0; font-size: 1.1rem; }
+        .btn-mini.edit-day { color: var(--theme); background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.3); }
         .btn-mini.edit-day:active { background: rgba(212, 175, 55, 0.2); }
-        
-        .btn-mini.del-day {
-            color: var(--danger); border-color: rgba(239, 68, 68, 0.4); 
-        }
+        .btn-mini.del-day { color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
         .btn-mini.del-day:active { background: rgba(239, 68, 68, 0.2); }
+
         /* --- 4. HUD --- */
         .hud {
             background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
@@ -252,11 +185,7 @@
         .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
         .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
 
-        /* ПРО-ВІДЖЕТИ ХЕДЕРА */
-        .hud-badges {
-            display: flex; flex-direction: column; gap: 8px;
-            width: 145px;
-        }
+        .hud-badges { display: flex; flex-direction: column; gap: 8px; width: 145px; }
         .target-badge, .water-badge {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; box-sizing: border-box;
@@ -264,14 +193,9 @@
             padding: 8px 12px; border-radius: 12px; font-family: var(--font-mono); 
             font-size: 0.75rem; color: #888; transition: 0.2s; cursor: pointer;
         }
-        .target-badge span:last-child { color: var(--theme); font-weight: 800; font-size: 0.95rem; }
-        
         .water-badge { background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2); }
-        .water-badge span:last-child { color: var(--p-color); font-weight: 800; font-size: 0.95rem; }
-        
         .target-badge:active, .water-badge:active { transform: scale(0.95); filter: brightness(1.2); }
-        
-        /* Преміальна кнопка синхронізації */
+
         .btn-sync {
             width: 100%; background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), transparent);
             border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme);
@@ -292,14 +216,10 @@
             0% { opacity: 0; transform: translateY(15px) scale(0.96); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .animate-pop {
-            opacity: 0;
-            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
+        .animate-pop { opacity: 0; animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .meal-block { 
             background: var(--bg-panel); border: 1px solid var(--border); 
-            border-radius: 16px; margin-bottom: 20px; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 16px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .meal-header {
             padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -308,10 +228,7 @@
         }
         .mh-del { color: var(--danger); opacity: 0.3; font-size: 16px; padding: 5px; transition: 0.2s; }
         .mh-del:hover { opacity: 1; }
-        .food-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;
-        }
+        .food-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s; }
         .food-row:last-of-type { border-bottom: none; }
         .food-row:active { background: rgba(212, 175, 55, 0.05); }
         
@@ -321,29 +238,18 @@
         .fr-w { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; color: #fff; }
         .fr-k { font-family: var(--font-mono); font-size: 0.7rem; color: #666; margin-top: 2px; }
 
-        .btn-action {
-            width: 100%; padding: 14px; background: #0a0a0a; border: none; border-top: 1px solid var(--border);
-            color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; transition: 0.2s;
-        }
+        .btn-action { width: 100%; padding: 14px; background: #0a0a0a; border: none; border-top: 1px solid var(--border); color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
         .btn-action:active { background: #151515; color: var(--theme); }
-
-        .btn-main-add {
-            width: 100%; padding: 16px; border: 1px dashed #333; border-radius: 14px; 
-            background: transparent; color: #666; font-weight: 700; font-size: 0.9rem;
-            margin-top: 20px; transition: 0.2s;
-        }
+        .btn-main-add { width: 100%; padding: 16px; border: 1px dashed #333; border-radius: 14px; background: transparent; color: #666; font-weight: 700; font-size: 0.9rem; margin-top: 20px; transition: 0.2s; }
         .btn-main-add:active { border-color: var(--theme); color: var(--theme); background: rgba(212, 175, 55, 0.05); }
 
         /* --- 6. ЛОКАЛЬНІ МОДАЛКИ --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; bottom: 0; right: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 9999 !important; 
-            display: none; 
+            z-index: 9999 !important; display: none; 
             align-items: flex-end; justify-content: center;
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; 
+            overflow-y: auto; -webkit-overflow-scrolling: touch; 
         }
         .modal-card {
             background: #121212; width: 100%; max-width: 600px;
@@ -353,10 +259,7 @@
             animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         
-        #waterModal {
-            align-items: flex-start !important; /* Жорстко притискаємо до верху */
-            padding-top: 15vh; /* Робимо відступ зверху, щоб було зручно */
-        }
+        #waterModal { align-items: flex-start !important; padding-top: 15vh; }
         
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
@@ -369,8 +272,6 @@
             .btn-danger:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); box-shadow: 0 4px 15px rgba(239,68,68,0.2); transform: translateY(-2px); }
             .btn-main-add:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--theme); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-2px); }
             .btn-action:hover { background: #151515; color: var(--theme); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-            .target-badge:hover, .water-badge:hover { filter: brightness(1.2); transform: translateY(-1px); }
-            .btn-sync:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
         }
 
         .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
@@ -389,38 +290,26 @@
         .stat-box:focus-within { border-color: #555; }
         .stat-box label { display: block; font-size: 0.65rem; color: #666; font-weight: 700; margin-bottom: 4px; font-family: var(--font-mono); letter-spacing: 1px;}
         .stat-box input { 
-            width: 100%; 
-            background: transparent; 
-            border: none; 
-            color: #fff; 
-            text-align: center; 
-            font-family: var(--font-mono); 
-            font-weight: 700; 
-            font-size: 1.2rem;
-            -webkit-appearance: none;
-            appearance: none;
-            border-radius: 0;
-            padding: 0; margin: 0; display: block; height: 26px; line-height: 26px; 
-            outline: none;
+            width: 100%; background: transparent; border: none; color: #fff; text-align: center; 
+            font-family: var(--font-mono); font-weight: 700; font-size: 1.2rem;
+            -webkit-appearance: none; appearance: none; border-radius: 0;
+            padding: 0; margin: 0; display: block; height: 26px; line-height: 26px; outline: none;
         }
 
         .btn-primary {
             width: 100%; background: var(--theme); color: #000; padding: 16px;
             border-radius: 12px; font-weight: 800; border: none; text-transform: uppercase;
-            margin-top: 10px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); font-family: var(--font-mono); letter-spacing: 1px;
-            transition: 0.2s;
+            margin-top: 10px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); font-family: var(--font-mono); letter-spacing: 1px; transition: 0.2s;
         }
         .btn-primary:active { transform: scale(0.98); background: #fcd34d; }
         
         .btn-danger {
             width: 100%; background: transparent; color: var(--danger); padding: 14px;
             border-radius: 12px; font-weight: 700; border: 1px dashed #333; margin-top: 5px;
-            font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 1px;
-            transition: 0.2s;
+            font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 1px; transition: 0.2s;
         }
         .btn-danger:active { background: rgba(239,68,68,0.1); border-color: var(--danger); }
 
-        /* AUTOCOMPLETE */
         #sugg-list {
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
             margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;
@@ -430,7 +319,6 @@
         .sugg-item:active { background: #333; }
         .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; font-weight: 700; }
 
-        /* OTHERS */
         .color-p { color: var(--p-color) !important; }
         .color-f { color: var(--f-color) !important; }
         .color-c { color: var(--c-color) !important; }
@@ -439,28 +327,9 @@
         .chk-wrap input { accent-color: var(--theme); width: 20px; height: 20px; }
         .chk-wrap label { font-size: 0.9rem; color: #aaa; }
         .bank-list-container { max-height: 60vh; overflow-y: auto; margin-top: 15px; }
-        .bank-row {
-            padding: 14px 0; border-bottom: 1px solid #222; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
+        .bank-row { padding: 14px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
         .bank-row b { display: block; font-size: 1rem; color: #fff; margin-bottom: 4px; }
         .bank-row span { font-family: var(--font-mono); font-size: 0.75rem; color: #666; }
-
-        /* RED ALERT ANIMATION */
-        @keyframes secret-hint {
-            0% { transform: scale(1); }
-            50% { 
-                transform: scale(1.15) rotate(5deg); 
-                background: linear-gradient(135deg, #ef4444, #991b1b);
-                box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
-                border-color: #ef4444;
-                color: #fff;
-            }
-            100% { transform: scale(1); }
-        }
-        .brand-icon.hint-active {
-            animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
 
     </style>
 </head>
@@ -487,7 +356,7 @@
 
     <div class="day-bar" id="dayBar"></div>
     
-        <div class="day-control-panel">
+    <div class="day-control-panel">
         <div class="day-title-box">
             <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
             <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
@@ -510,7 +379,7 @@
             
             <div class="hud-badges">
                 <div class="target-badge" onclick="App.openTargets()">
-                    <span>🎯 ЦІЛЬ:</span> <span><span id="disp-target">2700</span> <small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></span>
+                    <span>🎯 ЦІЛЬ:</span> <span><span id="disp-target">0</span> <small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></span>
                 </div>
                 <div class="water-badge" onclick="App.editWater()">
                     <span>💧 ВОДА:</span> <span><span id="disp-w" style="color:var(--p-color);">0.00</span> <small style="color:#666; font-size:0.65rem; font-weight:700;">L</small></span>
@@ -675,6 +544,7 @@
         <button class="btn-danger" style="color:#888; border-color:#444;" onclick="App.applyTargetsToAll()">ЗАСТОСУВАТИ ДО ВСІХ ДНІВ</button>
     </div>
 </div>
+
 <div class="modal-overlay" id="waterModal">
     <div class="modal-card">
         <div class="mc-header">
@@ -727,6 +597,7 @@
 <div id="undoFloat" onclick="App.undo()">↩</div>
 
 <style>
+/* Стилі для плаваючої кнопки Undo */
 #undoFloat { 
     position: fixed; 
     bottom: 160px; 
