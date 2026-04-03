@@ -610,6 +610,7 @@
         <button class="btn-danger" id="btnDelBank" onclick="App.delFromBank()">ВИДАЛИТИ З БАЗИ</button>
     </div>
 </div>
+
 <div id="dayEditModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -647,6 +648,7 @@
         <button class="btn-primary" style="margin-top:20px;" onclick="App.saveSchedule()">ЗБЕРЕГТИ РОЗКЛАД</button>
     </div>
 </div>
+
 <div class="modal-overlay" id="targetsModal">
     <div class="modal-card">
         <div class="mc-header">
@@ -689,15 +691,15 @@
             <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">ml</span>
         </div>
         
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
-            <button class="btn-action" style="padding:10px; border-radius:8px;" onclick="App.adjustWater(0.25)">+250 ml</button>
-            <button class="btn-action" style="padding:10px; border-radius:8px;" onclick="App.adjustWater(0.50)">+500 ml</button>
-            <button class="btn-action" style="padding:10px; border-radius:8px;" onclick="App.adjustWater(1.00)">+1 L</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px;" onclick="App.adjustWater(0.25)">+250 ml</button>
+            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px;" onclick="App.adjustWater(0.50)">+500 ml</button>
+            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px;" onclick="App.adjustWater(1.00)">+1 L</button>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:25px;">
-            <button class="btn-action" style="padding:10px; border-radius:8px; opacity:0.6;" onclick="App.adjustWater(-0.25)">-250 ml</button>
-            <button class="btn-action" style="padding:10px; border-radius:8px; opacity:0.6;" onclick="App.adjustWater(-0.50)">-500 ml</button>
-            <button class="btn-action" style="padding:10px; border-radius:8px; opacity:0.6;" onclick="App.adjustWater(-1.00)">-1 L</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:30px;">
+            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px; color:#666;" onclick="App.adjustWater(-0.25)">-250 ml</button>
+            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px; color:#666;" onclick="App.adjustWater(-0.50)">-500 ml</button>
+            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px; color:#666;" onclick="App.adjustWater(-1.00)">-1 L</button>
         </div>
 
         <h4 style="color:#fff; font-size:0.85rem; margin-bottom:15px; text-align:center; border-bottom:1px dashed #333; padding-bottom:5px; letter-spacing:1px;">⚖️ МІНЕРАЛИ</h4>
@@ -718,6 +720,7 @@
         <button class="btn-primary" onclick="App.saveWater()">ЗБЕРЕГТИ БАЛАНС</button>
     </div>
 </div>
+
 <script src="assets/js/utils.js"></script>  
 <script src="assets/js/nutrition.js"></script> 
 <script src="assets/js/common.js"></script>
@@ -725,10 +728,9 @@
 <div id="undoFloat" onclick="App.undo()">↩</div>
 
 <style>
-/* Стилі для плаваючої кнопки Undo (як у pharm.html) */
 #undoFloat { 
     position: fixed; 
-    bottom: 160px; /* Трохи вище, щоб не перекривала нижню панель, якщо вона є */
+    bottom: 160px; 
     right: 20px; 
     width: 50px; 
     height: 50px; 
@@ -754,8 +756,6 @@
     pointer-events: auto; 
     transform: translateY(0) scale(1); 
 }
-
-/* Коли відкрита модалка - ховаємо кнопку Undo */
 body.modal-active #undoFloat { 
     opacity: 0 !important; 
     visibility: hidden !important; 
