@@ -33,7 +33,6 @@ const App = {
 
         if(loadedData) {
             this.data = loadedData;
-            // ГАРАНТІЯ: Якщо після лоаду немає поля schedule, створюємо його
             if (!this.data.schedule) this.data.schedule = {};
             
             if(!loadedData.days) {
@@ -51,16 +50,14 @@ const App = {
             this.data.schedule = {};
         }
         
-        // АВТОЗАВАНТАЖЕННЯ ДНЯ ЗГІДНО РОЗКЛАДУ
         if (!this.data.schedule) this.data.schedule = {};
         
-        const todayNum = new Date().getDay(); // 0 (Неділя) - 6 (Субота)
-        const mapDay = todayNum === 0 ? 7 : todayNum; // Переводимо у формат 1 (Пн) - 7 (Нд)
+        const todayNum = new Date().getDay(); 
+        const mapDay = todayNum === 0 ? 7 : todayNum; 
         const schedDayId = this.data.schedule[mapDay.toString()];
 
-        // ФІКС: Порівнюємо як рядки String(), щоб уникнути багу типів
         if (schedDayId && this.data.days.find(d => String(d.id) === String(schedDayId))) {
-            this.state.currentDayId = Number(schedDayId); // Повертаємо у формат числа
+            this.state.currentDayId = Number(schedDayId); 
         } else if(!this.state.currentDayId && this.data.days.length > 0) {
             this.state.currentDayId = this.data.days[0].id;
         }
@@ -69,6 +66,7 @@ const App = {
         this.render();
         document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
     },
+
     setupHardReset() {
         const brandBlock = document.getElementById('brandBlock');
         if(!brandBlock) return;
@@ -86,7 +84,7 @@ const App = {
             }
         };
     },
-    // НОВА ФУНКЦІЯ: Обробка Enter для ВСІХ модалок
+
     handleGlobalKeydown(e) {
         if (e.key === 'Enter') {
             const isVisible = (id) => {
@@ -99,7 +97,6 @@ const App = {
             else if (isVisible('waterModal')) { e.preventDefault(); this.saveWater(); }
             else if (isVisible('targetsModal')) { e.preventDefault(); this.saveTargets(); }
             else if (isVisible('foodModal')) { 
-                // Не зберігаємо на Enter, якщо ми просто вводимо назву для пошуку продукту
                 if(document.activeElement && document.activeElement.id !== 'inpName') {
                     e.preventDefault(); this.saveFood(); 
                 }
@@ -116,7 +113,7 @@ const App = {
     lockScroll() {
         if (document.body.classList.contains('modal-active')) return; 
         this.state.lockedScrollY = window.scrollY; 
-        document.body.classList.add('modal-active'); // Тепер фіксер бачить модалку!
+        document.body.classList.add('modal-active'); 
         document.body.style.position = 'fixed';
         document.body.style.top = `-${this.state.lockedScrollY}px`;
         document.body.style.width = '100%';
@@ -131,7 +128,6 @@ const App = {
         document.body.style.top = '';
         document.body.style.width = '';
         
-        // ФІКС 1: Змушуємо браузер перерахувати макет перед скролом!
         void document.body.offsetHeight; 
         
         window.scrollTo({ left: 0, top: scrollY, behavior: 'instant' });
@@ -146,27 +142,25 @@ const App = {
         if(this.history.length > 10) this.history.shift();
         this.history.push(JSON.stringify(this.data));
         const undoFloat = document.getElementById('undoFloat');
-        if(undoFloat) undoFloat.classList.add('visible'); // Показуємо плаваючу кнопку
+        if(undoFloat) undoFloat.classList.add('visible'); 
     },
     
     undo() {
         if(!this.history.length) return;
         this.data = JSON.parse(this.history.pop());
         
-        // Ховаємо кнопку, якщо історія пуста
         if(!this.history.length) {
             const undoFloat = document.getElementById('undoFloat');
             if(undoFloat) undoFloat.classList.remove('visible');
         }
         
-        // Безпечна перевірка існування дня
         if(!this.data.days.find(d => d.id === this.state.currentDayId)) {
             this.state.currentDayId = this.data.days.length > 0 ? this.data.days[0].id : null;
         }
         
         this.save(); 
-        this.renderDaysBar(); // КРИТИЧНО: Перемальовуємо панель днів (для ПК скролу)
-        this.render(false);   // Перемальовуємо контент без анімації стрибків
+        this.renderDaysBar(); 
+        this.render(false);   
         
         if(window.Haptics) window.Haptics.light();
     },
@@ -182,13 +176,12 @@ const App = {
         }
         const id = Utils.id();
         
-        // РОЗУМНЕ УСПАДКУВАННЯ: Беремо цілі з попереднього дня (або глобальні)
         const prevDay = this.data.days[this.data.days.length - 1];
         const newTargets = prevDay && prevDay.targets ? { ...prevDay.targets } : { ...this.data.targets };
 
         const newDay = {
             id: id, name: name, 
-            targets: newTargets, // Тепер день має власні цілі
+            targets: newTargets, 
             meals: [
                 {id: id+1, name:"Сніданок", foods:[]},
                 {id: id+2, name:"Обід", foods:[]},
@@ -201,13 +194,13 @@ const App = {
             this.save(); 
             this.render(); 
             
-            // ПРО-ФІКС: Плавний автоскрол до новоствореного дня
             setTimeout(() => {
                 const bar = document.getElementById('dayBar');
                 if(bar) bar.scrollTo({ left: bar.scrollWidth, behavior: 'smooth' });
-            }, 50); // Мікрозатримка, щоб DOM встиг намалювати нову кнопку
+            }, 50); 
         }
     },
+
     duplicateDay() {
         const day = this.getCurrentDay();
         if(!day) return;
@@ -222,7 +215,6 @@ const App = {
         this.save(); 
         this.render();
         
-        // Автоскрол і для дублювання теж
         setTimeout(() => {
             const bar = document.getElementById('dayBar');
             if(bar) bar.scrollTo({ left: bar.scrollWidth, behavior: 'smooth' });
@@ -235,7 +227,7 @@ const App = {
     },
 
     promptRenameDay() {
-        if(document.activeElement) document.activeElement.blur(); // Жорстко ховаємо клавіатуру
+        if(document.activeElement) document.activeElement.blur(); 
         
         const day = this.getCurrentDay();
         if(!day) return;
@@ -259,18 +251,17 @@ const App = {
         document.getElementById('inpDaySub').value = sub;
         document.getElementById('dayEditModal').style.display = 'flex';
         
-        // Плавний автофокус на поле вводу
         setTimeout(() => document.getElementById('inpDayTitle').focus(), 150);
     },
+
     saveDayName() {
         const day = this.getCurrentDay();
         const t = document.getElementById('inpDayTitle').value.trim();
         const s = document.getElementById('inpDaySub').value.trim();
         
-        if(!t) return; // Головна назва обов'язкова
+        if(!t) return; 
         
         this.pushHistory();
-        // Зберігаємо в базу жорстко через розділювач
         day.name = s ? `${t}|${s}` : t;
         
         this.save();
@@ -280,12 +271,12 @@ const App = {
     },
 
     openSchedule() {
-        if(document.activeElement) document.activeElement.blur(); // Жорстко ховаємо клавіатуру
+        if(document.activeElement) document.activeElement.blur(); 
         this.lockScroll();
         this.toggleFab(false);
         
         const container = document.getElementById('scheduleContainer');
-        if(!container) return; // Захист від помилки DOM
+        if(!container) return; 
         
         const daysOfWeek = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота', 'Неділя'];
         let html = '';
@@ -325,14 +316,12 @@ const App = {
             else delete this.data.schedule[i.toString()];
         }
 
-        // Жорстке збереження всієї структури data
         Utils.save(DB_KEY, this.data);
         
         const todayNum = new Date().getDay();
         const mapDay = todayNum === 0 ? 7 : todayNum;
         const schedDayId = this.data.schedule[mapDay.toString()];
         
-        // ФІКС: Порівнюємо як рядки String()
         if (schedDayId && this.data.days.find(d => String(d.id) === String(schedDayId))) {
             this.switchDay(Number(schedDayId));
         }
@@ -340,6 +329,7 @@ const App = {
         this.closeModal();
         if(window.Haptics) window.Haptics.success();
     },
+
     async deleteDay() {
         if(this.data.days.length <= 1) {
             await Modal.alert("Останній день видалити неможливо.", "ПОМИЛКА", "red");
@@ -356,7 +346,7 @@ const App = {
     getWaterFromInputs() {
         const l = parseInt(document.getElementById('inpWaterL').value) || 0;
         const ml = parseInt(document.getElementById('inpWaterMl').value) || 0;
-        return l + (ml / 1000); // Тепер 2 л і 50 мл = 2.05
+        return l + (ml / 1000); 
     },
 
     editWater() {
@@ -367,7 +357,6 @@ const App = {
         const day = this.getCurrentDay();
         const w = day.water || 0;
         
-        // Правильно розбиваємо збережене значення на L та ml
         const l = Math.floor(w);
         const ml = Math.round((w - l) * 1000);
         
@@ -410,6 +399,7 @@ const App = {
         this.closeModal();
         if(window.Haptics) window.Haptics.success();
     },
+
     moveMeal(id, dir) {
         const day = this.getCurrentDay();
         const idx = day.meals.findIndex(m => m.id === id);
@@ -425,6 +415,7 @@ const App = {
         this.save();
         this.render(false);
     },
+
     render(animate = true) {
         this.renderDaysBar();
         const day = this.getCurrentDay();
@@ -527,7 +518,7 @@ const App = {
         this.updateStats();
     },
 
-        renderDaysBar() {
+    renderDaysBar() {
         const bar = document.getElementById('dayBar');
         if(!bar) return;
         bar.innerHTML = '';
@@ -564,7 +555,6 @@ const App = {
         addBtn.onclick = () => App.addDay();
         bar.appendChild(addBtn);
 
-        // ФІКС КРАШУ: Скрол-логіка тепер ОДИН раз ПОЗА циклом!
         if (!bar.dataset.dragAttached) {
             let isDown = false; let startX; let scrollLeft;
             bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
@@ -581,7 +571,7 @@ const App = {
         }
     },
 
-        updateStats() {
+    updateStats() {
         const day = this.getCurrentDay();
         if(!day) return;
         let t = {p:0, f:0, c:0, k:0};
@@ -595,8 +585,7 @@ const App = {
             }
         }));
         
-        // ФІКС КРАШУ: Безпечне зчитування цілі, навіть якщо база пуста
-        const tg = (day.targets && day.targets.k) ? day.targets : (this.data.targets || {p:0, f:0, c:0, k:0});
+        const tg = (day.targets && typeof day.targets.k !== 'undefined') ? day.targets : (this.data.targets || {p:0, f:0, c:0, k:0});
         
         const dispK = document.getElementById('disp-k');
         if(dispK) {
@@ -606,9 +595,9 @@ const App = {
         
         const dispT = document.getElementById('disp-target');
         if(dispT) dispT.innerText = Math.round(tg.k || 0);
-        
+
         const dispW = document.getElementById('disp-w');
-        if(dispW) dispW.innerText = (day.water || 0).toFixed(2);
+        if(dispW) dispW.innerText = (day.water || 0).toFixed(2); 
 
         const dispNa = document.getElementById('disp-na');
         const dispK_el = document.getElementById('disp-k-el');
@@ -631,7 +620,7 @@ const App = {
             const el = document.getElementById('bar-'+id);
             const txt = document.getElementById('disp-'+id);
             if(el && txt) {
-                const pct = Math.min(100, max > 0 ? (val/max)*100 : 0); // Захист від ділення на нуль
+                const pct = Math.min(100, max > 0 ? (val/max)*100 : 0);
                 el.style.width = pct + '%';
                 txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
             }
@@ -749,7 +738,6 @@ const App = {
     },
     
     closeModal() { 
-        // ФІКС 2: Блокуємо iOS-фіксер довше, щоб клавіатура точно встигла сховатись
         window.blockKeyboardScrollFix = true;
         setTimeout(() => { window.blockKeyboardScrollFix = false; }, 400);
 
@@ -764,7 +752,6 @@ const App = {
         document.querySelectorAll('.modal-overlay, .modal').forEach(el => el.style.display='none');
         this.toggleFab(true); 
         
-        // ФІКС 3: Відпускаємо екран із мікрозатримкою (щоб iOS завершив анімацію клавіатури)
         setTimeout(() => {
             this.unlockScroll(); 
         }, 20);
@@ -789,17 +776,15 @@ const App = {
         if(this.state.fidx === -1) meal.foods.push(item);
         else meal.foods[this.state.fidx] = item;
         
-        // ФІКС СКРОЛУ: Змінено порядок!
         this.save(); 
-        this.render(false); // Рендеримо без анімації (щоб не мигало)
-        this.closeModal();  // Закриваємо модалку останнім кроком
+        this.render(false); 
+        this.closeModal();  
     },
 
     deleteFood() {
         this.pushHistory();
         this.getCurrentDay().meals.find(m=>m.id===this.state.mid).foods.splice(this.state.fidx, 1);
         
-        // ФІКС СКРОЛУ: Змінено порядок!
         this.save(); 
         this.render(false); 
         this.closeModal(); 
@@ -944,7 +929,6 @@ const App = {
         if(this.state.editName && this.state.editName !== n) delete this.data.bank[this.state.editName];
         this.data.bank[n] = {p,f,c,k,unit};
         
-        // ФІКС СКРОЛУ
         this.save(); 
         this.renderBank();
         this.render(false);
@@ -955,7 +939,6 @@ const App = {
         if(await Modal.confirm(`Видалити "${this.state.editName}" з бази назавжди?`, "ВИДАЛЕННЯ", "red")) {
             delete this.data.bank[this.state.editName];
             
-            // ФІКС СКРОЛУ
             this.save(); 
             this.renderBank();
             this.render(false);
@@ -982,33 +965,29 @@ const App = {
     async applyPreset(type) {
         let weight = null;
         
-        // 1. Пробуємо дістати вагу з глобального хабу
         if (typeof GlobalVitals !== 'undefined') {
             weight = GlobalVitals.getLatestWeight();
         }
         
-        // 2. Якщо немає, шукаємо локальну
         if (!weight) weight = this.data.userWeight; 
 
-        // 3. Якщо ваги ніде немає — запитуємо 1 раз
         if (!weight) {
             const inputWeight = await Modal.prompt("Для смарт-розрахунку введіть вашу вагу (кг):", "АНТРОПОМЕТРІЯ", "85");
             if (!inputWeight) return; 
             weight = parseFloat(inputWeight.replace(',', '.'));
             if (isNaN(weight) || weight <= 0) return await Modal.alert("Некоректна вага!", "ПОМИЛКА", "red");
             
-            this.data.userWeight = weight; // Зберігаємо локально
+            this.data.userWeight = weight; 
             this.save();
         }
 
-        // БОДІБІЛДЕРСЬКІ КОЕФІЦІЄНТИ (на 1 кг маси тіла)
         let pMult, fMult, cMult;
 
         switch(type) {
-            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; // ЗАГРУЗКА
-            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; // БАЗА
-            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; // СУШКА
-            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; // БЕЗВУГЛЕВОДКА
+            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; 
+            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; 
+            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; 
+            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; 
         }
 
         document.getElementById('tgP').value = Math.round(weight * pMult);
@@ -1023,11 +1002,6 @@ const App = {
         const weight = GlobalVitals.getLatestWeight();
         if (!weight) return;
 
-        // ЖОРСТКА БАЗА ДЛЯ БОДІБІЛДИНГУ:
-        // Білок: 2.5г на 1кг
-        // Жири: 0.8г на 1кг
-        // Вуглеводи: 3.5г на 1кг (база, потім коригується пресетами)
-        
         const p = Math.round(weight * 2.5);
         const f = Math.round(weight * 0.8);
         const c = Math.round(weight * 3.5);
@@ -1059,13 +1033,12 @@ const App = {
         };
         
         day.targets = newT;
-        this.data.targets = { ...newT }; // Оновлюємо глобальні як резерв
+        this.data.targets = { ...newT }; 
         
         this.save(); 
         
         const dispT = document.getElementById('disp-target');
         if(dispT) {
-            // Жорстко перевіряємо, чи є цілі у конкретного дня, якщо ні - беремо глобальні
             const currentKcal = day.targets && day.targets.k ? day.targets.k : (this.data.targets ? this.data.targets.k : 0);
             dispT.innerText = currentKcal;
         }
