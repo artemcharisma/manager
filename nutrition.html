@@ -650,22 +650,22 @@
 <div class="modal-overlay" id="targetsModal">
     <div class="modal-card">
         <div class="mc-header">
-            <h3 class="mc-title">🎯 ЦІЛІ ДНЯ</h3>
+            <h3 class="mc-title">🎯 МАКРОСИ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
-        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Макроси для поточного дня</p>
+        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Індивідуальний розрахунок на 1кг ваги</p>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('high')">HIGH CARB (Наповнення)</button>
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('med')">MED CARB (База)</button>
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('low')">LOW CARB (Дефіцит)</button>
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('zero')">ZERO CARB (Яма)</button>
+            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px; color:var(--theme);" onclick="App.applyPreset('mass')">МАСОНАБІР (ПРОФІЦИТ)</button>
+            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('base')">РЕКОМП (ПІДТРИМКА)</button>
+            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('cut')">СУШКА (ДЕФІЦИТ)</button>
+            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px; color:var(--danger);" onclick="App.applyPreset('zero')">ЯМА (БЕЗВУГЛЕВОДКА)</button>
         </div>
 
         <div class="stats-grid" style="margin-bottom:20px;">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-p">БІЛ (г)</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-f">ЖИР (г)</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-c">ВУГ (г)</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
             <div class="stat-box"><label>ККАЛ</label><input type="number" id="tgK" inputmode="numeric"></div>
         </div>
         
