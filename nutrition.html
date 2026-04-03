@@ -337,9 +337,9 @@
 
         /* --- 6. ЛОКАЛЬНІ МОДАЛКИ --- */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; bottom: 0; right: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 9999 !important; /* ЖОРСТКИЙ ПРІОРИТЕТ */
+            z-index: 9999 !important; 
             display: none; 
             align-items: flex-end; justify-content: center;
             overflow-y: auto; 
@@ -658,16 +658,16 @@
         <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Індивідуальний розрахунок на 1кг ваги</p>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px; color:var(--theme);" onclick="App.applyPreset('mass')">МАСОНАБІР (ПРОФІЦИТ)</button>
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('base')">РЕКОМП (ПІДТРИМКА)</button>
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('cut')">СУШКА (ДЕФІЦИТ)</button>
-            <button class="btn-action" style="font-size:0.7rem; padding:10px; border-radius:8px; color:var(--danger);" onclick="App.applyPreset('zero')">ЯМА (БЕЗВУГЛЕВОДКА)</button>
+            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px; color:var(--theme);" onclick="App.applyPreset('mass')">ЗАГРУЗКА (ПРОФІЦИТ)</button>
+            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('base')">БАЗА (ПІДТРИМКА)</button>
+            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('cut')">СУШКА (ДЕФІЦИТ)</button>
+            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px; color:var(--danger);" onclick="App.applyPreset('zero')">БЕЗВУГЛЕВОДКА</button>
         </div>
 
         <div class="stats-grid" style="margin-bottom:20px;">
-            <div class="stat-box"><label class="color-p">БІЛ (г)</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-f">ЖИР (г)</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-c">ВУГ (г)</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-p">БІЛ</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-f">ЖИР</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-c">ВУГ</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
             <div class="stat-box"><label>ККАЛ</label><input type="number" id="tgK" inputmode="numeric"></div>
         </div>
         
@@ -675,7 +675,6 @@
         <button class="btn-danger" style="color:#888; border-color:#444;" onclick="App.applyTargetsToAll()">ЗАСТОСУВАТИ ДО ВСІХ ДНІВ</button>
     </div>
 </div>
-
 <div class="modal-overlay" id="waterModal">
     <div class="modal-card">
         <div class="mc-header">
