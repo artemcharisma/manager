@@ -411,13 +411,13 @@
             </div>
             
             <div class="hud-badges">
-                <div class="target-badge" onclick="App.openTargets()">
-                    <div style="display:flex; align-items:center; gap:6px;"><span style="font-size:1rem; line-height:1;">🎯</span> <span>ЦІЛЬ:</span></div>
-                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-target" style="color:var(--theme); font-weight:800; font-size:1.1rem;">0</span><small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></div>
+                <div class="target-badge" onclick="App.openTargets()" style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px;">
+                    <div style="display:flex; align-items:center; gap:5px;"><span style="font-size:1rem; line-height:1;">🎯</span> <span style="font-size:0.7rem;">ЦІЛЬ</span></div>
+                    <div style="display:flex; align-items:baseline; gap:2px;"><span id="disp-target" style="font-weight:800; font-size:1rem; color:var(--theme);">0</span><small style="font-size:0.55rem; color:#666; font-weight:700;">ккал</small></div>
                 </div>
-                <div class="water-badge" onclick="App.editWater()">
-                    <div style="display:flex; align-items:center; gap:6px;"><span style="font-size:1rem; line-height:1;">💧</span> <span>ВОДА:</span></div>
-                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-w" style="color:var(--p-color); font-weight:800; font-size:1.1rem;">0.00</span><small style="color:#666; font-size:0.65rem; font-weight:700;">L</small></div>
+                <div class="water-badge" onclick="App.editWater()" style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px;">
+                    <div style="display:flex; align-items:center; gap:5px;"><span style="font-size:1rem; line-height:1;">💧</span> <span style="font-size:0.7rem;">ВОДА</span></div>
+                    <div style="display:flex; align-items:baseline; gap:2px;"><span id="disp-w" style="font-weight:800; font-size:1rem; color:var(--p-color);">0.00</span><small style="font-size:0.55rem; color:#666; font-weight:700;">L</small></div>
                 </div>
             </div>
         </div>
