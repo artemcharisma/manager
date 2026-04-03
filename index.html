@@ -309,19 +309,15 @@
                         }
                         document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
                     }
-                    if(ph.vitals) {
-                        let latestW = "--.--<span>KG</span>", latestBP = "--/--";
-                        const keys = Object.keys(ph.vitals).sort((a,b) => {
-                            const [wA, dA] = a.split('-').map(Number); const [wB, dB] = b.split('-').map(Number);
-                            if(wA !== wB) return wB - wA; return dB - dA;
-                        });
-                        for(let key of keys) {
-                            if(ph.vitals[key].w && latestW.includes("--")) latestW = ph.vitals[key].w + "<span>KG</span>";
-                            if(ph.vitals[key].bp && latestBP === "--/--") latestBP = ph.vitals[key].bp;
-                            if(!latestW.includes("--") && latestBP !== "--/--") break;
-                        }
-                        document.getElementById('vital-weight').innerHTML = latestW; document.getElementById('vital-bp').innerHTML = latestBP;
+                                        // НОВА ЛОГІКА: Читаємо дані з GlobalVitals
+                    if (typeof GlobalVitals !== 'undefined') {
+                        const weight = GlobalVitals.getLatestWeight();
+                        const bp = GlobalVitals.getLatestBP();
+                        
+                        document.getElementById('vital-weight').innerHTML = weight ? `${weight}<span>KG</span>` : "--.--<span>KG</span>";
+                        document.getElementById('vital-bp').innerHTML = bp ? bp : "--/--";
                     }
+
                 }
             } catch(e){}
 
