@@ -3,417 +3,670 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOCOL MANAGER</title>
+    <title>NUTRITION PROTOCOL</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nutrition">
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
-    
     <link rel="stylesheet" href="assets/style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
-
-        /* РІДНІ СТИЛІ ХАБУ (Залишені для ідеального візуалу) */
-        :root { 
-            --bg: #030303; 
-            --card-bg: rgba(18, 18, 20, 0.8); 
-            --border: rgba(255, 255, 255, 0.08); 
-            --gold: #d4af37; 
-            --blue: #3b82f6; 
-            --green: #10b981; 
-            --red: #ef4444;
-            --text-main: #ffffff; 
-            --text-dim: #888888; 
-            --text-dark: #555555;
-        }
-        
-        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-
-        body { 
-            background-color: var(--bg);
-            background-image: 
-                radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
-                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 100% 100%, 25px 25px, 25px 25px;
-            background-position: center top;
-            color: var(--text-main); 
-            font-family: 'Inter', -apple-system, sans-serif;
-            margin: 0; padding: 20px 15px; 
-            min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased; 
-            -moz-osx-font-smoothing: grayscale;
+            input::-webkit-outer-spin-button,
+            input::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type=number] {
+                -moz-appearance: textfield;
+            }
+        /* --- 1. GLOBAL SETTINGS --- */
+        :root {
+            --bg-app: #000000;
+            --bg-panel: #121212;
+            --border: #2a2a2a;
+            --theme: #d4af37; /* GOLD */
+            
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            
+            --danger: #ef4444;
+            --success: #10b981;
+            
+            /* Macros */
+            --p-color: #3b82f6; 
+            --f-color: #eab308; 
+            --c-color: #10b981; 
+            
+            --font-ui: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
-        .hub-container { 
-            width: 100%; max-width: 450px; 
-            display: flex; flex-direction: column;
-            margin: auto 0; 
+       *, *::before, *::after {
+            -webkit-tap-highlight-color: transparent !important;
+            box-sizing: border-box; outline: none;
         }
-        
-        header { 
+
+        /* 1. СТРІЛКА (За замовчуванням усюди) */
+        body, html, .meal-header, .modal-overlay, .app-container { 
+            cursor: default; 
+        }
+
+        /* 2. ТЕКСТ (Тільки в полях вводу та заголовках, які редагуються) */
+        input, textarea, [contenteditable] { 
+            cursor: text !important;
+        }
+
+        /* 3. ПАЛЕЦЬ (Тільки на реальних кнопках і клікабельних рядках) */
+        button, select, label, a, input[type="checkbox"], [class*="btn"],  
+        .day-tab, .mh-del, .target-badge, .water-badge, .food-row,       
+        .bank-row, .sugg-item, .sys-card, .sys-close, .mc-header span  
+        {
+            cursor: pointer !important;
+        }
+
+        body {
+            background-color: var(--bg-app); 
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 15px; min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .app-container { width: 100%; max-width: 800px; margin: 0 auto; position: relative; }
+
+        /* --- 2. HEADER --- */
+        header {
             display: flex; justify-content: space-between; align-items: center;
-            width: 100%; padding-bottom: 10px; margin-bottom: 35px;
-            animation: slideDown 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        .sys-status-left { display: flex; align-items: center; gap: 12px; }
-
-        .status-indicator { position: relative; display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; }
-        .status-dot { width: 6px; height: 6px; background-color: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); position: relative; z-index: 2; }
-        .status-ring { position: absolute; width: 100%; height: 100%; border: 1px solid var(--green); border-radius: 50%; animation: radarPulse 2.5s infinite cubic-bezier(0.25, 1, 0.5, 1); }
-
-        .brand-title { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #fff; letter-spacing: 2px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; }
-        .brand-title span { font-weight: 400; color: var(--text-dim); margin-left: 6px; }
-
-        .sys-status-right { text-align: right; font-family: 'JetBrains Mono', monospace; }
-        .sys-time { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 1px; line-height: 1; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
-        .sys-date { font-size: 0.65rem; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
-
-        .nav-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-        
-        .smart-card {
-            background: linear-gradient(145deg, rgba(25, 25, 28, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border); border-radius: 20px; padding: 22px 20px;
-            text-decoration: none; display: flex; align-items: center; gap: 20px;
-            position: relative; overflow: hidden;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-            animation: fadeInUp 0.6s ease backwards;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-        }
-
-        .smart-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #333; transition: 0.3s; }
-        .card-pharm::before { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
-        .card-train::before { background: var(--blue); box-shadow: 0 0 15px var(--blue); }
-        .card-nutri::before { background: var(--green); box-shadow: 0 0 15px var(--green); }
-
-        .smart-card:nth-child(1) { animation-delay: 0.1s; }
-        .smart-card:nth-child(2) { animation-delay: 0.2s; }
-        .smart-card:nth-child(3) { animation-delay: 0.3s; }
-
-        .icon-box { 
-            width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 26px; border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.3s ease; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); background: rgba(0,0,0,0.6);
+            padding-bottom: 15px; margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            gap: 15px; flex-wrap: wrap;
         }
         
-        .card-pharm .icon-box { color: var(--gold); border-color: rgba(212,175,55,0.3); }
-        .card-train .icon-box { color: var(--blue); border-color: rgba(59,130,246,0.3); }
-        .card-nutri .icon-box { color: var(--green); border-color: rgba(16,185,129,0.3); }
+        .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        
+        .brand-icon {
+            width: 44px; height: 44px; 
+            background: linear-gradient(135deg, var(--theme), #fcd34d);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; 
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); color: #000;
+            transition: transform 0.2s ease; cursor: pointer; 
+        }
+        
+        .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--theme); }
+        .brand-text span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; }
+        
+        .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: 10px; 
+            border: 1px solid #333; background: var(--bg-panel); color: #888;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: 0.2s; padding: 0; margin: 0;
+        }
+        .icon-btn:active { transform: scale(0.95); background: #000; border-color: var(--theme); color: var(--theme); }
 
+        /* --- 3. DAY NAVIGATION --- */
+        .day-bar {
+            display: flex; overflow-x: auto; gap: 8px; 
+            padding: 10px 10px 20px 10px; margin-bottom: 0; 
+            scrollbar-width: thin; scrollbar-color: var(--theme) transparent;
+            margin-left: -10px; margin-right: -10px; scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch; touch-action: pan-x;
+        }
+        .day-bar::-webkit-scrollbar { height: 4px; display: block; }
+        .day-bar::-webkit-scrollbar-track { background: transparent; }
+        .day-bar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .day-bar:hover::-webkit-scrollbar-thumb { background: var(--theme); }
+
+        .day-tab {
+            min-width: 75px; max-width: 110px; padding: 8px 5px; min-height: 56px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border);
+            color: #555; transition: 0.2s; flex-shrink: 0; cursor: pointer;
+        }
+        .day-tab span { font-weight: 800; font-size: 0.95rem; font-family: var(--font-ui); width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .day-tab small { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 2px; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        
+        .day-tab.active {
+            border-color: var(--theme); color: #000; background: var(--theme);
+            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2); transform: translateY(-3px); z-index: 2;
+        }
+        .day-tab.active span { color: #000; }
+        .day-tab.active small { color: rgba(0,0,0,0.7); }
+
+        .day-add-btn {
+            min-width: 60px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; cursor: pointer;
+        }
+        .day-add-btn:active { background: var(--theme); color: #000; border-color: var(--theme); transform: scale(0.95); }
+
+        /* --- ШАПКА ДНЯ ТА КНОПКИ ДІЙ --- */
+        .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: flex-start; gap: 15px; }
+        .day-title-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; flex: 1; min-width: 0; }
+        .day-title-display { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1; width: 100%; }
+        .day-subtitle-display {
+            font-size: 0.75rem; color: var(--theme); font-family: var(--font-mono); font-weight: 800;
+            letter-spacing: 1px; text-transform: uppercase; background: rgba(212, 175, 55, 0.1);
+            padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+        }
+
+        .day-action-buttons { display: flex; gap: 8px; flex-shrink: 0; align-items: center; margin-top: 4px; }
+
+        .btn-mini { 
+            background: #111; border: 1px solid #333; color: #888; 
+            font-size: 0.7rem; padding: 0 12px; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s; cursor: pointer;
+            height: 32px; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-mini:active { background: #333; color: #fff; transform: scale(0.95); }
+        .btn-mini.icon-only { width: 32px; padding: 0; font-size: 1.1rem; }
+        .btn-mini.edit-day { color: var(--theme); background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.3); }
+        .btn-mini.edit-day:active { background: rgba(212, 175, 55, 0.2); }
+        .btn-mini.del-day { color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
+        .btn-mini.del-day:active { background: rgba(239, 68, 68, 0.2); }
+
+        /* --- 4. HUD --- */
+        .hud {
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .hud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+        
+        .k-group { display: flex; flex-direction: column; }
+        .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
+        .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
+
+        .hud-badges { display: flex; flex-direction: column; gap: 8px; min-width: 145px; }
+        .target-badge, .water-badge {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; box-sizing: border-box;
+            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 8px 12px; border-radius: 12px; font-family: var(--font-mono); 
+            font-size: 0.75rem; color: #888; transition: 0.2s; cursor: pointer;
+        }
+        .water-badge { background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2); }
+        .target-badge:active, .water-badge:active { transform: scale(0.95); filter: brightness(1.2); }
+
+        .btn-sync {
+            width: 100%; background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), transparent);
+            border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme);
+            padding: 14px; border-radius: 12px; font-weight: 800; font-family: var(--font-mono);
+            font-size: 0.8rem; letter-spacing: 1px; margin-top: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-sync:active { transform: scale(0.98); background: rgba(212, 175, 55, 0.2); }
+
+        .hud-macros { display: flex; flex-direction: column; gap: 10px; }
+        .macro-row { display: grid; grid-template-columns: 35px 1fr 60px; align-items: center; gap: 10px; }
+        .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #555; }
+        .mr-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+        .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; }
+
+        /* --- 5. MEALS LIST --- */
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(15px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-pop { opacity: 0; animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .meal-block { 
+            background: var(--bg-panel); border: 1px solid var(--border); 
+            border-radius: 16px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .meal-header {
+            padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .mh-del { color: var(--danger); opacity: 0.3; font-size: 16px; padding: 5px; transition: 0.2s; }
+        .mh-del:hover { opacity: 1; }
+        .food-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s; }
+        .food-row:last-of-type { border-bottom: none; }
+        .food-row:active { background: rgba(212, 175, 55, 0.05); }
+        
+        .fr-info h4 { margin: 0; font-size: 0.9rem; font-weight: 600; color: #e4e4e7; margin-bottom: 4px; }
+        .fr-info p { margin: 0; font-family: var(--font-mono); font-size: 0.65rem; color: #666; }
+        .fr-vals { text-align: right; }
+        .fr-w { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; color: #fff; }
+        .fr-k { font-family: var(--font-mono); font-size: 0.7rem; color: #666; margin-top: 2px; }
+
+        .btn-action { width: 100%; padding: 14px; background: #0a0a0a; border: none; border-top: 1px solid var(--border); color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
+        .btn-action:active { background: #151515; color: var(--theme); }
+        .btn-main-add { width: 100%; padding: 16px; border: 1px dashed #333; border-radius: 14px; background: transparent; color: #666; font-weight: 700; font-size: 0.9rem; margin-top: 20px; transition: 0.2s; }
+        .btn-main-add:active { border-color: var(--theme); color: var(--theme); background: rgba(212, 175, 55, 0.05); }
+
+        /* --- 6. ЛОКАЛЬНІ МОДАЛКИ --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; bottom: 0; right: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 9999 !important; display: none; 
+            align-items: flex-end; justify-content: center;
+            overflow-y: auto; -webkit-overflow-scrolling: touch; 
+        }
+        .modal-card {
+            background: #121212; width: 100%; max-width: 600px;
+            border-top: 1px solid var(--border); border-radius: 24px 24px 0 0; 
+            padding: 25px; padding-bottom: 50px; display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+            animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        #waterModal { align-items: flex-start !important; padding-top: 15vh; }
+        
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
         @media (hover: hover) {
-            .card-pharm:hover { background: linear-gradient(145deg, rgba(212,175,55,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(212,175,55,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(212,175,55,0.15); }
-            .card-train:hover { background: linear-gradient(145deg, rgba(59,130,246,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(59,130,246,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(59,130,246,0.15); }
-            .card-nutri:hover { background: linear-gradient(145deg, rgba(16,185,129,0.15) 0%, rgba(10,10,12,0.95) 100%); border-color: rgba(16,185,129,0.4); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(16,185,129,0.15); }
-        }
-        
-        .card-pharm:active { background: linear-gradient(145deg, rgba(212,175,55,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--gold); transform: scale(0.96); transition: transform 0.05s ease; }
-        .card-train:active { background: linear-gradient(145deg, rgba(59,130,246,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--blue); transform: scale(0.96); transition: transform 0.05s ease; }
-        .card-nutri:active { background: linear-gradient(145deg, rgba(16,185,129,0.2) 0%, rgba(20,20,22,0.95) 100%); border-color: var(--green); transform: scale(0.96); transition: transform 0.05s ease; }
-        .smart-card:active .icon-box { transform: scale(0.9) rotate(-5deg); box-shadow: 0 0 20px currentColor; }
-        
-        .info { flex-grow: 1; }
-        .info h3 { margin: 0; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        
-        .info-data { margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 5px; }
-        .data-row { display: flex; align-items: center; gap: 8px; }
-        .data-hl { color: #fff; font-weight: 700; }
-        .data-lbl { color: var(--text-dark); }
-
-        .bottom-wrapper { margin-top: 40px; width: 100%; animation: fadeIn 1s ease 0.5s backwards; }
-
-        .vitals-strip { display: flex; justify-content: space-between; margin-bottom: 30px; padding: 0 10px; }
-        .v-item { display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 2; }
-        .v-item.right { text-align: right; align-items: flex-end; }
-        
-        .v-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-        
-        .ecg-svg { width: 32px; height: 12px; stroke: var(--red); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(239,68,68,0.6)); }
-        .ecg-line { stroke-dasharray: 90; stroke-dashoffset: 90; animation: ecgDraw 2s infinite linear; }
-
-        .v-val { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: #fff; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(255,255,255,0.15); margin-top: 2px; }
-        .v-val span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; letter-spacing: 1px; margin-left: 2px;}
-
-        .sys-control-title { text-align: center; color: #555; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 4px; margin-bottom: 15px; font-weight: 800; }
-
-        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        
-        .ctrl-btn {
-            background: linear-gradient(to bottom, rgba(25, 25, 28, 0.9), rgba(15, 15, 17, 0.95)); 
-            border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 14px;
-            font-size: 0.75rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: 8px;
-            letter-spacing: 1px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            .icon-btn:hover { background: #1a1a1a; border-color: var(--theme); color: var(--theme); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
+            .day-tab:hover:not(.active) { border-color: #555; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .btn-mini:hover { background: #333; color: #fff; transform: translateY(-1px); }
+            .day-add-btn:hover { border-color: #888; color: #fff; transform: translateY(-2px); }
+            .btn-primary:hover { background: #fcd34d; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
+            .btn-danger:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); box-shadow: 0 4px 15px rgba(239,68,68,0.2); transform: translateY(-2px); }
+            .btn-main-add:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--theme); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-2px); }
+            .btn-action:hover { background: #151515; color: var(--theme); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         }
 
-        .btn-save { color: var(--green); border-color: rgba(16, 185, 129, 0.15); }
-        .btn-reset { color: var(--red); border-color: rgba(239, 68, 68, 0.15); }
+        .mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .mc-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
 
-        @media (hover: hover) {
-            .btn-save:hover { border-color: var(--green); background: linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(15, 15, 17, 0.95)); box-shadow: 0 5px 20px rgba(16, 185, 129, 0.2); }
-            .btn-reset:hover { border-color: var(--red); background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(15, 15, 17, 0.95)); box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2); }
+        .inp-main {
+            width: 100%; background: #000; border: 1px solid #333;
+            padding: 16px; border-radius: 12px; color: #fff; font-size: 1.1rem;
+            font-family: var(--font-mono); outline: none; transition: 0.2s;
         }
+        .inp-main:focus { border-color: var(--theme); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+        .inp-main::placeholder { color: #444; font-family: var(--font-ui); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .stat-box { background: #050505; padding: 10px 5px; border-radius: 10px; text-align: center; border: 1px solid #222; transition: 0.2s; }
+        .stat-box:focus-within { border-color: #555; }
+        .stat-box label { display: block; font-size: 0.65rem; color: #666; font-weight: 700; margin-bottom: 4px; font-family: var(--font-mono); letter-spacing: 1px;}
+        .stat-box input { 
+            width: 100%; background: transparent; border: none; color: #fff; text-align: center; 
+            font-family: var(--font-mono); font-weight: 700; font-size: 1.2rem;
+            -webkit-appearance: none; appearance: none; border-radius: 0;
+            padding: 0; margin: 0; display: block; height: 26px; line-height: 26px; outline: none;
+        }
+
+        .btn-primary {
+            width: 100%; background: var(--theme); color: #000; padding: 16px;
+            border-radius: 12px; font-weight: 800; border: none; text-transform: uppercase;
+            margin-top: 10px; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); font-family: var(--font-mono); letter-spacing: 1px; transition: 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); background: #fcd34d; }
         
-        .btn-save:active { border-color: var(--green); background: rgba(16, 185, 129, 0.2); transform: scale(0.93); transition: transform 0.05s ease; }
-        .btn-reset:active { border-color: var(--red); background: rgba(239, 68, 68, 0.2); transform: scale(0.93); transition: transform 0.05s ease; }
+        .btn-danger {
+            width: 100%; background: transparent; color: var(--danger); padding: 14px;
+            border-radius: 12px; font-weight: 700; border: 1px dashed #333; margin-top: 5px;
+            font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 1px; transition: 0.2s;
+        }
+        .btn-danger:active { background: rgba(239,68,68,0.1); border-color: var(--danger); }
 
-        .last-backup { margin-top: 18px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dark); letter-spacing: 1px; }
+        #sugg-list {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+            margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;
+            position: absolute; width: 100%; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .sugg-item { padding: 14px 15px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; color: #ddd; font-size: 0.9rem; }
+        .sugg-item:active { background: #333; }
+        .sugg-item span { font-family: var(--font-mono); color: #666; font-size: 0.75rem; font-weight: 700; }
 
-        @keyframes ecgDraw { 0% { stroke-dashoffset: 90; } 40% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -90; } }
-        @keyframes radarPulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        @keyframes slideDown { from { transform: translateY(-15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Приховуємо глобальне меню (зірку) на головній сторінці */
-        #sys-fab { display: none !important; }
+        .color-p { color: var(--p-color) !important; }
+        .color-f { color: var(--f-color) !important; }
+        .color-c { color: var(--c-color) !important; }
+        #fileInput { display: none; }
+        .chk-wrap { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
+        .chk-wrap input { accent-color: var(--theme); width: 20px; height: 20px; }
+        .chk-wrap label { font-size: 0.9rem; color: #aaa; }
+        .bank-list-container { max-height: 60vh; overflow-y: auto; margin-top: 15px; }
+        .bank-row { padding: 14px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .bank-row b { display: block; font-size: 1rem; color: #fff; margin-bottom: 4px; }
+        .bank-row span { font-family: var(--font-mono); font-size: 0.75rem; color: #666; }
 
+        /* --- ПРЕМІУМ КНОПКИ ДЛЯ ВОДИ (вбиваємо білі системні рамки) --- */
+        .btn-ghost {
+            background: transparent; border: 1px dashed #444; color: #aaa;
+            border-radius: 10px; padding: 10px;
+            font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono);
+            transition: 0.2s; cursor: pointer; outline: none;
+            -webkit-appearance: none; /* Жорстко прибирає системні стилі iOS */
+        }
+        .btn-ghost:active { background: rgba(255,255,255,0.05); color: #fff; border-color: #666; }
+        .btn-ghost.dim { opacity: 0.6; }
+
+        /* --- ПРЕМІУМ КНОПКИ ПРЕСЕТІВ МАКРОСІВ --- */
+        .preset-btn {
+            width: 100%; padding: 12px 5px; border-radius: 8px; 
+            font-family: var(--font-mono); cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            gap: 4px; line-height: 1.2; text-align: center; outline: none;
+            -webkit-appearance: none;
+        }
+        .preset-btn span { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; }
+        .preset-btn small { font-size: 0.55rem; font-weight: 700; opacity: 0.7; font-family: var(--font-ui); text-transform: uppercase; }
+        
+        .preset-mass { background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); }
+        .preset-mass:active { background: rgba(16, 185, 129, 0.15); }
+        
+        .preset-base { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme); }
+        .preset-base:active { background: rgba(212, 175, 55, 0.15); }
+        
+        .preset-cut { background: rgba(255, 255, 255, 0.02); border: 1px dashed #555; color: #ccc; }
+        .preset-cut:active { background: rgba(255, 255, 255, 0.08); border-color: #888; color: #fff; }
+        
+        .preset-zero { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); }
+        .preset-zero:active { background: rgba(239, 68, 68, 0.15); }
     </style>
 </head>
 <body ontouchstart="">
-    <div class="hub-container">
-        
-        <header>
-            <div class="sys-status-left">
-                <div class="status-indicator">
-                    <div class="status-ring"></div>
-                    <div class="status-dot"></div>
-                </div>
-                <div class="brand-title">PROTOCOL<span>MANAGER</span></div>
-            </div>
-            <div class="sys-status-right">
-                <div class="sys-time" id="clock-time">00:00</div>
-                <div class="sys-date" id="clock-date">-- --</div>
-            </div>
-        </header>
 
-        <div class="nav-grid">
-            <a href="pharm.html" class="smart-card card-pharm">
-                <div class="icon-box">🏆</div>
-                <div class="info">
-                    <h3>Фармакологія</h3>
-                    <div class="info-data" id="data-pharm">
-                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
-                    </div>
-                </div>
-            </a>
-            
-            <a href="training.html" class="smart-card card-train">
-                <div class="icon-box">⚖️</div>
-                <div class="info">
-                    <h3>Тренування</h3>
-                    <div class="info-data" id="data-train">
-                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
-                    </div>
-                </div>
-            </a>
-            
-            <a href="nutrition.html" class="smart-card card-nutri">
-                <div class="icon-box">🥑</div>
-                <div class="info">
-                    <h3>Харчування</h3>
-                    <div class="info-data" id="data-nutri">
-                        <span class="data-lbl">ЗАВАНТАЖЕННЯ...</span>
-                    </div>
-                </div>
-            </a>
+<div class="app-container">
+    
+    <header>
+        <div class="brand" id="brandBlock">
+            <div class="brand-icon">🥑</div>
+            <div class="brand-text">
+                <h1>NUTRITION</h1>
+                <span>PROTOCOL</span>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="icon-btn" onclick="App.undo()" id="undoBtn" style="display:none; color:var(--theme)">↩</button>
+            <button class="icon-btn" onclick="App.exportData()">💾</button>
+            <button class="icon-btn" onclick="document.getElementById('fileInput').click()">📂</button>
+            <button class="icon-btn" onclick="App.openSchedule()" style="color:var(--theme)">📅</button>
+            <button class="icon-btn" onclick="App.openBank()" style="color:var(--theme)">📚</button>
+        </div>
+    </header>
+
+    <div class="day-bar" id="dayBar"></div>
+    
+    <div class="day-control-panel">
+        <div class="day-title-box">
+            <h2 class="day-title-display" id="currentDayTitleMain">День</h2>
+            <div id="currentDaySubtitle" class="day-subtitle-display" style="display:none;">Підпис</div>
         </div>
         
-        <div class="bottom-wrapper">
-            <div class="vitals-strip">
-                <div class="v-item">
-                    <span class="v-label">CURRENT WEIGHT</span>
-                    <span class="v-val" id="vital-weight">--.--<span>KG</span></span>
-                </div>
-                <div class="v-item right">
-                    <span class="v-label" style="color: var(--red);">
-                        <svg viewBox="0 0 50 20" class="ecg-svg">
-                            <path class="ecg-line" d="M 0,10 L 12,10 L 16,3 L 22,17 L 26,10 L 50,10" />
-                        </svg>
-                        BLOOD PRESSURE
-                    </span>
-                    <span class="v-val" id="vital-bp">--/--</span>
-                </div>
-            </div>
-
-            <div class="sys-control-title">SYSTEM CONTROL</div>
-
-            <div class="controls-grid">
-                <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                    BACKUP
-                </button>
-                <button onclick="SystemReset()" class="ctrl-btn btn-reset">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    WIPE ALL
-                </button>
-            </div>
-            
-            <div id="last-backup" class="last-backup">NO BACKUP FOUND</div>
+        <div class="day-action-buttons">
+             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()">✎</button>
+             <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
+             <button class="btn-mini icon-only del-day" onclick="App.deleteDay()">🗑</button>
         </div>
     </div>
 
-    <script src="assets/js/utils.js"></script>
-    <script src="assets/js/common.js"></script>
 
-    <script>
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
-            document.getElementById('clock-date').innerText = now.toLocaleDateString('uk-UA', {weekday:'short', day:'2-digit', month:'2-digit'});
-        }
-        setInterval(updateClock, 1000); 
-
-        function getDayMacros(day, bank) {
-            let p=0, f=0, c=0, kcal=0;
-            if (day && day.meals) {
-                day.meals.forEach(m => {
-                    if (m.foods) {
-                        m.foods.forEach(item => {
-                            const ref = bank[item.n];
-                            if (ref) {
-                                const ratio = ref.unit ? parseFloat(item.w) : parseFloat(item.w) / 100;
-                                p += (parseFloat(ref.p)||0) * ratio; f += (parseFloat(ref.f)||0) * ratio;
-                                c += (parseFloat(ref.c)||0) * ratio; kcal += (parseFloat(ref.k)||0) * ratio;
-                            } else {
-                                p += parseFloat(item.p)||0; f += parseFloat(item.f)||0; c += parseFloat(item.c)||0; kcal += parseFloat(item.k)||0;
-                            }
-                        });
-                    }
-                });
-            }
-            return { p: Math.round(p), f: Math.round(f), c: Math.round(c), kcal: Math.round(kcal) };
-        }
-
-        function populateSmartCards() {
-            // БЛОК 1: ДАНІ З ФАРМИ (GOLD PROTOCOL)
-            try {
-                const ph = JSON.parse(localStorage.getItem('gold_protocol'));
-                if (ph && ph.schedule && ph.startDate) {
-                    const startDate = new Date(ph.startDate); const now = new Date();
-                    const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                    const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
-                    const diffTime = now.getTime() - startMonday.getTime();
-                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-                    if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
-                    let phaseTitle = "Курс";
-                    if (ph.phases) {
-                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
-                        if (currentPhase) phaseTitle = currentPhase.title;
-                    }
-                    document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
-                }
-            } catch(e){}
-
-            // БЛОК 2: ТРЕНУВАННЯ
-            try {
-                const tr = JSON.parse(localStorage.getItem('training_protocol'));
-                if (tr && tr.weeks && tr.weeks.length > 0) {
-                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
-                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
-                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-                    document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
-                }
-            } catch(e){}
-
-            // БЛОК 3: ХАРЧУВАННЯ
-            try {
-                const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
-                if (nu && nu.days) {
-                    const bank = nu.bank || {}; let htmlContent = '';
-                    if (nu.days[0]) {
-                        const d1 = getDayMacros(nu.days[0], bank);
-                        if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
-                    }
-                    if (nu.days[1]) {
-                        const d2 = getDayMacros(nu.days[1], bank);
-                        if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
-                    }
-                    if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
-                    else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
-                }
-            } catch(e){}
-
-            // БЛОК 4: ГЛОБАЛЬНІ ПОКАЗНИКИ (Вага та Тиск з GlobalVitals)
-            try {
-                if (typeof GlobalVitals !== 'undefined') {
-                    const weight = GlobalVitals.getLatestWeight();
-                    const bp = GlobalVitals.getLatestBP();
-                    
-                    document.getElementById('vital-weight').innerHTML = weight ? `${weight}<span>KG</span>` : "--.--<span>KG</span>";
-                    document.getElementById('vital-bp').innerHTML = bp ? bp : "--/--";
-                }
-            } catch(e){}
-        }
-
-        const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
-
-        async function CreateRestorePoint() {
-            const msg = `Створити нову резервну копію (Backup)?<br><br>
-                         <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
-                            Попередня копія буде перезаписана поточним станом бази даних.
-                         </span>`;
-            const confirmed = await Modal.confirm(msg, "СТВОРЕННЯ BACKUP", "gold");
-            if(!confirmed) return; 
-
-            let savedCount = 0;
-            APP_KEYS.forEach(k => { const d = localStorage.getItem(k); if(d) { localStorage.setItem(k + '_backup', d); savedCount++; } });
-            localStorage.setItem('backup_timestamp', new Date().toLocaleString('uk-UA'));
-            updateBackupLabel();
+    <div class="hud">
+        <div class="hud-header">
+            <div class="k-group">
+                <span class="k-val" id="disp-k">0</span>
+                <span class="k-label">ККАЛ СЬОГОДНІ</span>
+            </div>
             
-            if(savedCount > 0) await Modal.alert("Резервну копію успішно створено.", "BACKUP СТВОРЕНО", "green");
-            else await Modal.alert("Система пуста. Немає даних для бекапу.", "ПОВІДОМЛЕННЯ", "gold");
-        }
+            <div class="hud-badges">
+                <div class="target-badge" onclick="App.openTargets()">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:1rem; line-height:1; display:inline-block; width:24px; text-align:center;">🎯</span> <span style="position:relative; top:1px;">ЦІЛЬ:</span></div>
+                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-target" style="color:var(--theme); font-weight:800; font-size:1.1rem;">0</span><small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></div>
+                </div>
+                <div class="water-badge" onclick="App.editWater()">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:1rem; line-height:1; display:inline-block; width:24px; text-align:center;">💧</span> <span style="position:relative; top:1px;">ВОДА:</span></div>
+                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-w" style="color:var(--p-color); font-weight:800; font-size:1.1rem;">0.00</span><small style="color:#666; font-size:0.65rem; font-weight:700;">L</small></div>
+                </div>
+            </div>
+        
+        <div class="hud-macros">
+            <div class="macro-row">
+                <span class="mr-label color-p">PROT</span>
+                <div class="mr-track"><div class="mr-fill" id="bar-p" style="width:0%; background:var(--p-color)"></div></div>
+                <span class="mr-val" id="disp-p">0g</span>
+            </div>
+            <div class="macro-row">
+                <span class="mr-label color-f">FATS</span>
+                <div class="mr-track"><div class="mr-fill" id="bar-f" style="width:0%; background:var(--f-color)"></div></div>
+                <span class="mr-val" id="disp-f">0g</span>
+            </div>
+            <div class="macro-row">
+                <span class="mr-label color-c">CARB</span>
+                <div class="mr-track"><div class="mr-fill" id="bar-c" style="width:0%; background:var(--c-color)"></div></div>
+                <span class="mr-val" id="disp-c">0g</span>
+            </div>
+        </div>
 
-        function updateBackupLabel() {
-            const ts = localStorage.getItem('backup_timestamp');
-            const el = document.getElementById('last-backup');
-            if(ts) { el.innerText = "LAST BACKUP: " + ts; el.style.color = "var(--green)"; } 
-            else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
-        }
+        <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #333; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:var(--font-mono); font-size:0.7rem; color:#666; font-weight:700; letter-spacing:1px;">БАЛАНС Б/Ж/В:</span>
+            <span id="macro-ratio" style="font-family:var(--font-mono); font-size:0.8rem; font-weight:800; color:#fff;">0% : 0% : 0%</span>
+        </div>
+    </div>
 
-        async function SystemReset() {
-            const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
-            if(hasBackup) {
-                const promptText = `
-                    <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
-                            <div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ВІДНОВИТИ з Backup</span></div>
-                            <div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div>
-                        </div>
-                    </div>
-                `;
-                const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "Введіть 1 або 2");
-                
-                if (choice === '1') {
-                    if (await Modal.confirm("Ви точно хочете відновити систему з останнього Backup?", "ВІДНОВЛЕННЯ ДАНИХ", "green")) {
-                        APP_KEYS.forEach(k => { const b = localStorage.getItem(k + '_backup'); if(b) localStorage.setItem(k, b); });
-                        await Modal.alert("Систему успішно відновлено!", "ВІДНОВЛЕНО", "green");
-                        location.reload();
-                    }
-                } else if (choice === '2') {
-                    if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО.</span><br><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red")) FullWipe();
-                }
-            } else {
-                if (await Modal.confirm("Резервних копій не знайдено.<br>Ви впевнені, що хочете очистити систему?", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red")) FullWipe();
-            }
-        }
+    <div id="mealList"></div>
+    <button class="btn-main-add" onclick="App.addMealBlock()">+ ДОДАТИ ПРИЙОМ ЇЖІ</button>
 
-        function FullWipe() { localStorage.clear(); location.reload(); }
+</div>
 
-        window.onload = () => {
-            updateClock();
-            updateBackupLabel();
-            populateSmartCards(); 
-        };
-    </script>
+<div id="foodModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title" id="modalTitle">ДОДАТИ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+
+        <div style="position:relative">
+            <input id="inpName" class="inp-main" placeholder="Пошук або назва..." autocomplete="off" oninput="App.searchFood(this.value)">
+            <div id="sugg-list"></div>
+        </div>
+
+        <input type="number" id="inpWeight" class="inp-main" placeholder="Вага (г) або шт" inputmode="decimal" oninput="App.recalcModal()">
+
+        <div class="stats-grid">
+            <div class="stat-box"><label class="color-p">БІЛ</label><input id="inpP" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-f">ЖИР</label><input id="inpF" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-c">ВУГ</label><input id="inpC" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label>ККАЛ</label><input id="inpK" type="number" inputmode="decimal"></div>
+        </div>
+        
+        <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
+        <button class="btn-danger" id="btnDeleteFood" style="display:none" onclick="App.deleteFood()">ВИДАЛИТИ ПРОДУКТ</button>
+    </div>
+</div>
+
+<div id="bankModal" class="modal-overlay">
+    <div class="modal-card" style="height:85vh; max-height:85vh">
+        <div class="mc-header">
+            <h3 class="mc-title">БАЗА ПРОДУКТІВ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        <button class="btn-primary" onclick="App.openBankEdit(null)">+ СТВОРИТИ НОВИЙ</button>
+        <input class="inp-main" style="margin-top:10px; padding:12px; font-size:0.9rem" placeholder="🔍 Фільтр..." oninput="App.renderBank(this.value)">
+        <div class="bank-list-container" id="bankList"></div>
+    </div>
+</div>
+
+<div id="bankEditModal" class="modal-overlay" style="z-index:110">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">РЕДАКТОР</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        
+        <input id="bankInpName" class="inp-main" placeholder="Назва продукту">
+        
+        <div class="stats-grid">
+            <div class="stat-box"><label class="color-p">Б</label><input id="bankInpP" placeholder="0" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-f">Ж</label><input id="bankInpF" placeholder="0" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-c">В</label><input id="bankInpC" placeholder="0" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label>К</label><input id="bankInpK" placeholder="Auto" type="number" inputmode="decimal"></div>
+        </div>
+
+        <div class="chk-wrap">
+            <input type="checkbox" id="bankInpUnit">
+            <label for="bankInpUnit">Це одна порція/шт (не 100г)</label>
+        </div>
+
+        <button class="btn-primary" onclick="App.saveBankItem()">ЗБЕРЕГТИ В БАЗУ</button>
+        <button class="btn-danger" id="btnDelBank" onclick="App.delFromBank()">ВИДАЛИТИ З БАЗИ</button>
+    </div>
+</div>
+
+<div id="dayEditModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">НАЛАШТУВАННЯ ЕТАПУ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        
+        <div style="margin-bottom: 15px; margin-top: 10px;">
+            <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
+            <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
+        </div>
+        
+        <div>
+            <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ПІДПИС (ДЕТАЛІ АБО ТАЙМІНГ)</label>
+            <input id="inpDaySub" class="inp-main" placeholder="Наприклад: Тиждень 3 (Треня)" autocomplete="off">
+        </div>
+        
+        <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
+    </div>
+</div>
+
+<div id="scheduleModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">ТИЖНЕВИЙ МІКРОЦИКЛ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        
+        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; font-family:var(--font-mono); letter-spacing:0.5px; text-align:center;">
+            Прив'яжіть створені етапи до днів тижня. Додаток автоматично завантажить потрібний раціон.
+        </div>
+        
+        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-bottom:10px;"></div>
+        
+        <button class="btn-primary" style="margin-top:20px;" onclick="App.saveSchedule()">ЗБЕРЕГТИ РОЗКЛАД</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="targetsModal">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">🎯 МАКРОСИ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Індивідуальний розрахунок на 1кг ваги</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
+            <button class="preset-btn preset-mass" onclick="App.applyPreset('mass')"><span>ПРОФІЦИТ</span><small>Загрузка</small></button>
+            <button class="preset-btn preset-base" onclick="App.applyPreset('base')"><span>ПІДТРИМКА</span><small>База</small></button>
+            <button class="preset-btn preset-cut" onclick="App.applyPreset('cut')"><span>ДЕФІЦИТ</span><small>Сушка</small></button>
+            <button class="preset-btn preset-zero" onclick="App.applyPreset('zero')"><span>ЯМА</span><small>Безвуглеводка</small></button>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-box"><label class="color-p">БІЛ</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-f">ЖИР</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label class="color-c">ВУГ</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
+            <div class="stat-box"><label>ККАЛ</label><input type="number" id="tgK" inputmode="numeric"></div>
+        </div>
+        
+        <button class="btn-primary" onclick="App.saveTargets()">ЗБЕРЕГТИ ЦІЛЬ</button>
+        <button class="btn-danger" style="color:#888; border-color:#444;" onclick="App.applyTargetsToAll()">ЗАСТОСУВАТИ ДО ВСІХ ДНІВ</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="waterModal">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title" style="display:flex; align-items:center; gap:6px;"><span style="font-size:1.2rem; line-height:1;">💧</span> БАЛАНС</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        <p style="text-align:center; color:#888; font-size:0.75rem; margin-bottom:20px; text-transform:uppercase; letter-spacing:1px;">Гідратація та електроліти</p>
+        
+        <div style="display:flex; justify-content:center; align-items:baseline; gap:10px; margin-bottom:15px;">
+            <input type="number" id="inpWaterL" inputmode="numeric" placeholder="0" class="inp-main" style="width:80px; text-align:center; font-size:1.8rem; font-weight:800; padding:10px;">
+            <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">L</span>
+            <input type="number" id="inpWaterMl" inputmode="numeric" placeholder="00" class="inp-main" style="width:80px; text-align:center; font-size:1.8rem; font-weight:800; padding:10px;">
+            <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">ml</span>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <button class="btn-ghost" onclick="App.adjustWater(0.25)">+250 ml</button>
+            <button class="btn-ghost" onclick="App.adjustWater(0.50)">+500 ml</button>
+            <button class="btn-ghost" onclick="App.adjustWater(1.00)">+1 L</button>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:30px;">
+            <button class="btn-ghost dim" onclick="App.adjustWater(-0.25)">-250 ml</button>
+            <button class="btn-ghost dim" onclick="App.adjustWater(-0.50)">-500 ml</button>
+            <button class="btn-ghost dim" onclick="App.adjustWater(-1.00)">-1 L</button>
+        </div>
+
+        <h4 style="color:#fff; font-size:0.85rem; margin-bottom:15px; text-align:center; border-bottom:1px dashed #333; padding-bottom:5px; letter-spacing:1px;">⚖️ МІНЕРАЛИ</h4>
+        
+        <div style="display:flex; gap:15px; justify-content:center; margin-bottom:25px;">
+            <div style="flex:1; position:relative;">
+                <label style="color:#888; font-size:0.7rem; font-weight:bold; display:block; margin-bottom:5px; text-align:center;">НАТРІЙ (Na)</label>
+                <input type="number" id="inpSodium" inputmode="numeric" placeholder="0" class="inp-main" style="text-align:center; font-size:1.2rem; padding-right:30px;">
+                <span style="position:absolute; right:10px; bottom:16px; color:#555; font-size:0.8rem; font-weight:bold; pointer-events:none;">mg</span>
+            </div>
+            <div style="flex:1; position:relative;">
+                <label style="color:#888; font-size:0.7rem; font-weight:bold; display:block; margin-bottom:5px; text-align:center;">КАЛІЙ (K)</label>
+                <input type="number" id="inpPotassium" inputmode="numeric" placeholder="0" class="inp-main" style="text-align:center; font-size:1.2rem; padding-right:30px;">
+                <span style="position:absolute; right:10px; bottom:16px; color:#555; font-size:0.8rem; font-weight:bold; pointer-events:none;">mg</span>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="App.saveWater()">ЗБЕРЕГТИ БАЛАНС</button>
+    </div>
+</div>
+
+<script src="assets/js/utils.js"></script>  
+<script src="assets/js/nutrition.js"></script> 
+<script src="assets/js/common.js"></script>
+
+<div id="undoFloat" onclick="App.undo()">↩</div>
+
+<style>
+/* Стилі для плаваючої кнопки Undo */
+#undoFloat { 
+    position: fixed; 
+    bottom: 160px; 
+    right: 20px; 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    background: rgba(28,28,30,0.9); 
+    border: 2px solid var(--theme); 
+    color: var(--theme); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.5rem; 
+    font-weight: 800; 
+    z-index: 900; 
+    opacity: 0; 
+    pointer-events: none; 
+    transform: translateY(20px) scale(0.5); 
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    cursor: pointer; 
+    backdrop-filter: blur(5px); 
+}
+#undoFloat.visible { 
+    opacity: 1; 
+    pointer-events: auto; 
+    transform: translateY(0) scale(1); 
+}
+body.modal-active #undoFloat { 
+    opacity: 0 !important; 
+    visibility: hidden !important; 
+    pointer-events: none !important; 
+    transform: translateY(-10px) scale(0.95) !important; 
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; 
+}
+</style>
 </body>
 </html>
