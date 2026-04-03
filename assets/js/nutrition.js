@@ -527,42 +527,26 @@ const App = {
         this.updateStats();
     },
 
-    renderDaysBar() {
+        renderDaysBar() {
         const bar = document.getElementById('dayBar');
         if(!bar) return;
         bar.innerHTML = '';
+        
         this.data.days.forEach(d => {
             const el = document.createElement('div');
             el.className = `day-tab ${d.id === this.state.currentDayId ? 'active' : ''}`;
-            el.style.cursor = 'pointer'; // ГАРАНТІЯ клікабельності
+            el.style.cursor = 'pointer'; 
             
             let t = d.name;
-            let s = ''; // За замовчуванням пусто! Ніяких крапок. (Підпис)
+            let s = ''; 
             if (d.name.includes('|')) {
                 const parts = d.name.split('|');
                 t = parts[0];
                 s = parts[1] || '';
             }
             
-            // Якщо підпис є - малюємо тег <small>. Якщо ні - малюємо тільки головну назву.
             const subHtml = s ? `<small style="pointer-events:none;">${s}</small>` : '';
             el.innerHTML = `<span style="pointer-events:none;">${t}</span>${subHtml}`;
-            // Додати в самий кінець renderDaysBar()
-            const bar = document.getElementById('dayBar');
-            let isDown = false; let startX; let scrollLeft;
-            bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
-            bar.addEventListener('mouseleave', () => { isDown = false; });
-            bar.addEventListener('mouseup', () => { isDown = false; });
-            bar.addEventListener('mousemove', (e) => {
-                if(!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - bar.offsetLeft;
-                const walk = (x - startX) * 2;
-                bar.scrollLeft = scrollLeft - walk;
-            });
-            
-            // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
-            el.innerHTML = `<span style="pointer-events:none;">${t}</span><small style="pointer-events:none;">${s}</small>`;
             
             el.onclick = () => {
                 if(this.state.currentDayId !== d.id) {
@@ -579,7 +563,24 @@ const App = {
         addBtn.style.cursor = 'pointer';
         addBtn.onclick = () => App.addDay();
         bar.appendChild(addBtn);
+
+        // ФІКС КРАШУ: Скрол-логіка тепер ОДИН раз ПОЗА циклом!
+        if (!bar.dataset.dragAttached) {
+            let isDown = false; let startX; let scrollLeft;
+            bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
+            bar.addEventListener('mouseleave', () => { isDown = false; });
+            bar.addEventListener('mouseup', () => { isDown = false; });
+            bar.addEventListener('mousemove', (e) => {
+                if(!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - bar.offsetLeft;
+                const walk = (x - startX) * 2;
+                bar.scrollLeft = scrollLeft - walk;
+            });
+            bar.dataset.dragAttached = 'true';
+        }
     },
+
     updateStats() {
         const day = this.getCurrentDay();
         if(!day) return;
