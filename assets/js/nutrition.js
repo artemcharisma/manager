@@ -971,21 +971,43 @@ const App = {
         document.getElementById('targetsModal').style.display='flex';
     },
 
-    applyPreset(type) {
-        let p = parseInt(document.getElementById('tgP').value) || 200; // Беремо поточні білки як базу
-        let f = parseInt(document.getElementById('tgF').value) || 80;
-        let c = 0;
-
-        switch(type) {
-            case 'high': c = 400; break;
-            case 'med': c = 250; break;
-            case 'low': c = 100; break;
-            case 'zero': c = 30; break; // Слідові з овочів
+    async applyPreset(type) {
+        let weight = null;
+        
+        // 1. Пробуємо взяти вагу з Хабу Фарми (GlobalVitals)
+        if (typeof GlobalVitals !== 'undefined') {
+            weight = GlobalVitals.getLatestWeight();
         }
 
-        document.getElementById('tgC').value = c;
+        // 2. Якщо ваги немає в хабі, беремо з локальної пам'яті Харчування або питаємо
+        if (!weight) weight = this.data.userWeight; 
+
+        if (!weight) {
+            const inputWeight = await Modal.prompt("Для точного розрахунку макросів введіть вашу вагу (кг):", "АНТРОПОМЕТРІЯ", "85");
+            if (!inputWeight) return; 
+            weight = parseFloat(inputWeight.replace(',', '.'));
+            if (isNaN(weight) || weight <= 0) return await Modal.alert("Некоректна вага!", "ПОМИЛКА", "red");
+            
+            this.data.userWeight = weight; // Зберігаємо, щоб не питати двічі
+            this.save();
+        }
+
+        // БОДІБІЛДЕРСЬКІ КОЕФІЦІЄНТИ (на 1 кг ваги тіла)
+        let pMult, fMult, cMult;
+
+        switch(type) {
+            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; // Масонабір (Профіцит)
+            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; // Рекомп (Підтримка)
+            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; // Сушка (Дефіцит)
+            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; // Яма (слідові вуглі, підвищений білок і жир)
+        }
+
+        document.getElementById('tgP').value = Math.round(weight * pMult);
+        document.getElementById('tgF').value = Math.round(weight * fMult);
+        document.getElementById('tgC').value = Math.round(weight * cMult);
         this.calcTargetKcal();
-        if(window.Haptics) window.Haptics.light();
+        
+        if(window.Haptics) window.Haptics.success();
     },
     calcFromWeight() {
         if (typeof GlobalVitals === 'undefined') return;
