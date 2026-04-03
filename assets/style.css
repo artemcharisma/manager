@@ -1,242 +1,127 @@
-/* =========================================
-   PROTOCOL OS - GLOBAL STYLES
-   ========================================= */
+// assets/js/utils.js
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+const Utils = {
+    // Безпечне завантаження даних
+    load(key, defaultData) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : defaultData;
+        } catch (e) {
+            console.warn(`Помилка завантаження даних для ключа "${key}":`, e);
+            return defaultData;
+        }
+    },
 
-:root { 
-    --bg: #030303; 
-    --card-bg: rgba(18, 18, 20, 0.8); 
-    --border: rgba(255, 255, 255, 0.08); 
-    --gold: #d4af37; 
-    --blue: #3b82f6; 
-    --green: #10b981; 
-    --red: #ef4444;
-    --text-main: #ffffff; 
-    --text-dim: #888888; 
-    --text-dark: #555555;
-    --theme: var(--gold); /* Запасний колір, якщо не вказано */
-}
+    // Збереження даних
+    save(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.error(`Помилка збереження даних для ключа "${key}":`, e);
+            alert("Увага! Пам'ять переповнена, дані не збережено.");
+        }
+    },
 
-* { 
-    box-sizing: border-box; 
-    -webkit-user-select: none; 
-    -moz-user-select: none; 
-    user-select: none; 
-    -webkit-tap-highlight-color: transparent; 
-    outline: none; 
-}
+    // Генерація унікального ID
+    id() {
+        return Date.now();
+    },
 
-input, textarea, [contenteditable] {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    user-select: text;
-    cursor: text;
-}
+    // Форматування дати (український формат)
+    date(d = new Date()) {
+        return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
+    }
+};
 
-/* ГЛОБАЛЬНИЙ ФОН (Кіберпанк-сітка) */
-body { 
-    background-color: var(--bg);
-    background-image: 
-        radial-gradient(circle at 50% -20%, #1a1a1a 0%, #030303 70%),
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 100% 100%, 25px 25px, 25px 25px;
-    background-position: center top;
-    background-attachment: fixed;
-    color: var(--text-main); 
-    font-family: 'Inter', -apple-system, sans-serif;
-    margin: 0; padding: 0; 
-    min-height: 100vh; /* Фолбек для старих браузерів */
-    min-height: 100dvh; /* ВАЖЛИВО: Динамічна висота для iOS */
-    overflow-x: hidden; 
-    -webkit-font-smoothing: antialiased; 
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Скролбар */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--theme); }
-
-/* =========================================
-   GLOBAL SYSTEM MENU (FAB)
-   ========================================= */
-#sys-fab {
-    position: fixed; bottom: 90px; right: 20px;
-    width: 50px; height: 50px; background: rgba(15, 15, 15, 0.8);
-    border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 30px; cursor: pointer; z-index: 9000;
-    line-height: 1; padding-bottom: 4px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-    backdrop-filter: blur(5px);
-}
-
-#sys-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-    z-index: 9999; display: none; align-items: flex-end; justify-content: center;
-    opacity: 0; transition: opacity 0.3s;
-}
-#sys-overlay.open { display: flex; opacity: 1; }
-
-.sys-panel {
-    width: 100%; max-width: 500px; background: #0a0a0c;
-    border-top: 1px solid #333; border-radius: 24px 24px 0 0;
-    padding: 25px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    padding-bottom: 50px;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-}
-#sys-overlay.open .sys-panel { transform: translateY(0); }
-
-.sys-header { 
-    display: flex; justify-content: space-between; align-items: center; 
-    margin-bottom: 25px; color: var(--text-dim); 
-    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; 
-}
-.sys-close { font-size: 1.2rem; cursor: pointer; color: #fff; padding: 5px; }
-
-.sys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.sys-card {
-    background: linear-gradient(145deg, #1a1a1c 0%, #101012 100%); 
-    border: 1px solid var(--border); border-radius: 16px;
-    padding: 15px 5px; text-decoration: none; display: flex; flex-direction: column;
-    align-items: center; gap: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-}
-.sys-icon { font-size: 1.8rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-.sys-card span { font-size: 0.65rem; color: #aaa; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.5px;}
-
-/* =========================================
-   PROTOCOL MODAL OS (Глобальні вікна)
-   ========================================= */
-#protocol-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
-    z-index: 10000; display: none; 
-    opacity: 0; transition: opacity 0.2s ease;
-    align-items: center; justify-content: center;
-}
-#protocol-modal-overlay.active { display: flex; opacity: 1; }
-
-#protocol-modal-box {
-    background: linear-gradient(145deg, #101012 0%, #050505 100%);
-    border: 1px solid var(--border); border-radius: 20px;
-    width: 90%; max-width: 400px; padding: 25px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
-    transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-    text-align: center;
-}
-#protocol-modal-overlay.active #protocol-modal-box { transform: scale(1); }
-
-#protocol-modal-box.theme-green { border-color: var(--green); box-shadow: 0 0 30px rgba(16,185,129,0.15); }
-#protocol-modal-box.theme-gold { border-color: var(--gold); box-shadow: 0 0 30px rgba(212,175,55,0.15); }
-#protocol-modal-box.theme-red { border-color: var(--red); box-shadow: 0 0 40px rgba(239,68,68,0.2); }
-
-#protocol-modal-header {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem; color: var(--text-dim); letter-spacing: 2px;
-    text-transform: uppercase; margin-bottom: 18px; font-weight: 700;
-}
-
-#protocol-modal-body {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem; color: #e0e0e0; line-height: 1.6; margin-bottom: 25px;
-    letter-spacing: 0.2px;
-}
-
-#protocol-modal-input-wrap { display: none; margin-top: 15px; }
-#protocol-modal-input {
-    width: 100%; background: #000; border: 1px solid #333; color: #fff;
-    font-family: 'JetBrains Mono', monospace; font-size: 1rem;
-    padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center;
-    outline: none; transition: 0.2s;
-}
-#protocol-modal-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
-
-#protocol-modal-footer { display: grid; gap: 12px; }
-#protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr; }
-
-/* Кнопки всередині модалки */
-.modal-ctrl-btn {
-    background: linear-gradient(to bottom, rgba(25, 25, 28, 0.9), rgba(15, 15, 17, 0.95)); 
-    border: 1px solid rgba(255,255,255,0.05); 
-    padding: 16px; border-radius: 14px;
-    font-size: 0.75rem; cursor: pointer; 
-    font-family: 'JetBrains Mono', monospace; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    letter-spacing: 1px; color: var(--text-main);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.modal-ctrl-btn.sys-save { color: var(--green) !important; border-color: rgba(16, 185, 129, 0.15) !important; background: transparent !important; margin: 0 !important; border-radius: 14px !important; }
-.modal-ctrl-btn.sys-reset { color: var(--red) !important; border-color: rgba(239, 68, 68, 0.15) !important; background: transparent !important; margin: 0 !important; border-radius: 14px !important; }
-
-#modal-btn-cancel {
-    background: linear-gradient(to bottom, rgba(40, 40, 45, 0.8), rgba(25, 25, 30, 0.9));
-    border: 1px solid rgba(255, 255, 255, 0.1); color: #d1d1d1;
-}
-
-/* =========================================
-   ДИНАМІКА КНОПОК ХАБУ ТА ВІКОН (РОЗДІЛЕНО ДЛЯ IOS ТА PC)
-   ========================================= */
-.sys-card, #sys-fab, .modal-ctrl-btn, #modal-btn-cancel {
-    transition: all 0.2s ease !important;
-}
-
-/* 1. МОБІЛЬНІ ПРИСТРОЇ (Тільки при утриманні пальця, без залипання) */
-.sys-card:active { transform: scale(0.95) !important; background: #222 !important; border-color: #555 !important; }
-#sys-fab:active { transform: scale(0.9) !important; background: #222 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; }
-.modal-ctrl-btn:active, #modal-btn-cancel:active { transform: scale(0.96) !important; filter: brightness(1.2) !important; }
-
-/* 2. КОМП'ЮТЕР (Тільки при наведенні мишки) */
-@media (hover: hover) {
-    .sys-card:hover { background: #222 !important; border-color: #555 !important; transform: translateY(-2px); }
-    #sys-fab:hover { background: #222 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; transform: scale(1.05); }
+// ГЛОБАЛЬНИЙ СЕРВІС ЖИТТЄВИХ ПОКАЗНИКІВ
+const GlobalVitals = {
+    key: 'protocol_global_vitals',
     
-    /* Нейтральне виділення для Скасувати / звичайних ОК */
-    .modal-ctrl-btn:hover { filter: brightness(1.2) !important; transform: translateY(-1px); }
-    #modal-btn-cancel:hover { background: rgba(255, 255, 255, 0.05) !important; transform: translateY(-1px); }
-    
-    /* ЕСТЕЧНИЙ БАЛАНС: Підсвітка для кнопки ПІДТВЕРДИТИ (Червона) */
-    .modal-ctrl-btn.sys-reset:hover {
-        border-color: rgba(239, 68, 68, 0.5) !important;
-        background: rgba(239, 68, 68, 0.1) !important;
-        color: #ffb3b3 !important;
-        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2) !important;
-        filter: none !important;
+    // Форматування будь-якого Date об'єкта у строгий формат YYYY-MM-DD
+    formatDate(dateObj) {
+        const d = new Date(dateObj);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    },
+
+    getAll() {
+        return Utils.load(this.key, {});
+    },
+
+    get(dateString) {
+        const all = this.getAll();
+        return all[dateString] || { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
+    },
+
+    save(dateString, field, value) {
+        const all = this.getAll();
+        if (!all[dateString]) {
+            all[dateString] = { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
+        }
+        all[dateString][field] = value;
+        Utils.save(this.key, all);
+    },
+
+    // Отримання останньої введеної ваги (для Хабу та розрахунків дозувань)
+    getLatestWeight() {
+        const all = this.getAll();
+        const dates = Object.keys(all).sort((a, b) => new Date(b) - new Date(a));
+        for (let d of dates) {
+            if (all[d].w) return parseFloat(all[d].w);
+        }
+        return null;
+    }
+};
+
+class StateManager {
+    constructor(key, defaultData) {
+        this.key = key;
+        this.defaultData = defaultData;
+        this.history = [];
+    }
+
+    // Завантаження даних
+    init() {
+        const s = localStorage.getItem(this.key);
+        if (s) {
+            try {
+                return { ...this.defaultData, ...JSON.parse(s) };
+            } catch (e) {
+                console.error("Error parsing data", e);
+                return JSON.parse(JSON.stringify(this.defaultData));
+            }
+        }
+        return JSON.parse(JSON.stringify(this.defaultData));
+    }
+
+    // Збереження
+    save(data) {
+        try {
+            localStorage.setItem(this.key, JSON.stringify(data));
+        } catch (e) {
+            alert("Пам'ять переповнена! Видаліть щось.");
+        }
+    }
+
+    // Додати в історію (для Undo)
+    push(data) {
+        if (this.history.length > 20) this.history.shift();
+        this.history.push(JSON.stringify(data));
+        return true;
+    }
+
+    // Повернути назад
+    undo(currentData) {
+        if (this.history.length === 0) return null;
+        const prevData = JSON.parse(this.history.pop());
+        this.save(prevData);
+        return prevData;
     }
     
-    /* Підсвітка для кнопки ОК (Зелена) */
-    .modal-ctrl-btn.sys-save:hover {
-        border-color: rgba(16, 185, 129, 0.5) !important;
-        background: rgba(16, 185, 129, 0.1) !important;
-        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2) !important;
-        filter: none !important;
+    // Експорт файлу
+    export(data, filename) {
+        const a = document.createElement('a');
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        a.download = filename;
+        a.click();
     }
 }
-
-/* --- ФІКСИ ДЛЯ IOS ТА РОЗМІРІВ КНОПОК --- */
-#protocol-modal-overlay, #sys-overlay { height: 100dvh !important; }
-.modal-ctrl-btn { width: 100% !important; }
-
-body {
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
-}
-
-/* ДОЗВІЛ ЛИШЕ ДЛЯ ПОЛІВ ВВОДУ */
-input, textarea, [contenteditable="true"] {
-    -webkit-touch-callout: default !important;
-    -webkit-user-select: text !important;
-    user-select: text !important;
-    cursor: text !important;
-}
-
-#protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
-
-/* Фікс однакового розміру кнопок у модалці */
-#protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
