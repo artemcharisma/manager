@@ -1055,9 +1055,15 @@ const App = {
         
         this.save(); 
         
-        // КРИТИЧНО ДЛЯ ТОГО, ЩОБ ЦИФРИ ОНОВИЛИСЯ НА ЕКРАНІ:
+        const dispT = document.getElementById('disp-target');
+        if(dispT) {
+            // Жорстко перевіряємо, чи є цілі у конкретного дня, якщо ні - беремо глобальні
+            const currentKcal = day.targets && day.targets.k ? day.targets.k : (this.data.targets ? this.data.targets.k : 0);
+            dispT.innerText = currentKcal;
+        }
+        
         this.render(false); 
-        this.updateStats(); 
+        this.updateStats();
         
         this.closeModal();
     },
