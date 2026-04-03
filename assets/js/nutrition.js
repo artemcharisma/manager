@@ -974,26 +974,33 @@ const App = {
     async applyPreset(type) {
         let weight = null;
         
-        if (typeof GlobalVitals !== 'undefined') weight = GlobalVitals.getLatestWeight();
+        // 1. Пробуємо дістати вагу з глобального хабу
+        if (typeof GlobalVitals !== 'undefined') {
+            weight = GlobalVitals.getLatestWeight();
+        }
+        
+        // 2. Якщо немає, шукаємо локальну
         if (!weight) weight = this.data.userWeight; 
 
+        // 3. Якщо ваги ніде немає — запитуємо 1 раз
         if (!weight) {
-            const inputWeight = await Modal.prompt("Для розрахунку макросів введіть вашу вагу (кг):", "АНТРОПОМЕТРІЯ", "85");
+            const inputWeight = await Modal.prompt("Для смарт-розрахунку введіть вашу вагу (кг):", "АНТРОПОМЕТРІЯ", "85");
             if (!inputWeight) return; 
             weight = parseFloat(inputWeight.replace(',', '.'));
             if (isNaN(weight) || weight <= 0) return await Modal.alert("Некоректна вага!", "ПОМИЛКА", "red");
             
-            this.data.userWeight = weight; 
+            this.data.userWeight = weight; // Зберігаємо локально
             this.save();
         }
 
+        // БОДІБІЛДЕРСЬКІ КОЕФІЦІЄНТИ (на 1 кг маси тіла)
         let pMult, fMult, cMult;
 
         switch(type) {
-            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; 
-            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; 
-            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; 
-            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; 
+            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; // ЗАГРУЗКА
+            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; // БАЗА
+            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; // СУШКА
+            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; // БЕЗВУГЛЕВОДКА
         }
 
         document.getElementById('tgP').value = Math.round(weight * pMult);
@@ -1044,13 +1051,13 @@ const App = {
         };
         
         day.targets = newT;
-        this.data.targets = { ...newT }; 
+        this.data.targets = { ...newT }; // Оновлюємо глобальні як резерв
         
         this.save(); 
         
-        // КРИТИЧНО ДЛЯ ОНОВЛЕННЯ 2700:
+        // КРИТИЧНО ДЛЯ ТОГО, ЩОБ ЦИФРИ ОНОВИЛИСЯ НА ЕКРАНІ:
         this.render(false); 
-        this.updateStats(); // Подвійний пуш для гарантії оновлення DOM
+        this.updateStats(); 
         
         this.closeModal();
     },
