@@ -259,17 +259,15 @@
         </div>
     </div>
 
-    <script src="assets/js/utils.js"></script>
     <script src="assets/js/common.js"></script>
 
     <script>
         function updateClock() {
             const now = new Date();
-            const timeEl = document.getElementById('clock-time');
-            const dateEl = document.getElementById('clock-date');
-            if(timeEl) timeEl.innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
-            if(dateEl) dateEl.innerText = now.toLocaleDateString('uk-UA', {weekday:'short', day:'2-digit', month:'2-digit'});
+            document.getElementById('clock-time').innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('uk-UA', {weekday:'short', day:'2-digit', month:'2-digit'});
         }
+        setInterval(updateClock, 1000); 
 
         function getDayMacros(day, bank) {
             let p=0, f=0, c=0, kcal=0;
@@ -293,27 +291,40 @@
         }
 
         function populateSmartCards() {
-            // БЛОК 1: ДАНІ З ФАРМИ (GOLD PROTOCOL)
             try {
                 const ph = JSON.parse(localStorage.getItem('gold_protocol'));
-                if (ph && ph.schedule && ph.startDate) {
-                    const startDate = new Date(ph.startDate); const now = new Date();
-                    const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                    const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
-                    const diffTime = now.getTime() - startMonday.getTime();
-                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-                    if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
-                    let phaseTitle = "Курс";
-                    if (ph.phases) {
-                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
-                        if (currentPhase) phaseTitle = currentPhase.title;
+                if (ph) {
+                    if (ph.schedule && ph.startDate) {
+                        const startDate = new Date(ph.startDate); const now = new Date();
+                        const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                        const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
+                        const diffTime = now.getTime() - startMonday.getTime();
+                        let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                        const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
+                        if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
+                        let phaseTitle = "Курс";
+                        if (ph.phases) {
+                            const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
+                            if (currentPhase) phaseTitle = currentPhase.title;
+                        }
+                        document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
                     }
-                    document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
+                    if(ph.vitals) {
+                        let latestW = "--.--<span>KG</span>", latestBP = "--/--";
+                        const keys = Object.keys(ph.vitals).sort((a,b) => {
+                            const [wA, dA] = a.split('-').map(Number); const [wB, dB] = b.split('-').map(Number);
+                            if(wA !== wB) return wB - wA; return dB - dA;
+                        });
+                        for(let key of keys) {
+                            if(ph.vitals[key].w && latestW.includes("--")) latestW = ph.vitals[key].w + "<span>KG</span>";
+                            if(ph.vitals[key].bp && latestBP === "--/--") latestBP = ph.vitals[key].bp;
+                            if(!latestW.includes("--") && latestBP !== "--/--") break;
+                        }
+                        document.getElementById('vital-weight').innerHTML = latestW; document.getElementById('vital-bp').innerHTML = latestBP;
+                    }
                 }
             } catch(e){}
 
-            // БЛОК 2: ТРЕНУВАННЯ
             try {
                 const tr = JSON.parse(localStorage.getItem('training_protocol'));
                 if (tr && tr.weeks && tr.weeks.length > 0) {
@@ -324,7 +335,6 @@
                 }
             } catch(e){}
 
-            // БЛОК 3: ХАРЧУВАННЯ
             try {
                 const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days) {
@@ -339,17 +349,6 @@
                     }
                     if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
                     else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
-                }
-            } catch(e){}
-
-            // БЛОК 4: ГЛОБАЛЬНІ ПОКАЗНИКИ (Вага та Тиск з GlobalVitals)
-            try {
-                if (typeof GlobalVitals !== 'undefined') {
-                    const weight = GlobalVitals.getLatestWeight();
-                    const bp = GlobalVitals.getLatestBP();
-                    
-                    document.getElementById('vital-weight').innerHTML = weight ? `${weight}<span>KG</span>` : "--.--<span>KG</span>";
-                    document.getElementById('vital-bp').innerHTML = bp ? bp : "--/--";
                 }
             } catch(e){}
         }
@@ -410,17 +409,11 @@
 
         function FullWipe() { localStorage.clear(); location.reload(); }
 
-        // БРОНЕБІЙНИЙ ЗАПУСК
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                updateClock();
-                setInterval(updateClock, 1000); 
-                updateBackupLabel();
-                populateSmartCards(); 
-            } catch(e) {
-                console.error("Initialization error:", e);
-            }
-        });
+        window.onload = () => {
+            updateClock();
+            updateBackupLabel();
+            populateSmartCards(); 
+        };
     </script>
 </body>
 </html>
