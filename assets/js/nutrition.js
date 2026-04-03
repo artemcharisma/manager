@@ -974,32 +974,30 @@ const App = {
     async applyPreset(type) {
         let weight = null;
         
-        // 1. Пробуємо взяти вагу з Хабу Фарми (GlobalVitals)
-        if (typeof GlobalVitals !== 'undefined') {
-            weight = GlobalVitals.getLatestWeight();
-        }
-
-        // 2. Якщо ваги немає в хабі, беремо з локальної пам'яті Харчування або питаємо
+        // Пробуємо дістати вагу з глобального хабу
+        if (typeof GlobalVitals !== 'undefined') weight = GlobalVitals.getLatestWeight();
+        
+        // Якщо там немає - шукаємо локальну збережену
         if (!weight) weight = this.data.userWeight; 
 
+        // Якщо ваги ніде немає - просимо ввести 1 раз
         if (!weight) {
-            const inputWeight = await Modal.prompt("Для точного розрахунку макросів введіть вашу вагу (кг):", "АНТРОПОМЕТРІЯ", "85");
+            const inputWeight = await Modal.prompt("Для смарт-розрахунку макросів введіть вашу вагу (кг):", "АНТРОПОМЕТРІЯ", "85");
             if (!inputWeight) return; 
             weight = parseFloat(inputWeight.replace(',', '.'));
             if (isNaN(weight) || weight <= 0) return await Modal.alert("Некоректна вага!", "ПОМИЛКА", "red");
             
-            this.data.userWeight = weight; // Зберігаємо, щоб не питати двічі
+            this.data.userWeight = weight; // Зберігаємо, щоб більше не питати
             this.save();
         }
 
-        // БОДІБІЛДЕРСЬКІ КОЕФІЦІЄНТИ (на 1 кг ваги тіла)
+        // Жорсткі множники на 1 кг маси тіла
         let pMult, fMult, cMult;
-
         switch(type) {
-            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; // Масонабір (Профіцит)
-            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; // Рекомп (Підтримка)
-            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; // Сушка (Дефіцит)
-            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; // Яма (слідові вуглі, підвищений білок і жир)
+            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; // Профіцит
+            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; // Підтримка
+            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; // Дефіцит
+            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; // Слідові вуглі, підвищений білок/жир
         }
 
         document.getElementById('tgP').value = Math.round(weight * pMult);
@@ -1007,7 +1005,7 @@ const App = {
         document.getElementById('tgC').value = Math.round(weight * cMult);
         this.calcTargetKcal();
         
-        if(window.Haptics) window.Haptics.success();
+        if(window.Haptics) window.Haptics.light();
     },
     calcFromWeight() {
         if (typeof GlobalVitals === 'undefined') return;
