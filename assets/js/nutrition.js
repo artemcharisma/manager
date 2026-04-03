@@ -527,25 +527,42 @@ const App = {
         this.updateStats();
     },
 
-        renderDaysBar() {
+    renderDaysBar() {
         const bar = document.getElementById('dayBar');
         if(!bar) return;
         bar.innerHTML = '';
         this.data.days.forEach(d => {
             const el = document.createElement('div');
             el.className = `day-tab ${d.id === this.state.currentDayId ? 'active' : ''}`;
-            el.style.cursor = 'pointer'; 
+            el.style.cursor = 'pointer'; // ГАРАНТІЯ клікабельності
             
             let t = d.name;
-            let s = ''; 
+            let s = ''; // За замовчуванням пусто! Ніяких крапок. (Підпис)
             if (d.name.includes('|')) {
                 const parts = d.name.split('|');
                 t = parts[0];
                 s = parts[1] || '';
             }
             
+            // Якщо підпис є - малюємо тег <small>. Якщо ні - малюємо тільки головну назву.
             const subHtml = s ? `<small style="pointer-events:none;">${s}</small>` : '';
             el.innerHTML = `<span style="pointer-events:none;">${t}</span>${subHtml}`;
+            // Додати в самий кінець renderDaysBar()
+            const bar = document.getElementById('dayBar');
+            let isDown = false; let startX; let scrollLeft;
+            bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
+            bar.addEventListener('mouseleave', () => { isDown = false; });
+            bar.addEventListener('mouseup', () => { isDown = false; });
+            bar.addEventListener('mousemove', (e) => {
+                if(!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - bar.offsetLeft;
+                const walk = (x - startX) * 2;
+                bar.scrollLeft = scrollLeft - walk;
+            });
+            
+            // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
+            el.innerHTML = `<span style="pointer-events:none;">${t}</span><small style="pointer-events:none;">${s}</small>`;
             
             el.onclick = () => {
                 if(this.state.currentDayId !== d.id) {
@@ -562,25 +579,8 @@ const App = {
         addBtn.style.cursor = 'pointer';
         addBtn.onclick = () => App.addDay();
         bar.appendChild(addBtn);
-
-        // ФІКС КРАШУ: Логіка скролу ТЕПЕР ПОЗА ЦИКЛОМ! 
-        if (!bar.dataset.dragAttached) {
-            let isDown = false; let startX; let scrollLeft;
-            bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
-            bar.addEventListener('mouseleave', () => { isDown = false; });
-            bar.addEventListener('mouseup', () => { isDown = false; });
-            bar.addEventListener('mousemove', (e) => {
-                if(!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - bar.offsetLeft;
-                const walk = (x - startX) * 2;
-                bar.scrollLeft = scrollLeft - walk;
-            });
-            bar.dataset.dragAttached = 'true';
-        }
     },
-
-        updateStats() {
+    updateStats() {
         const day = this.getCurrentDay();
         if(!day) return;
         let t = {p:0, f:0, c:0, k:0};
@@ -593,27 +593,27 @@ const App = {
                 t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
             }
         }));
-        
-        // ФІКС КРАШУ: Захист від пустої цілі (undefined/null)
-        const tg = (day.targets && day.targets.k) ? day.targets : (this.data.targets || {p:0, f:0, c:0, k:0});
+        const tg = day.targets || this.data.targets;
         
         const dispK = document.getElementById('disp-k');
         if(dispK) {
             dispK.innerText = Math.round(t.k);
-            if(t.k > (tg.k || 0)) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
+            if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
         }
         
+        // --- ВІДНОВЛЕНИЙ КОД: ОНОВЛЕННЯ ЦІЛІ НА ЕКРАНІ ---
         const dispT = document.getElementById('disp-target');
-        if(dispT) dispT.innerText = Math.round(tg.k || 0);
+        if(dispT) dispT.innerText = tg.k;
+        // -------------------------------------------------
         
         const dispW = document.getElementById('disp-w');
-        if(dispW) dispW.innerText = (day.water || 0).toFixed(2);
-
+        if(dispW) dispW.innerText = (day.water || 0).toFixed(2); // Показуємо 2 знаки (напр. 2.50)
+        // ОНОВЛЕННЯ ЕЛЕКТРОЛІТІВ (якщо є елементи в UI для їх показу, інакше просто зберігаємо в об'єкті)
         const dispNa = document.getElementById('disp-na');
         const dispK_el = document.getElementById('disp-k-el');
         if(dispNa) dispNa.innerText = day.na || 0;
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
-
+        // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
         let pPct = 0, fPct = 0, cPct = 0;
         if (totalMacroKcal > 0) {
@@ -630,17 +630,13 @@ const App = {
             const el = document.getElementById('bar-'+id);
             const txt = document.getElementById('disp-'+id);
             if(el && txt) {
-                // ФІКС КРАШУ: Захист від ділення на нуль, якщо ціль не встановлена
-                const pct = Math.min(100, max > 0 ? (val/max)*100 : 0);
+                const pct = Math.min(100, (val/max)*100);
                 el.style.width = pct + '%';
                 txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
             }
         };
-        updateBar('p', t.p, tg.p || 0); 
-        updateBar('f', t.f, tg.f || 0); 
-        updateBar('c', t.c, tg.c || 0);
+        updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
     },
-
     searchFood(q) {
         const list = document.getElementById('sugg-list');
         list.innerHTML = '';
