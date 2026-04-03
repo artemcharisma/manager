@@ -185,7 +185,7 @@
         .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
         .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
 
-        .hud-badges { display: flex; flex-direction: column; gap: 8px; width: 145px; }
+        .hud-badges { display: flex; flex-direction: column; gap: 8px; min-width: 145px; }
         .target-badge, .water-badge {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; box-sizing: border-box;
@@ -331,6 +331,39 @@
         .bank-row b { display: block; font-size: 1rem; color: #fff; margin-bottom: 4px; }
         .bank-row span { font-family: var(--font-mono); font-size: 0.75rem; color: #666; }
 
+        /* --- ПРЕМІУМ КНОПКИ ДЛЯ ВОДИ (вбиваємо білі системні рамки) --- */
+        .btn-ghost {
+            background: transparent; border: 1px dashed #444; color: #aaa;
+            border-radius: 10px; padding: 10px;
+            font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono);
+            transition: 0.2s; cursor: pointer; outline: none;
+            -webkit-appearance: none; /* Жорстко прибирає системні стилі iOS */
+        }
+        .btn-ghost:active { background: rgba(255,255,255,0.05); color: #fff; border-color: #666; }
+        .btn-ghost.dim { opacity: 0.6; }
+
+        /* --- ПРЕМІУМ КНОПКИ ПРЕСЕТІВ МАКРОСІВ --- */
+        .preset-btn {
+            width: 100%; padding: 12px 5px; border-radius: 8px; 
+            font-family: var(--font-mono); cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            gap: 4px; line-height: 1.2; text-align: center; outline: none;
+            -webkit-appearance: none;
+        }
+        .preset-btn span { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; }
+        .preset-btn small { font-size: 0.55rem; font-weight: 700; opacity: 0.7; font-family: var(--font-ui); text-transform: uppercase; }
+        
+        .preset-mass { background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); }
+        .preset-mass:active { background: rgba(16, 185, 129, 0.15); }
+        
+        .preset-base { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme); }
+        .preset-base:active { background: rgba(212, 175, 55, 0.15); }
+        
+        .preset-cut { background: rgba(255, 255, 255, 0.02); border: 1px dashed #555; color: #ccc; }
+        .preset-cut:active { background: rgba(255, 255, 255, 0.08); border-color: #888; color: #fff; }
+        
+        .preset-zero { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); }
+        .preset-zero:active { background: rgba(239, 68, 68, 0.15); }
     </style>
 </head>
 <body ontouchstart="">
@@ -379,10 +412,12 @@
             
             <div class="hud-badges">
                 <div class="target-badge" onclick="App.openTargets()">
-                    <span>🎯 ЦІЛЬ:</span> <span><span id="disp-target">0</span> <small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></span>
+                    <div style="display:flex; align-items:center; gap:6px;"><span style="font-size:1rem; line-height:1;">🎯</span> <span>ЦІЛЬ:</span></div>
+                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-target" style="color:var(--theme); font-weight:800; font-size:1.1rem;">0</span><small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></div>
                 </div>
                 <div class="water-badge" onclick="App.editWater()">
-                    <span>💧 ВОДА:</span> <span><span id="disp-w" style="color:var(--p-color);">0.00</span> <small style="color:#666; font-size:0.65rem; font-weight:700;">L</small></span>
+                    <div style="display:flex; align-items:center; gap:6px;"><span style="font-size:1rem; line-height:1;">💧</span> <span>ВОДА:</span></div>
+                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-w" style="color:var(--p-color); font-weight:800; font-size:1.1rem;">0.00</span><small style="color:#666; font-size:0.65rem; font-weight:700;">L</small></div>
                 </div>
             </div>
         </div>
@@ -527,10 +562,10 @@
         <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Індивідуальний розрахунок на 1кг ваги</p>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
-            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px; color:var(--theme);" onclick="App.applyPreset('mass')">ЗАГРУЗКА (ПРОФІЦИТ)</button>
-            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('base')">БАЗА (ПІДТРИМКА)</button>
-            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px;" onclick="App.applyPreset('cut')">СУШКА (ДЕФІЦИТ)</button>
-            <button class="btn-action" style="font-size:0.65rem; padding:10px; border-radius:8px; color:var(--danger);" onclick="App.applyPreset('zero')">БЕЗВУГЛЕВОДКА</button>
+            <button class="preset-btn preset-mass" onclick="App.applyPreset('mass')"><span>ПРОФІЦИТ</span><small>Загрузка</small></button>
+            <button class="preset-btn preset-base" onclick="App.applyPreset('base')"><span>ПІДТРИМКА</span><small>База</small></button>
+            <button class="preset-btn preset-cut" onclick="App.applyPreset('cut')"><span>ДЕФІЦИТ</span><small>Сушка</small></button>
+            <button class="preset-btn preset-zero" onclick="App.applyPreset('zero')"><span>ЯМА</span><small>Безвуглеводка</small></button>
         </div>
 
         <div class="stats-grid" style="margin-bottom:20px;">
@@ -561,14 +596,14 @@
         </div>
         
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
-            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px;" onclick="App.adjustWater(0.25)">+250 ml</button>
-            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px;" onclick="App.adjustWater(0.50)">+500 ml</button>
-            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px;" onclick="App.adjustWater(1.00)">+1 L</button>
+            <button class="btn-ghost" onclick="App.adjustWater(0.25)">+250 ml</button>
+            <button class="btn-ghost" onclick="App.adjustWater(0.50)">+500 ml</button>
+            <button class="btn-ghost" onclick="App.adjustWater(1.00)">+1 L</button>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:30px;">
-            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px; color:#666;" onclick="App.adjustWater(-0.25)">-250 ml</button>
-            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px; color:#666;" onclick="App.adjustWater(-0.50)">-500 ml</button>
-            <button class="btn-ghost" style="border:1px dashed #333; border-radius:10px; padding:10px; color:#666;" onclick="App.adjustWater(-1.00)">-1 L</button>
+            <button class="btn-ghost dim" onclick="App.adjustWater(-0.25)">-250 ml</button>
+            <button class="btn-ghost dim" onclick="App.adjustWater(-0.50)">-500 ml</button>
+            <button class="btn-ghost dim" onclick="App.adjustWater(-1.00)">-1 L</button>
         </div>
 
         <h4 style="color:#fff; font-size:0.85rem; margin-bottom:15px; text-align:center; border-bottom:1px dashed #333; padding-bottom:5px; letter-spacing:1px;">⚖️ МІНЕРАЛИ</h4>
