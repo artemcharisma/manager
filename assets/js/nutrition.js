@@ -581,7 +581,7 @@ const App = {
         }
     },
 
-    updateStats() {
+        updateStats() {
         const day = this.getCurrentDay();
         if(!day) return;
         let t = {p:0, f:0, c:0, k:0};
@@ -594,7 +594,9 @@ const App = {
                 t.p += f.p||0; t.f += f.f||0; t.c += f.c||0; t.k += f.k||0;
             }
         }));
-        const tg = day.targets || this.data.targets;
+        
+        // ФІКС КРАШУ: Безпечне зчитування цілі, навіть якщо база пуста
+        const tg = (day.targets && day.targets.k) ? day.targets : (this.data.targets || {p:0, f:0, c:0, k:0});
         
         const dispK = document.getElementById('disp-k');
         if(dispK) {
@@ -602,19 +604,17 @@ const App = {
             if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
         }
         
-        // --- ВІДНОВЛЕНИЙ КОД: ОНОВЛЕННЯ ЦІЛІ НА ЕКРАНІ ---
         const dispT = document.getElementById('disp-target');
-        if(dispT) dispT.innerText = tg.k;
-        // -------------------------------------------------
+        if(dispT) dispT.innerText = Math.round(tg.k || 0);
         
         const dispW = document.getElementById('disp-w');
-        if(dispW) dispW.innerText = (day.water || 0).toFixed(2); // Показуємо 2 знаки (напр. 2.50)
-        // ОНОВЛЕННЯ ЕЛЕКТРОЛІТІВ (якщо є елементи в UI для їх показу, інакше просто зберігаємо в об'єкті)
+        if(dispW) dispW.innerText = (day.water || 0).toFixed(2);
+
         const dispNa = document.getElementById('disp-na');
         const dispK_el = document.getElementById('disp-k-el');
         if(dispNa) dispNa.innerText = day.na || 0;
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
-        // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ
+
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
         let pPct = 0, fPct = 0, cPct = 0;
         if (totalMacroKcal > 0) {
@@ -631,13 +631,16 @@ const App = {
             const el = document.getElementById('bar-'+id);
             const txt = document.getElementById('disp-'+id);
             if(el && txt) {
-                const pct = Math.min(100, (val/max)*100);
+                const pct = Math.min(100, max > 0 ? (val/max)*100 : 0); // Захист від ділення на нуль
                 el.style.width = pct + '%';
                 txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
             }
         };
-        updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
+        updateBar('p', t.p, tg.p || 0); 
+        updateBar('f', t.f, tg.f || 0); 
+        updateBar('c', t.c, tg.c || 0);
     },
+
     searchFood(q) {
         const list = document.getElementById('sugg-list');
         list.innerHTML = '';
