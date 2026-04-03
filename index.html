@@ -234,4 +234,193 @@
                 <div class="v-item right">
                     <span class="v-label" style="color: var(--red);">
                         <svg viewBox="0 0 50 20" class="ecg-svg">
-                            <path class="ecg-line" d="M 0,10 L
+                            <path class="ecg-line" d="M 0,10 L 12,10 L 16,3 L 22,17 L 26,10 L 50,10" />
+                        </svg>
+                        BLOOD PRESSURE
+                    </span>
+                    <span class="v-val" id="vital-bp">--/--</span>
+                </div>
+            </div>
+
+            <div class="sys-control-title">SYSTEM CONTROL</div>
+
+            <div class="controls-grid">
+                <button onclick="CreateRestorePoint()" class="ctrl-btn btn-save">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    BACKUP
+                </button>
+                <button onclick="SystemReset()" class="ctrl-btn btn-reset">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    WIPE ALL
+                </button>
+            </div>
+            
+            <div id="last-backup" class="last-backup">NO BACKUP FOUND</div>
+        </div>
+    </div>
+
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/common.js"></script>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeEl = document.getElementById('clock-time');
+            const dateEl = document.getElementById('clock-date');
+            if(timeEl) timeEl.innerText = now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+            if(dateEl) dateEl.innerText = now.toLocaleDateString('uk-UA', {weekday:'short', day:'2-digit', month:'2-digit'});
+        }
+
+        function getDayMacros(day, bank) {
+            let p=0, f=0, c=0, kcal=0;
+            if (day && day.meals) {
+                day.meals.forEach(m => {
+                    if (m.foods) {
+                        m.foods.forEach(item => {
+                            const ref = bank[item.n];
+                            if (ref) {
+                                const ratio = ref.unit ? parseFloat(item.w) : parseFloat(item.w) / 100;
+                                p += (parseFloat(ref.p)||0) * ratio; f += (parseFloat(ref.f)||0) * ratio;
+                                c += (parseFloat(ref.c)||0) * ratio; kcal += (parseFloat(ref.k)||0) * ratio;
+                            } else {
+                                p += parseFloat(item.p)||0; f += parseFloat(item.f)||0; c += parseFloat(item.c)||0; kcal += parseFloat(item.k)||0;
+                            }
+                        });
+                    }
+                });
+            }
+            return { p: Math.round(p), f: Math.round(f), c: Math.round(c), kcal: Math.round(kcal) };
+        }
+
+        function populateSmartCards() {
+            // БЛОК 1: ДАНІ З ФАРМИ (GOLD PROTOCOL)
+            try {
+                const ph = JSON.parse(localStorage.getItem('gold_protocol'));
+                if (ph && ph.schedule && ph.startDate) {
+                    const startDate = new Date(ph.startDate); const now = new Date();
+                    const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                    const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
+                    const diffTime = now.getTime() - startMonday.getTime();
+                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
+                    if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
+                    let phaseTitle = "Курс";
+                    if (ph.phases) {
+                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
+                        if (currentPhase) phaseTitle = currentPhase.title;
+                    }
+                    document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
+                }
+            } catch(e){}
+
+            // БЛОК 2: ТРЕНУВАННЯ
+            try {
+                const tr = JSON.parse(localStorage.getItem('training_protocol'));
+                if (tr && tr.weeks && tr.weeks.length > 0) {
+                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
+                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
+                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
+                    document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
+                }
+            } catch(e){}
+
+            // БЛОК 3: ХАРЧУВАННЯ
+            try {
+                const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
+                if (nu && nu.days) {
+                    const bank = nu.bank || {}; let htmlContent = '';
+                    if (nu.days[0]) {
+                        const d1 = getDayMacros(nu.days[0], bank);
+                        if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
+                    }
+                    if (nu.days[1]) {
+                        const d2 = getDayMacros(nu.days[1], bank);
+                        if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
+                    }
+                    if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
+                    else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
+                }
+            } catch(e){}
+
+            // БЛОК 4: ГЛОБАЛЬНІ ПОКАЗНИКИ (Вага та Тиск з GlobalVitals)
+            try {
+                if (typeof GlobalVitals !== 'undefined') {
+                    const weight = GlobalVitals.getLatestWeight();
+                    const bp = GlobalVitals.getLatestBP();
+                    
+                    document.getElementById('vital-weight').innerHTML = weight ? `${weight}<span>KG</span>` : "--.--<span>KG</span>";
+                    document.getElementById('vital-bp').innerHTML = bp ? bp : "--/--";
+                }
+            } catch(e){}
+        }
+
+        const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
+
+        async function CreateRestorePoint() {
+            const msg = `Створити нову резервну копію (Backup)?<br><br>
+                         <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
+                            Попередня копія буде перезаписана поточним станом бази даних.
+                         </span>`;
+            const confirmed = await Modal.confirm(msg, "СТВОРЕННЯ BACKUP", "gold");
+            if(!confirmed) return; 
+
+            let savedCount = 0;
+            APP_KEYS.forEach(k => { const d = localStorage.getItem(k); if(d) { localStorage.setItem(k + '_backup', d); savedCount++; } });
+            localStorage.setItem('backup_timestamp', new Date().toLocaleString('uk-UA'));
+            updateBackupLabel();
+            
+            if(savedCount > 0) await Modal.alert("Резервну копію успішно створено.", "BACKUP СТВОРЕНО", "green");
+            else await Modal.alert("Система пуста. Немає даних для бекапу.", "ПОВІДОМЛЕННЯ", "gold");
+        }
+
+        function updateBackupLabel() {
+            const ts = localStorage.getItem('backup_timestamp');
+            const el = document.getElementById('last-backup');
+            if(ts) { el.innerText = "LAST BACKUP: " + ts; el.style.color = "var(--green)"; } 
+            else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
+        }
+
+        async function SystemReset() {
+            const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
+            if(hasBackup) {
+                const promptText = `
+                    <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ВІДНОВИТИ з Backup</span></div>
+                            <div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div>
+                        </div>
+                    </div>
+                `;
+                const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "Введіть 1 або 2");
+                
+                if (choice === '1') {
+                    if (await Modal.confirm("Ви точно хочете відновити систему з останнього Backup?", "ВІДНОВЛЕННЯ ДАНИХ", "green")) {
+                        APP_KEYS.forEach(k => { const b = localStorage.getItem(k + '_backup'); if(b) localStorage.setItem(k, b); });
+                        await Modal.alert("Систему успішно відновлено!", "ВІДНОВЛЕНО", "green");
+                        location.reload();
+                    }
+                } else if (choice === '2') {
+                    if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО.</span><br><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red")) FullWipe();
+                }
+            } else {
+                if (await Modal.confirm("Резервних копій не знайдено.<br>Ви впевнені, що хочете очистити систему?", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red")) FullWipe();
+            }
+        }
+
+        function FullWipe() { localStorage.clear(); location.reload(); }
+
+        // БРОНЕБІЙНИЙ ЗАПУСК
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                updateClock();
+                setInterval(updateClock, 1000); 
+                updateBackupLabel();
+                populateSmartCards(); 
+            } catch(e) {
+                console.error("Initialization error:", e);
+            }
+        });
+    </script>
+</body>
+</html>
