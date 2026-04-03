@@ -69,6 +69,16 @@ const GlobalVitals = {
             if (all[d].w) return parseFloat(all[d].w);
         }
         return null;
+    },
+
+    // Отримання останнього введеного тиску (для Хабу)
+    getLatestBP() {
+        const all = this.getAll();
+        const dates = Object.keys(all).sort((a, b) => new Date(b) - new Date(a));
+        for (let d of dates) {
+            if (all[d].bp) return all[d].bp;
+        }
+        return null;
     }
 };
 
