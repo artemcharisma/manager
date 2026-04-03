@@ -290,7 +290,8 @@
             return { p: Math.round(p), f: Math.round(f), c: Math.round(c), kcal: Math.round(kcal) };
         }
 
-        function populateSmartCards() {
+                function populateSmartCards() {
+            // БЛОК 1: ДАНІ З ФАРМИ (GOLD PROTOCOL)
             try {
                 const ph = JSON.parse(localStorage.getItem('gold_protocol'));
                 if (ph) {
@@ -309,18 +310,10 @@
                         }
                         document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
                     }
-                                        // НОВА ЛОГІКА: Читаємо дані з GlobalVitals
-                    if (typeof GlobalVitals !== 'undefined') {
-                        const weight = GlobalVitals.getLatestWeight();
-                        const bp = GlobalVitals.getLatestBP();
-                        
-                        document.getElementById('vital-weight').innerHTML = weight ? `${weight}<span>KG</span>` : "--.--<span>KG</span>";
-                        document.getElementById('vital-bp').innerHTML = bp ? bp : "--/--";
-                    }
-
                 }
             } catch(e){}
 
+            // БЛОК 2: ТРЕНУВАННЯ
             try {
                 const tr = JSON.parse(localStorage.getItem('training_protocol'));
                 if (tr && tr.weeks && tr.weeks.length > 0) {
@@ -331,6 +324,7 @@
                 }
             } catch(e){}
 
+            // БЛОК 3: ХАРЧУВАННЯ
             try {
                 const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
                 if (nu && nu.days) {
@@ -347,7 +341,19 @@
                     else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
                 }
             } catch(e){}
+
+            // БЛОК 4: ГЛОБАЛЬНІ ПОКАЗНИКИ (Вага та Тиск)
+            try {
+                if (typeof GlobalVitals !== 'undefined') {
+                    const weight = GlobalVitals.getLatestWeight();
+                    const bp = GlobalVitals.getLatestBP();
+                    
+                    document.getElementById('vital-weight').innerHTML = weight ? `${weight}<span>KG</span>` : "--.--<span>KG</span>";
+                    document.getElementById('vital-bp').innerHTML = bp ? bp : "--/--";
+                }
+            } catch(e){}
         }
+
 
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
