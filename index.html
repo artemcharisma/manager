@@ -227,20 +227,26 @@
         
         <div class="bottom-wrapper">
             <div class="vitals-strip">
-                <div class="v-item">
-                    <span class="v-label">CURRENT WEIGHT</span>
-                    <span class="v-val" id="vital-weight">--.--<span>KG</span></span>
-                </div>
-                <div class="v-item right">
-                    <span class="v-label" style="color: var(--red);">
-                        <svg viewBox="0 0 50 20" class="ecg-svg">
-                            <path class="ecg-line" d="M 0,10 L 12,10 L 16,3 L 22,17 L 26,10 L 50,10" />
-                        </svg>
-                        BLOOD PRESSURE
-                    </span>
-                    <span class="v-val" id="vital-bp">--/--</span>
-                </div>
-            </div>
+    <div class="v-item">
+        <span class="v-label">CURRENT WEIGHT</span>
+        <span class="v-val" id="vital-weight">--.--<span>KG</span></span>
+    </div>
+    
+    <div class="v-item" style="align-items: center; text-align: center;">
+        <span class="v-label" style="color: var(--blue);">HEART RATE</span>
+        <span class="v-val" id="vital-hr">-- <span>BPM</span></span>
+    </div>
+
+    <div class="v-item right">
+        <span class="v-label" style="color: var(--red);">
+            <svg viewBox="0 0 50 20" class="ecg-svg">
+                <path class="ecg-line" d="M 0,10 L 12,10 L 16,3 L 22,17 L 26,10 L 50,10" />
+            </svg>
+            BLOOD PRESSURE
+        </span>
+        <span class="v-val" id="vital-bp">--/--</span>
+    </div>
+</div>
 
             <div class="sys-control-title">SYSTEM CONTROL</div>
 
@@ -291,84 +297,82 @@
         }
 
         function populateSmartCards() {
-            try {
-                const ph = JSON.parse(localStorage.getItem('gold_protocol'));
-                if (ph) {
-                    if (ph.schedule && ph.startDate) {
-                        const startDate = new Date(ph.startDate); const now = new Date();
-                        const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                        const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
-                        const diffTime = now.getTime() - startMonday.getTime();
-                        let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-                        const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-                        if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
-                        let phaseTitle = "Курс";
-                        if (ph.phases) {
-                            const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
-                            if (currentPhase) phaseTitle = currentPhase.title;
-                        }
-                        document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
-                    }
-                    // Нова логіка для Хабу (index.html) у функції populateSmartCards()
-try {
-    const vitalsData = JSON.parse(localStorage.getItem('protocol_global_vitals'));
-    if (vitalsData) {
-        let latestW = "--.--<span>KG</span>", latestBP = "--/--", latestHR = "--";
-        
-        // Сортуємо дати за спаданням (від найновішої до найстарішої)
-        const dates = Object.keys(vitalsData).sort((a, b) => new Date(b) - new Date(a));
-        
-        for (let d of dates) {
-            const v = vitalsData[d];
-            if (v.w && latestW.includes("--")) latestW = v.w + "<span>KG</span>";
-            if (v.bp && latestBP === "--/--") latestBP = v.bp;
-            if (v.hr && latestHR === "--") latestHR = v.hr;
+    // 1. Фармакологія
+    try {
+        const ph = JSON.parse(localStorage.getItem('gold_protocol'));
+        if (ph && ph.schedule && ph.startDate) {
+            const startDate = new Date(ph.startDate); const now = new Date();
+            const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+            const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
+            const diffTime = now.getTime() - startMonday.getTime();
+            let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+            const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
+            if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
+            let phaseTitle = "Курс";
+            if (ph.phases) {
+                const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
+                if (currentPhase) phaseTitle = currentPhase.title;
+            }
+            document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
+        }
+    } catch(e){ console.error("Pharm error:", e); }
+
+    // 2. Життєві показники (ІЗОЛЬОВАНО)
+    try {
+        const vitalsData = JSON.parse(localStorage.getItem('protocol_global_vitals'));
+        if (vitalsData) {
+            let latestW = "--.--<span>KG</span>", latestBP = "--/--", latestHR = "--";
             
-            // Якщо всі три показники знайдено, зупиняємо цикл
-            if (!latestW.includes("--") && latestBP !== "--/--" && latestHR !== "--") break;
+            const dates = Object.keys(vitalsData).sort((a, b) => new Date(b) - new Date(a));
+            
+            for (let d of dates) {
+                const v = vitalsData[d];
+                if (v.w && latestW.includes("--")) latestW = v.w + "<span>KG</span>";
+                if (v.bp && latestBP === "--/--") latestBP = v.bp;
+                if (v.hr && latestHR === "--") latestHR = v.hr;
+                
+                if (!latestW.includes("--") && latestBP !== "--/--" && latestHR !== "--") break;
+            }
+            
+            const weightEl = document.getElementById('vital-weight');
+            const bpEl = document.getElementById('vital-bp');
+            const hrEl = document.getElementById('vital-hr');
+            
+            if (weightEl) weightEl.innerHTML = latestW;
+            if (bpEl) bpEl.innerHTML = latestBP;
+            if (hrEl && latestHR !== "--") hrEl.innerHTML = latestHR + " <span style='font-size: 0.75rem; color: var(--text-dim);'>BPM</span>";
         }
-        
-        // Вивід у DOM
-        const weightEl = document.getElementById('vital-weight');
-        const bpEl = document.getElementById('vital-bp');
-        
-        if (weightEl) weightEl.innerHTML = latestW;
-        if (bpEl) bpEl.innerHTML = latestBP;
-        
-        // Якщо ви додасте HTML елемент для пульсу з id 'vital-hr', розкоментуйте рядок нижче:
-        // const hrEl = document.getElementById('vital-hr'); if (hrEl) hrEl.innerHTML = latestHR + " BPM";
-    }
-} catch(e) {
-    console.error("Помилка завантаження глобальних показників у Хабі:", e);
+    } catch(e) { console.error("Vitals error:", e); }
+
+    // 3. Тренування
+    try {
+        const tr = JSON.parse(localStorage.getItem('training_protocol'));
+        if (tr && tr.weeks && tr.weeks.length > 0) {
+            const lastWeek = tr.weeks[tr.weeks.length - 1]; 
+            const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
+            const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
+            document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
+        }
+    } catch(e){}
+
+    // 4. Харчування
+    try {
+        const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
+        if (nu && nu.days) {
+            const bank = nu.bank || {}; let htmlContent = '';
+            if (nu.days[0]) {
+                const d1 = getDayMacros(nu.days[0], bank);
+                if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
+            }
+            if (nu.days[1]) {
+                const d2 = getDayMacros(nu.days[1], bank);
+                if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
+            }
+            if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
+            else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
+        }
+    } catch(e){}
 }
-
-            try {
-                const tr = JSON.parse(localStorage.getItem('training_protocol'));
-                if (tr && tr.weeks && tr.weeks.length > 0) {
-                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
-                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
-                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-                    document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
-                }
-            } catch(e){}
-
-            try {
-                const nu = JSON.parse(localStorage.getItem('protocol_sys_plus_days'));
-                if (nu && nu.days) {
-                    const bank = nu.bank || {}; let htmlContent = '';
-                    if (nu.days[0]) {
-                        const d1 = getDayMacros(nu.days[0], bank);
-                        if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
-                    }
-                    if (nu.days[1]) {
-                        const d2 = getDayMacros(nu.days[1], bank);
-                        if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
-                    }
-                    if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
-                    else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
-                }
-            } catch(e){}
-        }
 
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
