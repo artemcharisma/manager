@@ -226,23 +226,28 @@
         </div>
         
         <div class="bottom-wrapper">
-            <div class="vitals-strip">
-    <div class="v-item">
-        <span class="v-label">CURRENT WEIGHT</span>
+            <div class="vitals-strip" style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: end;">
+    <div class="v-item" style="text-align: left; align-items: flex-start;">
+        <span class="v-label">WEIGHT</span>
         <span class="v-val" id="vital-weight">--.--<span>KG</span></span>
     </div>
     
-    <div class="v-item" style="align-items: center; text-align: center;">
-        <span class="v-label" style="color: var(--blue);">HEART RATE</span>
-        <span class="v-val" id="vital-hr">-- <span>BPM</span></span>
+    <div class="v-item" style="text-align: center; align-items: center;">
+        <span class="v-label" style="color: var(--blue);">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" style="margin-right: 4px; filter: drop-shadow(0 0 2px var(--blue));">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            PULSE
+        </span>
+        <span class="v-val" id="vital-hr">--<span>BPM</span></span>
     </div>
 
-    <div class="v-item right">
+    <div class="v-item right" style="text-align: right; align-items: flex-end;">
         <span class="v-label" style="color: var(--red);">
-            <svg viewBox="0 0 50 20" class="ecg-svg">
+            <svg viewBox="0 0 50 20" class="ecg-svg" style="width: 24px; height: 10px; margin-right: 4px;">
                 <path class="ecg-line" d="M 0,10 L 12,10 L 16,3 L 22,17 L 26,10 L 50,10" />
             </svg>
-            BLOOD PRESSURE
+            PRESSURE
         </span>
         <span class="v-val" id="vital-bp">--/--</span>
     </div>
