@@ -252,32 +252,32 @@
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
             gap: 8px; 
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .set-row { 
-            display: flex; align-items: center; justify-content: space-between;
+            display: flex; align-items: center; 
             background: #0a0a0a; border: 1px solid #333; 
-            border-radius: 8px; overflow: hidden; height: 42px;
+            border-radius: 8px; overflow: hidden; height: 38px;
         }
         .set-num { 
-            background: #18181b; color: #555; font-size: 0.75rem; font-weight: 800; 
-            width: 32px; height: 100%; display: flex; align-items: center; justify-content: center;
+            background: #18181b; color: #555; font-size: 0.7rem; font-weight: 800; 
+            width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;
             border-right: 1px solid #333; flex-shrink: 0;
         }
-        .set-part { display: flex; align-items: center; justify-content: center; flex: 1; padding: 0 4px; }
+        .set-part { display: flex; align-items: center; justify-content: center; flex: 1; }
         .set-input { 
-            width: 45px; 
+            width: 40px; 
             background: transparent; border: none; padding: 0;
-            text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1.1rem; color: #fff;
+            text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
         }
-        .set-unit { font-size: 0.65rem; color: #666; font-weight: 700; margin-left: 4px; margin-top: 4px; }
+        .set-unit { font-size: 0.6rem; color: #444; font-weight: 700; margin-left: 3px; margin-top: 3px; }
 
         /* КНОПКА ТАЙМЕРА В ЗАГОЛОВКУ ВПРАВИ */
         .ex-timer-btn {
             background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme);
-            border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; cursor: pointer;
+            border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer;
             display: flex; align-items: center; transition: 0.2s;
-            font-family: 'JetBrains Mono'; font-weight: 800;
+            font-family: 'JetBrains Mono'; font-weight: 700;
         }
         .ex-timer-btn:active { background: var(--theme); color: #000; transform: scale(0.95); }
               /* --- CARDIO STYLE (ВСТАВ ЦЕ В CSS) --- */
