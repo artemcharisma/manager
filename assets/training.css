@@ -247,18 +247,17 @@
         .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; line-height: 1.4; display: block; }
         .ex-badge { font-size: 0.6rem; color: var(--text-muted); background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222; width: fit-content; }
 
-        /* --- ВИПРАВЛЕННЯ СІТКИ СЕТІВ (GRID) --- */
+        /* --- КОМПАКТНА СІТКА СЕТІВ (GRID) --- */
         .sets-wrapper { 
             display: grid; 
-            /* Збільшено ширину блоку, щоб влізла іконка годинника та ширші цифри */
-            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); 
-            gap: 10px; 
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 8px; 
+            margin-top: 8px;
         }
         .set-row { 
             display: flex; align-items: center; justify-content: space-between;
             background: #0a0a0a; border: 1px solid #333; 
-            border-radius: 8px; overflow: hidden; height: 42px; /* Зробили вищим для точного тапу пальцем */
+            border-radius: 8px; overflow: hidden; height: 38px;
         }
         .set-num { 
             background: #18181b; color: #555; font-size: 0.7rem; font-weight: 800; 
@@ -267,22 +266,20 @@
         }
         .set-part { display: flex; align-items: center; justify-content: center; flex: 1; padding: 0 4px; }
         .set-input { 
-            width: 50px; /* Збільшили ширину, щоб 120.5 кг влазило без проблем */
+            width: 40px; 
             background: transparent; border: none; padding: 0;
-            text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1.1rem; color: #fff;
+            text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
         }
         .set-unit { font-size: 0.6rem; color: #666; font-weight: 700; margin-left: 4px; margin-top: 4px; }
 
-        /* НОВА КНОПКА ТАЙМЕРА БІЛЯ СЕТУ */
-        .set-timer-btn {
-            width: 38px; height: 100%; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            background: #111; color: var(--theme);
-            border-left: 1px solid #333; cursor: pointer;
-            transition: background 0.2s, color 0.2s;
+        /* КНОПКА ТАЙМЕРА В ЗАГОЛОВКУ ВПРАВИ */
+        .ex-timer-btn {
+            background: transparent; border: 1px solid #333; color: var(--theme);
+            border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer;
+            display: flex; align-items: center; gap: 4px; transition: 0.2s;
+            font-family: 'JetBrains Mono'; font-weight: 700;
         }
-        .set-timer-btn:active { background: #222; color: #fff; }
-
+        .ex-timer-btn:active { background: #222; transform: scale(0.95); }
               /* --- CARDIO STYLE (ВСТАВ ЦЕ В CSS) --- */
         .cardio-block { 
             background: rgba(234, 179, 8, 0.05); 
