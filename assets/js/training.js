@@ -421,11 +421,9 @@ const App = {
                         let timerHtml = '';
                         if (!isEd && m !== 'cardio') {
                             const exTime = ex.t || App.timerState.default;
-                            // Один тап = запуск. Подвійний тап = налаштування.
                             timerHtml = `
-                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}"
-                                 onclick="App.startTimer(${exTime})" 
-                                 ondblclick="App.setTimerForExercise(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime}); event.stopPropagation();">
+                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation; user-select: none;"
+                                 onclick="App.handleTimerClick(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime})">
                                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 ${exTime}s
                             </div>`;
@@ -472,15 +470,14 @@ const App = {
                     </div>`;
                 }).join('');
 
-                // Якщо увімкнено редагування, номер тижня стає клікабельним для зміни
+                // В режимі редагування номер тижня - це інпут, а не костиль з модалкою
                 const weekNumHtml = isEd 
-                    ? `<span onclick="App.updateWeekNum(${week.id})" style="border-bottom: 1px dashed #fff; cursor: pointer;">${week.num}</span>`
+                    ? `<input type="number" inputmode="numeric" value="${week.num}" style="width:40px; background:transparent; border:1px dashed #666; border-radius:4px; color:var(--${week.type}); font-size:1.1rem; text-align:center; padding:0; font-weight:800; font-family:'JetBrains Mono';" onblur="App.updateWeekNum(${week.id}, this.value)" onclick="event.stopPropagation()">`
                     : week.num;
 
-                // Номер тижня редагується подвійним тапом (незалежно від режиму редагування)
                 return `<div id="week-${week.id}" class="${theme}">
                     <div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center">
-                        <div ondblclick="App.updateWeekNum(${week.id})"><h3 style="margin:0; color:#fff">ТИЖДЕНЬ <span style="border-bottom:1px dashed #666">${week.num}</span> <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
+                        <div><h3 style="margin:0; color:#fff; display:flex; align-items:center; gap:8px;">ТИЖДЕНЬ ${weekNumHtml} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
                         <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${week.id})">Видалити</span>
                     </div>
                     <div class="days-list">${daysHtml}</div>
@@ -719,6 +716,50 @@ const App = {
             this.render();
         }
     },
+    // --- КАСТОМНИЙ DOUBLE TAP (ЩОБ ТАЙМЕР НЕ СТАРТУВАВ ПРИ РЕДАГУВАННІ) ---
+    _timerTaps: {},
+    handleTimerClick(w, d, e, time) {
+        const key = `${w}-${d}-${e}`;
+        if (this._timerTaps[key]) {
+            // Подвійний тап: скасовуємо старт таймера і відкриваємо налаштування
+            clearTimeout(this._timerTaps[key]);
+            this._timerTaps[key] = null;
+            this.setTimerForExercise(w, d, e, time);
+        } else {
+            // Одинарний тап: чекаємо 250мс, якщо другого тапу не було - запускаємо таймер
+            this._timerTaps[key] = setTimeout(() => {
+                this._timerTaps[key] = null;
+                this.startTimer(time);
+            }, 250);
+        }
+    },
+
+    // --- РЕДАГУВАННЯ ТИЖНЯ (БЕЗ МОДАЛОК) ---
+    updateWeekNum(id, val) {
+        const num = parseInt(val);
+        if (!isNaN(num) && num > 0) {
+            const w = this.data.weeks.find(x => x.id === id);
+            if (w && w.num !== num) {
+                this.pushHistory();
+                w.num = num;
+                this.data.weeks.sort((a, b) => a.num - b.num); // Сортуємо одразу
+                this.save();
+                this.render();
+            }
+        }
+    },
+
+    async renameProgram(key) {
+        const currentName = this.data.customNames[key] || (key === 'balanced' ? "ЗБАЛАНСОВАНА" : "РУКИ");
+        const val = await Modal.prompt("Введіть нову назву для цієї вкладки:", "ПЕРЕЙМЕНУВАННЯ", currentName);
+        
+        if (val !== null && val.trim() !== "") {
+            this.pushHistory();
+            this.data.customNames[key] = val.trim().toUpperCase();
+            this.save();
+            this.render();
+        }
+    },
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
         if(val && !this.data.exBank.includes(val)) {
@@ -747,10 +788,10 @@ const App = {
         const prog = this.data.currentProgram || 'balanced';
         let newData;
         
-        // Шукаємо максимальний номер тижня ВЗАГАЛІ для цієї програми
+        // 1. Шукаємо реальний максимальний номер тижня у цій програмі
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
-        const newWeekNum = maxNum + 1; // Завжди наступний
+        const newWeekNum = maxNum + 1; // Завжди наступний по порядку
 
         const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
         
@@ -767,7 +808,7 @@ const App = {
         const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
         this.data.weeks.push(w);
         
-        // СОРТУВАННЯ МАСИВУ ТИЖНІВ (від найменшого до найбільшого)
+        // 2. Одразу сортуємо масив тижнів
         this.data.weeks.sort((a, b) => a.num - b.num);
 
         this.updateBank();
