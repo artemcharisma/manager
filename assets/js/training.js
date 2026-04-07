@@ -360,19 +360,27 @@ const App = {
                             let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
                             let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
 
-                            // Нова логіка відображення підказок (золотий колір)
-                            let placeholderW = ghostW ? `placeholder="${ghostW}" class="set-input w-val ghost-active"` : `class="set-input w-val"`;
-                            let placeholderR = ghostR ? `placeholder="${ghostR}" class="set-input ghost-active"` : `class="set-input"`;
+                            let classW = ghostW ? "set-input w-val ghost-active" : "set-input w-val";
+                            let classR = ghostR ? "set-input r-val ghost-active" : "set-input r-val";
+                            
+                            let placeholderW = ghostW ? `placeholder="${ghostW}"` : "";
+                            let placeholderR = ghostR ? `placeholder="${ghostR}"` : "";
 
                             return `<div class="set-row">
                                 <div class="set-num">${sIdx+1}</div>
                                 <div class="set-part">
-                                    <input type="text" inputmode="text" ${placeholderW} value="${s.w||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
+                                    <input type="text" inputmode="text" class="${classW}" ${placeholderW} value="${s.w||''}" 
+                                           onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
+                                           onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
                                     <span class="set-unit">кг</span>
                                 </div>
                                 <div class="set-part">
-                                    <input type="number" inputmode="decimal" ${placeholderR} value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
+                                    <input type="number" inputmode="decimal" class="${classR}" ${placeholderR} value="${s.r||''}" 
+                                           onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
                                     <span class="set-unit">x</span>
+                                </div>
+                                <div class="set-timer-btn" onclick="App.startTimer(App.timerState.default)">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </div>
                             </div>`;
                         }).join('');
@@ -518,16 +526,15 @@ const App = {
     initTimer() {
         const t = document.createElement('div');
         t.id = 'rest-timer';
-        // Перемістили вниз по центру (стиль "Dynamic Island")
         t.style.cssText = `
             position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
             background: rgba(20, 20, 22, 0.9); border: 1px solid var(--theme, #d4af37);
             color: var(--theme, #d4af37); padding: 8px 24px; border-radius: 30px;
             font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 800;
             box-shadow: 0 5px 20px rgba(0,0,0,0.6); cursor: pointer; z-index: 8000;
-            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; align-items: center; justify-content: center;
             backdrop-filter: blur(10px); user-select: none; touch-action: manipulation;
-            min-width: 120px; text-align: center;
+            min-width: 120px; text-align: center; display: none; /* ПРИХОВАНО ЗА ЗАМОВЧУВАННЯМ */
         `;
         
         let lastTap = 0;
@@ -538,7 +545,7 @@ const App = {
                 this.setTimerDefault();
                 lastTap = 0; 
             } else {
-                this.toggleTimer();
+                this.stopTimer(); // Клік по активному таймеру = ховаємо його
                 lastTap = now;
             }
         };
@@ -548,8 +555,6 @@ const App = {
         
         const savedTime = localStorage.getItem('rest_timer_default');
         if (savedTime) this.timerState.default = parseInt(savedTime);
-        
-        this.updateTimerUI();
     },
 
     toggleTimer() {
@@ -569,6 +574,7 @@ const App = {
             Notification.requestPermission();
         }
         
+        this.timerState.el.style.display = 'flex'; // ПОКАЗУЄМО ТАЙМЕР
         this.timerState.el.style.background = 'var(--theme, #d4af37)';
         this.timerState.el.style.color = '#000';
         this.timerState.el.style.boxShadow = '0 0 20px var(--theme, #d4af37)';
@@ -583,39 +589,40 @@ const App = {
             this.updateTimerUI();
 
             if (this.timerState.left <= 0) {
-                this.stopTimer();
+                clearInterval(this.timerState.interval);
+                this.timerState.interval = null;
+                this.timerState.endTime = null;
+                
+                this.timerState.el.style.background = 'var(--success)';
+                this.timerState.el.style.color = '#fff';
+                this.timerState.el.style.boxShadow = '0 0 20px var(--success)';
                 this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
                 
                 if ("Notification" in window && Notification.permission === "granted") {
-                    new Notification("Час вийшов!", {
-                        body: "Пора робити наступний підхід",
-                        icon: "icon.png", 
-                        vibrate: [200, 100, 200]
-                    });
+                    new Notification("Час вийшов!", { body: "Пора робити наступний підхід", icon: "icon.png", vibrate: [200, 100, 200] });
                 }
                 
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
                 if (window.Haptics) window.Haptics.heavy();
                 
-                setTimeout(() => this.updateTimerUI(), 4000);
+                // Ховаємо через 4 секунди після завершення
+                setTimeout(() => { if(!this.timerState.interval) this.timerState.el.style.display = 'none'; }, 4000);
             }
         }, 250); 
     },
 
     stopTimer() {
-        clearInterval(this.timerState.interval);
+        if(this.timerState.interval) clearInterval(this.timerState.interval);
         this.timerState.interval = null;
         this.timerState.endTime = null; 
         
-        // Повертаємо базовий колір при зупинці
         this.timerState.el.style.background = 'rgba(20, 20, 22, 0.9)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
         this.timerState.el.style.boxShadow = '0 5px 20px rgba(0,0,0,0.6)';
         
+        this.timerState.el.style.display = 'none'; // ХОВАЄМО ТАЙМЕР
         this.timerState.left = this.timerState.default;
-        this.updateTimerUI();
     },
-
 
     updateTimerUI() {
         if (!this.timerState.el) return;
@@ -772,13 +779,12 @@ const App = {
         }
 
         if(this.data.weeks[w].days[d].exercises[e].sets[s][f] !== finalVal) {
-            this.pushHistory();
+            // ВАЖЛИВО: Видалено this.pushHistory() щоб уникнути мікро-фрізів та дьоргання екрану під час вводу цифр!
             this.data.weeks[w].days[d].exercises[e].sets[s][f] = finalVal;
             this.save();
             if (needRender) this.render();
         }
     },
-
     setGuideMode(m) { this.data.guideMode = m; this.save(); this.renderGuide(); },
     
     updateTarget(group, val) { 
