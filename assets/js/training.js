@@ -742,7 +742,13 @@ const App = {
         const prog = this.data.currentProgram || 'balanced';
         let newData;
         
+        // Шукаємо максимальний номер тижня ВЗАГАЛІ для цієї програми
+        const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
+        const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
+        const newWeekNum = maxNum + 1; // Завжди наступний
+
         const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
+        
         if(lastWeek && !init) {
             newData = JSON.parse(JSON.stringify(lastWeek.days));
             newData.forEach(d => {
@@ -752,8 +758,13 @@ const App = {
         } else {
             newData = JSON.parse(JSON.stringify(Templates[prog][type]));
         }
-        const w = { id: Date.now(), type, prog, num: this.data.weeks.length + 1, days: newData };
+        
+        const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
         this.data.weeks.push(w);
+        
+        // СОРТУВАННЯ МАСИВУ ТИЖНІВ ПІСЛЯ ДОДАВАННЯ
+        this.data.weeks.sort((a, b) => a.num - b.num);
+
         this.updateBank();
         this.save(); 
         this.render();
@@ -885,9 +896,19 @@ const App = {
     },
 
     toggleEdit() {
-        document.body.classList.toggle('editing');
-        document.getElementById('editBtn').classList.toggle('active');
-        this.render(); this.renderGuide();
+        // Чітко визначаємо стан на основі наявності класу
+        const isEditing = document.body.classList.contains('editing');
+        
+        if (isEditing) {
+            document.body.classList.remove('editing');
+            document.getElementById('editBtn').classList.remove('active');
+        } else {
+            document.body.classList.add('editing');
+            document.getElementById('editBtn').classList.add('active');
+        }
+        
+        this.render(); 
+        this.renderGuide();
     },
 
     setView(v) {
