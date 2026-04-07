@@ -181,16 +181,17 @@
         /* Приховуємо глобальне меню (зірку) на головній сторінці */
         #sys-fab { display: none !important; }
 
-        /* Яскравий акцент для Wipe All / Hard Reset у модальному вікні */
+        /* Елегантний акцент для Wipe All / Hard Reset у модальному вікні */
         .modal-ctrl-btn.sys-reset { 
-            color: #ffffff !important; 
-            border-color: var(--red) !important; 
-            background: rgba(239, 68, 68, 0.8) !important; 
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4) !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            color: var(--red) !important; 
+            border: 1px solid rgba(239, 68, 68, 0.3) !important; 
+            background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)) !important; 
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1) !important;
+            text-shadow: none !important;
         }
         .modal-ctrl-btn.sys-reset:active {
-            background: rgba(239, 68, 68, 1) !important;
+            background: rgba(239, 68, 68, 0.25) !important;
+            border-color: var(--red) !important;
             transform: scale(0.95) !important;
         }
 
