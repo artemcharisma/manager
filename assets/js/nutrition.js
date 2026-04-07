@@ -279,6 +279,28 @@ const App = {
         this.closeModal();
     },
 
+    moveDay(dir) {
+        // Знаходимо індекс поточного дня у масиві
+        const idx = this.data.days.findIndex(d => d.id === this.state.currentDayId);
+        if (idx < 0) return;
+        
+        const newIdx = idx + dir;
+        
+        // Запобіжник: щоб не вийти за межі списку (лівіше першого або правіше останнього)
+        if (newIdx < 0 || newIdx >= this.data.days.length) return;
+        
+        this.pushHistory(); // Зберігаємо стан для Undo
+        
+        // Міняємо місцями елементи в масиві
+        const temp = this.data.days[idx];
+        this.data.days[idx] = this.data.days[newIdx];
+        this.data.days[newIdx] = temp;
+        
+        this.save();
+        this.renderDaysBar(); // Оновлюємо верхню панель у реальному часі
+        
+        if(window.Haptics) window.Haptics.light();
+    },
     openSchedule() {
         if(document.activeElement) document.activeElement.blur(); // Жорстко ховаємо клавіатуру
         this.lockScroll();
