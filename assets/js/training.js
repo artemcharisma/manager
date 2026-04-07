@@ -537,7 +537,7 @@ const App = {
         this.toggleFab(true);
     },
 
-    // --- REST TIMER (ТАЙМЕР ВІДПОЧИНКУ) ---
+    // --- REST TIMER (ОПТИМІЗОВАНО) ---
     initTimer() {
         const t = document.createElement('div');
         t.id = 'rest-timer';
@@ -554,7 +554,7 @@ const App = {
         
         t.onclick = (e) => {
             e.preventDefault();
-            this.stopTimer(); // Будь-який клік по працюючому таймеру просто ховає його
+            this.setTimerDefault(); // Клік по активному таймеру тепер ВІДКРИВАЄ НАЛАШТУВАННЯ
         };
 
         document.body.appendChild(t);
@@ -646,13 +646,21 @@ const App = {
     },
 
     async setTimerDefault() {
-        this.stopTimer();
-        const val = await Modal.prompt("Введіть час відпочинку (в секундах):<br><span style='color:#666; font-size:0.8rem'>Наприклад: 90 (1.5 хв) або 120 (2 хв)</span>", "ТАЙМЕР", this.timerState.default.toString());
-        if (val && !isNaN(val)) {
+        // НЕ зупиняємо таймер одразу, щоб він не зник, якщо юзер натиснув "Скасувати"
+        const val = await Modal.prompt("Введіть час відпочинку (в секундах):<br><br><span style='color:var(--danger); font-size:0.8rem; font-weight:bold'>Введіть 0, щоб зупинити таймер.</span>", "НАЛАШТУВАННЯ ТАЙМЕРА", this.timerState.default.toString());
+        
+        if (val !== null && val !== "") {
             const newTime = parseInt(val);
-            this.timerState.default = newTime;
-            localStorage.setItem('rest_timer_default', newTime); 
-            this.updateTimerUI();
+            if (!isNaN(newTime)) {
+                if (newTime <= 0) {
+                    this.stopTimer(); // Якщо ввів 0 - вимикаємо і ховаємо
+                } else {
+                    this.timerState.default = newTime;
+                    localStorage.setItem('rest_timer_default', newTime);
+                    this.startTimer(newTime); // Перезапускаємо з новим часом
+                    this.render(); // Оновлюємо кнопки біля вправ
+                }
+            }
         }
     },
     
