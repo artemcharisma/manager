@@ -418,16 +418,24 @@ const App = {
                         }
 
                         let timerHtml = '';
-                        if (!isEd && m !== 'cardio') {
+                        if (m !== 'cardio') {
                             const exTime = ex.t || App.timerState.default;
-                            // oncontextmenu = Довгий тап на телефоні (відкриває налаштування)
-                            timerHtml = `
-                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}"
-                                 onclick="App.startTimer(${exTime})" 
-                                 oncontextmenu="App.setTimerForExercise(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime}); return false;">
-                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                ${exTime}s
-                            </div>`;
+                            if (isEd) {
+                                // У РЕЖИМІ РЕДАГУВАННЯ: Клік відкриває налаштування часу
+                                timerHtml = `
+                                <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}"
+                                     onclick="App.setTimerForExercise(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime}); event.stopPropagation();">
+                                    <span style="margin-right:4px; font-size:1rem;">⚙️</span>${exTime}s
+                                </div>`;
+                            } else {
+                                // ЗВИЧАЙНИЙ РЕЖИМ: Клік запускає таймер
+                                timerHtml = `
+                                <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation;"
+                                     onclick="App.startTimer(${exTime})">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    ${exTime}s
+                                </div>`;
+                            }
                         }
 
                         return `<div class="exercise">
@@ -512,6 +520,13 @@ const App = {
         this.data.currentProgram = prog;
         this.setTheme(prog);
         this.save();
+        
+        // Синхронізуємо стан олівця після зміни програми
+        const isEditing = document.body.classList.contains('editing');
+        const btn = document.getElementById('editBtn');
+        if (isEditing && btn) btn.classList.add('active');
+        else if (!isEditing && btn) btn.classList.remove('active');
+        
         this.render();
     },
 
@@ -673,15 +688,16 @@ const App = {
         if (val !== null && val !== "") {
             const newTime = parseInt(val);
             if (!isNaN(newTime) && newTime > 0) {
+                // Зберігаємо індивідуальний час для вправи
                 this.data.weeks[w].days[d].exercises[e].t = newTime;
                 this.save();
                 
+                // Миттєве оновлення кнопки без повного рендеру екрану
                 const btnId = `timer-btn-${w}-${d}-${e}`;
                 const btnEl = document.getElementById(btnId);
                 if (btnEl) {
-                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
-                    btnEl.setAttribute('onclick', `App.startTimer(${newTime})`);
-                    btnEl.setAttribute('oncontextmenu', `App.setTimerForExercise(${w}, ${d}, ${e}, ${newTime}); return false;`);
+                    btnEl.innerHTML = `<span style="margin-right:4px">⚙️</span>${newTime}s`;
+                    btnEl.setAttribute('onclick', `App.setTimerForExercise(${w}, ${d}, ${e}, ${newTime}); event.stopPropagation();`);
                 }
             }
         }
@@ -745,10 +761,10 @@ const App = {
         const prog = this.data.currentProgram || 'balanced';
         let newData;
         
-        // Шукаємо максимальний номер тижня ВЗАГАЛІ для цієї програми
+        // Шукаємо максимальний номер тижня САМЕ для цієї програми
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
-        const newWeekNum = maxNum + 1; // Завжди наступний
+        const newWeekNum = maxNum + 1; // Завжди наступний після найвищого існуючого
 
         const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
         
@@ -899,15 +915,15 @@ const App = {
     },
 
     toggleEdit() {
-        // Чітко визначаємо стан на основі наявності класу
         const isEditing = document.body.classList.contains('editing');
+        const btn = document.getElementById('editBtn');
         
         if (isEditing) {
             document.body.classList.remove('editing');
-            document.getElementById('editBtn').classList.remove('active');
+            if (btn) btn.classList.remove('active');
         } else {
             document.body.classList.add('editing');
-            document.getElementById('editBtn').classList.add('active');
+            if (btn) btn.classList.add('active');
         }
         
         this.render(); 
