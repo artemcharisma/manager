@@ -417,7 +417,7 @@ const App = {
                             <div class="ex-info">
                                 <div class="ex-name-row">
                                     ${exNameHtml}
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
                                         ${groupSelect}
                                         ${timerHtml}
                                     </div>
@@ -645,27 +645,24 @@ const App = {
     },
 
     async setTimerForExercise(w, d, e, currentVal) {
-        const val = await Modal.prompt(`Введіть час відпочинку для цієї вправи (в секундах):<br><br><span style='color:#888; font-size:0.8rem'>Наприклад: 90 (1.5 хв) або 120 (2 хв)</span>`, "ТАЙМЕР ВПРАВИ", currentVal.toString());
+        const val = await Modal.prompt(`Введіть час (сек) для цієї вправи:<br><br><span style='color:#888; font-size:0.8rem'>Наприклад: 90 (1.5 хв) або 120 (2 хв)</span>`, "ТАЙМЕР ВПРАВИ", currentVal.toString());
         
         if (val !== null && val !== "") {
             const newTime = parseInt(val);
             if (!isNaN(newTime) && newTime > 0) {
-                // Зберігаємо час ТІЛЬКИ для цієї конкретної вправи
                 this.data.weeks[w].days[d].exercises[e].t = newTime;
                 this.save();
                 
-                // ТОЧКОВЕ оновлення DOM без мерехтіння всього екрану
                 const btnId = `timer-btn-${w}-${d}-${e}`;
                 const btnEl = document.getElementById(btnId);
                 if (btnEl) {
-                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
+                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
                     btnEl.setAttribute('onclick', `App.startTimer(${newTime})`);
                     btnEl.setAttribute('oncontextmenu', `App.setTimerForExercise(${w}, ${d}, ${e}, ${newTime}); return false;`);
                 }
             }
         }
     },
-
     
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
