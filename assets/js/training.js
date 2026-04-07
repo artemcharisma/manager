@@ -354,7 +354,7 @@ const App = {
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
-                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
+                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
                             }
 
                             let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
@@ -384,29 +384,39 @@ const App = {
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
+                        let exNameHtml = '';
+                        if (isEd) {
+                            exNameHtml = `
+                            <div style="position:relative; flex:1; margin-right:10px;">
+                                <input class="ex-name-input" id="ex-${realWIdx}-${dIdx}-${eIdx}" autocomplete="off" value="${ex.n}" 
+                                       onfocus="App.openExList(${realWIdx}, ${dIdx}, ${eIdx})" 
+                                       oninput="App.filterExList(this.value, ${realWIdx}, ${dIdx}, ${eIdx})" 
+                                       onblur="setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n',document.getElementById('ex-${realWIdx}-${dIdx}-${eIdx}').value), 200)">
+                                <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
+                            </div>`;
+                        } else {
+                            exNameHtml = `<span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>`;
+                        }
+
+                        let timerHtml = '';
+                        if (!isEd && m !== 'cardio') {
+                            timerHtml = `
+                            <div class="ex-timer-btn" 
+                                 onclick="App.startTimer(App.timerState.default)" 
+                                 oncontextmenu="App.setTimerDefault(); return false;">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                ${App.timerState.default}s
+                            </div>`;
+                        }
+
                         return `<div class="exercise">
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
                             <div class="ex-info">
                                 <div class="ex-name-row">
-                                    ${isEd ? `
-                                    <div style="position:relative; flex:1; margin-right:10px;">
-                                        <input class="ex-name-input" id="ex-${realWIdx}-${dIdx}-${eIdx}" autocomplete="off" value="${ex.n}" 
-                                               onfocus="App.openExList(${realWIdx}, ${dIdx}, ${eIdx})" 
-                                               oninput="App.filterExList(this.value, ${realWIdx}, ${dIdx}, ${eIdx})" 
-                                               onblur="setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n',document.getElementById('ex-${realWIdx}-${dIdx}-${eIdx}').value), 200)">
-                                        <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
-                                    </div>
-                                    ` : `<span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>`}
-                                    
+                                    ${exNameHtml}
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                                         ${groupSelect}
-                                        ${!isEd && m !== 'cardio' ? `
-                                        <div class="ex-timer-btn" 
-                                             onclick="App.startTimer(App.timerState.default)" 
-                                             oncontextmenu="App.setTimerDefault(); return false;">
-                                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                            ${App.timerState.default}s
-                                        </div>` : ''}
+                                        ${timerHtml}
                                     </div>
                                 </div>
                                 <div class="edit-ui">
@@ -416,6 +426,7 @@ const App = {
                             </div>
                             <div class="sets-wrapper">${setsHtml}</div>
                         </div>`;
+                    }).join('');
 
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${realWIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
@@ -450,7 +461,6 @@ const App = {
         }
         
         this.renderGuide();
-
     },
 
     save() { this.state.save(this.data); },
