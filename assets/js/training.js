@@ -311,21 +311,22 @@ const App = {
         const isEd = document.body.classList.contains('editing');
         const prog = this.data.currentProgram;
 
-        // --- ДИНАМІЧНІ НАЗВИ ВКЛАДОК ---
+        // --- ДИНАМІЧНІ НАЗВИ ВКЛАДОК (Редагуються подвійним тапом) ---
         const nameBal = this.data.customNames ? this.data.customNames.balanced : "ЗБАЛАНСОВАНА";
         const nameArms = this.data.customNames ? this.data.customNames.arms : "РУКИ";
 
-        // Знаходимо HTML контейнер і малюємо кнопки вкладок з можливістю редагування
         const progSel = document.querySelector('.program-selector');
         if (progSel) {
             progSel.innerHTML = `
-                <div class="prog-opt ${prog === 'balanced' ? 'active' : ''}" onclick="App.setProgram('balanced')">
+                <div class="prog-opt ${prog === 'balanced' ? 'active' : ''}" 
+                     onclick="App.setProgram('balanced')" 
+                     ondblclick="App.renameProgram('balanced'); event.stopPropagation();">
                     ⚖️ ${nameBal}
-                    ${isEd && prog === 'balanced' ? `<span onclick="App.renameProgram('balanced'); event.stopPropagation()" style="margin-left:5px; font-size:0.8rem">✏️</span>` : ''}
                 </div>
-                <div class="prog-opt ${prog === 'arms' ? 'active' : ''}" onclick="App.setProgram('arms')">
+                <div class="prog-opt ${prog === 'arms' ? 'active' : ''}" 
+                     onclick="App.setProgram('arms')" 
+                     ondblclick="App.renameProgram('arms'); event.stopPropagation();">
                     💪 ${nameArms}
-                    ${isEd && prog === 'arms' ? `<span onclick="App.renameProgram('arms'); event.stopPropagation()" style="margin-left:5px; font-size:0.8rem">✏️</span>` : ''}
                 </div>
             `;
         }
@@ -418,24 +419,16 @@ const App = {
                         }
 
                         let timerHtml = '';
-                        if (m !== 'cardio') {
+                        if (!isEd && m !== 'cardio') {
                             const exTime = ex.t || App.timerState.default;
-                            if (isEd) {
-                                // У РЕЖИМІ РЕДАГУВАННЯ: Клік відкриває налаштування часу
-                                timerHtml = `
-                                <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}"
-                                     onclick="App.setTimerForExercise(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime}); event.stopPropagation();">
-                                    <span style="margin-right:4px; font-size:1rem;">⚙️</span>${exTime}s
-                                </div>`;
-                            } else {
-                                // ЗВИЧАЙНИЙ РЕЖИМ: Клік запускає таймер
-                                timerHtml = `
-                                <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation;"
-                                     onclick="App.startTimer(${exTime})">
-                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                    ${exTime}s
-                                </div>`;
-                            }
+                            // Один тап = запуск. Подвійний тап = налаштування.
+                            timerHtml = `
+                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}"
+                                 onclick="App.startTimer(${exTime})" 
+                                 ondblclick="App.setTimerForExercise(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime}); event.stopPropagation();">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                ${exTime}s
+                            </div>`;
                         }
 
                         return `<div class="exercise">
@@ -484,9 +477,10 @@ const App = {
                     ? `<span onclick="App.updateWeekNum(${week.id})" style="border-bottom: 1px dashed #fff; cursor: pointer;">${week.num}</span>`
                     : week.num;
 
+                // Номер тижня редагується подвійним тапом (незалежно від режиму редагування)
                 return `<div id="week-${week.id}" class="${theme}">
                     <div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center">
-                        <div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${weekNumHtml} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
+                        <div ondblclick="App.updateWeekNum(${week.id})"><h3 style="margin:0; color:#fff">ТИЖДЕНЬ <span style="border-bottom:1px dashed #666">${week.num}</span> <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
                         <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${week.id})">Видалити</span>
                     </div>
                     <div class="days-list">${daysHtml}</div>
@@ -520,13 +514,6 @@ const App = {
         this.data.currentProgram = prog;
         this.setTheme(prog);
         this.save();
-        
-        // Синхронізуємо стан олівця після зміни програми
-        const isEditing = document.body.classList.contains('editing');
-        const btn = document.getElementById('editBtn');
-        if (isEditing && btn) btn.classList.add('active');
-        else if (!isEditing && btn) btn.classList.remove('active');
-        
         this.render();
     },
 
@@ -688,16 +675,15 @@ const App = {
         if (val !== null && val !== "") {
             const newTime = parseInt(val);
             if (!isNaN(newTime) && newTime > 0) {
-                // Зберігаємо індивідуальний час для вправи
                 this.data.weeks[w].days[d].exercises[e].t = newTime;
                 this.save();
                 
-                // Миттєве оновлення кнопки без повного рендеру екрану
                 const btnId = `timer-btn-${w}-${d}-${e}`;
                 const btnEl = document.getElementById(btnId);
                 if (btnEl) {
-                    btnEl.innerHTML = `<span style="margin-right:4px">⚙️</span>${newTime}s`;
-                    btnEl.setAttribute('onclick', `App.setTimerForExercise(${w}, ${d}, ${e}, ${newTime}); event.stopPropagation();`);
+                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
+                    btnEl.setAttribute('onclick', `App.startTimer(${newTime})`);
+                    btnEl.setAttribute('oncontextmenu', `App.setTimerForExercise(${w}, ${d}, ${e}, ${newTime}); return false;`);
                 }
             }
         }
@@ -761,10 +747,10 @@ const App = {
         const prog = this.data.currentProgram || 'balanced';
         let newData;
         
-        // Шукаємо максимальний номер тижня САМЕ для цієї програми
+        // Шукаємо максимальний номер тижня ВЗАГАЛІ для цієї програми
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
-        const newWeekNum = maxNum + 1; // Завжди наступний після найвищого існуючого
+        const newWeekNum = maxNum + 1; // Завжди наступний
 
         const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
         
@@ -781,7 +767,7 @@ const App = {
         const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
         this.data.weeks.push(w);
         
-        // СОРТУВАННЯ МАСИВУ ТИЖНІВ ПІСЛЯ ДОДАВАННЯ
+        // СОРТУВАННЯ МАСИВУ ТИЖНІВ (від найменшого до найбільшого)
         this.data.weeks.sort((a, b) => a.num - b.num);
 
         this.updateBank();
