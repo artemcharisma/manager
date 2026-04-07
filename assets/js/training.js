@@ -686,8 +686,7 @@ const App = {
             }
         }
     },
-    // --- НОВІ ФУНКЦІЇ ДЛЯ РЕДАГУВАННЯ ---
-    async updateWeekNum(id) {
+        async updateWeekNum(id) {
         const w = this.data.weeks.find(x => x.id === id);
         if (!w) return;
         
@@ -697,6 +696,10 @@ const App = {
             if (!isNaN(num) && num > 0 && w.num !== num) {
                 this.pushHistory();
                 w.num = num;
+                
+                // СОРТУЄМО ПІСЛЯ РУЧНОЇ ЗМІНИ НОМЕРА
+                this.data.weeks.sort((a, b) => a.num - b.num);
+                
                 this.save();
                 this.render();
             }
