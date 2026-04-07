@@ -72,56 +72,69 @@ const GlobalVitals = {
     }
 };
 
+/* =========================================
+   PROTOCOL OS - UTILS (OPTIMIZED)
+   ========================================= */
+
 class StateManager {
-    constructor(key, defaultData) {
-        this.key = key;
+    constructor(storageKey, defaultData, maxHistory = 10) {
+        this.key = storageKey;
         this.defaultData = defaultData;
-        this.history = [];
+        this.maxHistory = maxHistory;
+        this.history = []; // Історія тепер живе ТІЛЬКИ в RAM
     }
 
-    // Завантаження даних
     init() {
-        const s = localStorage.getItem(this.key);
-        if (s) {
-            try {
-                return { ...this.defaultData, ...JSON.parse(s) };
-            } catch (e) {
-                console.error("Error parsing data", e);
-                return JSON.parse(JSON.stringify(this.defaultData));
+        try {
+            const stored = localStorage.getItem(this.key);
+            if (stored) {
+                // Завантажуємо актуальний стан
+                return JSON.parse(stored);
             }
+        } catch (e) {
+            console.error("Помилка ініціалізації бази:", e);
         }
         return JSON.parse(JSON.stringify(this.defaultData));
     }
 
-    // Збереження
+    push(data) {
+        // Зберігаємо копію в оперативній пам'яті для Undo
+        this.history.push(JSON.stringify(data));
+        if (this.history.length > this.maxHistory) {
+            this.history.shift(); // Видаляємо найстаріший крок
+        }
+        // НЕ пишемо history в localStorage, щоб не вбити квоту 5MB!
+    }
+
+    undo(currentData) {
+        if (this.history.length > 0) {
+            const prev = this.history.pop();
+            const prevObj = JSON.parse(prev);
+            this.save(prevObj); // Зберігаємо скасований стан як актуальний
+            return prevObj;
+        }
+        return null;
+    }
+
     save(data) {
+        // Пишемо в базу ТІЛЬКИ фінальний актуальний стан
         try {
             localStorage.setItem(this.key, JSON.stringify(data));
         } catch (e) {
-            alert("Пам'ять переповнена! Видаліть щось.");
+            console.error("Quota Exceeded! База даних занадто велика.", e);
+            if (window.Modal) {
+                window.Modal.alert("Пам'ять пристрою переповнена. Будь ласка, зробіть Backup і видаліть старі тижні.", "ПОМИЛКА ПАМ'ЯТІ", "red");
+            }
         }
     }
 
-    // Додати в історію (для Undo)
-    push(data) {
-        if (this.history.length > 20) this.history.shift();
-        this.history.push(JSON.stringify(data));
-        return true;
-    }
-
-    // Повернути назад
-    undo(currentData) {
-        if (this.history.length === 0) return null;
-        const prevData = JSON.parse(this.history.pop());
-        this.save(prevData);
-        return prevData;
-    }
-    
-    // Експорт файлу
     export(data, filename) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        a.href = url;
         a.download = filename;
         a.click();
+        URL.revokeObjectURL(url);
     }
 }
