@@ -537,24 +537,24 @@ const App = {
         this.toggleFab(true);
     },
 
-    // --- REST TIMER (ОПТИМІЗОВАНО) ---
+    // --- РОЗУМНИЙ REST TIMER ---
     initTimer() {
         const t = document.createElement('div');
         t.id = 'rest-timer';
         t.style.cssText = `
             position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
-            background: rgba(20, 20, 22, 0.9); border: 1px solid var(--theme, #d4af37);
-            color: var(--theme, #d4af37); padding: 8px 24px; border-radius: 30px;
-            font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 800;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.6); cursor: pointer; z-index: 8000;
-            transition: all 0.2s ease; align-items: center; justify-content: center;
+            background: rgba(20, 20, 22, 0.95); border: 1px solid var(--theme, #d4af37);
+            color: var(--theme, #d4af37); padding: 10px 28px; border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 800;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.8); cursor: pointer; z-index: 8000;
+            transition: all 0.2s ease; display: none; align-items: center; justify-content: center;
             backdrop-filter: blur(10px); user-select: none; touch-action: manipulation;
-            min-width: 120px; text-align: center; display: none;
+            min-width: 140px; text-align: center;
         `;
         
         t.onclick = (e) => {
             e.preventDefault();
-            this.setTimerDefault(); // Клік по активному таймеру тепер ВІДКРИВАЄ НАЛАШТУВАННЯ
+            this.stopTimer(); // Клік по таймеру зупиняє і ховає його
         };
 
         document.body.appendChild(t);
@@ -563,7 +563,6 @@ const App = {
         const savedTime = localStorage.getItem('rest_timer_default');
         if (savedTime) this.timerState.default = parseInt(savedTime);
     },
-
     toggleTimer() {
         if (this.timerState.interval) {
             this.stopTimer();
@@ -581,10 +580,10 @@ const App = {
             Notification.requestPermission();
         }
         
-        this.timerState.el.style.display = 'flex'; // ПОКАЗУЄМО ТАЙМЕР
+        this.timerState.el.style.display = 'flex';
         this.timerState.el.style.background = 'var(--theme, #d4af37)';
         this.timerState.el.style.color = '#000';
-        this.timerState.el.style.boxShadow = '0 0 20px var(--theme, #d4af37)';
+        this.timerState.el.style.boxShadow = '0 0 25px var(--theme, #d4af37)';
         
         this.updateTimerUI();
         if (window.Haptics) window.Haptics.light();
@@ -602,18 +601,17 @@ const App = {
                 
                 this.timerState.el.style.background = 'var(--success)';
                 this.timerState.el.style.color = '#fff';
-                this.timerState.el.style.boxShadow = '0 0 20px var(--success)';
+                this.timerState.el.style.boxShadow = '0 0 25px var(--success)';
                 this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
                 
                 if ("Notification" in window && Notification.permission === "granted") {
-                    new Notification("Час вийшов!", { body: "Пора робити наступний підхід", icon: "icon.png", vibrate: [200, 100, 200] });
+                    new Notification("Час відпочинку вийшов!", { body: "Пора робити наступний підхід", icon: "icon.png", vibrate: [200, 100, 200] });
                 }
                 
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
                 if (window.Haptics) window.Haptics.heavy();
                 
-                // Ховаємо через 4 секунди після завершення
-                setTimeout(() => { if(!this.timerState.interval) this.timerState.el.style.display = 'none'; }, 4000);
+                setTimeout(() => { if(!this.timerState.interval) this.timerState.el.style.display = 'none'; }, 5000);
             }
         }, 250); 
     },
@@ -623,11 +621,11 @@ const App = {
         this.timerState.interval = null;
         this.timerState.endTime = null; 
         
-        this.timerState.el.style.background = 'rgba(20, 20, 22, 0.9)';
+        this.timerState.el.style.background = 'rgba(20, 20, 22, 0.95)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
-        this.timerState.el.style.boxShadow = '0 5px 20px rgba(0,0,0,0.6)';
+        this.timerState.el.style.boxShadow = '0 5px 25px rgba(0,0,0,0.8)';
         
-        this.timerState.el.style.display = 'none'; // ХОВАЄМО ТАЙМЕР
+        this.timerState.el.style.display = 'none';
         this.timerState.left = this.timerState.default;
     },
 
@@ -640,25 +638,26 @@ const App = {
         
         if (this.timerState.interval) {
             this.timerState.el.innerHTML = `⏳ ${m}:${s}`;
-        } else {
-            this.timerState.el.innerHTML = `⏱ ${m}:${s}`;
         }
     },
 
-    async setTimerDefault() {
-        // НЕ зупиняємо таймер одразу, щоб він не зник, якщо юзер натиснув "Скасувати"
-        const val = await Modal.prompt("Введіть час відпочинку (в секундах):<br><br><span style='color:var(--danger); font-size:0.8rem; font-weight:bold'>Введіть 0, щоб зупинити таймер.</span>", "НАЛАШТУВАННЯ ТАЙМЕРА", this.timerState.default.toString());
+    async setTimerForExercise(w, d, e, currentVal) {
+        const val = await Modal.prompt(`Введіть час відпочинку для цієї вправи (в секундах):<br><br><span style='color:#888; font-size:0.8rem'>Наприклад: 90 (1.5 хв) або 120 (2 хв)</span>`, "ТАЙМЕР ВПРАВИ", currentVal.toString());
         
         if (val !== null && val !== "") {
             const newTime = parseInt(val);
-            if (!isNaN(newTime)) {
-                if (newTime <= 0) {
-                    this.stopTimer(); // Якщо ввів 0 - вимикаємо і ховаємо
-                } else {
-                    this.timerState.default = newTime;
-                    localStorage.setItem('rest_timer_default', newTime);
-                    this.startTimer(newTime); // Перезапускаємо з новим часом
-                    this.render(); // Оновлюємо кнопки біля вправ
+            if (!isNaN(newTime) && newTime > 0) {
+                // Зберігаємо час ТІЛЬКИ для цієї конкретної вправи
+                this.data.weeks[w].days[d].exercises[e].t = newTime;
+                this.save();
+                
+                // ТОЧКОВЕ оновлення DOM без мерехтіння всього екрану
+                const btnId = `timer-btn-${w}-${d}-${e}`;
+                const btnEl = document.getElementById(btnId);
+                if (btnEl) {
+                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
+                    // Оновлюємо onclick атрибут, щоб він використовував новий час
+                    btnEl.setAttribute('onclick', `App.startTimer(${newTime})`);
                 }
             }
         }
