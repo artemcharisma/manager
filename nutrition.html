@@ -533,6 +533,14 @@
         </div>
         
         <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
+
+        <div style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 20px;">
+            <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ПОРЯДОК У СПИСКУ</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn-ghost" onclick="App.moveDay(-1)" style="font-size:1rem; padding:12px; color: var(--theme); border-color: rgba(212, 175, 55, 0.3);">◀ ВЛІВО</button>
+                <button class="btn-ghost" onclick="App.moveDay(1)" style="font-size:1rem; padding:12px; color: var(--theme); border-color: rgba(212, 175, 55, 0.3);">ВПРАВО ▶</button>
+            </div>
+        </div>
     </div>
 </div>
 
