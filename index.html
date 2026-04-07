@@ -153,9 +153,17 @@
             letter-spacing: 1px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
-        .btn-save { color: var(--green); border-color: rgba(16, 185, 129, 0.15); }
-        .btn-reset { color: var(--red); border-color: rgba(239, 68, 68, 0.15); }
-
+        /* Чіткі контури для кнопок Хабу на мобільних пристроях */
+        .btn-save { 
+            color: var(--green); 
+            border-color: rgba(16, 185, 129, 0.4); /* Більш яскрава рамка */
+            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.08), rgba(10, 10, 12, 0.95)); 
+        }
+        .btn-reset { 
+            color: var(--red); 
+            border-color: rgba(239, 68, 68, 0.4); 
+            background: linear-gradient(to bottom, rgba(239, 68, 68, 0.08), rgba(10, 10, 12, 0.95)); 
+        }
         @media (hover: hover) {
             .btn-save:hover { border-color: var(--green); background: linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(15, 15, 17, 0.95)); box-shadow: 0 5px 20px rgba(16, 185, 129, 0.2); }
             .btn-reset:hover { border-color: var(--red); background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(15, 15, 17, 0.95)); box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2); }
@@ -181,20 +189,30 @@
         /* Приховуємо глобальне меню (зірку) на головній сторінці */
         #sys-fab { display: none !important; }
 
-        /* Елегантний акцент для Wipe All / Hard Reset у модальному вікні */
+        /* Червона кнопка (Wipe All / Hard Reset) - Менш ядерна, більш сувора */
         .modal-ctrl-btn.sys-reset { 
             color: var(--red) !important; 
-            border: 1px solid rgba(239, 68, 68, 0.3) !important; 
-            background: linear-gradient(to bottom, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)) !important; 
+            border: 1px solid rgba(239, 68, 68, 0.4) !important; 
+            background: rgba(20, 5, 5, 0.9) !important; /* Дуже темний червоний фон */
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1) !important;
             text-shadow: none !important;
         }
         .modal-ctrl-btn.sys-reset:active {
-            background: rgba(239, 68, 68, 0.25) !important;
-            border-color: var(--red) !important;
+            background: rgba(239, 68, 68, 0.15) !important;
             transform: scale(0.95) !important;
         }
 
+        /* Зелена кнопка (ОК / ПІДТВЕРДИТИ) - Чітка на телефоні */
+        .modal-ctrl-btn.sys-save {
+            color: var(--green) !important;
+            border: 1px solid rgba(16, 185, 129, 0.4) !important;
+            background: rgba(5, 20, 10, 0.9) !important; /* Дуже темний зелений фон */
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1) !important;
+        }
+        .modal-ctrl-btn.sys-save:active {
+            background: rgba(16, 185, 129, 0.15) !important;
+            transform: scale(0.95) !important;
+        }
     </style>
 </head>
 <body ontouchstart="">
