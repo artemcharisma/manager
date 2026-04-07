@@ -354,7 +354,7 @@ const App = {
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
-                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" style="width:50px; text-align:center" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
+                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
                             }
 
                             let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
@@ -366,6 +366,7 @@ const App = {
                             let placeholderW = ghostW ? `placeholder="${ghostW}"` : "";
                             let placeholderR = ghostR ? `placeholder="${ghostR}"` : "";
 
+                            // ТУТ БІЛЬШЕ НЕМАЄ ТАЙМЕРА ДЛЯ КОЖНОГО ПІДХОДУ
                             return `<div class="set-row">
                                 <div class="set-num">${sIdx+1}</div>
                                 <div class="set-part">
@@ -400,13 +401,13 @@ const App = {
 
                         let timerHtml = '';
                         if (!isEd && m !== 'cardio') {
-                            // Беремо збережений час вправи (ex.t), або дефолтний
                             const exTime = ex.t || App.timerState.default;
+                            // oncontextmenu = Довгий тап на телефоні (відкриває налаштування)
                             timerHtml = `
                             <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}"
                                  onclick="App.startTimer(${exTime})" 
                                  oncontextmenu="App.setTimerForExercise(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime}); return false;">
-                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 ${exTime}s
                             </div>`;
                         }
@@ -556,7 +557,7 @@ const App = {
         
         t.onclick = (e) => {
             e.preventDefault();
-            this.stopTimer(); // Клік по таймеру зупиняє і ховає його
+            this.stopTimer(); // Клік по активному таймеру зупиняє і ховає його
         };
 
         document.body.appendChild(t);
@@ -657,13 +658,14 @@ const App = {
                 const btnId = `timer-btn-${w}-${d}-${e}`;
                 const btnEl = document.getElementById(btnId);
                 if (btnEl) {
-                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
-                    // Оновлюємо onclick атрибут, щоб він використовував новий час
+                    btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${newTime}s`;
                     btnEl.setAttribute('onclick', `App.startTimer(${newTime})`);
+                    btnEl.setAttribute('oncontextmenu', `App.setTimerForExercise(${w}, ${d}, ${e}, ${newTime}); return false;`);
                 }
             }
         }
     },
+
     
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
