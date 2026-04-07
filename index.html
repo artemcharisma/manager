@@ -361,7 +361,7 @@
             
             if (weightEl) weightEl.innerHTML = latestW;
             if (bpEl) bpEl.innerHTML = latestBP;
-            if (hrEl && latestHR !== "--") hrEl.innerHTML = latestHR + " <span style='font-size: 0.75rem; color: var(--text-dim);'>BPM</span>";
+            if (hrEl && latestHR !== "--") hrEl.innerHTML = latestHR + "<span>BPM</span>";
         }
     } catch(e) { console.error("Vitals error:", e); }
 
