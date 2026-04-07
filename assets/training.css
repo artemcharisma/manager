@@ -247,12 +247,12 @@
         .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; line-height: 1.4; display: block; }
         .ex-badge { font-size: 0.6rem; color: var(--text-muted); background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222; width: fit-content; }
 
-        /* --- КОМПАКТНА СІТКА СЕТІВ (GRID) --- */
+        /* --- ІДЕАЛЬНА КОМПАКТНА СІТКА СЕТІВ (GRID) --- */
         .sets-wrapper { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
             gap: 8px; 
-            margin-top: 8px;
+            margin-top: 10px;
         }
         .set-row { 
             display: flex; align-items: center; justify-content: space-between;
@@ -261,25 +261,25 @@
         }
         .set-num { 
             background: #18181b; color: #555; font-size: 0.7rem; font-weight: 800; 
-            width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;
+            width: 28px; height: 100%; display: flex; align-items: center; justify-content: center;
             border-right: 1px solid #333; flex-shrink: 0;
         }
-        .set-part { display: flex; align-items: center; justify-content: center; flex: 1; padding: 0 4px; }
+        .set-part { display: flex; align-items: center; justify-content: center; flex: 1; padding: 0 2px; }
         .set-input { 
-            width: 40px; 
+            width: 45px; /* Оптимально для 3 цифр з крапкою */
             background: transparent; border: none; padding: 0;
             text-align: right; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 1rem; color: #fff;
         }
-        .set-unit { font-size: 0.6rem; color: #666; font-weight: 700; margin-left: 4px; margin-top: 4px; }
+        .set-unit { font-size: 0.6rem; color: #666; font-weight: 700; margin-left: 2px; margin-top: 3px; }
 
         /* КНОПКА ТАЙМЕРА В ЗАГОЛОВКУ ВПРАВИ */
         .ex-timer-btn {
-            background: transparent; border: 1px solid #333; color: var(--theme);
-            border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer;
-            display: flex; align-items: center; gap: 4px; transition: 0.2s;
+            background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme);
+            border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer;
+            display: flex; align-items: center; transition: 0.2s;
             font-family: 'JetBrains Mono'; font-weight: 700;
         }
-        .ex-timer-btn:active { background: #222; transform: scale(0.95); }
+        .ex-timer-btn:active { background: var(--theme); color: #000; transform: scale(0.95); }
               /* --- CARDIO STYLE (ВСТАВ ЦЕ В CSS) --- */
         .cardio-block { 
             background: rgba(234, 179, 8, 0.05); 
