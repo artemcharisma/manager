@@ -19,7 +19,7 @@
         }
 
         /* 2. ТЕКСТ: Курсор тексту */
-        input, textarea, [contenteditable] { 
+        input, textarea, [contenteditable], input[onclick], textarea[onclick] { 
             cursor: text !important;
         }
 
