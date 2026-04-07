@@ -171,11 +171,11 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-/* --- ПРЕМІАЛЬНІ КНОПКИ ДЛЯ ВСІХ МОДАЛЬНИХ ВІКОН --- */
+/* --- ПРЕМІАЛЬНІ КНОПКИ ДЛЯ ВСІХ МОДАЛЬНИХ ВІКОН (Стиль Хабу) --- */
 .modal-ctrl-btn.sys-save {
     color: var(--green) !important;
     border: 1px solid rgba(16, 185, 129, 0.4) !important;
-    background: rgba(5, 20, 10, 0.9) !important; /* Темний зелений фон */
+    background: linear-gradient(to bottom, rgba(16, 185, 129, 0.08), rgba(10, 10, 12, 0.95)) !important;
     box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1) !important;
     margin: 0 !important; border-radius: 14px !important;
 }
@@ -183,7 +183,7 @@ body {
 .modal-ctrl-btn.sys-reset { 
     color: var(--red) !important; 
     border: 1px solid rgba(239, 68, 68, 0.4) !important; 
-    background: rgba(20, 5, 5, 0.9) !important; /* Темний червоний фон */
+    background: linear-gradient(to bottom, rgba(239, 68, 68, 0.08), rgba(10, 10, 12, 0.95)) !important;
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1) !important;
     text-shadow: none !important;
     margin: 0 !important; border-radius: 14px !important;
