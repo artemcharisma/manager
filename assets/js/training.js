@@ -138,6 +138,9 @@ const App = {
         if(!this.data.exBank) this.data.exBank = [];
         if(!this.data.opened) this.data.opened = {}; 
         
+        // --- ДОДАНО --- Ініціалізація назв вкладок (якщо їх ще немає)
+        if(!this.data.customNames) this.data.customNames = { balanced: "ЗБАЛАНСОВАНА", arms: "РУКИ" };
+        
         // CSS для анімації та підсвічування ghost data
         const extraStyles = document.createElement('style');
         extraStyles.innerHTML = `
@@ -308,9 +311,24 @@ const App = {
         const isEd = document.body.classList.contains('editing');
         const prog = this.data.currentProgram;
 
-        document.querySelectorAll('.prog-opt').forEach(el => el.classList.remove('active'));
-        const progBtn = document.getElementById(`prog-${prog}`);
-        if(progBtn) progBtn.classList.add('active');
+        // --- ДИНАМІЧНІ НАЗВИ ВКЛАДОК ---
+        const nameBal = this.data.customNames ? this.data.customNames.balanced : "ЗБАЛАНСОВАНА";
+        const nameArms = this.data.customNames ? this.data.customNames.arms : "РУКИ";
+
+        // Знаходимо HTML контейнер і малюємо кнопки вкладок з можливістю редагування
+        const progSel = document.querySelector('.program-selector');
+        if (progSel) {
+            progSel.innerHTML = `
+                <div class="prog-opt ${prog === 'balanced' ? 'active' : ''}" onclick="App.setProgram('balanced')">
+                    ⚖️ ${nameBal}
+                    ${isEd && prog === 'balanced' ? `<span onclick="App.renameProgram('balanced'); event.stopPropagation()" style="margin-left:5px; font-size:0.8rem">✏️</span>` : ''}
+                </div>
+                <div class="prog-opt ${prog === 'arms' ? 'active' : ''}" onclick="App.setProgram('arms')">
+                    💪 ${nameArms}
+                    ${isEd && prog === 'arms' ? `<span onclick="App.renameProgram('arms'); event.stopPropagation()" style="margin-left:5px; font-size:0.8rem">✏️</span>` : ''}
+                </div>
+            `;
+        }
 
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
@@ -453,9 +471,14 @@ const App = {
                     </div>`;
                 }).join('');
 
+                // Якщо увімкнено редагування, номер тижня стає клікабельним для зміни
+                const weekNumHtml = isEd 
+                    ? `<span onclick="App.updateWeekNum(${week.id})" style="border-bottom: 1px dashed #fff; cursor: pointer;">${week.num}</span>`
+                    : week.num;
+
                 return `<div id="week-${week.id}" class="${theme}">
                     <div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center">
-                        <div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${week.num} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
+                        <div><h3 style="margin:0; color:#fff">ТИЖДЕНЬ ${weekNumHtml} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
                         <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${week.id})">Видалити</span>
                     </div>
                     <div class="days-list">${daysHtml}</div>
@@ -663,7 +686,34 @@ const App = {
             }
         }
     },
-    
+    // --- НОВІ ФУНКЦІЇ ДЛЯ РЕДАГУВАННЯ ---
+    async updateWeekNum(id) {
+        const w = this.data.weeks.find(x => x.id === id);
+        if (!w) return;
+        
+        const val = await Modal.prompt("Введіть новий номер тижня:", "РЕДАГУВАННЯ ТИЖНЯ", w.num.toString());
+        if (val !== null && val !== "") {
+            const num = parseInt(val);
+            if (!isNaN(num) && num > 0 && w.num !== num) {
+                this.pushHistory();
+                w.num = num;
+                this.save();
+                this.render();
+            }
+        }
+    },
+
+    async renameProgram(key) {
+        const currentName = this.data.customNames[key] || (key === 'balanced' ? "ЗБАЛАНСОВАНА" : "РУКИ");
+        const val = await Modal.prompt("Введіть нову назву для цієї вкладки:", "ПЕРЕЙМЕНУВАННЯ", currentName);
+        
+        if (val !== null && val.trim() !== "") {
+            this.pushHistory();
+            this.data.customNames[key] = val.trim().toUpperCase();
+            this.save();
+            this.render();
+        }
+    },
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
         if(val && !this.data.exBank.includes(val)) {
