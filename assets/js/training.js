@@ -403,8 +403,8 @@ const App = {
                             timerHtml = `
                             <div class="ex-timer-btn" 
                                  onclick="App.startTimer(App.timerState.default)" 
-                                 oncontextmenu="App.setTimerDefault(); return false;">
-                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                 ondblclick="App.setTimerDefault()">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 ${App.timerState.default}s
                             </div>`;
                         }
