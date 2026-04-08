@@ -635,7 +635,9 @@ const App = {
         document.head.appendChild(extraStyles);
 
         await PhotoDB.init();
-        this.load();
+        await this.load(); 
+    
+        this.migrateVitals();
         
         // --- ЗАПУСК МІГРАЦІЇ НА ГЛОБАЛЬНІ ПОКАЗНИКИ ---
         this.migrateVitals();
@@ -733,8 +735,8 @@ const App = {
         if (migrated) this.save();
     },
 
-    load() {
-        this.data = this.stateManager.init();
+    async load() {
+        this.data = await this.stateManager.init();
         
         if(!this.data.vitals) this.data.vitals = {};
         if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
