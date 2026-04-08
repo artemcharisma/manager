@@ -1088,7 +1088,7 @@ const App = {
                 sys = v.bp; 
             }
 
-            let content = pills.map((m, idx) => {
+                        let content = pills.map((m, idx) => {
                 const pillId = `${this.state.week}-${i}-${idx}`;
                 
                 const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
@@ -1099,23 +1099,25 @@ const App = {
                 const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
                 const isOpen = this.state.openMenu === pillId;
 
+                // КРИТИЧНИЙ ФІКС: min-width: 0 для тексту + жорсткий flex-shrink: 0 для блоку з дозуванням і меню
                 return `
-                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s ease; z-index:${isOpen ? 50 : 1}; overflow:visible !important;" ${clickAction}>
+                <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; justify-content:space-between; ${isDone} cursor:pointer; transition:all 0.3s ease; z-index:${isOpen ? 50 : 1}; overflow:visible !important;" ${clickAction}>
                     ${checkIcon}
-                    <div style="flex:1; pointer-events:${textPointer}; min-width:0; margin-right:10px;">
+                    <div style="flex:1; min-width:0; padding-right:10px; pointer-events:${textPointer};">
                         <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; outline:none;">${m.name}</div>
-                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop} style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; outline:none;">${m.meta || ""}</div>
+                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop} style="font-size:0.75rem; color:#888; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; outline:none; margin-left:0;">${m.meta || ""}</div>
                     </div>
                     <div style="display:flex; align-items:center; flex-shrink:0;">
-                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; white-space:nowrap; text-align:right; outline:none;" ${innerStop}>${m.dose}</span>
+                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; font-family:'JetBrains Mono', monospace; font-size:0.85rem; font-weight:700; white-space:nowrap; text-align:right; outline:none;" ${innerStop}>${m.dose}</span>
                         ${this.state.editing ? `
-                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; margin-left:12px; display:flex; align-items:center; pointer-events:auto;">
+                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; display:flex; align-items:center; justify-content:center; margin-left:8px; pointer-events:auto;">
                                 ${this.getMenuUI(this.state.week, i, idx, m.name, isOpen)}
                             </div>
                         ` : ''}
                     </div>
                 </div>`;
             }).join('');
+
                 
             let headerBtns = '';
             if (this.state.editing) {
@@ -1882,42 +1884,49 @@ const App = {
         this.save();
         this.renderView(); 
     },
-    getMenuUI(w, d, i, name, isOpen) {
+        getMenuUI(w, d, i, name, isOpen) {
         const safeName = name.replace(/'/g, "\\'"); 
         
-        // Єдина SVG іконка шестірні
         const gearIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
-        const btnColor = isOpen ? 'var(--primary)' : '#666';
-        
-        // Кнопка, яка завжди єдина
-        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:${btnColor}; transition:0.2s;">${gearIcon}</div>`;
+        let menuHtml = '';
+        if (isOpen) {
+            // Меню тепер висить абсолютно, не ламаючи батьківський контейнер
+            menuHtml = `
+            <div style="position:absolute; right:0; top:36px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; width:220px; display:flex; flex-direction:column; padding:4px 0; text-align:left; font-family:-apple-system, sans-serif;">
+                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.9rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem;">📋</span> <span>Копіювати</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.9rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; color:var(--blue)">📑</span> <span>На всю фазу</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.9rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.9rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.9rem; color:var(--red); font-weight:bold; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem;">✕</span> <span>Видалити запис</span>
+                </div>
+            </div>`;
+        }
 
-        if (!isOpen) return btn;
+        const btnColor = isOpen ? 'var(--primary)' : '#888';
+        const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
 
-        // Стиль для кожного пункту меню (щоб не дублювати код)
-        const itemStyle = "padding:12px 16px; display:flex; align-items:center; gap:12px; font-size:0.9rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.2s;";
-
-        // Випадаюче меню + Кнопка разом
-        const dropdown = `
-            <div style="position:absolute; right:0; top:34px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; min-width:230px; display:flex; flex-direction:column; padding:4px 0; text-align:left; font-family:sans-serif;">
-                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; width:20px; text-align:center;">📋</span> <span>Копіювати</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--blue)">📑</span> <span>На усю фазу</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="${itemStyle} border-bottom:none;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
-                </div>
+        // Повертаємо меню і кнопку як сусідні елементи, щоб уникнути конфліктів flex-контейнерів
+        return `
+            ${menuHtml}
+            <div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" 
+                 style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:8px; transition:all 0.2s ease;"
+                 onmouseover="this.style.color='var(--primary)'; this.style.background='rgba(212,175,55,0.1)'" 
+                 onmouseout="if(!${isOpen}){ this.style.color='#888'; this.style.background='transparent'; } else { this.style.background='rgba(212,175,55,0.15)'; }">
+                ${gearIcon}
             </div>
         `;
+    },
+
 
         // Повертаємо кнопку і меню (якщо відкрито) без дублювання
         return btn + dropdown;
