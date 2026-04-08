@@ -1907,7 +1907,7 @@ const App = {
         `;
 
         return btn + dropdown;
-    }
+    },
 
 
    toggleMenu(w, d, i, name) {
