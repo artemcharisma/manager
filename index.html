@@ -325,96 +325,89 @@
         }
 
         async function populateSmartCards() {
-    // 1. Фармакологія
-    try {
-        const ph = await Utils.load('gold_protocol', null);
-        if (ph && ph.schedule && ph.startDate) {
-            const startDate = new Date(ph.startDate); const now = new Date();
-            const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-            const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
-            const diffTime = now.getTime() - startMonday.getTime();
-            let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-            const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-            if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
-            let phaseTitle = "Курс";
-            if (ph.phases) {
-                const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
-                if (currentPhase) phaseTitle = currentPhase.title;
-            }
-            document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
+            // 1. Фармакологія
+            try {
+                const ph = await Utils.load('gold_protocol', null);
+                if (ph && ph.schedule && ph.startDate) {
+                    const startDate = new Date(ph.startDate); const now = new Date();
+                    const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                    const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
+                    const diffTime = now.getTime() - startMonday.getTime();
+                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
+                    if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
+                    let phaseTitle = "Курс";
+                    if (ph.phases) {
+                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
+                        if (currentPhase) phaseTitle = currentPhase.title;
+                    }
+                    document.getElementById('data-pharm').innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
+                }
+            } catch(e){ console.error("Pharm error:", e); }
+
+            // 2. Життєві показники
+            try {
+                const vitalsData = await GlobalVitals.getAll();
+                if (vitalsData && Object.keys(vitalsData).length > 0) {
+                    let latestW = "--.--<span>KG</span>", latestBP = "--/--", latestHR = "--";
+                    const dates = Object.keys(vitalsData).sort((a, b) => new Date(b) - new Date(a));
+                    for (let d of dates) {
+                        const v = vitalsData[d];
+                        if (v.w && latestW.includes("--")) latestW = v.w + "<span>KG</span>";
+                        if (v.bp && latestBP === "--/--") latestBP = v.bp;
+                        if (v.hr && latestHR === "--") latestHR = v.hr;
+                        if (!latestW.includes("--") && latestBP !== "--/--" && latestHR !== "--") break;
+                    }
+                    const weightEl = document.getElementById('vital-weight');
+                    const bpEl = document.getElementById('vital-bp');
+                    const hrEl = document.getElementById('vital-hr');
+                    if (weightEl) weightEl.innerHTML = latestW;
+                    if (bpEl) bpEl.innerHTML = latestBP;
+                    if (hrEl && latestHR !== "--") hrEl.innerHTML = latestHR + "<span>BPM</span>";
+                }
+            } catch(e) { console.error("Vitals error:", e); }
+
+            // 3. Тренування
+            try {
+                const tr = await Utils.load('training_protocol', null);
+                if (tr && tr.weeks && tr.weeks.length > 0) {
+                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
+                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
+                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
+                    document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
+                }
+            } catch(e){}
+
+            // 4. Харчування
+            try {
+                const nu = await Utils.load('protocol_sys_plus_days', null);
+                if (nu && nu.days && nu.days.length > 0) {
+                    const bank = nu.bank || {}; 
+                    let htmlContent = '';
+                    const findDay = (keywords) => {
+                        return nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
+                    };
+                    let trainDay = findDay(['трен', 'train', 'робоч', 'важк']) || nu.days[0];
+                    let restDay = findDay(['відпоч', 'рест', 'rest', 'off', 'вихідн']) || (nu.days.length > 1 ? nu.days[1] : null);
+
+                    if (restDay && trainDay.id === restDay.id && nu.days.length > 1) {
+                        restDay = nu.days.find(d => d.id !== trainDay.id);
+                    }
+
+                    if (trainDay) {
+                        const d1 = getDayMacros(trainDay, bank);
+                        if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
+                    }
+                    if (restDay) {
+                        const d2 = getDayMacros(restDay, bank);
+                        if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
+                    }
+                    
+                    if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
+                    else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
+                }
+            } catch(e){}
         }
-    } catch(e){ console.error("Pharm error:", e); }
-
-    // 2. Життєві показники
-    try {
-        const vitalsData = await GlobalVitals.getAll();
-        if (vitalsData && Object.keys(vitalsData).length > 0) {
-            let latestW = "--.--<span>KG</span>", latestBP = "--/--", latestHR = "--";
-            
-            const dates = Object.keys(vitalsData).sort((a, b) => new Date(b) - new Date(a));
-            
-            for (let d of dates) {
-                const v = vitalsData[d];
-                if (v.w && latestW.includes("--")) latestW = v.w + "<span>KG</span>";
-                if (v.bp && latestBP === "--/--") latestBP = v.bp;
-                if (v.hr && latestHR === "--") latestHR = v.hr;
-                
-                if (!latestW.includes("--") && latestBP !== "--/--" && latestHR !== "--") break;
-            }
-            
-            const weightEl = document.getElementById('vital-weight');
-            const bpEl = document.getElementById('vital-bp');
-            const hrEl = document.getElementById('vital-hr');
-            
-            if (weightEl) weightEl.innerHTML = latestW;
-            if (bpEl) bpEl.innerHTML = latestBP;
-            if (hrEl && latestHR !== "--") hrEl.innerHTML = latestHR + "<span>BPM</span>";
-        }
-    } catch(e) { console.error("Vitals error:", e); }
-
-    // 3. Тренування
-    try {
-        const tr = await Utils.load('training_protocol', null);
-        if (tr && tr.weeks && tr.weeks.length > 0) {
-            const lastWeek = tr.weeks[tr.weeks.length - 1]; 
-            const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
-            const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-            document.getElementById('data-train').innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
-        }
-    } catch(e){}
-
-    // 4. Харчування
-    try {
-        const nu = await Utils.load('protocol_sys_plus_days', null);
-        if (nu && nu.days && nu.days.length > 0) {
-            const bank = nu.bank || {}; 
-            let htmlContent = '';
-            
-            const findDay = (keywords) => {
-                return nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
-            };
-
-            let trainDay = findDay(['трен', 'train', 'робоч', 'важк']) || nu.days[0];
-            let restDay = findDay(['відпоч', 'рест', 'rest', 'off', 'вихідн']) || (nu.days.length > 1 ? nu.days[1] : null);
-
-            if (restDay && trainDay.id === restDay.id && nu.days.length > 1) {
-                restDay = nu.days.find(d => d.id !== trainDay.id);
-            }
-
-            if (trainDay) {
-                const d1 = getDayMacros(trainDay, bank);
-                if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
-            }
-            if (restDay) {
-                const d2 = getDayMacros(restDay, bank);
-                if(d2.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[R]</span> <span class="data-hl">${d2.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d2.p} Ж${d2.f} В${d2.c}</span></div>`;
-            }
-            
-            if (htmlContent !== '') document.getElementById('data-nutri').innerHTML = htmlContent;
-            else document.getElementById('data-nutri').innerHTML = `<span class="data-lbl">РАЦІОН ПОРОЖНІЙ</span>`;
-        }
-    } catch(e){}
-}
 
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
