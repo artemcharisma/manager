@@ -598,10 +598,9 @@ const App = {
     },
 
     // НОВА ФУНКЦІЯ: Міграція старих даних у GlobalVitals
-    migrateVitals() {
+    async migrateVitals() {
         let migrated = false;
 
-        // 1. Міграція тиску, пульсу та ваги
         if (this.data.vitals && Object.keys(this.data.vitals).length > 0) {
             for (let key in this.data.vitals) {
                 const [w, d] = key.split('-');
@@ -609,28 +608,27 @@ const App = {
                 const dateStr = GlobalVitals.formatDate(realDateObj);
                 const v = this.data.vitals[key];
                 
-                if (v.w) GlobalVitals.save(dateStr, 'w', v.w);
-                if (v.bp) GlobalVitals.save(dateStr, 'bp', v.bp);
-                if (v.hr) GlobalVitals.save(dateStr, 'hr', v.hr);
+                if (v.w) await GlobalVitals.save(dateStr, 'w', v.w);
+                if (v.bp) await GlobalVitals.save(dateStr, 'bp', v.bp);
+                if (v.hr) await GlobalVitals.save(dateStr, 'hr', v.hr);
             }
-            this.data.vitals = {}; // Очищаємо старі дані
+            this.data.vitals = {};
             migrated = true;
         }
 
-        // 2. Міграція замірів (прив'язуємо до понеділка відповідного тижня)
         if (this.data.measurements && Object.keys(this.data.measurements).length > 0) {
             for (let w in this.data.measurements) {
-                const realDateObj = this.getRealDateObj(parseInt(w), 0); // Понеділок
+                const realDateObj = this.getRealDateObj(parseInt(w), 0); 
                 const dateStr = GlobalVitals.formatDate(realDateObj);
                 const m = this.data.measurements[w];
                 
-                if (m.chest) GlobalVitals.save(dateStr, 'chest', m.chest);
-                if (m.waist) GlobalVitals.save(dateStr, 'waist', m.waist);
-                if (m.arm) GlobalVitals.save(dateStr, 'arm', m.arm);
-                if (m.leg) GlobalVitals.save(dateStr, 'leg', m.leg);
-                if (m.calf) GlobalVitals.save(dateStr, 'calf', m.calf);
+                if (m.chest) await GlobalVitals.save(dateStr, 'chest', m.chest);
+                if (m.waist) await GlobalVitals.save(dateStr, 'waist', m.waist);
+                if (m.arm) await GlobalVitals.save(dateStr, 'arm', m.arm);
+                if (m.leg) await GlobalVitals.save(dateStr, 'leg', m.leg);
+                if (m.calf) await GlobalVitals.save(dateStr, 'calf', m.calf);
             }
-            this.data.measurements = {}; // Очищаємо старі дані
+            this.data.measurements = {}; 
             migrated = true;
         }
 
@@ -1665,7 +1663,6 @@ const App = {
     },
 
     async saveMeas(w, k, v) {
-        // Заміри тіла прив'язуємо до понеділка поточного тижня
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0)); 
         if (v) v = v.replace(',', '.');
         await GlobalVitals.save(dateStr, k, v);
