@@ -597,10 +597,107 @@ const App = {
         setTimeout(() => document.getElementById('pillName').focus(), 100);
     },
 
+    async init() {
+        const extraStyles = document.createElement('style');
+        extraStyles.innerHTML = `
+            @keyframes goldShimmer {
+                0% { background-position: 200% center; }
+                100% { background-position: -200% center; }
+            }
+            #progBar {
+                background: linear-gradient(90deg, var(--primary) 25%, #fff2a8 50%, var(--primary) 75%) !important;
+                background-size: 200% auto !important;
+                animation: goldShimmer 2.5s linear infinite !important;
+            }
+            @media (hover: hover) {
+                .custom-pill-option:hover { background: #333 !important; }
+            }
+            
+            #pillName::-webkit-calendar-picker-indicator { display: none !important; }
+            
+            .date-picker-wrapper { 
+                position: relative; display: inline-flex; align-items: center; 
+                justify-content: center; margin-left: 6px; vertical-align: middle; 
+                width: 28px; height: 28px; cursor: pointer; 
+            }
+            body.privacy-mode .date-picker-wrapper { 
+                pointer-events: none !important; 
+            }
+            .date-hidden-input { 
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                opacity: 0; cursor: pointer; z-index: 10; border: none; background: transparent; color: transparent; 
+            }
+            .date-hidden-input::-webkit-calendar-picker-indicator { 
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
+            }
+        `;
+        document.head.appendChild(extraStyles);
+
+        await PhotoDB.init();
+        this.load();
+        
+        // --- ЗАПУСК МІГРАЦІЇ НА ГЛОБАЛЬНІ ПОКАЗНИКИ ---
+        this.migrateVitals();
+        
+        await this.refreshPhotos();
+        
+        this.initCustomDropdown();
+        
+        const now = new Date();
+        const start = this.getMondayOfStartWeek();
+        const diffTime = now.getTime() - start.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        let currentWeek = Math.floor(diffDays / 7) + 1; 
+        
+        const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
+        if (currentWeek < 1) currentWeek = 1;
+        if (currentWeek > maxW) currentWeek = maxW;
+        
+        this.state.week = currentWeek; 
+        
+        const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
+        if (currentPhase) this.state.phaseId = currentPhase.id;
+
+        this.renderNav(); 
+        this.renderView();
+        
+        if (this.data.privacyEnabled) {
+            document.body.classList.add('privacy-mode', 'privacy-locked');
+        }
+        
+        setTimeout(() => {
+            const cb = document.getElementById('privacyAutoLock');
+            if (cb) cb.checked = this.data.privacyEnabled || false;
+        }, 100);
+        
+        const brandBlock = document.querySelector('.brand');
+        const brandIcon = document.querySelector('.brand-icon');
+
+        brandBlock.onclick = () => {
+            if (document.body.classList.contains('privacy-mode')) return;
+            brandIcon.classList.remove('hint-active');
+            void brandIcon.offsetWidth; 
+            brandIcon.classList.add('hint-active');
+        };
+        
+        brandBlock.ondblclick = async () => {
+            if (document.body.classList.contains('privacy-mode')) return;
+            if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані.", "КРИТИЧНО", "red")) {
+                localStorage.removeItem('gold_protocol');
+                localStorage.removeItem('pharm_manual_lock');
+                localStorage.removeItem('protocol_global_vitals'); // Очищення глобальної бази
+                try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
+                location.reload();
+            }
+        };
+    },
+
     // НОВА ФУНКЦІЯ: Міграція старих даних у GlobalVitals
-    async migrateVitals() {
+    migrateVitals() {
         let migrated = false;
 
+        // 1. Міграція тиску, пульсу та ваги
         if (this.data.vitals && Object.keys(this.data.vitals).length > 0) {
             for (let key in this.data.vitals) {
                 const [w, d] = key.split('-');
@@ -608,47 +705,47 @@ const App = {
                 const dateStr = GlobalVitals.formatDate(realDateObj);
                 const v = this.data.vitals[key];
                 
-                if (v.w) await GlobalVitals.save(dateStr, 'w', v.w);
-                if (v.bp) await GlobalVitals.save(dateStr, 'bp', v.bp);
-                if (v.hr) await GlobalVitals.save(dateStr, 'hr', v.hr);
+                if (v.w) GlobalVitals.save(dateStr, 'w', v.w);
+                if (v.bp) GlobalVitals.save(dateStr, 'bp', v.bp);
+                if (v.hr) GlobalVitals.save(dateStr, 'hr', v.hr);
             }
-            this.data.vitals = {};
+            this.data.vitals = {}; // Очищаємо старі дані
             migrated = true;
         }
 
+        // 2. Міграція замірів (прив'язуємо до понеділка відповідного тижня)
         if (this.data.measurements && Object.keys(this.data.measurements).length > 0) {
             for (let w in this.data.measurements) {
-                const realDateObj = this.getRealDateObj(parseInt(w), 0); 
+                const realDateObj = this.getRealDateObj(parseInt(w), 0); // Понеділок
                 const dateStr = GlobalVitals.formatDate(realDateObj);
                 const m = this.data.measurements[w];
                 
-                if (m.chest) await GlobalVitals.save(dateStr, 'chest', m.chest);
-                if (m.waist) await GlobalVitals.save(dateStr, 'waist', m.waist);
-                if (m.arm) await GlobalVitals.save(dateStr, 'arm', m.arm);
-                if (m.leg) await GlobalVitals.save(dateStr, 'leg', m.leg);
-                if (m.calf) await GlobalVitals.save(dateStr, 'calf', m.calf);
+                if (m.chest) GlobalVitals.save(dateStr, 'chest', m.chest);
+                if (m.waist) GlobalVitals.save(dateStr, 'waist', m.waist);
+                if (m.arm) GlobalVitals.save(dateStr, 'arm', m.arm);
+                if (m.leg) GlobalVitals.save(dateStr, 'leg', m.leg);
+                if (m.calf) GlobalVitals.save(dateStr, 'calf', m.calf);
             }
-            this.data.measurements = {}; 
+            this.data.measurements = {}; // Очищаємо старі дані
             migrated = true;
         }
 
         if (migrated) this.save();
     },
 
-    async load() {
-        this.data = await this.stateManager.init(); // <--- ДОДАНО AWAIT
+    load() {
+        this.data = this.stateManager.init();
         
         if(!this.data.vitals) this.data.vitals = {};
         if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
         if(!this.data.bodyMap) this.data.bodyMap = { last: null, history: [] };
-        if(this.data.privacyEnabled === undefined) this.data.privacyEnabled = false; 
+        if(this.data.privacyEnabled === undefined) this.data.privacyEnabled = false; // За замовчуванням вимкнено
         if(!this.data.privacyPassword) this.data.privacyPassword = '2255';
         if(!this.data.analysis) this.data.analysis = JSON.parse(JSON.stringify(DefaultData.analysis));
         if(!this.data.pharmacy) this.data.pharmacy = JSON.parse(JSON.stringify(DefaultData.pharmacy));
         if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
         if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
         if(!this.data.measurements) this.data.measurements = {};
-        if(!this.data.notes) this.data.notes = {}; // <--- ДОДАНО ЦЕЙ РЯДОК
     },
 
     save() { 
@@ -878,9 +975,10 @@ const App = {
             c.innerHTML = ''; 
             if(this.state.view === 'analysis') this.renderAnalysis(c);
             else if(this.state.view === 'pharmacy') this.renderPharm(c);
-            else if(this.state.view === 'analytics') await this.renderAnalytics(c); // <--- ДОДАНО AWAIT
+            else if(this.state.view === 'analytics') this.renderAnalytics(c);
         }
     },
+
     renderTimeline() {
         const weekNumbers = Object.keys(this.data.schedule).map(Number);
         const maxW = weekNumbers.length > 0 ? Math.max(...weekNumbers) : 1;
@@ -927,9 +1025,6 @@ const App = {
         const oldWeekBar = document.querySelector('.week-bar');
         if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
 
-        // ДОДАНО: Отримуємо ВСІ вітали один раз (швидко), щоб не чекати в циклі
-        const allVitals = await GlobalVitals.getAll();
-
         const ph = this.data.phases.find(x => x.id === this.state.phaseId);
         const wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
         const pasteToWeekHtml = (this.state.editing && this.pillBuffer) ? `
@@ -944,11 +1039,8 @@ const App = {
             const realDate = this.getRealDate(this.state.week, i);
             const isToday = this.isToday(this.state.week, i);
             const pills = this.data.schedule[this.state.week]?.[i] || [];
-            
-            // ЗМІНЕНО: Беремо дані з кешу allVitals
             const dateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, i));
-            const v = allVitals[dateStr] || { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
-            
+            const v = GlobalVitals.get(dateStr);
             let sys = "", dia = "";
             if (v.bp && v.bp.includes('/')) {
                 const parts = v.bp.split('/');
@@ -1027,9 +1119,8 @@ const App = {
         const photos = await PhotoDB.get(this.state.week);
         const pHtml = photos.map((p, idx) => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${idx})"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
-        // ЗМІНЕНО: Беремо дані вимірів з кешу allVitals
         const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, 0));
-        const meas = allVitals[mondayDateStr] || { chest: '', waist: '', arm: '', leg: '', calf: '' };
+        const meas = GlobalVitals.get(mondayDateStr);
         const statsHtml = this.getStatsHtml(this.state.week);
 
         c.innerHTML = `
@@ -1064,7 +1155,7 @@ const App = {
         if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
     },
 
-    async renderAnalytics(c) {
+    renderAnalytics(c) {
         c.innerHTML = `
             <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
                 <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
@@ -1101,9 +1192,6 @@ const App = {
 
         const dataChest = [], dataWaist = [], dataArm = [], dataLeg = [], dataCalf = [];
     
-        // ДОДАНО: Отримуємо ВСІ вітали один раз
-        const allVitals = await GlobalVitals.getAll();
-
         const weekKeys = Object.keys(this.data.schedule).map(Number);
         const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
         
@@ -1151,9 +1239,8 @@ const App = {
     
             let weightSum = 0; let weightCount = 0;
             for(let d=0; d<7; d++) {
-                // ЗМІНЕНО: Беремо з allVitals
                 const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
-                const v = allVitals[dateStr] || {};
+                const v = GlobalVitals.get(dateStr);
                 if(v && v.w) { 
                     const val = parseFloat(v.w.toString().replace(',','.'));
                     weightSum += val; 
@@ -1164,9 +1251,8 @@ const App = {
             }
             dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
 
-            // ЗМІНЕНО: Беремо з allVitals
             const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0));
-            const meas = allVitals[mondayDateStr] || {};
+            const meas = GlobalVitals.get(mondayDateStr);
             dataChest.push(meas.chest ? parseFloat(meas.chest) : null);
             dataWaist.push(meas.waist ? parseFloat(meas.waist) : null);
             dataArm.push(meas.arm ? parseFloat(meas.arm) : null);
@@ -1634,16 +1720,15 @@ const App = {
         return statsHtml;
     },
     
-    async saveNote(w,t) { 
+    saveNote(w,t) { 
         this.pushHistory(); 
-        if(!this.data.notes) this.data.notes = {};
         this.data.notes[w]=t; 
         this.save(); 
     },
     
-    async saveBP(w, d, type, val) {
+    saveBP(w, d, type, val) {
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
-        const v = await GlobalVitals.get(dateStr);
+        const v = GlobalVitals.get(dateStr);
 
         let currentBP = v.bp || "/";
         let parts = currentBP.split('/');
@@ -1653,19 +1738,20 @@ const App = {
         if (type === 'dia') parts[1] = val;
 
         let finalBP = (parts[0] === "" && parts[1] === "") ? "" : `${parts[0]}/${parts[1]}`;
-        await GlobalVitals.save(dateStr, 'bp', finalBP);
+        GlobalVitals.save(dateStr, 'bp', finalBP);
     },
     
-    async saveVital(w, d, k, v) { 
+    saveVital(w, d, k, v) { 
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
         if (k === 'w' && v) v = v.replace(',', '.'); 
-        await GlobalVitals.save(dateStr, k, v); 
+        GlobalVitals.save(dateStr, k, v); 
     },
 
-    async saveMeas(w, k, v) {
+    saveMeas(w, k, v) {
+        // Заміри тіла прив'язуємо до понеділка поточного тижня
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0)); 
         if (v) v = v.replace(',', '.');
-        await GlobalVitals.save(dateStr, k, v);
+        GlobalVitals.save(dateStr, k, v);
     },
     
         async copyDay(w, d) {
