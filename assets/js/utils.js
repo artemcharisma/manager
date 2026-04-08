@@ -1,6 +1,5 @@
 // assets/js/utils.js
 
-// 1. ЛЕГКА НАТИВНА ОБГОРТКА INDEXEDDB (Ліміт > 500MB)
 const StorageDB = {
     name: 'ProtocolOS_DB',
     store: 'store',
@@ -9,31 +8,88 @@ const StorageDB = {
     init() {
         if (!this.dbPromise) {
             this.dbPromise = new Promise((resolve, reject) => {
-                const req = indexedDB.open(this.name, 1);
-                req.onupgradeneeded = (e) => e.target.result.createObjectStore(this.store);
-                req.onsuccess = (e) => resolve(e.target.result);
-                req.onerror = (e) => reject(e.target.error);
+                if (!window.indexedDB) return reject(new Error("No IDB"));
+                
+                let isResolved = false;
+                const timeout = setTimeout(() => {
+                    if (!isResolved) {
+                        isResolved = true;
+                        reject(new Error("IDB Timeout"));
+                    }
+                }, 1000); // 1 секунда і падаємо в localStorage
+
+                try {
+                    const req = indexedDB.open(this.name, 1);
+                    
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(this.store)) {
+                            db.createObjectStore(this.store);
+                        }
+                    };
+                    
+                    req.onsuccess = (e) => {
+                        if (isResolved) return;
+                        isResolved = true;
+                        clearTimeout(timeout);
+                        resolve(e.target.result);
+                    };
+                    
+                    req.onerror = (e) => {
+                        if (isResolved) return;
+                        isResolved = true;
+                        clearTimeout(timeout);
+                        reject(e.target.error);
+                    };
+                    
+                    req.onblocked = () => {
+                        if (isResolved) return;
+                        isResolved = true;
+                        clearTimeout(timeout);
+                        reject(new Error("IDB Blocked"));
+                    };
+                } catch(e) {
+                    if (!isResolved) {
+                        isResolved = true;
+                        clearTimeout(timeout);
+                        reject(e);
+                    }
+                }
             });
         }
         return this.dbPromise;
     },
 
     async get(key) {
-        const db = await this.init();
-        return new Promise((resolve, reject) => {
-            const req = db.transaction(this.store, 'readonly').objectStore(this.store).get(key);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-        });
+        try {
+            const db = await this.init();
+            return new Promise((resolve, reject) => {
+                try {
+                    const tx = db.transaction(this.store, 'readonly');
+                    const req = tx.objectStore(this.store).get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                } catch(e) { reject(e); }
+            });
+        } catch (e) {
+            return Promise.reject(e);
+        }
     },
 
     async set(key, value) {
-        const db = await this.init();
-        return new Promise((resolve, reject) => {
-            const req = db.transaction(this.store, 'readwrite').objectStore(this.store).put(value, key);
-            req.onsuccess = () => resolve();
-            req.onerror = () => reject(req.error);
-        });
+        try {
+            const db = await this.init();
+            return new Promise((resolve, reject) => {
+                try {
+                    const tx = db.transaction(this.store, 'readwrite');
+                    const req = tx.objectStore(this.store).put(value, key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                } catch(e) { reject(e); }
+            });
+        } catch(e) {
+            return Promise.reject(e);
+        }
     }
 };
 
@@ -53,16 +109,15 @@ const Utils = {
         try {
             data = await StorageDB.get(key);
         } catch (e) {
-            console.warn(`IDB read error for ${key}:`, e);
+            console.warn(`[Utils] IDB fallback activated for ${key}`);
         }
         
-        // БРОНЕБІЙНИЙ ФОЛБЕК: Якщо в базі пусто або вона вилетіла з помилкою — беремо з localStorage
         if (!data) {
             try {
                 const lsData = localStorage.getItem(key);
                 if (lsData) {
                     data = JSON.parse(lsData);
-                    try { await StorageDB.set(key, data); } catch(e) {} // Тиха міграція
+                    try { await StorageDB.set(key, data); } catch(e) {} 
                 }
             } catch (e) {}
         }
@@ -72,11 +127,9 @@ const Utils = {
     async save(key, data) {
         try {
             await StorageDB.set(key, data);
-            // Резервне копіювання в localStorage (на випадок збоїв IDB)
             try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
         } catch (e) {
-            console.error(`IDB save error:`, e);
-            // Якщо IDB впав — гарантовано зберігаємо в старий localStorage
+            console.warn(`[Utils] IDB save failed, using LS for ${key}`);
             try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
         }
     },
@@ -85,7 +138,6 @@ const Utils = {
     date(d = new Date()) { return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }); }
 };
 
-// ГЛОБАЛЬНИЙ СЕРВІС ЖИТТЄВИХ ПОКАЗНИКІВ (Тепер працює асинхронно)
 const GlobalVitals = {
     key: 'protocol_global_vitals',
     
@@ -122,24 +174,18 @@ const GlobalVitals = {
     }
 };
 
-/* =========================================
-   PROTOCOL OS - STATE MANAGER (INDEXED DB)
-   ========================================= */
-
 class StateManager {
     constructor(storageKey, defaultData, maxHistory = 10) {
         this.key = storageKey;
         this.defaultData = defaultData;
         this.maxHistory = maxHistory;
-        this.history = []; // Історія змін живе в RAM для швидкого Undo
+        this.history = []; 
     }
 
-    // ТЕПЕР ASYNC
     async init() {
         try {
             return await Utils.load(this.key, this.defaultData);
         } catch (e) {
-            console.error("Помилка ініціалізації бази (IDB):", e);
             return JSON.parse(JSON.stringify(this.defaultData));
         }
     }
@@ -155,13 +201,12 @@ class StateManager {
         if (this.history.length > 0) {
             const prev = this.history.pop();
             const prevObj = JSON.parse(prev);
-            this.save(prevObj); // Запускаємо фонове збереження
+            this.save(prevObj); 
             return prevObj;
         }
         return null;
     }
 
-    // Fire-and-forget (Асинхронне збереження, яке не блокує інтерфейс під час вводу)
     save(data) {
         Utils.save(this.key, data);
     }
