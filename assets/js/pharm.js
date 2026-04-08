@@ -1159,7 +1159,7 @@ const App = {
         if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
     },
 
-    renderAnalytics(c) {
+    async renderAnalytics(c) {
         c.innerHTML = `
             <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
                 <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
