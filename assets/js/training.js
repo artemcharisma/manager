@@ -226,6 +226,8 @@ const App = {
         brandBlock.ondblclick = async () => {
             if(await Modal.confirm("⚠ HARD RESET?<br><br>Це незворотно видалить усі дані тренувань.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('training_protocol');
+                // ДОДАНО: Знищуємо нову базу даних IndexedDB
+                try { indexedDB.deleteDatabase('ProtocolOS_DB'); } catch(e) {}
                 location.reload();
             }
         };
