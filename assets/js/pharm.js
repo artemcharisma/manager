@@ -1989,7 +1989,7 @@ const App = {
         this.renderView();
     },
 
-    smartSave() {
+        smartSave() {
         let report = `══════════════════════════════════════\n`;
         report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
         report += `══════════════════════════════════════\n\n`;
@@ -2044,26 +2044,48 @@ const App = {
         
         report += `\n══════════════════════════════════════\n`;
         
-        navigator.clipboard.writeText(report).then(async () => {
-            await Modal.alert("Дані успішно скопійовано в буфер обміну.", "✅ СКОПІЙОВАНО", "green");
-            if(await Modal.confirm("Скачати повний JSON бекап?", "ЗАВАНТАЖЕННЯ", "gold")) {
-                const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
-                // НАДІЙНИЙ ЕКСПОРТ БЕКАПУ
-                const dataStr = JSON.stringify(this.data, null, 2);
-                const blob = new Blob([dataStr], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a); // Обов'язково для iOS/Safari
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-            }
-        }).catch(async e => await Modal.alert("Не вдалося скопіювати текст", "ПОМИЛКА", "red"));
+        // 1. Копіюємо текст, але якщо помилка (наприклад, iOS блокує), ігноруємо її, щоб бекап пішов далі
+        try {
+            navigator.clipboard.writeText(report).catch(() => {});
+        } catch (e) {}
+
+        // 2. Гарантоване і миттєве завантаження JSON-файлу
+        try {
+            const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
+            const dataStr = JSON.stringify(this.data, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement("a");
+            a.style.display = "none"; // Приховуємо лінк
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a); // Обов'язково додаємо в DOM для мобільних
+            
+            a.click();
+            
+            // Очищаємо пам'ять
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 150);
+
+            // Показуємо успішне повідомлення
+            if (window.Modal && typeof window.Modal.alert === 'function') {
+                window.Modal.alert("Файл бекапу успішно завантажено!", "✅ ЗБЕРЕЖЕНО", "green");
+            } else {
+                alert("Бекап успішно завантажено!");
+            }
+        } catch (error) {
+            console.error(error);
+            if (window.Modal && typeof window.Modal.alert === 'function') {
+                window.Modal.alert("Не вдалося створити файл бекапу.", "ПОМИЛКА", "red");
+            } else {
+                alert("Помилка збереження!");
+            }
+        }
     },
+
 
     togglePillDone(w, d, i) {
         if (this.state.editing) return; 
