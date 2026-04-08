@@ -28,12 +28,12 @@ const App = {
     state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
     history: [],
 
-    init() {
-        const loadedData = Utils.load(DB_KEY, null);
+    async init() {
+        // КРИТИЧНИЙ ФІКС: Тепер ми чекаємо реальні дані, а не Promise
+        const loadedData = await Utils.load(DB_KEY, null);
 
         if(loadedData) {
             this.data = loadedData;
-            // ГАРАНТІЯ: Якщо після лоаду немає поля schedule, створюємо його
             if (!this.data.schedule) this.data.schedule = {};
             
             if(!loadedData.days) {
@@ -51,16 +51,14 @@ const App = {
             this.data.schedule = {};
         }
         
-        // АВТОЗАВАНТАЖЕННЯ ДНЯ ЗГІДНО РОЗКЛАДУ
         if (!this.data.schedule) this.data.schedule = {};
         
-        const todayNum = new Date().getDay(); // 0 (Неділя) - 6 (Субота)
-        const mapDay = todayNum === 0 ? 7 : todayNum; // Переводимо у формат 1 (Пн) - 7 (Нд)
+        const todayNum = new Date().getDay(); 
+        const mapDay = todayNum === 0 ? 7 : todayNum; 
         const schedDayId = this.data.schedule[mapDay.toString()];
 
-        // ФІКС: Порівнюємо як рядки String(), щоб уникнути багу типів
         if (schedDayId && this.data.days.find(d => String(d.id) === String(schedDayId))) {
-            this.state.currentDayId = Number(schedDayId); // Повертаємо у формат числа
+            this.state.currentDayId = Number(schedDayId); 
         } else if(!this.state.currentDayId && this.data.days.length > 0) {
             this.state.currentDayId = this.data.days[0].id;
         }
