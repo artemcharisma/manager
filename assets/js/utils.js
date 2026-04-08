@@ -109,7 +109,7 @@ const Utils = {
         try {
             data = await StorageDB.get(key);
         } catch (e) {
-            console.warn(`[Utils] IDB fallback activated for ${key}`);
+            console.warn(`[Utils] IDB read error for ${key}`);
         }
         
         if (!data) {
@@ -125,13 +125,12 @@ const Utils = {
     },
 
     async save(key, data) {
-        try {
-            await StorageDB.set(key, data);
-            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
-        } catch (e) {
-            console.warn(`[Utils] IDB save failed, using LS for ${key}`);
-            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
-        }
+        // 1. ЖОРСТКА ГАРАНТІЯ: Синхронно пишемо в localStorage ПЕРЕД усім іншим.
+        // Навіть якщо юзер натисне F5 через мілісекунду, дані вже збережені.
+        try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
+        
+        // 2. Фонове збереження у важку базу
+        try { await StorageDB.set(key, data); } catch (e) { console.warn('IDB save error', e); }
     },
 
     id() { return Date.now(); },
