@@ -1075,32 +1075,35 @@ const App = {
                 sys = v.bp; 
             }
 
-            let content = pills.map((m, idx) => {
-                const pillId = `${this.state.week}-${i}-${idx}`;
-                
-                const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
-                const checkIcon = m.done ? `<div style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>` : '';
-                
-                const textPointer = this.state.editing ? 'auto' : 'none';
-                const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
-                const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
+                        let content = pills.map((m, idx) => {
+                const pillId = `${this.state.week}-${i}-${idx}`;
+                
+                const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
+                const checkIcon = m.done ? `<div style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>` : '';
+                
+                const textPointer = this.state.editing ? 'auto' : 'none';
+                const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
+                const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
+                const isOpen = this.state.openMenu === pillId;
 
-                return `
-                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1);" ${clickAction}>
-                    ${checkIcon}
-                    <div style="flex:1; pointer-events:${textPointer};">
-                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600">${m.name}</div>
-                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop}>${m.meta || ""}</div>
-                    </div>
-                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer};" ${innerStop}>${m.dose}</span>
-                    
-                    ${this.state.editing ? `
-                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative; pointer-events:auto;">
-                            ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === pillId)}
-                        </div>
-                    ` : ''}
-                </div>`;
-            }).join('');
+                // Повернуто оригінальний дизайн. Додано лише z-index для активного меню та overflow:visible.
+                return `
+                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isOpen ? 50 : 1}; overflow:visible !important;" ${clickAction}>
+                    ${checkIcon}
+                    <div style="flex:1; pointer-events:${textPointer};">
+                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600">${m.name}</div>
+                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop}>${m.meta || ""}</div>
+                    </div>
+                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; margin-right: 10px;" ${innerStop}>${m.dose}</span>
+                    
+                    ${this.state.editing ? `
+                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; pointer-events:auto;">
+                            ${this.getMenuUI(this.state.week, i, idx, m.name, isOpen)}
+                        </div>
+                    ` : ''}
+                </div>`;
+            }).join('');
+
                 
             let headerBtns = '';
             if (this.state.editing) {
@@ -1867,40 +1870,44 @@ const App = {
         this.save();
         this.renderView(); 
     },
-    getMenuUI(w, d, i, name, isOpen) {
-        const safeName = name.replace(/'/g, "\\'"); 
-        
-        if (isOpen) {
-            return `
-            <div class="kebab-menu-dropdown">
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
-                    <span style="width:20px; text-align:center">📋</span> <span>Копіювати</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})">
-                    <span style="width:20px; text-align:center; color:var(--blue)">📑</span> <span>На всю фазу</span>
-                </div>
-                <div style="border-top: 1px solid #333; margin: 2px 0;"></div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})">
-                    <span style="width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
-                    <span style="width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div style="border-top: 1px solid #333; margin: 2px 0;"></div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="color:var(--red); font-weight:bold;">
-                    <span style="width:20px; text-align:center">✕</span> <span>Видалити запис</span>
-                </div>
-            </div>
-            <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:var(--primary); background:rgba(212,175,55,0.1); border-radius:6px; transition:0.2s;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </span>`;
-        } else {
-            return `
-            <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:var(--text); opacity:0.5; transition:0.2s;" onmouseover="this.style.opacity='1'; this.style.color='var(--primary)'" onmouseout="this.style.opacity='0.5'; this.style.color='var(--text)'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </span>`;
-        }
-    },
+        getMenuUI(w, d, i, name, isOpen) {
+        const safeName = name.replace(/'/g, "\\'"); 
+        
+        // Іконка шестірні
+        const gearIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none; vertical-align: middle;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+
+        const btnColor = isOpen ? 'var(--primary)' : 'var(--text)';
+        const btnOpacity = isOpen ? '1' : '0.5';
+
+        // Оригінальна кнопка (повертаємо її як `span`, щоб вона не ламала сітку)
+        const btn = `<span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="cursor:pointer; color:${btnColor}; opacity:${btnOpacity}; transition:0.2s; display:inline-block; line-height:1;" onmouseover="this.style.opacity='1'" onmouseout="if(!${isOpen})this.style.opacity='0.5'">${gearIcon}</span>`;
+
+        if (!isOpen) return btn;
+
+        // Повністю ізольоване меню (випадає поверх усього)
+        const dropdown = `
+            <div style="position:absolute; right:0; top:25px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; min-width:210px; display:flex; flex-direction:column; padding:4px 0; text-align:left;">
+                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="padding:10px 15px; display:flex; align-items:center; gap:10px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center;">📋</span> <span>Копіювати</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="padding:10px 15px; display:flex; align-items:center; gap:10px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--blue)">📑</span> <span>На всю фазу</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="padding:10px 15px; display:flex; align-items:center; gap:10px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="padding:10px 15px; display:flex; align-items:center; gap:10px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">🌍</span> <span>До кінця фази</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="padding:10px 15px; display:flex; align-items:center; gap:10px; font-size:0.85rem; color:var(--red); font-weight:bold; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center;">✕</span> <span>Видалити</span>
+                </div>
+            </div>
+        `;
+
+        return btn + dropdown;
+    }
+
    toggleMenu(w, d, i, name) {
         const id = `${w}-${d}-${i}`;
         const lastId = this.state.openMenu;
