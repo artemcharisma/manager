@@ -1,69 +1,117 @@
 // assets/js/utils.js
 
+// 1. ЛЕГКА НАТИВНА ОБГОРТКА INDEXEDDB (Ліміт > 500MB)
+const StorageDB = {
+    name: 'ProtocolOS_DB',
+    store: 'store',
+    dbPromise: null,
+
+    init() {
+        if (!this.dbPromise) {
+            this.dbPromise = new Promise((resolve, reject) => {
+                const req = indexedDB.open(this.name, 1);
+                req.onupgradeneeded = (e) => e.target.result.createObjectStore(this.store);
+                req.onsuccess = (e) => resolve(e.target.result);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+        return this.dbPromise;
+    },
+
+    async get(key) {
+        const db = await this.init();
+        return new Promise((resolve, reject) => {
+            const req = db.transaction(this.store, 'readonly').objectStore(this.store).get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    },
+
+    async set(key, value) {
+        const db = await this.init();
+        return new Promise((resolve, reject) => {
+            const req = db.transaction(this.store, 'readwrite').objectStore(this.store).put(value, key);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+    }
+};
+
 const Utils = {
-    // Безпечне завантаження даних
-    load(key, defaultData) {
+    // ЗАЛИШАЄМО ДЛЯ СУМІСНОСТІ СТАРИХ ЛЕГКИХ ДАНИХ
+    loadSync(key, defaultData) {
         try {
             const data = localStorage.getItem(key);
             return data ? JSON.parse(data) : defaultData;
+        } catch (e) { return defaultData; }
+    },
+    saveSync(key, data) {
+        try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { }
+    },
+
+    // НОВІ АСИНХРОННІ МЕТОДИ (IndexedDB) + МІГРАЦІЯ
+    async load(key, defaultData) {
+        try {
+            let data = await StorageDB.get(key);
+            
+            // РОЗУМНА МІГРАЦІЯ: Якщо в IDB пусто, але є дані в localStorage
+            if (!data) {
+                const lsData = localStorage.getItem(key);
+                if (lsData) {
+                    data = JSON.parse(lsData);
+                    await StorageDB.set(key, data); // Зберігаємо в нову базу
+                    console.log(`Міграція "${key}" в IndexedDB успішна!`);
+                }
+            }
+            return data ? data : defaultData;
         } catch (e) {
-            console.warn(`Помилка завантаження даних для ключа "${key}":`, e);
+            console.warn(`Помилка завантаження (IDB) для ключа "${key}":`, e);
             return defaultData;
         }
     },
 
-    // Збереження даних
-    save(key, data) {
+    async save(key, data) {
         try {
-            localStorage.setItem(key, JSON.stringify(data));
+            await StorageDB.set(key, data);
         } catch (e) {
-            console.error(`Помилка збереження даних для ключа "${key}":`, e);
-            alert("Увага! Пам'ять переповнена, дані не збережено.");
+            console.error(`Помилка збереження (IDB) для ключа "${key}":`, e);
+            if (window.Modal) window.Modal.alert("Помилка запису в базу даних. Очистіть кеш.", "КРИТИЧНА ПОМИЛКА", "red");
         }
     },
 
-    // Генерація унікального ID
-    id() {
-        return Date.now();
-    },
-
-    // Форматування дати (український формат)
-    date(d = new Date()) {
-        return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
-    }
+    id() { return Date.now(); },
+    date(d = new Date()) { return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }); }
 };
 
-// ГЛОБАЛЬНИЙ СЕРВІС ЖИТТЄВИХ ПОКАЗНИКІВ
+// ГЛОБАЛЬНИЙ СЕРВІС ЖИТТЄВИХ ПОКАЗНИКІВ (Тепер працює асинхронно)
 const GlobalVitals = {
     key: 'protocol_global_vitals',
     
-    // Форматування будь-якого Date об'єкта у строгий формат YYYY-MM-DD
     formatDate(dateObj) {
         const d = new Date(dateObj);
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     },
 
-    getAll() {
-        return Utils.load(this.key, {});
+    async getAll() {
+        return await Utils.load(this.key, {});
     },
 
-    get(dateString) {
-        const all = this.getAll();
+    async get(dateString) {
+        const all = await this.getAll();
         return all[dateString] || { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
     },
 
-    save(dateString, field, value) {
-        const all = this.getAll();
+    async save(dateString, field, value) {
+        const all = await this.getAll();
         if (!all[dateString]) {
             all[dateString] = { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
         }
         all[dateString][field] = value;
-        Utils.save(this.key, all);
+        await Utils.save(this.key, all);
     },
 
-    // Отримання останньої введеної ваги (для Хабу та розрахунків дозувань)
-    getLatestWeight() {
-        const all = this.getAll();
+    async getLatestWeight() {
+        const all = await this.getAll();
         const dates = Object.keys(all).sort((a, b) => new Date(b) - new Date(a));
         for (let d of dates) {
             if (all[d].w) return parseFloat(all[d].w);
@@ -73,7 +121,7 @@ const GlobalVitals = {
 };
 
 /* =========================================
-   PROTOCOL OS - UTILS (OPTIMIZED)
+   PROTOCOL OS - STATE MANAGER (INDEXED DB)
    ========================================= */
 
 class StateManager {
@@ -81,51 +129,39 @@ class StateManager {
         this.key = storageKey;
         this.defaultData = defaultData;
         this.maxHistory = maxHistory;
-        this.history = []; // Історія тепер живе ТІЛЬКИ в RAM
+        this.history = []; // Історія змін живе в RAM для швидкого Undo
     }
 
-    init() {
+    // ТЕПЕР ASYNC
+    async init() {
         try {
-            const stored = localStorage.getItem(this.key);
-            if (stored) {
-                // Завантажуємо актуальний стан
-                return JSON.parse(stored);
-            }
+            return await Utils.load(this.key, this.defaultData);
         } catch (e) {
-            console.error("Помилка ініціалізації бази:", e);
+            console.error("Помилка ініціалізації бази (IDB):", e);
+            return JSON.parse(JSON.stringify(this.defaultData));
         }
-        return JSON.parse(JSON.stringify(this.defaultData));
     }
 
     push(data) {
-        // Зберігаємо копію в оперативній пам'яті для Undo
         this.history.push(JSON.stringify(data));
         if (this.history.length > this.maxHistory) {
-            this.history.shift(); // Видаляємо найстаріший крок
+            this.history.shift();
         }
-        // НЕ пишемо history в localStorage, щоб не вбити квоту 5MB!
     }
 
     undo(currentData) {
         if (this.history.length > 0) {
             const prev = this.history.pop();
             const prevObj = JSON.parse(prev);
-            this.save(prevObj); // Зберігаємо скасований стан як актуальний
+            this.save(prevObj); // Запускаємо фонове збереження
             return prevObj;
         }
         return null;
     }
 
+    // Fire-and-forget (Асинхронне збереження, яке не блокує інтерфейс під час вводу)
     save(data) {
-        // Пишемо в базу ТІЛЬКИ фінальний актуальний стан
-        try {
-            localStorage.setItem(this.key, JSON.stringify(data));
-        } catch (e) {
-            console.error("Quota Exceeded! База даних занадто велика.", e);
-            if (window.Modal) {
-                window.Modal.alert("Пам'ять пристрою переповнена. Будь ласка, зробіть Backup і видаліть старі тижні.", "ПОМИЛКА ПАМ'ЯТІ", "red");
-            }
-        }
+        Utils.save(this.key, data);
     }
 
     export(data, filename) {
