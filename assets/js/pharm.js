@@ -26,7 +26,18 @@ const PhotoDB = {
             
             req.onblocked = () => {
                 alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
-            };
+                // Глобальне закриття меню препаратів
+        document.addEventListener('click', (e) => {
+            if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
+                const oldId = this.state.openMenu;
+                this.state.openMenu = null;
+                const oldEl = document.getElementById(`menu-${oldId}`);
+                if(oldEl) {
+                    const name = oldEl.getAttribute('data-name') || '';
+                    const [w, d, i] = oldId.split('-');
+                    oldEl.innerHTML = this.getMenuUI(w, d, i, name, false);
+                }
+            }
         });
     },
     add(week, file) {
@@ -1183,6 +1194,18 @@ const App = {
 
                 <style>
                     @keyframes fadeEffect { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                    .kebab-menu-dropdown {
+                position: absolute; right: 0; top: 25px;
+                background: #18181b; border: 1px solid #3f3f46;
+                border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+                z-index: 100; min-width: 220px; display: flex; flex-direction: column;
+                overflow: hidden; animation: fadeEffect 0.2s ease-out;
+            }
+            .kebab-menu-item {
+                padding: 12px 15px; display: flex; align-items: center; gap: 12px;
+                font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: 0.2s;
+            }
+            .kebab-menu-item:hover { background: rgba(255,255,255,0.05); }
                 </style>
             </div>`;
         
@@ -1844,24 +1867,34 @@ const App = {
         this.renderView(); 
     },
     getMenuUI(w, d, i, name, isOpen) {
-        const safeName = name.replace(/'/g, "\\'"); 
-        
-        if (isOpen) {
-            return `
-            <div style="display:flex; gap:12px; align-items:center; background:#222; padding:4px 8px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.5); position:absolute; right:0; top:-5px; z-index:10; border:1px solid #444;">
-                <span onclick="App.copyPill(${w},${d},${i})" title="Копіювати" style="cursor:pointer;">📋</span>
-                <span onclick="App.duplicatePillToPhase(${w},${d},${i})" title="На всю фазу" style="cursor:pointer; color:var(--blue)">📑</span>
-                
-                <span onclick="App.deletePillFromWeek('${safeName}', ${w})" title="Видалити з усього тижня" style="cursor:pointer; color:#f59e0b">🗓️</span>
-                <span onclick="App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" title="Видалити до кінця фази" style="cursor:pointer; color:#ef4444">🌍</span>
-                
-                <span onclick="App.delPillItem(${w},${d},${i})" title="Видалити" style="cursor:pointer; color:#ef4444; font-weight:bold">✕</span>
-                <span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="cursor:pointer; opacity:0.5; font-size:0.8rem">◀</span>
-            </div>`;
-        } else {
-            return `<span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="font-size:1.4rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.7">⋮</span>`;
-        }
-    },
+        const safeName = name.replace(/'/g, "\\'"); 
+        
+        if (isOpen) {
+            return `
+            <div class="kebab-menu-dropdown">
+                <div class="kebab-menu-item" onclick="App.copyPill(${w},${d},${i})">
+                    <span style="width:20px; text-align:center">📋</span> <span>Копіювати</span>
+                </div>
+                <div class="kebab-menu-item" onclick="App.duplicatePillToPhase(${w},${d},${i})">
+                    <span style="width:20px; text-align:center; color:var(--blue)">📑</span> <span>На всю фазу</span>
+                </div>
+                <div style="border-top: 1px solid #333; margin: 2px 0;"></div>
+                <div class="kebab-menu-item" onclick="App.deletePillFromWeek('${safeName}', ${w})">
+                    <span style="width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div class="kebab-menu-item" onclick="App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
+                    <span style="width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
+                </div>
+                <div style="border-top: 1px solid #333; margin: 2px 0;"></div>
+                <div class="kebab-menu-item" onclick="App.delPillItem(${w},${d},${i})" style="color:var(--red); font-weight:bold;">
+                    <span style="width:20px; text-align:center">✕</span> <span>Видалити запис</span>
+                </div>
+            </div>
+            <span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="font-size:1.6rem; cursor:pointer; line-height:1; color:var(--primary); text-shadow: 0 0 10px rgba(212,175,55,0.5);">✕</span>`;
+        } else {
+            return `<span onclick="App.toggleMenu(${w},${d},${i}, '${safeName}')" style="font-size:1.6rem; cursor:pointer; line-height:1; color:var(--text); opacity:0.5; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">⋮</span>`;
+        }
+    },
    toggleMenu(w, d, i, name) {
         const id = `${w}-${d}-${i}`;
         const lastId = this.state.openMenu;
@@ -1979,12 +2012,24 @@ const App = {
         report += `\n══════════════════════════════════════\n`;
         
         navigator.clipboard.writeText(report).then(async () => {
-            await Modal.alert("Дані успішно скопійовано в буфер обміну.", "✅ СКОПІЙОВАНО", "green");
-            if(await Modal.confirm("Скачати повний JSON бекап?", "ЗАВАНТАЖЕННЯ", "gold")) {
-                const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
-                this.stateManager.export(this.data, filename);
-            }
-        }).catch(async e => await Modal.alert("Не вдалося скопіювати текст", "ПОМИЛКА", "red"));
+            await Modal.alert("Дані успішно скопійовано в буфер обміну.", "✅ СКОПІЙОВАНО", "green");
+            if(await Modal.confirm("Скачати повний JSON бекап?", "ЗАВАНТАЖЕННЯ", "gold")) {
+                const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
+                // НАДІЙНИЙ ЕКСПОРТ БЕКАПУ
+                const dataStr = JSON.stringify(this.data, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a); // Обов'язково для iOS/Safari
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            }
+        }).catch(async e => await Modal.alert("Не вдалося скопіювати текст", "ПОМИЛКА", "red"));
     },
 
     togglePillDone(w, d, i) {
