@@ -565,13 +565,13 @@
     </div>
 </div>
 
-<div class="modal" id="bodyMapModal">
-    <div class="modal-content" style="max-width:350px">
-        <span class="modal-close" onclick="document.getElementById('bodyMapModal').style.display='none'; App.unlockScroll();">✕</span>
-        <h3 class="modal-title">Карта ін'єкцій</h3>
-        <p style="color:#666; font-size:0.8rem; margin-bottom:15px">Натисніть на зону, щоб відмітити укол.</p>
-        <div class="body-map-container" id="svgContainer"></div>
-    </div>
+<div class="modal" id="bodyMapModal" onclick="if(event.target === this) { this.style.display='none'; App.unlockScroll(); }">
+    <div class="modal-content" style="max-width:350px">
+        <span class="modal-close" onclick="document.getElementById('bodyMapModal').style.display='none'; App.unlockScroll();">✕</span>
+        <h3 class="modal-title">Карта ін'єкцій</h3>
+        <p style="color:#666; font-size:0.8rem; margin-bottom:15px">Натисніть на зону, щоб відмітити укол.</p>
+        <div class="body-map-container" id="svgContainer"></div>
+    </div>
 </div>
     
 <div class="modal" id="compareModal" style="z-index: 3000;">
