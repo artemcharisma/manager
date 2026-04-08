@@ -390,7 +390,10 @@
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days'];
 
         async function CreateRestorePoint() {
-    const msg = `Створити нову резервну копію (Backup)?...`;
+    const msg = `Створити нову резервну копію (Backup)?<br><br>
+                 <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
+                    Попередня копія буде перезаписана поточним станом бази даних.
+                 </span>`;
     const confirmed = await Modal.confirm(msg, "СТВОРЕННЯ BACKUP", "gold");
     if(!confirmed) return; 
 
@@ -409,17 +412,18 @@
     else await Modal.alert("Система пуста. Немає даних для бекапу.", "ПОВІДОМЛЕННЯ", "gold");
 }
 
-        function updateBackupLabel() {
-            const ts = localStorage.getItem('backup_timestamp');
-            const el = document.getElementById('last-backup');
-            if(ts) { el.innerText = "LAST BACKUP: " + ts; el.style.color = "var(--green)"; } 
-            else { el.innerText = "NO BACKUP FOUND"; el.style.color = "var(--text-dark)"; }
-        }
-
-        async function SystemReset() {
+async function SystemReset() {
     const hasBackup = APP_KEYS.some(k => localStorage.getItem(k + '_backup'));
     if(hasBackup) {
-        const promptText = `...`; // твій html
+        const promptText = `
+            <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ВІДНОВИТИ з Backup</span></div>
+                    <div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div>
+                </div>
+            </div>
+        `;
         const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "Введіть 1 або 2");
         
         if (choice === '1') {
@@ -432,10 +436,10 @@
                 location.reload();
             }
         } else if (choice === '2') {
-            if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ...", "⚠ WIPE ALL ⚠", "red")) FullWipe();
+            if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО.</span><br><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red")) FullWipe();
         }
     } else {
-        if (await Modal.confirm("Резервних копій не знайдено...", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red")) FullWipe();
+        if (await Modal.confirm("Резервних копій не знайдено.<br>Ви впевнені, що хочете очистити систему?", "⚠ УВАГА: БЕЗ BACKUP ⚠", "red")) FullWipe();
     }
 }
 
