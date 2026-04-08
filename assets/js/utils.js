@@ -38,7 +38,6 @@ const StorageDB = {
 };
 
 const Utils = {
-    // ЗАЛИШАЄМО ДЛЯ СУМІСНОСТІ СТАРИХ ЛЕГКИХ ДАНИХ
     loadSync(key, defaultData) {
         try {
             const data = localStorage.getItem(key);
@@ -49,33 +48,36 @@ const Utils = {
         try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { }
     },
 
-    // НОВІ АСИНХРОННІ МЕТОДИ (IndexedDB) + МІГРАЦІЯ
     async load(key, defaultData) {
+        let data = null;
         try {
-            let data = await StorageDB.get(key);
-            
-            // РОЗУМНА МІГРАЦІЯ: Якщо в IDB пусто, але є дані в localStorage
-            if (!data) {
+            data = await StorageDB.get(key);
+        } catch (e) {
+            console.warn(`IDB read error for ${key}:`, e);
+        }
+        
+        // БРОНЕБІЙНИЙ ФОЛБЕК: Якщо в базі пусто або вона вилетіла з помилкою — беремо з localStorage
+        if (!data) {
+            try {
                 const lsData = localStorage.getItem(key);
                 if (lsData) {
                     data = JSON.parse(lsData);
-                    await StorageDB.set(key, data); // Зберігаємо в нову базу
-                    console.log(`Міграція "${key}" в IndexedDB успішна!`);
+                    try { await StorageDB.set(key, data); } catch(e) {} // Тиха міграція
                 }
-            }
-            return data ? data : defaultData;
-        } catch (e) {
-            console.warn(`Помилка завантаження (IDB) для ключа "${key}":`, e);
-            return defaultData;
+            } catch (e) {}
         }
+        return data ? data : defaultData;
     },
 
     async save(key, data) {
         try {
             await StorageDB.set(key, data);
+            // Резервне копіювання в localStorage (на випадок збоїв IDB)
+            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
         } catch (e) {
-            console.error(`Помилка збереження (IDB) для ключа "${key}":`, e);
-            if (window.Modal) window.Modal.alert("Помилка запису в базу даних. Очистіть кеш.", "КРИТИЧНА ПОМИЛКА", "red");
+            console.error(`IDB save error:`, e);
+            // Якщо IDB впав — гарантовано зберігаємо в старий localStorage
+            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
         }
     },
 
