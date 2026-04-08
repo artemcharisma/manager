@@ -631,21 +631,34 @@ const App = {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
                 opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
             }
-        .kebab-menu-dropdown {
-                position: absolute; right: 0; top: 25px;
-                background: #18181b; border: 1px solid #3f3f46;
-                border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-                z-index: 100; min-width: 220px; display: flex; flex-direction: column;
-                overflow: hidden; animation: fadeEffect 0.2s ease-out;
+            
+            /* === ФІКС ДЛЯ МЕНЮ === */
+            .pill { overflow: visible !important; } /* КРИТИЧНО ВАЖЛИВО! Щоб меню не зрізалося */
+            
+            .kebab-menu-dropdown {
+                position: absolute; 
+                right: 0; 
+                top: calc(100% + 5px); /* З'являється чітко під іконкою */
+                background: #18181b; 
+                border: 1px solid #3f3f46;
+                border-radius: 12px; 
+                box-shadow: 0 10px 40px rgba(0,0,0,0.9); /* Посилили тінь */
+                z-index: 99999 !important; /* Поставили вище за все */
+                min-width: 220px; 
+                display: flex; 
+                flex-direction: column;
+                overflow: hidden; 
+                animation: fadeEffect 0.2s ease-out;
             }
             .kebab-menu-item {
                 padding: 12px 15px; display: flex; align-items: center; gap: 12px;
                 font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: 0.2s;
+                border-bottom: 1px solid rgba(255,255,255,0.05); /* Легкий розділювач */
             }
-            .kebab-menu-item:hover { background: rgba(255,255,255,0.05); }
-        `;
-        document.head.appendChild(extraStyles);
-
+            .kebab-menu-item:last-child { border-bottom: none; }
+            .kebab-menu-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        `;
+        document.head.appendChild(extraStyles);
         await PhotoDB.init();
         await this.load(); 
     
@@ -1095,7 +1108,7 @@ const App = {
                     <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer};" ${innerStop}>${m.dose}</span>
                     
                     ${this.state.editing ? `
-                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative; pointer-events:auto;">
+                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative; display:flex; align-items:center; z-index:${this.state.openMenu === pillId ? 9999 : 1}; pointer-events:auto;">
                             ${this.getMenuUI(this.state.week, i, idx, m.name, this.state.openMenu === pillId)}
                         </div>
                     ` : ''}
@@ -1868,39 +1881,37 @@ const App = {
         this.renderView(); 
     },
     getMenuUI(w, d, i, name, isOpen) {
-        const safeName = name.replace(/'/g, "\\'"); 
-        
-        if (isOpen) {
-            return `
-            <div class="kebab-menu-dropdown">
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
-                    <span style="width:20px; text-align:center">📋</span> <span>Копіювати</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})">
-                    <span style="width:20px; text-align:center; color:var(--blue)">📑</span> <span>На всю фазу</span>
-                </div>
-                <div style="border-top: 1px solid #333; margin: 2px 0;"></div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})">
-                    <span style="width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
-                    <span style="width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div style="border-top: 1px solid #333; margin: 2px 0;"></div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="color:var(--red); font-weight:bold;">
-                    <span style="width:20px; text-align:center">✕</span> <span>Видалити запис</span>
-                </div>
-            </div>
-            <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:var(--primary); background:rgba(212,175,55,0.1); border-radius:6px; transition:0.2s;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        const safeName = name.replace(/'/g, "\\'"); 
+        
+        if (isOpen) {
+            return `
+            <div class="kebab-menu-dropdown">
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
+                    <span style="width:20px; text-align:center">📋</span> <span>Копіювати</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})">
+                    <span style="width:20px; text-align:center; color:var(--blue)">📑</span> <span>На всю фазу</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})">
+                    <span style="width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
+                    <span style="width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="color:var(--red); font-weight:bold;">
+                    <span style="width:20px; text-align:center">✕</span> <span>Видалити запис</span>
+                </div>
+            </div>
+            <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:var(--primary); background:rgba(212,175,55,0.1); border-radius:6px; transition:0.2s;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </span>`;
-        } else {
-            return `
+        } else {
+            return `
             <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:var(--text); opacity:0.5; transition:0.2s;" onmouseover="this.style.opacity='1'; this.style.color='var(--primary)'" onmouseout="this.style.opacity='0.5'; this.style.color='var(--text)'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </span>`;
-        }
-    },
+        }
+    },
    toggleMenu(w, d, i, name) {
         const id = `${w}-${d}-${i}`;
         const lastId = this.state.openMenu;
