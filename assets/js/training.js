@@ -173,7 +173,7 @@ const App = {
         });
     },
 
-    init() {
+    async init() {
         this.data = await this.state.init();
 
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
