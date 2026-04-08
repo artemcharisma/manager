@@ -1,142 +1,34 @@
 // assets/js/utils.js
 
-const StorageDB = {
-    name: 'ProtocolOS_DB',
-    store: 'store',
-    dbPromise: null,
-
-    init() {
-        if (!this.dbPromise) {
-            this.dbPromise = new Promise((resolve, reject) => {
-                if (!window.indexedDB) return reject(new Error("No IDB"));
-                
-                let isResolved = false;
-                const timeout = setTimeout(() => {
-                    if (!isResolved) {
-                        isResolved = true;
-                        reject(new Error("IDB Timeout"));
-                    }
-                }, 1000); // 1 секунда і падаємо в localStorage
-
-                try {
-                    const req = indexedDB.open(this.name, 1);
-                    
-                    req.onupgradeneeded = (e) => {
-                        const db = e.target.result;
-                        if (!db.objectStoreNames.contains(this.store)) {
-                            db.createObjectStore(this.store);
-                        }
-                    };
-                    
-                    req.onsuccess = (e) => {
-                        if (isResolved) return;
-                        isResolved = true;
-                        clearTimeout(timeout);
-                        resolve(e.target.result);
-                    };
-                    
-                    req.onerror = (e) => {
-                        if (isResolved) return;
-                        isResolved = true;
-                        clearTimeout(timeout);
-                        reject(e.target.error);
-                    };
-                    
-                    req.onblocked = () => {
-                        if (isResolved) return;
-                        isResolved = true;
-                        clearTimeout(timeout);
-                        reject(new Error("IDB Blocked"));
-                    };
-                } catch(e) {
-                    if (!isResolved) {
-                        isResolved = true;
-                        clearTimeout(timeout);
-                        reject(e);
-                    }
-                }
-            });
-        }
-        return this.dbPromise;
-    },
-
-    async get(key) {
-        try {
-            const db = await this.init();
-            return new Promise((resolve, reject) => {
-                try {
-                    const tx = db.transaction(this.store, 'readonly');
-                    const req = tx.objectStore(this.store).get(key);
-                    req.onsuccess = () => resolve(req.result);
-                    req.onerror = () => reject(req.error);
-                } catch(e) { reject(e); }
-            });
-        } catch (e) {
-            return Promise.reject(e);
-        }
-    },
-
-    async set(key, value) {
-        try {
-            const db = await this.init();
-            return new Promise((resolve, reject) => {
-                try {
-                    const tx = db.transaction(this.store, 'readwrite');
-                    const req = tx.objectStore(this.store).put(value, key);
-                    req.onsuccess = () => resolve();
-                    req.onerror = () => reject(req.error);
-                } catch(e) { reject(e); }
-            });
-        } catch(e) {
-            return Promise.reject(e);
-        }
-    }
-};
-
+// 1. Утиліти - ТІЛЬКИ СИНХРОННИЙ LOCALSTORAGE (для миттєвої роботи)
 const Utils = {
-    loadSync(key, defaultData) {
+    load(key, defaultData) {
         try {
             const data = localStorage.getItem(key);
             return data ? JSON.parse(data) : defaultData;
-        } catch (e) { return defaultData; }
-    },
-    saveSync(key, data) {
-        try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { }
-    },
-
-    async load(key, defaultData) {
-        let data = null;
-        try {
-            data = await StorageDB.get(key);
         } catch (e) {
-            console.warn(`[Utils] IDB read error for ${key}`);
+            console.error(`Error loading ${key}:`, e);
+            return defaultData;
         }
-        
-        if (!data) {
-            try {
-                const lsData = localStorage.getItem(key);
-                if (lsData) {
-                    data = JSON.parse(lsData);
-                    try { await StorageDB.set(key, data); } catch(e) {} 
-                }
-            } catch (e) {}
-        }
-        return data ? data : defaultData;
     },
 
-    async save(key, data) {
-        // 1. ЖОРСТКА ГАРАНТІЯ: Синхронно пишемо в localStorage ПЕРЕД усім іншим.
-        // Навіть якщо юзер натисне F5 через мілісекунду, дані вже збережені.
-        try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
-        
-        // 2. Фонове збереження у важку базу
-        try { await StorageDB.set(key, data); } catch (e) { console.warn('IDB save error', e); }
+    save(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.error(`Error saving ${key}:`, e);
+        }
     },
+
+    // Для сумісності, якщо десь лишилися старі виклики
+    loadSync(key, def) { return this.load(key, def); },
+    saveSync(key, data) { return this.save(key, data); },
 
     id() { return Date.now(); },
     date(d = new Date()) { return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }); }
 };
 
+// 2. Життєві показники - ТЕПЕР СИНХРОННІ (це пофіксить тиск у Хабі)
 const GlobalVitals = {
     key: 'protocol_global_vitals',
     
@@ -145,26 +37,27 @@ const GlobalVitals = {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     },
 
-    async getAll() {
-        return await Utils.load(this.key, {});
+    getAll() {
+        return Utils.load(this.key, {});
     },
 
-    async get(dateString) {
-        const all = await this.getAll();
+    get(dateString) {
+        const all = this.getAll();
+        // Повертаємо об'єкт за замовчуванням, якщо дати ще немає
         return all[dateString] || { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
     },
 
-    async save(dateString, field, value) {
-        const all = await this.getAll();
+    save(dateString, field, value) {
+        const all = this.getAll();
         if (!all[dateString]) {
             all[dateString] = { w: '', bp: '', hr: '', chest: '', waist: '', arm: '', leg: '', calf: '' };
         }
         all[dateString][field] = value;
-        await Utils.save(this.key, all);
+        Utils.save(this.key, all);
     },
 
-    async getLatestWeight() {
-        const all = await this.getAll();
+    getLatestWeight() {
+        const all = this.getAll();
         const dates = Object.keys(all).sort((a, b) => new Date(b) - new Date(a));
         for (let d of dates) {
             if (all[d].w) return parseFloat(all[d].w);
@@ -173,6 +66,7 @@ const GlobalVitals = {
     }
 };
 
+// 3. Менеджер станів - СИНХРОННИЙ (це зупинить злітання даних)
 class StateManager {
     constructor(storageKey, defaultData, maxHistory = 10) {
         this.key = storageKey;
@@ -181,12 +75,9 @@ class StateManager {
         this.history = []; 
     }
 
-    async init() {
-        try {
-            return await Utils.load(this.key, this.defaultData);
-        } catch (e) {
-            return JSON.parse(JSON.stringify(this.defaultData));
-        }
+    init() {
+        // Жодного await - завантажуємо дані миттєво
+        return Utils.load(this.key, this.defaultData);
     }
 
     push(data) {
