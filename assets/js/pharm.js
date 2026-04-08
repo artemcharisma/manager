@@ -650,7 +650,8 @@ const App = {
         if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
         if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
         if(!this.data.measurements) this.data.measurements = {};
-    }
+        if(!this.data.notes) this.data.notes = {}; // <--- ДОДАНО ЦЕЙ РЯДОК
+    },
 
     save() { 
         this.stateManager.save(this.data); 
@@ -1635,15 +1636,16 @@ const App = {
         return statsHtml;
     },
     
-    saveNote(w,t) { 
+    async saveNote(w,t) { 
         this.pushHistory(); 
+        if(!this.data.notes) this.data.notes = {};
         this.data.notes[w]=t; 
         this.save(); 
     },
     
-    saveBP(w, d, type, val) {
+    async saveBP(w, d, type, val) {
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
-        const v = GlobalVitals.get(dateStr);
+        const v = await GlobalVitals.get(dateStr);
 
         let currentBP = v.bp || "/";
         let parts = currentBP.split('/');
@@ -1653,20 +1655,20 @@ const App = {
         if (type === 'dia') parts[1] = val;
 
         let finalBP = (parts[0] === "" && parts[1] === "") ? "" : `${parts[0]}/${parts[1]}`;
-        GlobalVitals.save(dateStr, 'bp', finalBP);
+        await GlobalVitals.save(dateStr, 'bp', finalBP);
     },
     
-    saveVital(w, d, k, v) { 
+    async saveVital(w, d, k, v) { 
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
         if (k === 'w' && v) v = v.replace(',', '.'); 
-        GlobalVitals.save(dateStr, k, v); 
+        await GlobalVitals.save(dateStr, k, v); 
     },
 
-    saveMeas(w, k, v) {
+    async saveMeas(w, k, v) {
         // Заміри тіла прив'язуємо до понеділка поточного тижня
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0)); 
         if (v) v = v.replace(',', '.');
-        GlobalVitals.save(dateStr, k, v);
+        await GlobalVitals.save(dateStr, k, v);
     },
     
         async copyDay(w, d) {
