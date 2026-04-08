@@ -714,37 +714,7 @@ const App = {
             }
         }
     },
-        async updateWeekNum(id) {
-        const w = this.data.weeks.find(x => x.id === id);
-        if (!w) return;
         
-        const val = await Modal.prompt("Введіть новий номер тижня:", "РЕДАГУВАННЯ ТИЖНЯ", w.num.toString());
-        if (val !== null && val !== "") {
-            const num = parseInt(val);
-            if (!isNaN(num) && num > 0 && w.num !== num) {
-                this.pushHistory();
-                w.num = num;
-                
-                // СОРТУЄМО ПІСЛЯ РУЧНОЇ ЗМІНИ НОМЕРА
-                this.data.weeks.sort((a, b) => a.num - b.num);
-                
-                this.save();
-                this.render();
-            }
-        }
-    },
-
-    async renameProgram(key) {
-        const currentName = this.data.customNames[key] || (key === 'balanced' ? "ЗБАЛАНСОВАНА" : "РУКИ");
-        const val = await Modal.prompt("Введіть нову назву для цієї вкладки:", "ПЕРЕЙМЕНУВАННЯ", currentName);
-        
-        if (val !== null && val.trim() !== "") {
-            this.pushHistory();
-            this.data.customNames[key] = val.trim().toUpperCase();
-            this.save();
-            this.render();
-        }
-    },
     // --- КАСТОМНИЙ DOUBLE TAP (ЩОБ ТАЙМЕР НЕ СТАРТУВАВ ПРИ РЕДАГУВАННІ) ---
     _timerTaps: {},
     handleTimerClick(w, d, e, time) {
