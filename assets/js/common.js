@@ -75,6 +75,7 @@ let modalResolve = null;
 const Modal = {
     overlay: null, box: null, header: null, text: null,
     inputWrap: null, input: null, btnCancel: null, btnOk: null, footer: null,
+    _handleKeyDown: null, // Додано для збереження слухача клавіатури
 
     init() {
         this.overlay = document.getElementById('protocol-modal-overlay');
@@ -120,10 +121,30 @@ const Modal = {
 
         this.overlay.className = 'active';
         Haptics.medium();
-        return new Promise((resolve) => { modalResolve = resolve; });
+        
+        return new Promise((resolve) => { 
+            modalResolve = resolve; 
+            
+            // ДОДАНО: Обробка клавіш Enter та Escape
+            this._handleKeyDown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.handleOK();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (this.btnCancel.style.display !== 'none') {
+                        this.handleCancel();
+                    } else {
+                        this.handleOK(); // Якщо кнопки скасування немає, Escape працює як ОК
+                    }
+                }
+            };
+            document.addEventListener('keydown', this._handleKeyDown);
+        });
     },
 
     handleOK() {
+        if (this._handleKeyDown) document.removeEventListener('keydown', this._handleKeyDown);
         const type = this.inputWrap.style.display === 'block' ? 'prompt' : (this.btnCancel.style.display === 'flex' ? 'confirm' : 'alert');
         this.close();
         if (type === 'prompt') modalResolve(this.input.value);
@@ -131,6 +152,7 @@ const Modal = {
     },
 
     handleCancel() {
+        if (this._handleKeyDown) document.removeEventListener('keydown', this._handleKeyDown);
         this.close();
         modalResolve(null); 
     },
@@ -179,6 +201,7 @@ document.addEventListener('click', function(e) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
+
 // 1. Розумне зняття фокусу (ФІКС ДЛЯ ЗБЕРЕЖЕННЯ КЛАВІАТУРИ В МОДАЛКАХ)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
@@ -203,7 +226,6 @@ const IOSKeyboardFixer = {
     initialScrollY: 0,
     isKeyboardOpen: false,
     init() {
-        // Шукай всередині IOSKeyboardFixer.init() у common.js і заміни focusin:
         document.addEventListener('focusin', (e) => {
             const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.hasAttribute('contenteditable');
             if (isInput && !this.isKeyboardOpen) {
@@ -243,3 +265,19 @@ const IOSKeyboardFixer = {
     }
 };
 IOSKeyboardFixer.init();
+
+// ДОДАНО: Глобальний запобіжник від втрати даних
+// Спрацьовує, якщо користувач згорнув браузер або вимкнув екран телефону
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        const active = document.activeElement;
+        // Знімаємо фокус, щоб примусово відпрацював onblur у полях вводу (наприклад, у training.js)
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
+            active.blur(); 
+        }
+        // Примусове збереження поточного стейту
+        if (typeof App !== 'undefined' && typeof App.save === 'function') {
+            App.save();
+        }
+    }
+});
