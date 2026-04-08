@@ -129,9 +129,52 @@ const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
     timerState: { interval: null, left: 0, default: 90, el: null, endTime: null },
+    historyIndex: {}, // ДОДАНО: Кеш для швидкого пошуку 1RM та Ghost Data
+
+    // ДОДАНО: Метод, який один раз будує індекс усієї історії для миттєвого доступу
+    buildIndex() {
+        this.historyIndex = {};
+        if (!this.data || !this.data.weeks) return;
+        
+        const sortedWeeks = [...this.data.weeks].sort((a, b) => a.num - b.num);
+
+        sortedWeeks.forEach(week => {
+            week.days.forEach((day, dIdx) => {
+                day.exercises.forEach(ex => {
+                    if (!ex.n) return;
+                    const name = ex.n.trim().toLowerCase();
+                    if (!this.historyIndex[name]) this.historyIndex[name] = [];
+
+                    let sessionMax1RM = 0;
+                    let hasValidSets = false;
+
+                    if (ex.sets) {
+                        ex.sets.forEach(s => {
+                            if (s.w || s.r) hasValidSets = true;
+                            const w = parseFloat(s.w) || 0;
+                            const r = parseFloat(s.r) || 0;
+                            if (w > 0 && r > 0) {
+                                const rm = w * (1 + r / 30);
+                                if (rm > sessionMax1RM) sessionMax1RM = rm;
+                            }
+                        });
+                    }
+
+                    this.historyIndex[name].push({
+                        wNum: week.num,
+                        prog: week.prog,
+                        dIdx: dIdx,
+                        sets: ex.sets,
+                        maxRM: sessionMax1RM,
+                        hasData: hasValidSets
+                    });
+                });
+            });
+        });
+    },
 
     init() {
-        this.data = this.state.init();
+        this.data = await this.state.init();
 
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
         if(!this.data.guidelines) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
@@ -190,6 +233,7 @@ const App = {
         if(!this.data.currentProgram) this.data.currentProgram = 'balanced';
         this.setTheme(this.data.currentProgram);
         this.updateBank();
+        this.buildIndex();
         this.render();
         this.save();
         this.initTimer();
@@ -249,60 +293,42 @@ const App = {
         }
     },
 
-    getGhostData(exerciseName, currentWNum, currentDIdx) {
-        if (!exerciseName || !this.data.weeks) return null;
-        
-        const currentWeekIndex = this.data.weeks.findIndex(w => w.num === currentWNum && w.prog === this.data.currentProgram);
-        if (currentWeekIndex === -1) return null;
+    getGhostData(exerciseName, currentWNum, currentDIdx, prog) {
+        if (!exerciseName || !this.historyIndex) return null;
+        const name = exerciseName.trim().toLowerCase();
+        const history = this.historyIndex[name];
+        if (!history) return null;
 
-        for (let wIdx = currentWeekIndex; wIdx >= 0; wIdx--) {
-            const week = this.data.weeks[wIdx];
-            let startDayIdx = (wIdx === currentWeekIndex) ? currentDIdx - 1 : week.days.length - 1;
+        // Шукаємо з кінця історії (найсвіжіші дані)
+        for (let i = history.length - 1; i >= 0; i--) {
+            const entry = history[i];
+            if (entry.prog !== prog) continue;
             
-            for (let dIdx = startDayIdx; dIdx >= 0; dIdx--) {
-                const day = week.days[dIdx];
-                if (day && day.exercises) {
-                    const pastEx = day.exercises.find(
-                        e => e.n && e.n.trim().toLowerCase() === exerciseName.trim().toLowerCase()
-                    );
-                    
-                    if (pastEx && pastEx.sets && pastEx.sets.length > 0) {
-                        return pastEx.sets; 
-                    }
-                }
+            // Шукаємо перший запис, який був ДО поточного дня
+            if (entry.wNum < currentWNum || (entry.wNum === currentWNum && entry.dIdx < currentDIdx)) {
+                if (entry.hasData) return entry.sets;
             }
         }
         return null;
     },
 
-    getEstimated1RM(exerciseName, currentWNum, currentDIdx) {
-        if (!exerciseName || !this.data.weeks) return 0;
-        let max1RM = 0;
-        const currentProg = this.data.currentProgram;
+    getEstimated1RM(exerciseName, currentWNum, currentDIdx, prog) {
+        if (!exerciseName || !this.historyIndex) return 0;
+        const name = exerciseName.trim().toLowerCase();
+        const history = this.historyIndex[name];
+        if (!history) return 0;
 
-        this.data.weeks.forEach(week => {
-            if (week.prog !== currentProg) return;
-            if (week.num > currentWNum) return;
-
-            week.days.forEach((day, dIdx) => {
-                if (week.num === currentWNum && dIdx >= currentDIdx) return;
-                
-                if (day.exercises) {
-                    const pastEx = day.exercises.find(e => e.n && e.n.trim().toLowerCase() === exerciseName.trim().toLowerCase());
-                    if (pastEx && pastEx.sets) {
-                        pastEx.sets.forEach(set => {
-                            const w = parseFloat(set.w) || 0;
-                            const r = parseFloat(set.r) || 0;
-                            if (w > 0 && r > 0) {
-                                const oneRm = w * (1 + r / 30);
-                                if (oneRm > max1RM) max1RM = oneRm;
-                            }
-                        });
-                    }
-                }
-            });
-        });
-        return Math.round(max1RM);
+        let maxRM = 0;
+        for (let i = 0; i < history.length; i++) {
+            const entry = history[i];
+            if (entry.prog !== prog) continue;
+            
+            // Враховуємо тільки ті рекорди, що були ДО поточного дня
+            if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
+            
+            if (entry.maxRM > maxRM) maxRM = entry.maxRM;
+        }
+        return Math.round(maxRM);
     },
     
     render() {
@@ -369,7 +395,7 @@ const App = {
                             </div>`;
                         }
 
-                        const ghostSets = App.getGhostData(ex.n, week.num, dIdx);
+                        const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
@@ -488,7 +514,10 @@ const App = {
         this.renderGuide();
     },
 
-    save() { this.state.save(this.data); },
+    save() { 
+        this.buildIndex(); // Оновлюємо кеш перед збереженням
+        this.state.save(this.data); 
+    },
     
     undo() {
         const prev = this.state.undo(this.data);
@@ -875,7 +904,7 @@ const App = {
             if (!isNaN(percent) && percent > 0) {
                 const exName = this.data.weeks[w].days[d].exercises[e].n;
                 const wNum = this.data.weeks[w].num;
-                const e1RM = this.getEstimated1RM(exName, wNum, d);
+                const e1RM = this.getEstimated1RM(exName, wNum, d, this.data.currentProgram);
                 
                 if (e1RM > 0) {
                     const calcWeight = e1RM * (percent / 100);
