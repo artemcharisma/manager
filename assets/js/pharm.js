@@ -26,17 +26,6 @@ const PhotoDB = {
             
             req.onblocked = () => {
                 alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
-                // Глобальне закриття меню препаратів
-        document.addEventListener('click', (e) => {
-            if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
-                const oldId = this.state.openMenu;
-                this.state.openMenu = null;
-                const oldEl = document.getElementById(`menu-${oldId}`);
-                if(oldEl) {
-                    const name = oldEl.getAttribute('data-name') || '';
-                    const [w, d, i] = oldId.split('-');
-                    oldEl.innerHTML = this.getMenuUI(w, d, i, name, false);
-                }
             }
         });
     },
@@ -642,8 +631,20 @@ const App = {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
                 opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
             }
-        `;
-        document.head.appendChild(extraStyles);
+        .kebab-menu-dropdown {
+                position: absolute; right: 0; top: 25px;
+                background: #18181b; border: 1px solid #3f3f46;
+                border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+                z-index: 100; min-width: 220px; display: flex; flex-direction: column;
+                overflow: hidden; animation: fadeEffect 0.2s ease-out;
+            }
+            .kebab-menu-item {
+                padding: 12px 15px; display: flex; align-items: center; gap: 12px;
+                font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: 0.2s;
+            }
+            .kebab-menu-item:hover { background: rgba(255,255,255,0.05); }
+        `;
+        document.head.appendChild(extraStyles);
 
         await PhotoDB.init();
         await this.load(); 
@@ -704,7 +705,19 @@ const App = {
                 location.reload();
             }
         };
-    },
+        document.addEventListener('click', (e) => {
+                if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
+                    const oldId = this.state.openMenu;
+                    this.state.openMenu = null;
+                    const oldEl = document.getElementById(`menu-${oldId}`);
+                    if(oldEl) {
+                        const name = oldEl.getAttribute('data-name') || '';
+                        const [w, d, i] = oldId.split('-');
+                        oldEl.innerHTML = this.getMenuUI(w, d, i, name, false);
+                    }
+                }
+            });
+        },
 
     // НОВА ФУНКЦІЯ: Міграція старих даних у GlobalVitals
     migrateVitals() {
@@ -1194,18 +1207,6 @@ const App = {
 
                 <style>
                     @keyframes fadeEffect { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-                    .kebab-menu-dropdown {
-                position: absolute; right: 0; top: 25px;
-                background: #18181b; border: 1px solid #3f3f46;
-                border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-                z-index: 100; min-width: 220px; display: flex; flex-direction: column;
-                overflow: hidden; animation: fadeEffect 0.2s ease-out;
-            }
-            .kebab-menu-item {
-                padding: 12px 15px; display: flex; align-items: center; gap: 12px;
-                font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: 0.2s;
-            }
-            .kebab-menu-item:hover { background: rgba(255,255,255,0.05); }
                 </style>
             </div>`;
         
