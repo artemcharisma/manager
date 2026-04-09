@@ -1123,23 +1123,21 @@ const App = {
                 </div>`;
             }).join('');
                 
-            // ФІКС 1: Прибрані фони і бордери, залишені чисті іконки
+            // ФІКС: Кнопкам повернуто фон, задано ідеальне коло (border-radius:50%) та заборонено стискатись
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
-                    headerBtns += `<span style="font-size:1.3rem; cursor:pointer; color:var(--green); margin-right:12px; display:inline-block;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</span>`;
+                    headerBtns += `<div style="flex-shrink:0; font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:50%; margin-right:8px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
-                headerBtns += `<span style="font-size:1.1rem; cursor:pointer; color:#aaa; display:inline-block;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">📋</span>`;
+                headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.05); border-radius:50%; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
 
-            // ФІКС 2: Додано overflow:hidden до картки, щоб кути не вилазили.
-            // ФІКС 3: Прибрано гострий градієнт з day-header.
-            // ФІКС 4: Дата отримала border-radius: 12px (круглий бейдж).
+            // ФІКС: Дата у вигляді красивої "пігулки"
             grid += `<div class="day-card" style="overflow:hidden; ${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
-                <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent);">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-size:1.05rem; font-weight:800; color:#fff; text-transform:uppercase;">${dayNames[i]}</span>
-                        <span style="font-size:0.7rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:3px 8px; border-radius:12px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
+                        <span style="font-size:0.7rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:3px 10px; border-radius:20px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
                     </div>
                     <div style="display:flex; align-items:center; margin-left:auto;">${headerBtns}</div>
                 </div>
@@ -1228,7 +1226,6 @@ const App = {
                     <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 3, this)"><div style="width:12px; height:12px; background:#f59e0b; border-radius:50%;"></div><span style="color:#aaa;">СТЕГНО</span></div>
                     <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('meas', 4, this)"><div style="width:12px; height:12px; background:#ec4899; border-radius:50%;"></div><span style="color:#aaa;">ГОМІЛКА</span></div>
                 </div>
-
                 <style>
                     @keyframes fadeEffect { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
                 </style>
@@ -1244,7 +1241,6 @@ const App = {
     
         const weekKeys = Object.keys(this.data.schedule).map(Number);
         const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
-        
         let minWeight = 200, maxWeight = 0;
     
         for(let w=1; w<=maxW; w++) {
@@ -1275,11 +1271,9 @@ const App = {
                         if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: unit };
                         details[detKey].val += val;
 
-                        // ФІКС АНАЛІТИКИ: Сувора перевірка на Тестостерон
                         if (unit === 'mg') {
                             const nLow = name.toLowerCase();
-                            // Перевіряємо, чи це САМЕ тестостерон, сустанон або омнадрен
-                            // Ігноруємо Tren, Mast, Primo, навіть якщо вони мають ефір Enan, Prop, Cyp
+                            // ФІКС: Звідси видалено enan, cyp, prop. Тільки чиста база!
                             const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('omna');
                             
                             if(isTest) {
@@ -1722,9 +1716,10 @@ const App = {
                 const val = parseFloat(valStr);
 
                 if(!isNaN(val)) { 
-                    const name = p.name.trim().toUpperCase();
+                    const name = p.name.trim().toUpperCase(); 
                     const dLow = p.dose.trim().toLowerCase();
                     
+                    // Відрізаємо mg від ml 
                     let u = "mg"; 
                     if(dLow.includes("iu") || dLow.includes("од")) u = "IU"; 
                     else if(dLow.includes("mcg") || dLow.includes("мкг")) u = "mcg";
@@ -1905,8 +1900,8 @@ const App = {
         const btnColor = isOpen ? 'var(--primary)' : '#888';
         const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
         
-        // ФІКС МЕНЮ: Додано overflow:hidden, box-sizing:border-box та чіткі межі
-        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="box-sizing: border-box; display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; overflow:hidden; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
+        // ФІКС: Ідеальне коло (50%), не стискається (flex-shrink:0)
+        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="box-sizing: border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; overflow:hidden; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
 
         if (!isOpen) return btn;
 
@@ -2003,6 +1998,9 @@ const App = {
         const stats = this.calc(this.state.week);
         const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
 
+        // ВАЖЛИВО: Замінити тільки блок формувння ПРЕПАРАТІВ всередині smartSave()
+        // Знайди цей шматок у своїй функції smartSave і заміни:
+        
         if(sortedStats.length > 0) {
             report += `📊 ПРЕПАРАТИ:\n`;
             report += `────────────────────────────────────\n`;
