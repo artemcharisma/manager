@@ -1088,7 +1088,7 @@ const App = {
                 sys = v.bp; 
             }
 
-            let content = pills.map((m, idx) => {
+                                    let content = pills.map((m, idx) => {
                 const pillId = `${this.state.week}-${i}-${idx}`;
                 
                 const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
@@ -1097,25 +1097,27 @@ const App = {
                 const textPointer = this.state.editing ? 'auto' : 'none';
                 const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
                 const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
-                const isMenuOpen = this.state.openMenu === pillId;
+                const isOpen = this.state.openMenu === pillId;
 
-                // overflow:visible дозволяє меню вийти за межі картки.
+                // КРИТИЧНО ВАЖЛИВО: min-width: 0 для тексту, щоб працював text-overflow: ellipsis
                 return `
-                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? 50 : 1}; overflow:visible !important;" ${clickAction}>
+                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s ease; z-index:${isOpen ? 50 : 1}; overflow:visible !important;" ${clickAction}>
                     ${checkIcon}
-                    <div style="flex:1; pointer-events:${textPointer}; min-width:0; margin-right:8px;">
-                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</div>
-                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop} style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.meta || ""}</div>
+                    <div style="flex:1; min-width:0; padding-right:10px; pointer-events:${textPointer};">
+                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; outline:none;">${m.name}</div>
+                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop} style="font-size:0.7rem; color:#888; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; outline:none; margin-left:0;">${m.meta || ""}</div>
                     </div>
-                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; flex-shrink:0; white-space:nowrap; text-align:right;" ${innerStop}>${m.dose}</span>
+                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; font-family:'JetBrains Mono', monospace; font-weight:700; white-space:nowrap; text-align:right; outline:none;" ${innerStop}>${m.dose}</span>
                     
                     ${this.state.editing ? `
-                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; flex-shrink:0; pointer-events:auto;">
-                            ${this.getMenuUI(this.state.week, i, idx, m.name, isMenuOpen)}
+                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; margin-left:10px; display:flex; align-items:center; justify-content:center; pointer-events:auto;">
+                            ${this.getMenuUI(this.state.week, i, idx, m.name, isOpen)}
                         </div>
                     ` : ''}
                 </div>`;
             }).join('');
+
+
                 
             let headerBtns = '';
             if (this.state.editing) {
@@ -1882,52 +1884,69 @@ const App = {
         this.save();
         this.renderView(); 
     },
-    getMenuUI(w, d, i, name, isOpen) {
+            getMenuUI(w, d, i, name, isOpen) {
         const safeName = name.replace(/'/g, "\\'"); 
         
-        // Іконка шестірні (однакова для обох станів)
+        // Іконка шестірні
         const gearIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
-        let menuHtml = '';
-        if (isOpen) {
-            // Жорстко позиціонуємо меню absolute, щоб воно не ламало flex-контейнер
-            menuHtml = `
-            <div style="position:absolute; right:0; top:35px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; min-width:210px; display:flex; flex-direction:column; text-align:left; padding:4px 0;">
-                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem;">📋</span> <span>Копіювати</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; color:var(--blue)">📑</span> <span>На всю фазу</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:var(--red); font-weight:bold; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem;">✕</span> <span>Видалити запис</span>
-                </div>
-            </div>`;
-        }
+        const btnColor = isOpen ? 'var(--primary)' : '#888';
+        const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
 
-        const btnColor = isOpen ? 'var(--primary)' : 'var(--text)';
-        const btnBg = isOpen ? 'rgba(212,175,55,0.1)' : 'transparent';
-        const btnOpacity = isOpen ? '1' : '0.5';
+        // 1. Кнопка тригеру
+        const triggerBtn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; cursor:pointer; color:${btnColor}; background:${btnBg}; transition:0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
 
-        // Повертаємо лише ОДИН контейнер з кнопкою (меню лежить всередині неї як absolute)
+        // Якщо меню закрите — повертаємо ТІЛЬКИ кнопку
+        if (!isOpen) return triggerBtn;
+
+        // 2. Стилі пунктів меню
+        const itemStyle = "padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.2s;";
+
+        // 3. Саме випадаюче меню (position:absolute не ламає батьківський flex)
+        const dropdown = `
+            <div style="position:absolute; right:0; top:36px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; min-width:230px; display:flex; flex-direction:column; padding:4px 0; text-align:left; font-family:-apple-system, sans-serif;">
+                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center;">📋</span> <span>Копіювати</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--blue)">📑</span> <span>На усю фазу</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="${itemStyle}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="${itemStyle} border-bottom:none;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
+                </div>
+            </div>
+        `;
+
+        // Повертаємо кнопку і меню ПОРУЧ, а не вкладеними
+        return triggerBtn + dropdown;
+    }
+
+
+        const btnColor = isOpen ? 'var(--primary)' : '#888';
+        const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
+
+        // Повертаємо меню і кнопку як сусідні елементи, щоб уникнути конфліктів flex-контейнерів
         return `
-            <div style="position:relative; display:flex; align-items:center; justify-content:center;">
-                ${menuHtml}
-                <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" 
-                      style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:${btnColor}; background:${btnBg}; opacity:${btnOpacity}; border-radius:6px; transition:0.2s;"
-                      onmouseover="this.style.opacity='1'; this.style.color='var(--primary)'" 
-                      onmouseout="if(!${isOpen}){this.style.opacity='0.5'; this.style.color='var(--text)'}">
-                    ${gearIcon}
-                </span>
+            ${menuHtml}
+            <div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" 
+                 style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:8px; transition:all 0.2s ease;"
+                 onmouseover="this.style.color='var(--primary)'; this.style.background='rgba(212,175,55,0.1)'" 
+                 onmouseout="if(!${isOpen}){ this.style.color='#888'; this.style.background='transparent'; } else { this.style.background='rgba(212,175,55,0.15)'; }">
+                ${gearIcon}
             </div>
         `;
     },
+
+
+        // Повертаємо кнопку і меню (якщо відкрито) без дублювання
+        return btn + dropdown;
+    }
    toggleMenu(w, d, i, name) {
         const id = `${w}-${d}-${i}`;
         const lastId = this.state.openMenu;
@@ -2440,617 +2459,3 @@ const App = {
 };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
-
-pharm.html:
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COURSE: GOLD PROTOCOL</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Manager OS">
-    
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="assets/style.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    
-    <style>
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-        
-        :root {
-            --bg-app: #000000; --bg-panel: #121212; --bg-element: #1e1e1e;
-            --border: #2a2a2a; --primary: #d4af37; --blue: #3b82f6;
-            --green: #10b981; --purple: #8b5cf6; --red: #ef4444;
-            --yellow: #f59e0b; --pink: #ec4899; --text-main: #f4f4f5;
-            --text-muted: #a1a1aa; --radius: 12px;
-        }
-        
-        html, body { max-width: 100vw; overflow-x: hidden; }
-
-        body {
-            background-color: var(--bg-app); color: var(--text-main);
-            margin: 0; padding: 20px 10px; min-height: 100vh;
-            display: flex; justify-content: center; padding-bottom: 100px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            
-            /* ГЛОБАЛЬНЕ БЛОКУВАННЯ ВИДІЛЕННЯ ТА ЛУПИ IOS */
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            -moz-user-select: none !important;
-            -ms-user-select: none !important;
-            user-select: none !important;
-        }
-
-        /* Дозвіл ТІЛЬКИ для полів вводу (contenteditable тут видалено, щоб не було конфлікту) */
-        input, textarea {
-            -webkit-touch-callout: default !important;
-            -webkit-user-select: text !important;
-            -moz-user-select: text !important;
-            -ms-user-select: text !important;
-            user-select: text !important;
-            cursor: text !important;
-        }
-
-        .app-container { width: 100%; max-width: 1400px; padding-bottom: 120px; }
-
-        header {
-            display: flex; flex-direction: column; gap: 15px; 
-            margin-bottom: 20px; padding-bottom: 15px;
-            border-bottom: 1px solid var(--border); position: relative; z-index: 50;
-        }
-
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .brand { display: flex; align-items: center; gap: 12px; }
-
-        .brand-icon {
-            width: 44px; height: 44px; background: linear-gradient(135deg, #d4af37, #fcd34d);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); 
-            color: #000; transition: 0.3s; cursor: pointer;
-        }
-
-        .brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; font-family: sans-serif; line-height: 1; }
-        .brand-text span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; font-family: sans-serif; margin-top: 5px; }
-
-        .controls { display: flex; gap: 6px; }
-        .btn-icon, .edit-toggle {
-            width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border);
-            background: var(--bg-panel); color: var(--text-muted); display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; cursor: pointer; transition: 0.2s; padding: 0; border: none;
-        }
-        
-        .phase-btn { background: var(--bg-panel); border: 1px solid var(--border); min-width: 140px; padding: 15px; border-radius: var(--radius); cursor: pointer; position: relative; display: flex; flex-direction: column; overflow: hidden; }
-
-        .edit-toggle.active { background: var(--primary); color: #000; border-color: var(--primary); }
-
-        @keyframes stripes-move { 0% { background-position: 0 0; } 100% { background-position: 28px 0; } }
-
-        .app-container, header, .nav-tabs, .pill, .med-card, .stat-card, 
-        .chart-container, .photo-area, #mainView, .phase-scroll, .week-bar {
-            transition: filter 0.8s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s ease;
-        }
-
-        body.privacy-mode .btn-panic { color: var(--red); border-color: var(--red); background: rgba(239, 68, 68, 0.1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); animation: panic-pulse 2s infinite; z-index: 101; position: relative; }
-        @keyframes panic-pulse { 0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); } 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } }
-
-        body.privacy-mode .brand-icon { filter: grayscale(100%) contrast(200%); background: #222; color: #fff; }
-        body.privacy-mode .brand h1 { font-size: 0; }
-        body.privacy-mode .brand h1::after { content: 'RESTRICTED'; font-size: 1.2rem; color: #888; letter-spacing: 4px; font-family: 'Courier New', monospace; font-weight: 900; }
-        body.privacy-mode .brand span { display: none; }
-
-        body.privacy-mode .pill div, body.privacy-mode .pill span, body.privacy-mode .stat-val, 
-        body.privacy-mode .stat-label, body.privacy-mode .med-name, body.privacy-mode .med-dose,
-        body.privacy-mode .med-desc, body.privacy-mode .pharm-stock, body.privacy-mode .check-name,
-        body.privacy-mode .phase-btn span, body.privacy-mode .phase-btn small, body.privacy-mode .day-header span,
-        body.privacy-mode .category-header span, body.privacy-mode .med-title, body.privacy-mode .med-timing,
-        body.privacy-mode .note-input, body.privacy-mode .modal-title, body.privacy-mode .modal-content p,
-        body.privacy-mode .vital-input, body.privacy-mode .bp-input, body.privacy-mode .bp-separator {
-            color: transparent !important; background-color: transparent !important; border-color: #333 !important;
-            background-image: repeating-linear-gradient(135deg, #1c1c1c, #1c1c1c 10px, #2a2a2a 10px, #2a2a2a 20px) !important;
-            background-size: 28px 28px !important; animation: stripes-move 3s linear infinite !important; 
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.8); border-radius: 4px; display: inline-block; min-height: 14px; pointer-events: none !important;
-        }
-        body.privacy-mode input::placeholder, body.privacy-mode textarea::placeholder { color: transparent !important; }
-        
-        body.privacy-mode .pill div:first-child div:first-child { width: 80%; height: 18px; margin-bottom: 4px; } 
-        body.privacy-mode .pill span { width: 50px; height: 18px; } 
-        body.privacy-mode .pill { background: #080808 !important; border-color: #333 !important; border-left: 2px solid #444 !important; }
-        
-        body.privacy-mode .phase-scroll, body.privacy-mode .week-bar { pointer-events: auto !important; overflow-x: auto; opacity: 1; filter: grayscale(100%); }
-        body.privacy-mode .phase-btn { background: #0a0a0a !important; border: 1px dashed #333 !important; min-width: 140px; }
-        body.privacy-mode .phase-btn.active { border-color: #fff !important; }
-        body.privacy-mode .phase-btn.active::after { background: #fff !important; }
-        body.privacy-mode .week-btn { background: #111 !important; color: #333 !important; }
-        body.privacy-mode .week-btn.active { background: #333 !important; color: transparent !important; }
-
-        body.privacy-mode .nav-tab { position: relative; background: #000 !important; border-color: #222 !important; pointer-events: auto !important; color: transparent !important; }
-        body.privacy-mode .nav-tab::after { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Courier New', monospace; font-weight: 800; letter-spacing: 1px; font-size: 0.8rem; color: #555; }
-        body.privacy-mode .nav-tab:nth-child(1)::after { content: 'PROTOCOL'; }
-        body.privacy-mode .nav-tab:nth-child(2)::after { content: 'ANALYTICS'; }
-        body.privacy-mode .nav-tab:nth-child(3)::after { content: 'LABS'; }
-        body.privacy-mode .nav-tab:nth-child(4)::after { content: 'MEDKIT'; }
-        body.privacy-mode .nav-tab.active { border-color: #666 !important; }
-        body.privacy-mode .nav-tab.active::after { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.5); }
-
-        body.privacy-mode .chart-container, body.privacy-mode .photo-area, body.privacy-mode .body-map-container { filter: blur(10px) grayscale(100%) opacity(0.3); pointer-events: none; }
-
-        body.privacy-mode .edit-ui, body.privacy-mode .edit-toggle, body.privacy-mode .btn-add-pill,
-        body.privacy-mode .btn-upload, body.privacy-mode .vitals-row, body.privacy-mode .phase-ctrl,
-        body.privacy-mode .new-phase-btn, body.privacy-mode [contenteditable] { display: none !important; }
-
-        #privacyModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.96); z-index: 2000; justify-content: center; align-items: center;
-            backdrop-filter: blur(10px); opacity: 1; transition: opacity 0.8s ease; 
-        }
-        #privacyModal.fade-out { opacity: 0; pointer-events: none; }
-        .privacy-modal-content { background: #000; padding: 40px 30px; border-radius: 16px; border: 1px solid #333; text-align: center; width: 300px; box-shadow: 0 0 100px rgba(255,255,255,0.05); }
-        .privacy-icon { font-size: 3rem; display: block; margin-bottom: 20px; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .privacy-pwd-input { background: #111; border: 1px solid #333; color: #fff; font-family: monospace; letter-spacing: 5px; text-align: center; padding: 15px; width: 100%; margin-bottom: 20px; font-size: 1.2rem; border-radius: 4px; outline: none; transition: 0.3s; }
-        .privacy-pwd-input:focus { border-color: #666; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
-        .btn-privacy-unlock { background: #fff; color: #000; border: none; padding: 15px; width: 100%; font-weight: 800; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border-radius: 4px; }
-        .privacy-modal-content.success { border-color: #fff; }
-        .privacy-modal-content.success .btn-privacy-unlock { background: #000; color: #fff; border: 1px solid #fff; }
-
-        body.privacy-locked { overflow-y: auto; }
-        body.privacy-mode [onclick^="App.update"], body.privacy-mode [contenteditable] { pointer-events: none; }
-        
-        .nav-tabs { background: var(--bg-panel); padding: 4px; border-radius: 12px; display: flex; justify-content: space-between; gap: 4px; border: 1px solid var(--border); }
-        .nav-tab { flex: 1; text-align: center; padding: 10px 0; color: var(--text-muted); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .nav-tab.active { background: var(--bg-element); color: var(--primary); }
-
-        .course-progress { width: 100%; height: 6px; background: #222; border-radius: 3px; margin: 0 0 25px 0; position: relative; }
-        .prog-bar { height: 100%; background: linear-gradient(90deg, var(--primary), #fcd34d); transition: width 0.5s ease; }
-        .prog-text { position: absolute; top: 8px; right: 0; font-size: 0.7rem; color: #666; font-family: 'JetBrains Mono'; }
-
-        .phase-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 25px; align-items: center; }
-        .phase-btn { background: var(--bg-panel); border: 1px solid var(--border); min-width: 140px; padding: 15px; border-radius: var(--radius); cursor: pointer; position: relative; display: flex; flex-direction: column; }
-        .phase-btn small { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-        .phase-btn span { font-weight: 700; font-size: 0.9rem; color: #fff; }
-        .phase-btn.active { background: rgba(212, 175, 55, 0.1); border-color: var(--primary); }
-        .phase-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--primary); }
-        
-        .week-bar { display: flex; gap: 6px; background: #000; padding: 6px; border-radius: 12px; margin-bottom: 25px; overflow-x: auto; }
-        .week-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; color: #52525b; font-weight: 700; font-size: 0.85rem; transition: 0.2s; flex-shrink: 0; }
-        .week-btn:hover { background: var(--bg-element); color: #fff; }
-        .week-btn.active { background: var(--primary); color: #000; }
-        .week-btn.has-data { color: #bbb; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 30px; }
-        .stat-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; display: flex; flex-direction: column; }
-        .stat-val { font-family: 'JetBrains Mono'; font-size: 1.2rem; font-weight: 700; color: #fff; }
-        .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; font-weight: 600; }
-        
-        .c-blue .stat-val { color: var(--blue); } .c-green .stat-val { color: var(--green); } .c-purple .stat-val { color: var(--purple); }
-        .c-red .stat-val { color: var(--red); } .c-pink .stat-val { color: var(--pink); } .c-yellow .stat-val { color: var(--yellow); }
-
-        .days-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 15px; width: 100%; box-sizing: border-box; }
-        .day-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; min-height: 220px; display: flex; flex-direction: column; position: relative; }
-        .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 700; color: #fff; padding-bottom: 10px; border-bottom: 1px solid #27272a; }
-
-        .pill { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #555; background: rgba(255,255,255,0.03); font-size: 0.9rem; }
-        .pill.c-blue { border-color: var(--blue); } .pill.c-green { border-color: var(--green); } .pill.c-purple { border-color: var(--purple); }
-        .pill.c-red { border-color: var(--red); } .pill.c-yellow { border-color: var(--yellow); } .pill.c-pink { border-color: var(--pink); }
-        .pill-meta { font-size: 0.7rem; color: #666; margin-left: 8px; }
-
-        .vitals-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 15px; border-top: 1px solid #27272a; }
-        .vital-input { background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 8px; font-size: 0.75rem; width: 100%; text-align: center; }
-
-        .bp-wrapper { display: flex; align-items: center; background: #000; border: 1px solid #333; border-radius: 6px; overflow: hidden; transition: 0.2s; }
-        .bp-wrapper:focus-within { border-color: var(--primary); }
-        .bp-input { background: transparent; border: none; color: #fff; width: 100%; text-align: center; font-size: 0.75rem; padding: 8px 2px; -moz-appearance: textfield; }
-        .bp-input::-webkit-outer-spin-button, .bp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .bp-separator { color: #555; font-size: 0.8rem; font-weight: bold; user-select: none; }
-        
-        .med-grid, .pharma-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; margin-bottom: 40px; width: 100%; box-sizing: border-box; }
-        .med-card, .category-block { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; }
-        .med-card:hover, .category-block:hover { transform: translateY(-4px); border-color: #444; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
-
-        .med-header, .category-header { padding: 15px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: flex-start; background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent); }
-        .med-title { color: #fff; font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; }
-        .med-timing { font-size: 0.7rem; color: var(--primary); font-family: 'JetBrains Mono', monospace; margin-top: 4px; display: block; opacity: 0.8; }
-
-        .category-header { font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
-        .category-block { border-top: 3px solid transparent; } 
-        .category-block:has(.heart) { border-top-color: var(--blue); } .category-block:has(.liver) { border-top-color: var(--green); }
-        .category-block:has(.sleep) { border-top-color: var(--purple); } .category-block:has(.sos) { border-top-color: var(--red); }
-        .category-header.heart { color: var(--blue); } .category-header.liver { color: var(--green); }
-        .category-header.sleep { color: var(--purple); } .category-header.sos { color: var(--red); }
-
-        /* ВІДЦЕНТРОВАНІ АНАЛІЗИ - ЦЕ ВАЖЛИВО ДЛЯ МІКРОСКОПА */
-        .med-list { padding: 5px 0; flex-grow: 1; }
-        .check-row { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.9rem; color: #ccc; line-height: 1.4; }
-        .check-row:last-child { border-bottom: none; }
-        .check-icon { flex-shrink: 0; color: var(--blue); font-size: 1.2rem; text-shadow: none; margin: 0; }
-        .check-name { flex-grow: 1; line-height: 1.4; }
-
-        .med-item { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 4px; }
-        .med-item:last-child { border-bottom: none; }
-        .med-row-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .med-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
-        .med-dose { background: #000; color: #ccc; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; border: 1px solid #333; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); min-width: 60px; text-align: center; }
-        .med-desc { font-size: 0.8rem; color: #666; padding-right: 20px; font-style: italic; }
-
-        .btn-ghost { width: 100%; text-align: center; font-size: 0.75rem; color: #555; padding: 12px; cursor: pointer; border-top: 1px dashed #222; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; transition: 0.2s; background: transparent; border-left: none; border-right: none; border-bottom: none; }
-        .btn-ghost:hover { background: rgba(255,255,255,0.03); color: #fff; }
-        .btn-new-section { width: 100%; padding: 15px; border: 1px dashed #444; background: transparent; color: #888; border-radius: 12px; cursor: pointer; margin-top: 10px; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
-        .btn-new-section:hover { border-color: var(--primary); color: var(--primary); background: rgba(212, 175, 55, 0.05); }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--bg-panel); padding: 25px; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 400px; position: relative; }
-        .modal-title { margin-top: 0; color: #fff; font-size: 1.2rem; margin-bottom: 20px; }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px; font-weight: 600; }
-        .modal-input { width: 100%; padding: 12px; background: #050505; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 0.9rem; }
-        .btn-save { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), #fcd34d); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 15px; }
-        .modal-close { position: absolute; top: 20px; right: 20px; color: #666; cursor: pointer; font-size: 1.2rem; }
-        
-        .dose-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 6px; margin-top: 5px; }
-        .dose-presets span { font-size: 0.75rem; background: #222; padding: 6px 8px; border-radius: 6px; color: #bbb; cursor: pointer; border: 1px solid #333; transition: 0.2s; text-align: center; }
-        .dose-presets span:hover { border-color: var(--primary); color: #fff; background: #333; }
-
-        .tag-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; min-height: 25px; }
-        .tag-chip { font-size: 0.7rem; background: rgba(255,255,255,0.05); color: #999; border: 1px solid #333; padding: 2px 8px; border-radius: 10px; cursor: pointer; }
-        .tag-chip:hover { border-color: var(--primary); color: #fff; }
-
-        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
-        .checkbox-wrapper input { width: 20px; height: 20px; accent-color: var(--primary); }
-        .color-options { display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
-        .color-opt { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-        .color-opt.selected { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
-
-        .chart-container { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 20px; height: 300px; }
-        .photo-area { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 30px; }
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-top: 20px; }
-        .photo-card { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; }
-        .photo-card img { width: 100%; height: 100%; object-fit: cover; }
-        .photo-del { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .btn-upload { background: rgba(139, 92, 246, 0.1); color: var(--purple); border: 1px dashed var(--purple); padding: 15px; border-radius: 12px; width: 100%; text-align: center; cursor: pointer; font-weight: 600; display: block; }
-        .note-input { width: 100%; background: #000; border: 1px solid #333; color: #e5e7eb; padding: 15px; border-radius: 12px; font-size: 0.95rem; resize: vertical; min-height: 100px; margin-top: 20px; }
-        
-        .edit-ui, .phase-ctrl, .phase-del, .new-phase-btn { display: none; }
-        body.editing .edit-ui { display: inline-flex !important; }
-        body.editing .phase-ctrl { display: flex; margin-top: 10px; justify-content: space-between; border-top: 1px solid #333; padding-top: 8px; }
-        body.editing .phase-del { display: block; position: absolute; top: 8px; right: 8px; color: var(--red); font-size: 12px; cursor: pointer; }
-        body.editing .new-phase-btn { display: flex; align-items: center; justify-content: center; background: var(--bg-panel); border: 1px dashed #444; border-radius: 12px; color: var(--green); font-size: 24px; }
-        .btn-add-pill { width: 100%; text-align: center; font-size: 1.5rem; color: var(--green); cursor: pointer; margin-top: 10px; opacity: 0.4; padding: 5px; border: 1px dashed #333; border-radius: 8px; }
-        .btn-add-pill:hover { opacity: 1; border-color: var(--green); }
-        .ctrl-btn { font-size: 0.7rem; background: #222; padding: 2px 8px; border-radius: 4px; cursor: pointer; color: #ccc; border: none; }
-
-        /* ==========================================================
-           АБСОЛЮТНЕ БЛОКУВАННЯ ВИДІЛЕННЯ (ФІКС IOS SAFARI)
-           ========================================================== */
-        /* Safari ігнорує заборону виділення для contenteditable. 
-           Єдиний вихід — повне відключення дотиків (pointer-events: none) */
-        body:not(.editing) [contenteditable],
-        body:not(.editing) [contenteditable="true"],
-        body:not(.editing) .pharm-stock,
-        body:not(.editing) .check-name,
-        body:not(.editing) .med-name,
-        body:not(.editing) .med-desc,
-        body:not(.editing) .check-row {
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            user-select: none !important;
-            pointer-events: none !important; /* КРИТИЧНО: фізично блокує лупу і виділення */
-            cursor: default !important;
-        }
-
-        /* ФАЗИ: Примусово повертаємо клікабельність та "палець" */
-        body:not(.editing) .phase-scroll,
-        body:not(.editing) .phase-btn,
-        body:not(.editing) .phase-btn span,
-        body:not(.editing) .phase-btn small {
-            pointer-events: auto !important; /* Дозволяємо клікати */
-            cursor: pointer !important; /* Повертаємо палець */
-            -webkit-user-select: none !important;
-            user-select: none !important;
-        }
-        /* ФАЗИ: Повертаємо палець */
-        body:not(.editing) .phase-btn {
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            user-select: none !important;
-            cursor: pointer !important;
-        }
-        
-        #undoFloat { position: fixed; bottom: 160px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: rgba(28,28,30,0.9); border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; z-index: 900; opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.5); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; backdrop-filter: blur(5px); }
-        #undoFloat.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-        .body-map-container { display: flex; justify-content: center; position: relative; height: 400px; }
-        .body-svg { height: 100%; width: auto; }
-        .muscle-group { fill: #333; stroke: #555; stroke-width: 1; cursor: pointer; }
-        .muscle-group.active { fill: var(--primary); stroke: #fff; filter: drop-shadow(0 0 5px var(--primary)); }
-        
-        #fileInput, #photoInput { display: none; }
-        @media (max-width: 360px) { .brand h1, .brand span { display: none; } }
-        
-        @keyframes secret-hint { 0% { transform: scale(1); filter: none; } 50% { transform: scale(1.15) rotate(5deg); background: linear-gradient(135deg, #ef4444, #991b1b); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); border-color: #ef4444; color: #fff; } 100% { transform: scale(1); filter: none; } }
-        .brand-icon.hint-active { animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        .day-card, .stat-card, .med-card { transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, border-color 0.25s ease; }
-        /* =======================================
-           АНІМАЦІЯ ПОЯВИ ДОЗУВАНЬ (STAGGERED POP)
-           ======================================= */
-        @keyframes statCardEnter {
-            0% { opacity: 0; transform: translateY(15px) scale(0.95); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .stat-card.animate-enter {
-            opacity: 0; /* Тримаємо прихованими до старту анімації */
-            /* Використовуємо cubic-bezier для ефекту преміальної мікро-пружини (Apple-style) */
-            animation: statCardEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @media (hover: hover) {
-            .btn-icon:hover, .edit-toggle:hover { 
-                background: var(--bg-element); 
-                color: var(--primary); 
-                box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2); 
-                transform: translateY(-1px);
-            } /* <--- ОСЬ ЦІЄЇ ДУЖКИ НЕ ВИСТАЧАЛО! */
-
-            /* 1. Оживляємо вкладки (Protocol, Аналітика, Аналізи, Аптечка) */
-            .nav-tab { transition: all 0.2s ease; }
-            .nav-tab:hover:not(.active) { 
-                background: rgba(255, 255, 255, 0.05); 
-                color: var(--primary); 
-                box-shadow: inset 0 0 10px rgba(255,255,255,0.02);
-            }
-
-            /* 2. Оживляємо кнопку MAP (без підстрибування) */
-            .btn-map:hover { 
-                background: rgba(255, 255, 255, 0.05) !important; 
-                border-color: var(--primary) !important; 
-                box-shadow: 0 0 15px rgba(212, 175, 55, 0.2) !important; 
-                transform: none !important; /* Блокуємо зміщення */
-            }
-
-            .day-card:hover, .med-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #444; }
-            
-            .btn-save:hover { box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
-            .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-            .btn-new-section:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--primary); color: var(--primary); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
-            .btn-privacy-unlock:hover { box-shadow: 0 5px 20px rgba(255,255,255,0.3); transform: translateY(-2px); }
-            .btn-upload:hover { background: rgba(139, 92, 246, 0.2); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transform: translateY(-2px); }
-            .phase-btn:hover:not(.active) { 
-                background: rgba(255,255,255,0.05); 
-                border-color: #555; 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.4); 
-                transform: translateY(-2px); 
-            }
-        }
-
-/* Динаміка натискання на телефоні */
-.phase-btn:active { transform: scale(0.96); background: rgba(0,0,0,0.5); }
-        .btn-icon, .edit-toggle, .phase-btn, .week-btn, .pill { transition: transform 0.1s ease, background 0.2s ease; }
-        .btn-icon:active, .edit-toggle:active, .phase-btn:active, .week-btn:active { transform: scale(0.94); }
-        .nav-tab { position: relative; overflow: hidden; }
-        .nav-tab::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(212, 175, 55, 0.1); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease; }
-        .nav-tab:active::before { width: 200%; height: 200%; }
-
-        .modal-content, .privacy-modal-content { background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .compare-col { display: flex; flex-direction: column; gap: 5px; }
-        .compare-label { text-align: center; font-size: 0.75rem; color: var(--primary); font-weight: 800; letter-spacing: 1px; background: rgba(212, 175, 55, 0.1); padding: 5px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2); }
-        .compare-img-box { aspect-ratio: 3/4; background: #000; border-radius: 8px; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; overflow: hidden; color: #555; position: relative; }
-        .compare-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .btn-compare { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        body.privacy-mode .btn-compare { display: none !important; }
-
-        .phase-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px 20px 5px; margin-bottom: 15px; align-items: center; }
-        .insert-phase-btn { display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; height: 100%; cursor: pointer; transition: 0.2s; opacity: 0.6; }
-        .insert-phase-btn span { width: 32px; height: 32px; border-radius: 50%; background: #111; border: 1px dashed var(--green); color: var(--green); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        .insert-phase-btn:hover { opacity: 1; transform: scale(1.1); }
-
-        #customPhotoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; overflow: hidden; align-items: center; justify-content: center; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s ease; }
-        #customPhotoModal.active { display: flex; opacity: 1; }
-        #customPhotoModal img { max-width: 100%; max-height: 100%; object-fit: contain; will-change: transform; cursor: grab; transition: transform 0.15s ease-out; }
-        #customPhotoModal.is-zoom img { cursor: grabbing; transition: none; }
-        #customPhotoModal.is-pan img { cursor: grabbing; transition: none; }
-
-        .custom-close-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: rgba(30,30,30,0.8); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: bold; cursor: pointer; z-index: 5001; transition: 0.2s; border: 1px solid #333; }
-        .custom-close-btn:hover { background: #d4af37; }
-        .custom-close-btn:active { transform: scale(0.9); }
-        .swap-btn { padding: 8px 25px; border-radius: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #888; cursor: pointer; transition: 0.2s; user-select: none; }
-        .swap-btn.active { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(212,175,55,0.4); }
-
-        body.modal-active .nav-tabs, body.modal-active .brand, body.modal-active .controls, body.modal-active #sys-fab, body.modal-active #undoFloat { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; transform: translateY(-10px) scale(0.95) !important; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; }
-
-        .photo-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; z-index: 5002; backdrop-filter: blur(5px); transition: 0.2s; user-select: none; border: 1px solid rgba(255,255,255,0.1); }
-        .photo-nav-btn:active { background: var(--primary); color: #000; }
-        #photoNavLeft { left: 15px; } #photoNavRight { right: 15px; }
-
-        .photo-week-bar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(10,10,10,0.85); border: 1px solid #333; border-radius: 30px; padding: 6px; z-index: 5002; display: flex; gap: 5px; backdrop-filter: blur(10px); max-width: 90vw; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
-        .photo-week-bar::-webkit-scrollbar { display: none; }
-        .p-week { padding: 8px 20px; border-radius: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #888; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
-        .p-week.active { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(212,175,55,0.4); }
-
-        body.modal-active #sys-fab, body.editing #sys-fab { opacity: 0 !important; pointer-events: none !important; transform: translateY(80px) scale(0.5) !important; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; }
-
-        .pharm-card { background: var(--bg-panel); border-radius: 12px; padding: 15px; border: 1px solid var(--border); position: relative; overflow: hidden; }
-        .pharm-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: radial-gradient(circle, var(--cat-color) 0%, transparent 70%); opacity: 0.15; transform: translate(30%, -30%); border-radius: 50%; pointer-events: none; }
-        .pharm-item { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
-        .pharm-item-top { display: flex; justify-content: space-between; align-items: center; }
-        .pharm-stock { background: #000; border: 1px dashed #555; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; color: #aaa; font-family: 'JetBrains Mono', monospace; cursor: default; display: inline-block; min-width: 40px; text-align: center; }
-        .pharm-stock.low { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); }
-        .pharm-stock:empty::before { content: '📦 шт/мл...'; opacity: 0.4; font-size: 0.65rem; }
-    </style>
-</head>
-<body id="appBody" ontouchstart="">
-
-<script>
-    try {
-        const pd = JSON.parse(localStorage.getItem('gold_protocol') || '{}');
-        const manualLock = localStorage.getItem('pharm_manual_lock') === 'true';
-        if ((pd && pd.privacyEnabled) || manualLock) { 
-            document.body.classList.add('privacy-mode', 'privacy-locked'); 
-        }
-    } catch(e) {}
-</script>
-
-<div class="app-container">
-    <header>
-        <div class="header-top">
-            <div class="brand">
-                <div class="brand-icon">🏆</div>
-                <div class="brand-text"> <h1>COURSE</h1><span>GOLD PROTOCOL</span></div>
-            </div>
-            <div class="controls">
-                <button class="btn-icon btn-panic" onclick="App.togglePrivacy()" title="Privacy Mode">👁️</button>
-                <button class="btn-icon" onclick="App.safeSave()" title="Save">💾</button> <button class="btn-icon" onclick="App.safeLoad()" title="Load">📂</button> <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)">
-                <input type="date" id="startDateInput" style="display:none" onchange="App.setStartDate(this.value)">
-                <button class="edit-toggle" id="editBtn" onclick="App.toggleEdit()" title="Edit">✎</button>
-            </div>
-        </div>
-        <div class="nav-tabs">
-            <div class="nav-tab active" onclick="App.setView('protocol', this)"><span>Protocol</span></div>
-            <div class="nav-tab" onclick="App.setView('analytics', this)"><span>Аналітика</span></div>
-            <div class="nav-tab" onclick="App.setView('analysis', this)"><span>Аналізи</span></div>
-            <div class="nav-tab" onclick="App.setView('pharmacy', this)"><span>Аптечка</span></div>
-        </div>
-    </header>
-
-    <div style="position:relative; margin-bottom:5px">
-        <div class="course-progress"><div class="prog-bar" id="progBar" style="width: 0px !important; transition: none !important;"></div></div>
-        <div class="prog-text" id="progText">Week 0/0</div>
-    </div>
-
-    <div class="phase-scroll" id="phaseNav"></div>
-    <div id="mainView"></div>
-</div>
-
-<div id="undoFloat" onclick="App.undo()">↩</div>
-
-<div id="privacyModal">
-    <div class="privacy-modal-content" id="pwdContainer">
-        <span class="privacy-icon" id="privIcon">🔒</span>
-        <h2 style="margin:0 0 10px 0; color:#fff; font-size:1.2rem">ACCESS LOCKED</h2>
-        <p style="color:#666; font-size:0.8rem; margin-bottom:20px">ENTER PASSCODE</p>
-        <input type="password" inputmode="numeric" pattern="[0-9]*" class="privacy-pwd-input" id="privacyPassword" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter') App.unlockPrivacy()">
-        <button class="btn-privacy-unlock" id="unlockBtn" ontouchstart="event.preventDefault(); App.unlockPrivacy()" onmousedown="App.unlockPrivacy()">UNLOCK</button>
-        
-        <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <input type="checkbox" id="privacyAutoLock" onchange="App.toggleAutoLock(this.checked)" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-            <label style="color: #888; font-size: 0.8rem; cursor: default;">Завжди блокувати при вході</label>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="addPillModal">
-    <div class="modal-content">
-        <span class="modal-close" onclick="App.closeModal()">✕</span>
-        <h3 class="modal-title">Додати препарат</h3>
-        
-        <div class="input-group" id="pillNameGroup" style="position:relative;">
-            <label>Назва</label>
-            <div style="position: relative; display: flex; align-items: center;">
-                <input class="modal-input" id="pillName" placeholder="Напр: hCG" autocomplete="off" style="padding-right: 45px; width: 100%; box-sizing: border-box;">
-                <div id="pillNameArrow" style="position: absolute; right: 0; top: 0; bottom: 0; width: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: 0.2s; z-index: 2;">
-                    <svg style="pointer-events:none; transition: transform 0.3s;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
-                </div>
-            </div>
-            <div id="custom-pill-list" style="display: none; position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #121212; border: 1px solid #333; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.9);"></div>
-        </div>
-
-        <div class="input-group">
-            <label>Дозування</label>
-            <input class="modal-input" id="pillDose" placeholder="Напр: 1000 IU" autocomplete="off" inputmode="decimal">
-            <div class="dose-presets">
-                <span onclick="App.setDose('0.5 tab')">0.5 tab</span>
-                <span onclick="App.setDose('1 tab')">1 tab</span>
-                <span onclick="App.setDose('0.5ml')">0.5ml</span>
-                <span onclick="App.setDose('1ml')">1ml</span>
-                <span onclick="App.setDose('250mg')">250mg</span>
-                <span onclick="App.setDose('500mg')">500mg</span>
-                <span onclick="App.setDose('250 IU')">250 IU</span>
-                <span onclick="App.setDose('500 IU')">500 IU</span>
-                <span onclick="App.setDose('1000 IU')">1000 IU</span>
-                <span onclick="App.setDose('2 IU')">2 IU</span>
-                <span onclick="App.setDose('4 IU')">4 IU</span>
-            </div>
-        </div>
-        <div class="input-group">
-            <label>Тег</label>
-            <input class="modal-input" id="pillMeta" placeholder="Напр: Base, AM" autocomplete="off">
-            <div class="tag-presets" id="tagPresets"></div>
-        </div>
-        <div class="input-group"><label>Колір</label>
-            <div class="color-options">
-                <div class="color-opt" style="background:#3b82f6" onclick="App.selectColor('c-blue', this)"></div>
-                <div class="color-opt" style="background:#10b981" onclick="App.selectColor('c-green', this)"></div>
-                <div class="color-opt" style="background:#8b5cf6" onclick="App.selectColor('c-purple', this)"></div>
-                <div class="color-opt" style="background:#ef4444" onclick="App.selectColor('c-red', this)"></div>
-                <div class="color-opt" style="background:#f59e0b" onclick="App.selectColor('c-yellow', this)"></div>
-                <div class="color-opt" style="background:#ec4899" onclick="App.selectColor('c-pink', this)"></div>
-            </div>
-        </div>
-        <div class="input-group" style="margin-top: 15px;">
-            <label>Повторення (до кінця фази)</label>
-            <select class="modal-input" id="pillFreq" style="cursor:pointer; appearance: auto; background-color: #050505;">
-                <option value="once">📍 Тільки в цей день</option>
-                <option value="weekly">📅 Кожного тижня (у цей день)</option>
-                <option value="daily">🔄 Щодня</option>
-                <option value="eod">⚡ Через день</option>
-                <option value="e3d">⏳ Кожні 3 дні</option>
-            </select>
-        </div>
-        <button class="btn-save" onclick="App.confirmAddPill()">ДОДАТИ</button>
-    </div>
-</div>
-
-<div class="modal" id="bodyMapModal" onclick="if(event.target === this) { this.style.display='none'; App.unlockScroll(); }">
-    <div class="modal-content" style="max-width:350px">
-        <span class="modal-close" onclick="document.getElementById('bodyMapModal').style.display='none'; App.unlockScroll();">✕</span>
-        <h3 class="modal-title">Карта ін'єкцій</h3>
-        <p style="color:#666; font-size:0.8rem; margin-bottom:15px">Натисніть на зону, щоб відмітити укол.</p>
-        <div class="body-map-container" id="svgContainer"></div>
-    </div>
-</div>
-    
-<div class="modal" id="compareModal" style="z-index: 3000;">
-    <div class="modal-content" style="max-width: 900px; width: 95%;">
-        <span class="modal-close" onclick="document.getElementById('compareModal').style.display='none'; App.unlockScroll();">✕</span>
-        <h3 class="modal-title" style="text-align:center; margin-bottom: 20px;">⚔️ PROGRESS COMPARISON</h3>
-        
-        <div class="compare-grid">
-            <div class="compare-col">
-                <select id="compSelectL" class="modal-input" style="text-align:center; font-weight:bold; margin-bottom:10px;" onchange="App.loadCompareImage('L', this.value)"></select>
-                <div class="compare-img-box" id="imgBoxL">
-                    <span style="opacity:0.3">Loading...</span>
-                </div>
-            </div>
-
-            <div class="compare-col">
-                <select id="compSelectR" class="modal-input" style="text-align:center; font-weight:bold; margin-bottom:10px;" onchange="App.loadCompareImage('R', this.value)"></select>
-                <div class="compare-img-box" id="imgBoxR">
-                    <span style="opacity:0.3">Loading...</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="assets/js/utils.js"></script>
-<script src="assets/js/pharm.js"></script>
-<script src="assets/js/common.js"></script>
-<div id="customPhotoModal">
-    <span class="custom-close-btn" onclick="App.closePhotoModal()" ontouchend="App.closePhotoModal(); event.preventDefault(); event.stopPropagation();">✕</span>
-    <div id="photoNavLeft" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(-1)">◀</div>
-    <img id="customPhotoImg" src="" alt="Full view">
-    <div id="photoNavRight" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(1)">▶</div>
-    <div id="photoWeekSelector" class="photo-week-bar"></div>
-</div>
-
-</body>
-</html>
