@@ -1931,7 +1931,7 @@ const App = {
         const el = document.getElementById(`menu-${id}`);
         if (el) {
             el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
-            if(el.closest('.pill')) el.closest('.pill').style.zIndex = isOpen ? '9999' : '1';
+            if(el.closest('.pill')) el.closest('.pill').style.zIndex = isOpen ? '50' : '1';
         }
     },
 
