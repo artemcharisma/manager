@@ -1255,25 +1255,32 @@ const App = {
     
             if(this.data.schedule[w]) {
                 this.data.schedule[w].forEach(day => day.forEach(pill => {
-                    const name = pill.name.trim();
-                    const dose = pill.dose.trim();
+                    if(!pill.name || !pill.dose) return;
                     
-                    if(!details[name]) details[name] = { val: 0, unit: '' };
+                    const name = pill.name.trim().toUpperCase(); 
+                    const doseStr = pill.dose.trim().toLowerCase();
                     
-                    const match = dose.match(/(\d+([.,]\d+)?)/);
+                    const match = doseStr.match(/(\d+([.,]\d+)?)/);
                     if (match) {
                         const val = parseFloat(match[0].replace(',', '.'));
+                        if(isNaN(val)) return;
+
                         let unit = 'mg';
-                        if(dose.toLowerCase().includes('iu')) unit = 'IU';
-                        if(dose.toLowerCase().includes('mcg')) unit = 'mcg';
-                        if(dose.toLowerCase().includes('tab')) unit = 'tab';
-                        
-                        details[name].val += val;
-                        details[name].unit = unit;
-    
-                        if (unit === 'mg' && ['c-blue', 'c-green', 'c-red', 'c-pink', 'c-yellow'].includes(pill.color)) {
+                        if(doseStr.includes('iu') || doseStr.includes('од')) unit = 'IU';
+                        else if(doseStr.includes('mcg') || doseStr.includes('мкг')) unit = 'mcg';
+                        else if(doseStr.includes('ml') || doseStr.includes('мл')) unit = 'ml';
+                        else if(doseStr.includes('tab') || doseStr.includes('таб')) unit = 'tab';
+
+                        const detKey = `${name}_${unit}`;
+                        if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: unit };
+                        details[detKey].val += val;
+
+                        // ФІКС 4: Графік рахує ВСІ міліграми, ігноруючи колір пігулки!
+                        if (unit === 'mg') {
                             const nLow = name.toLowerCase();
-                            if(nLow.includes('test') || nLow.includes('sust') || nLow.includes('enan') || nLow.includes('cyp') || nLow.includes('prop')) {
+                            const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('enan') || nLow.includes('cyp') || nLow.includes('prop') || nLow.includes('omna');
+                            
+                            if(isTest) {
                                 weekTest += val;
                             } else {
                                 weekOther += val;
@@ -1283,7 +1290,7 @@ const App = {
                 }));
             }
             
-            weekDetails.push(Object.entries(details).map(([n, d]) => `${n}: ${parseFloat(d.val.toFixed(1))} ${d.unit}`));
+            weekDetails.push(Object.values(details).map(d => `${d.name}: ${parseFloat(d.val.toFixed(1))} ${d.unit}`));
             dataTest.push(weekTest);
             dataStack.push(weekOther);
     
@@ -1706,27 +1713,32 @@ const App = {
         if(!this.data.schedule[week]) return stats;
         
         this.data.schedule[week].forEach(d => d.forEach(p => {
-            const match = p.dose.match(/(\d+([.,]\d+)?)/);
+            if(!p.name || !p.dose) return;
             
+            const match = p.dose.match(/(\d+([.,]\d+)?)/);
             if (match) {
                 const valStr = match[0].replace(',', '.');
-                const n = parseFloat(valStr);
+                const val = parseFloat(valStr);
 
-                if(!isNaN(n)) { 
-                    let k = p.name.trim(); 
-                    let u = "mg"; 
-                    const dLow = p.dose.toLowerCase();
-                    if(dLow.includes("iu")) u = "IU"; 
-                    else if(dLow.includes("mcg")) u = "mcg";
-                    else if(dLow.includes("ml")) u = "ml";
-                    else if(dLow.includes("tab")) u = "tab";
-
-                    if(!stats[k]) {
-                        let colorName = (p.color || 'c-yellow').replace('c-', '');
-                        stats[k] = { v: 0, u: u, c: colorName }; 
-                    }
+                if(!isNaN(val)) { 
+                    const name = p.name.trim().toUpperCase(); // ФІКС 1: Уніфікація назви (щоб не плутав регістр)
+                    const dLow = p.dose.trim().toLowerCase();
                     
-                    stats[k].v += n; 
+                    // ФІКС 2: Жорсткий парсинг одиниць виміру
+                    let u = "mg"; 
+                    if(dLow.includes("iu") || dLow.includes("од")) u = "IU"; 
+                    else if(dLow.includes("mcg") || dLow.includes("мкг")) u = "mcg";
+                    else if(dLow.includes("ml") || dLow.includes("мл")) u = "ml";
+                    else if(dLow.includes("tab") || dLow.includes("таб")) u = "tab";
+
+                    // ФІКС 3: Розділяємо математику, якщо юзер випадково змішав mg і ml для одного препу
+                    const key = `${name}_${u}`; 
+
+                    if(!stats[key]) {
+                        let colorName = (p.color || 'c-yellow').replace('c-', '');
+                        stats[key] = { rawName: name, v: 0, u: u, c: colorName }; 
+                    }
+                    stats[key].v += val; 
                 }
             }
         }));
@@ -1742,26 +1754,22 @@ const App = {
 
     updateStatsUI() {
          const container = document.getElementById('stats-container');
-         // Передаємо false, щоб при ручному вводі дозувань анімація не перегравалась
          if(container) container.innerHTML = this.getStatsHtml(this.state.week, false);
     },
 
-    // Додаємо параметр animate (за замовчуванням true для перемикання тижнів/вкладок)
     getStatsHtml(week, animate = true) {
         const stats = this.calc(week);
         const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
         
         let statsHtml = sortedStats.map(([k,v], index) => {
             let color = v.c || 'yellow'; 
-            
-            // Якщо анімація дозволена, додаємо клас і каскадну затримку (0.04s між кожною карткою)
             let animClass = animate ? 'animate-enter' : '';
             let delayStr = animate ? `animation-delay: ${index * 0.04}s;` : '';
             
-            return `<div class="stat-card c-${color} ${animClass}" style="${delayStr}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${k}</span></div>`;
+            // Використовуємо v.rawName, бо ключ тепер містить технічну інформацію
+            return `<div class="stat-card c-${color} ${animClass}" style="${delayStr}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${v.rawName}</span></div>`;
         }).join('') || '';
         
-        // Кнопка MAP завжди з'являється останньою в каскаді
         let mapAnimClass = animate ? 'animate-enter' : '';
         let mapDelayStr = animate ? `animation-delay: ${sortedStats.length * 0.04}s;` : '';
         
@@ -2002,7 +2010,7 @@ const App = {
             report += `📊 ПРЕПАРАТИ:\n`;
             report += `────────────────────────────────────\n`;
             sortedStats.forEach(([k, v]) => {
-                report += `${k.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
+                report += `${v.rawName.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
             });
             report += `\n`;
         }
