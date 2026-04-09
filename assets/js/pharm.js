@@ -1097,20 +1097,22 @@ const App = {
                 const textPointer = this.state.editing ? 'auto' : 'none';
                 const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
                 const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
+                
+                // ВАЖЛИВО: Перевіряємо, чи відкрито меню саме для цієї пігулки
                 const isMenuOpen = this.state.openMenu === pillId;
 
-                // overflow:visible дозволяє меню вийти за межі картки.
+                // ДОДАНО: z-index:${isMenuOpen ? '9999' : '1'} — витягує пігулку з відкритим меню поверх усього
                 return `
-                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? 50 : 1}; overflow:visible !important;" ${clickAction}>
+                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
                     ${checkIcon}
-                    <div style="flex:1; pointer-events:${textPointer}; min-width:0; margin-right:8px;">
-                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</div>
-                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop} style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.meta || ""}</div>
+                    <div style="flex:1; pointer-events:${textPointer};">
+                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600">${m.name}</div>
+                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop}>${m.meta || ""}</div>
                     </div>
-                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; flex-shrink:0; white-space:nowrap; text-align:right;" ${innerStop}>${m.dose}</span>
+                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer};" ${innerStop}>${m.dose}</span>
                     
                     ${this.state.editing ? `
-                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; flex-shrink:0; pointer-events:auto;">
+                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative; pointer-events:auto;">
                             ${this.getMenuUI(this.state.week, i, idx, m.name, isMenuOpen)}
                         </div>
                     ` : ''}
@@ -1939,6 +1941,7 @@ const App = {
                 const parts = lastId.split('-');
                 if(parts.length === 3) {
                     oldEl.innerHTML = this.getMenuUI(parts[0], parts[1], parts[2], oldName, false);
+                    if(oldEl.closest('.pill')) oldEl.closest('.pill').style.zIndex = '1';
                 }
             }
         }
@@ -1949,6 +1952,7 @@ const App = {
         const el = document.getElementById(`menu-${id}`);
         if (el) {
             el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
+            if(el.closest('.pill')) el.closest('.pill').style.zIndex = isOpen ? '9999' : '1';
         }
     },
 
@@ -2044,46 +2048,37 @@ const App = {
         
         report += `\n══════════════════════════════════════\n`;
         
-        // 1. Копіюємо текст, але якщо помилка (наприклад, iOS блокує), ігноруємо її, щоб бекап пішов далі
+        // 1. Спроба скопіювати текст у фоні (якщо браузер заборонить, це не зламає скачування)
         try {
             navigator.clipboard.writeText(report).catch(() => {});
-        } catch (e) {}
+        } catch(e) {}
 
-        // 2. Гарантоване і миттєве завантаження JSON-файлу
-        try {
-            const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
-            const dataStr = JSON.stringify(this.data, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement("a");
-            a.style.display = "none"; // Приховуємо лінк
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a); // Обов'язково додаємо в DOM для мобільних
-            
-            a.click();
-            
-            // Очищаємо пам'ять
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 150);
-
-            // Показуємо успішне повідомлення
-            if (window.Modal && typeof window.Modal.alert === 'function') {
-                window.Modal.alert("Файл бекапу успішно завантажено!", "✅ ЗБЕРЕЖЕНО", "green");
-            } else {
-                alert("Бекап успішно завантажено!");
+        // 2. Гарантоване вікно збереження бекапу
+        setTimeout(async () => {
+            if(await Modal.confirm("Дані збережено. Скачати JSON бекап?", "ЗАВАНТАЖЕННЯ", "gold")) {
+                try {
+                    const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
+                    const dataStr = JSON.stringify(this.data, null, 2);
+                    const blob = new Blob([dataStr], { type: "application/json" });
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    const a = document.createElement("a");
+                    a.style.display = "none";
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a); // Обов'язково для iOS
+                    
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 150);
+                } catch(err) {
+                    await Modal.alert("Помилка при створенні файлу.", "ПОМИЛКА", "red");
+                }
             }
-        } catch (error) {
-            console.error(error);
-            if (window.Modal && typeof window.Modal.alert === 'function') {
-                window.Modal.alert("Не вдалося створити файл бекапу.", "ПОМИЛКА", "red");
-            } else {
-                alert("Помилка збереження!");
-            }
-        }
+        }, 100);
     },
 
 
