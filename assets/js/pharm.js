@@ -1103,42 +1103,45 @@ const App = {
                 const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
                 const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
                 
-                // ВАЖЛИВО: Перевіряємо, чи відкрито меню саме для цієї пігулки
                 const isMenuOpen = this.state.openMenu === pillId;
 
-                // ДОДАНО: z-index:${isMenuOpen ? '9999' : '1'} — витягує пігулку з відкритим меню поверх усього
+                // ОНОВЛЕНА ВЕРСТКА ПІГУЛКИ (Flexbox з відштовхуванням правого блоку)
                 return `
-                <div class="pill ${m.color}" style="position:relative; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
+                <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
                     ${checkIcon}
-                    <div style="flex:1; pointer-events:${textPointer};">
-                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600">${m.name}</div>
-                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop}>${m.meta || ""}</div>
+                    <div style="flex:1; pointer-events:${textPointer}; display:flex; flex-direction:column; justify-content:center; padding-right:10px;">
+                        <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; line-height:1.2;">${m.name}</div>
+                        <div class="pill-meta" contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'meta',this.innerText)" ${innerStop} style="margin-top:2px;">${m.meta || ""}</div>
                     </div>
-                    <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer};" ${innerStop}>${m.dose}</span>
                     
-                    ${this.state.editing ? `
-                        <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="margin-left:10px; position:relative; pointer-events:auto;">
-                            ${this.getMenuUI(this.state.week, i, idx, m.name, isMenuOpen)}
-                        </div>
-                    ` : ''}
+                    <div style="display:flex; align-items:center; margin-left:auto; gap:12px;">
+                        <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; text-align:right; font-weight:800; font-family:'JetBrains Mono', monospace;" ${innerStop}>${m.dose}</span>
+                        
+                        ${this.state.editing ? `
+                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; pointer-events:auto;">
+                                ${this.getMenuUI(this.state.week, i, idx, m.name, isMenuOpen)}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>`;
             }).join('');
                 
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
-                    headerBtns += `<span style="font-size:0.9rem; cursor:pointer; margin-left:15px; color:#fff;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</span>`;
+                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius:8px;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
-                headerBtns += `<span style="font-size:0.9rem; cursor:pointer; opacity:0.7; margin-left:10px;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? 'Paste' : '📋'}</span>`;
+                headerBtns += `<div style="font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:8px; border: 1px solid rgba(255,255,255,0.1);" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
 
-            grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 10px rgba(212,175,55,0.1)' : ''}">
-                <div class="day-header">
-                    <div style="display:flex; flex-direction:column; line-height:1.2">
-                        <span>${dayNames[i]}</span>
-                        <span style="font-size:0.65rem; color:#666; font-weight:400">${realDate}</span>
+            // ОНОВЛЕНА ВЕРСТКА ДАТИ ТА ЗАГОЛОВКА
+            grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
+                <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.05rem; font-weight:800; color:#fff; text-transform:uppercase;">${dayNames[i]}</span>
+                        <span style="font-size:0.7rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
                     </div>
-                    <div style="display:flex; align-items:center">${headerBtns}</div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">${headerBtns}</div>
                 </div>
                 ${content}
                 <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
@@ -1202,7 +1205,6 @@ const App = {
         const newWeekBar = document.querySelector('.week-bar');
         if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
     },
-
     renderAnalytics(c) {
         c.innerHTML = `
             <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
