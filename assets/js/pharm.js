@@ -780,6 +780,7 @@ const App = {
         if(!this.data.measurements) this.data.measurements = {};
     },
 
+    // ДОДАНО
     saveTimer: null,
 
     save() { 
@@ -790,6 +791,7 @@ const App = {
         }, 800);
     },
 
+    // ДОДАНО: Екстрений запис
     forceSave() {
         this.stateManager.save(this.data); 
     },
