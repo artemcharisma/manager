@@ -1126,7 +1126,7 @@ const App = {
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
-                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
+                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
                 headerBtns += `<div style="font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
@@ -1271,9 +1271,12 @@ const App = {
                         if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: unit };
                         details[detKey].val += val;
 
+                        // ФІКС АНАЛІТИКИ: Сувора перевірка на Тестостерон
                         if (unit === 'mg') {
                             const nLow = name.toLowerCase();
-                            const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('enan') || nLow.includes('cyp') || nLow.includes('prop') || nLow.includes('omna');
+                            // Перевіряємо, чи це САМЕ тестостерон, сустанон або омнадрен
+                            // Ігноруємо Tren, Mast, Primo, навіть якщо вони мають ефір Enan, Prop, Cyp
+                            const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('omna');
                             
                             if(isTest) {
                                 weekTest += val;
@@ -1898,8 +1901,8 @@ const App = {
         const btnColor = isOpen ? 'var(--primary)' : '#888';
         const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
         
-        // ФІКС: border-radius: 50%
-        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
+        // ФІКС МЕНЮ: Додано overflow:hidden, box-sizing:border-box та чіткі межі
+        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="box-sizing: border-box; display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; overflow:hidden; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
 
         if (!isOpen) return btn;
 
