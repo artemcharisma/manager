@@ -780,7 +780,17 @@ const App = {
         if(!this.data.measurements) this.data.measurements = {};
     },
 
+    saveTimer: null,
+
     save() { 
+        if (this.saveTimer) clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+            this.stateManager.save(this.data); 
+            this.saveTimer = null;
+        }, 800);
+    },
+
+    forceSave() {
         this.stateManager.save(this.data); 
     },
 
@@ -2438,5 +2448,20 @@ const App = {
         nav.innerHTML = html; 
     }
 };
+// ЗАПОБІЖНИК: Гарантований запис при згортанні/закритті додатку
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && App.saveTimer) {
+        clearTimeout(App.saveTimer);
+        App.saveTimer = null;
+        App.forceSave();
+    }
+});
 
+window.addEventListener('beforeunload', () => {
+    if (App.saveTimer) {
+        clearTimeout(App.saveTimer);
+        App.saveTimer = null;
+        App.forceSave();
+    }
+});
 document.addEventListener('DOMContentLoaded', () => App.init());
