@@ -608,6 +608,7 @@ const App = {
                 background: linear-gradient(90deg, var(--primary) 25%, #fff2a8 50%, var(--primary) 75%) !important;
                 background-size: 200% auto !important;
                 animation: goldShimmer 2.5s linear infinite !important;
+                border-radius: 20px !important; /* ФІКС: щоб заповнена лінія не мала гострого краю */
             }
             @media (hover: hover) {
                 .custom-pill-option:hover { background: #333 !important; }
@@ -638,19 +639,22 @@ const App = {
             .kebab-menu-dropdown {
                 position: absolute; right: 0; top: calc(100% + 5px); 
                 background: #18181b; border: 1px solid #3f3f46;
-                border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
+                border-radius: 16px; /* Збільшено заокруглення з 12 до 16 */
+                box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
                 z-index: 99999 !important; min-width: 220px; display: flex; flex-direction: column;
                 overflow: hidden; animation: fadeEffect 0.2s ease-out; text-align: left;
-                /* ФІКС РАМКИ (щоб hover не робив кути квадратними) */
-                -webkit-mask-image: -webkit-radial-gradient(white, black);
                 transform: translateZ(0);
             }
+            
+            /* ФІКС: щоб при наведенні на верхній/нижній пункт кути не ставали квадратними */
+            .kebab-menu-item:first-child { border-radius: 16px 16px 0 0; }
+            .kebab-menu-item:last-child { border-radius: 0 0 16px 16px; border-bottom: none; }
+            
             .kebab-menu-item {
                 padding: 12px 15px; display: flex; align-items: center; gap: 12px;
                 font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: background 0.2s;
                 border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent;
             }
-            .kebab-menu-item:last-child { border-bottom: none; }
             .kebab-menu-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         `;
         document.head.appendChild(extraStyles);
@@ -1129,11 +1133,10 @@ const App = {
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
-                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius:8px;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
+                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
-                headerBtns += `<div style="font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:8px; border: 1px solid rgba(255,255,255,0.1);" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
+                headerBtns += `<div style="font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
-
             // ОНОВЛЕНА ВЕРСТКА ДАТИ ТА ЗАГОЛОВКА
             grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
                 <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent);">
@@ -1907,7 +1910,7 @@ const App = {
         const btnColor = isOpen ? 'var(--primary)' : '#888';
         const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
         
-        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:6px; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
+        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
 
         if (!isOpen) return btn;
 
