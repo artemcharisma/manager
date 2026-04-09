@@ -49,7 +49,6 @@ const SysSwitch = {
     },
     close() {
         this.el.classList.remove('open');
-        setTimeout(() => this.el.style.display = 'none', 300);
     }
 };
 
