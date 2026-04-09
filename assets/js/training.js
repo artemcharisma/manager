@@ -516,9 +516,20 @@ const App = {
         this.renderGuide();
     },
 
+    saveTimer: null,
+
     save() { 
-        this.buildIndex(); // Оновлюємо кеш перед збереженням
-        this.state.save(this.data); 
+        if (this.saveTimer) clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+            this.buildIndex(); // Оновлюємо кеш тільки перед реальним записом
+            this.state.save(this.data);
+            this.saveTimer = null;
+        }, 800);
+    },
+
+    forceSave() {
+        this.buildIndex();
+        this.state.save(this.data);
     },
     
     undo() {
