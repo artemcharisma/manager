@@ -1103,6 +1103,7 @@ const App = {
                 
                 const isMenuOpen = this.state.openMenu === pillId;
 
+                // Пігулки розштовхують контент по краях
                 return `
                 <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
                     ${checkIcon}
@@ -1123,7 +1124,6 @@ const App = {
                 </div>`;
             }).join('');
                 
-            // ФІКС: Кнопкам повернуто фон, задано ідеальне коло (border-radius:50%) та заборонено стискатись
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
@@ -1132,13 +1132,13 @@ const App = {
                 headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:50%; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
 
-            // ФІКС 2: Додано overflow:hidden до day-card, щоб кути не стирчали
-            // ФІКС 3: Змінено border-radius дати з 20px на 4px, щоб зробити її прямокутною (як в Nutrition)
-            grid += `<div class="day-card" style="overflow:hidden; border-radius: 16px; ${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
+            // ФІКС КАРТКИ ДНЯ: border-radius: 16px; overflow: hidden; - відрізає гострі кути фону
+            // ФІКС ДАТИ: border-radius: 4px; padding: 2px 6px; - робить її прямокутним бейджиком
+            grid += `<div class="day-card" style="overflow:hidden; border-radius:16px; ${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
                 <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent);">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-size:1.05rem; font-weight:800; color:#fff; text-transform:uppercase;">${dayNames[i]}</span>
-                        <span style="font-size:0.75rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:3px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
+                        <span style="font-size:0.7rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
                     </div>
                     <div style="display:flex; align-items:center; margin-left:auto;">${headerBtns}</div>
                 </div>
