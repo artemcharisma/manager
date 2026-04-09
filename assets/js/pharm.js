@@ -1062,7 +1062,7 @@ const App = {
             </span>`;
         }
     },
-        async renderProtocol(c) {
+            async renderProtocol(c) {
         let weekScrollPos = 0;
         const oldWeekBar = document.querySelector('.week-bar');
         if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
@@ -1103,7 +1103,6 @@ const App = {
                 
                 const isMenuOpen = this.state.openMenu === pillId;
 
-                // Пігулки розштовхують контент по краях
                 return `
                 <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
                     ${checkIcon}
@@ -1127,18 +1126,18 @@ const App = {
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
-                    headerBtns += `<div style="flex-shrink:0; font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:50%; margin-right:8px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
+                    headerBtns += `<div style="flex-shrink:0; font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
-                headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:50%; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
+                headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
 
-            // ФІКС КАРТКИ ДНЯ: border-radius: 16px; overflow: hidden; - відрізає гострі кути фону
-            // ФІКС ДАТИ: border-radius: 4px; padding: 2px 6px; - робить її прямокутним бейджиком
-            grid += `<div class="day-card" style="overflow:hidden; border-radius:16px; ${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
-                <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent);">
+            // ФІКС КАРТКИ ДНЯ: border-top-left-radius: 16px; border-top-right-radius: 16px; - Заокруглюємо сам ФОНОВИЙ КВАДРАТ
+            // ФІКС ДАТИ: border-radius: 4px; padding: 2px 6px; - Прямокутник як у харчуванні
+            grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
+                <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent); border-top-left-radius: 16px; border-top-right-radius: 16px;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-size:1.05rem; font-weight:800; color:#fff; text-transform:uppercase;">${dayNames[i]}</span>
-                        <span style="font-size:0.7rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
+                        <span style="font-size:0.75rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:3px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
                     </div>
                     <div style="display:flex; align-items:center; margin-left:auto;">${headerBtns}</div>
                 </div>
@@ -1204,6 +1203,7 @@ const App = {
         const newWeekBar = document.querySelector('.week-bar');
         if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
     },
+
 
     renderAnalytics(c) {
         c.innerHTML = `
