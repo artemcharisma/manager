@@ -104,10 +104,7 @@
         .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; font-weight: 600; }
         .c-blue .stat-val { color: var(--blue); } .c-green .stat-val { color: var(--green); } .c-purple .stat-val { color: var(--purple); } .c-red .stat-val { color: var(--red); } .c-pink .stat-val { color: var(--pink); } .c-yellow .stat-val { color: var(--yellow); }
         .days-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 15px; width: 100%; box-sizing: border-box; }
-        .day-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; min-height: 220px; display: flex; flex-direction: column; position: relative; }
-        .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 700; color: #fff; padding-bottom: 10px; border-bottom: 1px solid #27272a; }
-        .pill { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #555; background: rgba(255,255,255,0.03); font-size: 0.9rem; }
-        .pill.c-blue { border-color: var(--blue); } .pill.c-green { border-color: var(--green); } .pill.c-purple { border-color: var(--purple); } .pill.c-red { border-color: var(--red); } .pill.c-yellow { border-color: var(--yellow); } .pill.c-pink { border-color: var(--pink); }
+        
         .pill-meta { font-size: 0.7rem; color: #666; margin-left: 8px; }
         .vitals-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 15px; border-top: 1px solid #27272a; }
         .vital-input { background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 8px; font-size: 0.75rem; width: 100%; text-align: center; }
@@ -176,16 +173,13 @@
         @keyframes secret-hint { 0% { transform: scale(1); filter: none; } 50% { transform: scale(1.15) rotate(5deg); background: linear-gradient(135deg, #ef4444, #991b1b); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); border-color: #ef4444; color: #fff; } 100% { transform: scale(1); filter: none; } }
         .brand-icon.hint-active { animation: secret-hint 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        .day-card, .stat-card, .med-card { transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, border-color 0.25s ease; }
-        @keyframes statCardEnter { 0% { opacity: 0; transform: translateY(15px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         .stat-card.animate-enter { opacity: 0; animation: statCardEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes statCardEnter { 0% { opacity: 0; transform: translateY(15px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
         @media (hover: hover) {
             .btn-icon:hover, .edit-toggle:hover { background: var(--bg-element); color: var(--primary); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
             .nav-tab { transition: all 0.2s ease; }
             .nav-tab:hover:not(.active) { background: rgba(255, 255, 255, 0.05); color: var(--primary); box-shadow: inset 0 0 10px rgba(255,255,255,0.02); }
-            .btn-map:hover { background: rgba(255, 255, 255, 0.05) !important; border-color: var(--primary) !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2) !important; transform: none !important; }
-            .day-card:hover, .med-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #444; }
             .btn-save:hover { box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); transform: translateY(-2px); }
             .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .btn-new-section:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--primary); color: var(--primary); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transform: translateY(-1px); }
@@ -201,6 +195,8 @@
         .nav-tab::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(212, 175, 55, 0.1); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease; }
         .nav-tab:active::before { width: 200%; height: 200%; }
 
+        body.modal-active .nav-tabs, body.modal-active .brand, body.modal-active .controls, body.modal-active #sys-fab, body.modal-active #undoFloat { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; transform: translateY(-10px) scale(0.95) !important; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; }
+        body.modal-active #sys-fab, body.editing #sys-fab { opacity: 0 !important; pointer-events: none !important; transform: translateY(80px) scale(0.5) !important; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; }
         .insert-phase-btn { display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; height: 100%; cursor: pointer; transition: 0.2s; opacity: 0.6; }
         .insert-phase-btn span { width: 32px; height: 32px; border-radius: 50%; background: #111; border: 1px dashed var(--green); color: var(--green); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .insert-phase-btn:hover { opacity: 1; transform: scale(1.1); }
@@ -216,74 +212,84 @@
         .pharm-stock:empty::before { content: '📦 шт/мл...'; opacity: 0.4; font-size: 0.65rem; }
 
         /* ==========================================================
-           МОДАЛЬНІ ВІКНА - БЕЗПЕЧНИЙ СКРОЛ ТА 100% ПЕРЕКРИТТЯ
+           ФІКСИ ПЕРЕКРИТТЯ ТА Z-INDEX (ДНІ ТА ВИПАДАЮЧІ МЕНЮ)
+           ========================================================== */
+        .day-card { 
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; 
+            min-height: 220px; display: flex; flex-direction: column; position: relative; 
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; 
+            z-index: 1; /* Базовий рівень */
+        }
+        .pill { 
+            display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; 
+            border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #555; background: rgba(255,255,255,0.03); 
+            font-size: 0.9rem; position: relative; 
+            z-index: 1; 
+        }
+        .pill.c-blue { border-color: var(--blue); } .pill.c-green { border-color: var(--green); } .pill.c-purple { border-color: var(--purple); } .pill.c-red { border-color: var(--red); } .pill.c-yellow { border-color: var(--yellow); } .pill.c-pink { border-color: var(--pink); }
+
+        /* Коли ми наводимо на картку, вона стає вище */
+        @media (hover: hover) {
+            .day-card:hover, .med-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #444; z-index: 500; }
+        }
+        
+        /* КРИТИЧНО: коли відкривається меню, піднімаємо всю картку дня наверх, 
+           щоб меню не обрізалось наступними днями! */
+        .day-card:has(.pill[style*="50"]) { z-index: 9999 !important; }
+        .pill:has(.kebab-menu-dropdown) { z-index: 999 !important; }
+
+
+        /* ==========================================================
+           МОДАЛЬНІ ВІКНА (АБСОЛЮТНИЙ ПРІОРИТЕТ ТА СКРОЛ)
            ========================================================== */
         .modal, #privacyModal, #customPhotoModal { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(5, 5, 5, 0.95) !important; 
+            display: none; position: fixed; inset: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(5, 5, 5, 0.98) !important; 
             z-index: 999999 !important; 
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px); 
-            overflow-y: auto !important; 
-            padding: 40px 15px !important; 
-            box-sizing: border-box; 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            overflow-y: auto !important; overflow-x: hidden !important;
+            flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 40px 15px !important; box-sizing: border-box;
         }
 
-        /* ПРИМУСОВО ВИМИКАЄМО FLEXBOX ДЛЯ ФОРМ (Фікс обрізання на ПК) */
-        .modal[style*="display: flex"], 
-        #privacyModal[style*="display: flex"] { 
-            display: block !important; 
-        }
-
-        /* Фото-вікно залишаємо на Flexbox для центрування картинки */
-        #customPhotoModal[style*="display: flex"], 
-        #customPhotoModal.active { 
+        .modal[style*="display: flex"], #privacyModal[style*="display: flex"], #customPhotoModal.active { 
             display: flex !important; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 0 !important;
         }
 
-        .modal-content, .privacy-modal-content { 
-            background: #121212 !important; 
-            border: 1px solid rgba(255, 255, 255, 0.08) !important; 
-            border-radius: 16px !important; 
-            width: 100% !important; 
-            max-width: 400px !important; 
-            padding: 25px !important; 
-            margin: 0 auto !important; /* Горизонтальне центрування */
-            position: relative !important; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9) !important; 
+        .modal-content, .privacy-modal-content {
+            background: #121212 !important; padding: 25px; border-radius: 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.08); width: 100%; max-width: 400px; 
+            position: relative; margin: 0 auto; flex-shrink: 0 !important; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
         }
 
-        /* Приховуємо системні елементи при відкритих вікнах, але НЕ ламаємо фон */
-        body.modal-active .nav-tabs, 
-        body.modal-active .brand, 
-        body.modal-active .controls, 
-        body.modal-active #sys-fab, 
-        body.modal-active #undoFloat { 
-            opacity: 0 !important; 
-            pointer-events: none !important; 
-        }
-        
+        #customPhotoModal { padding: 0 !important; justify-content: center !important; }
+        .privacy-modal-content { text-align: center; max-width: 300px; margin-top: 10vh !important; }
+        #privacyModal.fade-out { opacity: 0; pointer-events: none; }
         #protocol-modal-overlay { z-index: 9999999 !important; }
 
-        /* Далі дрібні стилі контенту вікон */
-        #customPhotoModal img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .custom-close-btn { position: absolute; top: 15px; right: 15px; color: #fff; background: rgba(30,30,30,0.8); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; z-index: 5001; cursor: pointer; border: 1px solid #333; }
-        .photo-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; z-index: 5002; }
-        #photoNavLeft { left: 15px; } #photoNavRight { right: 15px; }
-
-        .privacy-modal-content { max-width: 320px !important; text-align: center; margin-top: 15vh !important; }
-        .modal-title { margin-top: 0; color: #fff; font-size: 1.2rem; margin-bottom: 20px; font-weight: 800; text-align: center; }
-        .modal-close { position: absolute; top: 15px; right: 15px; color: #666; cursor: pointer; font-size: 1.2rem; }
+        .modal-title { margin-top: 0; color: #fff; font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+        .modal-close { position: absolute; top: 15px; right: 15px; color: #666; cursor: pointer; font-size: 1.2rem; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05); transition: 0.2s; }
+        .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
         
-        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group { margin-bottom: 15px; }
         .input-group label { display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
         .modal-input { width: 100%; padding: 12px; background: #050505; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 0.95rem; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), #fcd34d); color: #000; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-save { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), #fcd34d); color: #000; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 15px; text-transform: uppercase; transition: 0.2s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
+
+        #customPhotoModal img { max-width: 100%; max-height: 100%; object-fit: contain; cursor: grab; transition: transform 0.15s ease-out; }
+        #customPhotoModal.is-zoom img, #customPhotoModal.is-pan img { cursor: grabbing; transition: none; }
+        .custom-close-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: rgba(30,30,30,0.8); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: bold; cursor: pointer; z-index: 5001; border: 1px solid #333; transition: 0.2s; }
+        .custom-close-btn:active { transform: scale(0.9); }
+        
+        .privacy-icon { font-size: 3rem; display: block; margin-bottom: 15px; transition: transform 0.5s; }
+        .privacy-pwd-input { background: #050505; border: 1px solid #333; color: #fff; font-family: 'JetBrains Mono', monospace; letter-spacing: 8px; text-align: center; padding: 15px; width: 100%; margin-bottom: 20px; font-size: 1.5rem; border-radius: 8px; outline: none; box-sizing: border-box; transition: 0.3s; }
+        .privacy-pwd-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+        .btn-privacy-unlock { background: #fff; color: #000; border: none; padding: 15px; width: 100%; font-weight: 800; letter-spacing: 2px; cursor: pointer; border-radius: 8px; transition: 0.3s; }
+        .privacy-modal-content.success { border-color: var(--green) !important; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2) !important; }
+        .privacy-modal-content.success .btn-privacy-unlock { background: var(--green); color: #000; border: 1px solid var(--green); }
 
         .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .compare-col { display: flex; flex-direction: column; gap: 5px; }
@@ -293,19 +299,25 @@
         .btn-compare { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
         body.privacy-mode .btn-compare { display: none !important; }
 
+        .photo-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; z-index: 5002; backdrop-filter: blur(5px); transition: 0.2s; user-select: none; border: 1px solid rgba(255,255,255,0.1); }
+        .photo-nav-btn:active { background: var(--primary); color: #000; }
+        #photoNavLeft { left: 15px; } #photoNavRight { right: 15px; }
+        .photo-week-bar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(10,10,10,0.85); border: 1px solid #333; border-radius: 30px; padding: 6px; z-index: 5002; display: flex; gap: 5px; backdrop-filter: blur(10px); max-width: 90vw; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+        .photo-week-bar::-webkit-scrollbar { display: none; }
+        .p-week { padding: 8px 20px; border-radius: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #888; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .p-week.active { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(212,175,55,0.4); }
+
         .dose-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 6px; margin-top: 5px; }
-        .dose-presets span { font-size: 0.75rem; background: #222; padding: 6px 8px; border-radius: 6px; color: #bbb; cursor: pointer; border: 1px solid #333; text-align: center; }
+        .dose-presets span { font-size: 0.75rem; background: #222; padding: 6px 8px; border-radius: 6px; color: #bbb; cursor: pointer; border: 1px solid #333; text-align: center; transition: 0.2s; }
+        .dose-presets span:hover { border-color: var(--primary); color: #fff; background: #333; }
         .tag-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; min-height: 25px; }
-        .tag-chip { font-size: 0.7rem; background: rgba(255,255,255,0.05); color: #999; border: 1px solid #333; padding: 2px 8px; border-radius: 10px; cursor: pointer; }
+        .tag-chip { font-size: 0.7rem; background: rgba(255,255,255,0.05); color: #999; border: 1px solid #333; padding: 2px 8px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .tag-chip:hover { border-color: var(--primary); color: #fff; }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
+        .checkbox-wrapper input { width: 20px; height: 20px; accent-color: var(--primary); }
         .color-options { display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
         .color-opt { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-        .color-opt.selected { border-color: #fff; transform: scale(1.1); }
-        
-        .privacy-icon { font-size: 3rem; display: block; margin-bottom: 15px; }
-        .privacy-pwd-input { background: #050505; border: 1px solid #333; color: #fff; font-family: 'JetBrains Mono', monospace; letter-spacing: 8px; text-align: center; padding: 15px; width: 100%; margin-bottom: 20px; font-size: 1.5rem; border-radius: 8px; outline: none; box-sizing: border-box; }
-        .btn-privacy-unlock { background: #fff; color: #000; border: none; padding: 15px; width: 100%; font-weight: 800; letter-spacing: 2px; cursor: pointer; border-radius: 8px; }
-        .privacy-modal-content.success { border-color: var(--green) !important; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2) !important; }
-        .privacy-modal-content.success .btn-privacy-unlock { background: var(--green); color: #000; }
+        .color-opt.selected { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
     </style>
 </head>
 <body id="appBody" ontouchstart="">
