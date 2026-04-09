@@ -1150,5 +1150,20 @@ const App = {
         r.readAsText(inp.files[0]);
     }
 };
+// ЗАПОБІЖНИК: Гарантований запис при згортанні/закритті додатку
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && App.saveTimer) {
+        clearTimeout(App.saveTimer);
+        App.saveTimer = null;
+        App.forceSave();
+    }
+});
 
+window.addEventListener('beforeunload', () => {
+    if (App.saveTimer) {
+        clearTimeout(App.saveTimer);
+        App.saveTimer = null;
+        App.forceSave();
+    }
+});
 document.addEventListener('DOMContentLoaded', () => App.init());
