@@ -632,20 +632,23 @@ const App = {
                 opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
             }
             
-            /* === ЧИСТІ СТИЛІ ДЛЯ МЕНЮ === */
-            .pill { overflow: visible !important; }
+            /* === ФІКС ДЛЯ МЕНЮ === */
+            .pill { overflow: visible !important; } /* КРИТИЧНО ВАЖЛИВО! Щоб меню не зрізалося */
             
             .kebab-menu-dropdown {
-                position: absolute; right: 0; top: calc(100% + 5px);
+                position: absolute; right: 0; top: calc(100% + 5px); 
                 background: #18181b; border: 1px solid #3f3f46;
-                border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-                z-index: 99999; min-width: 220px; display: flex; flex-direction: column;
+                border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
+                z-index: 99999 !important; min-width: 220px; display: flex; flex-direction: column;
                 overflow: hidden; animation: fadeEffect 0.2s ease-out; text-align: left;
+                /* ФІКС РАМКИ (щоб hover не робив кути квадратними) */
+                -webkit-mask-image: -webkit-radial-gradient(white, black);
+                transform: translateZ(0);
             }
             .kebab-menu-item {
                 padding: 12px 15px; display: flex; align-items: center; gap: 12px;
-                font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: 0.2s;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
+                font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: background 0.2s;
+                border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent;
             }
             .kebab-menu-item:last-child { border-bottom: none; }
             .kebab-menu-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
@@ -1920,7 +1923,8 @@ const App = {
                 const parts = lastId.split('-');
                 if(parts.length === 3) {
                     oldEl.innerHTML = this.getMenuUI(parts[0], parts[1], parts[2], oldName, false);
-                    if(oldEl.closest('.pill')) oldEl.closest('.pill').style.zIndex = '1';
+                    // Опускаємо попередню пігулку назад
+                    if (oldEl.closest('.pill')) oldEl.closest('.pill').style.zIndex = '1';
                 }
             }
         }
@@ -1931,10 +1935,10 @@ const App = {
         const el = document.getElementById(`menu-${id}`);
         if (el) {
             el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
-            if(el.closest('.pill')) el.closest('.pill').style.zIndex = isOpen ? '50' : '1';
+            // Витягуємо активну пігулку поверх усіх інших, щоб уникнути блимання
+            if (el.closest('.pill')) el.closest('.pill').style.zIndex = isOpen ? '50' : '1';
         }
     },
-
     async deletePillFromWeek(name, w) {
         if(!(await Modal.confirm(`⚠️ ВИДАЛИТИ "${name}" з УСЬОГО тижня ${w}?`, "ОЧИЩЕННЯ ТИЖНЯ", "red"))) return;
         this.pushHistory();
