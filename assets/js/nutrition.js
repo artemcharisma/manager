@@ -135,38 +135,32 @@ const App = {
         window.scrollTo({ left: 0, top: scrollY, behavior: 'instant' });
     },
     
+    // ДОДАНО: Таймер для відкладеного збереження
     saveTimer: null,
     
     save() {
-        // UI оновлюємо миттєво (щоб прогрес-бари реагували без затримки)
+        // UI (прогрес-бари, калорії) оновлюємо миттєво
         this.updateStats();
         
-        // Важкий I/O запис на диск відкладаємо
+        // Важкий I/O запис на диск телефону відкладаємо
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => {
             Utils.save(DB_KEY, this.data);
             this.saveTimer = null;
-        }, 800); // Чекаємо 800мс після останнього вводу
+        }, 800); // Чекаємо 800мс після останнього кліку/вводу
     },
 
+    // ДОДАНО: Екстрений запис
     forceSave() {
-        // Екстрений запис (викликається при закритті/згортанні додатку)
         Utils.save(DB_KEY, this.data);
     },
     
     pushHistory() {
-        // ЗНИЖЕНО З 10 ДО 3: Жорсткий ліміт для запобігання RAM Leak
+        // ЗМІНЕНО З 10 НА 3
         if(this.history.length > 3) this.history.shift();
         this.history.push(JSON.stringify(this.data));
         const undoFloat = document.getElementById('undoFloat');
         if(undoFloat) undoFloat.classList.add('visible');
-    },
-    
-    pushHistory() {
-        if(this.history.length > 10) this.history.shift();
-        this.history.push(JSON.stringify(this.data));
-        const undoFloat = document.getElementById('undoFloat');
-        if(undoFloat) undoFloat.classList.add('visible'); // Показуємо плаваючу кнопку
     },
     
     undo() {
