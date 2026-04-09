@@ -608,7 +608,7 @@ const App = {
                 background: linear-gradient(90deg, var(--primary) 25%, #fff2a8 50%, var(--primary) 75%) !important;
                 background-size: 200% auto !important;
                 animation: goldShimmer 2.5s linear infinite !important;
-                border-radius: 20px !important; /* ФІКС: щоб заповнена лінія не мала гострого краю */
+                border-radius: 20px !important; /* ФІКС КУТІВ */
             }
             @media (hover: hover) {
                 .custom-pill-option:hover { background: #333 !important; }
@@ -633,20 +633,16 @@ const App = {
                 opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
             }
             
-            /* === ФІКС ДЛЯ МЕНЮ === */
-            .pill { overflow: visible !important; } /* КРИТИЧНО ВАЖЛИВО! Щоб меню не зрізалося */
+            .pill { overflow: visible !important; }
             
             .kebab-menu-dropdown {
                 position: absolute; right: 0; top: calc(100% + 5px); 
                 background: #18181b; border: 1px solid #3f3f46;
-                border-radius: 16px; /* Збільшено заокруглення з 12 до 16 */
-                box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
+                border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
                 z-index: 99999 !important; min-width: 220px; display: flex; flex-direction: column;
                 overflow: hidden; animation: fadeEffect 0.2s ease-out; text-align: left;
                 transform: translateZ(0);
             }
-            
-            /* ФІКС: щоб при наведенні на верхній/нижній пункт кути не ставали квадратними */
             .kebab-menu-item:first-child { border-radius: 16px 16px 0 0; }
             .kebab-menu-item:last-child { border-radius: 0 0 16px 16px; border-bottom: none; }
             
@@ -661,7 +657,6 @@ const App = {
         await PhotoDB.init();
         await this.load(); 
     
-        this.migrateVitals();
         this.migrateVitals();
         await this.refreshPhotos();
         this.initCustomDropdown();
@@ -714,7 +709,6 @@ const App = {
             }
         };
 
-        // ФІКС Z-INDEX ПРИ КЛІКУ ПОЗА МЕНЮ
         document.addEventListener('click', (e) => {
             if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
                 const oldId = this.state.openMenu;
@@ -1109,7 +1103,6 @@ const App = {
                 
                 const isMenuOpen = this.state.openMenu === pillId;
 
-                // ОНОВЛЕНА ВЕРСТКА ПІГУЛКИ (Flexbox з відштовхуванням правого блоку)
                 return `
                 <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
                     ${checkIcon}
@@ -1133,18 +1126,18 @@ const App = {
             let headerBtns = '';
             if (this.state.editing) {
                 if (this.pillBuffer) {
-                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
+                    headerBtns += `<div style="font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
                 headerBtns += `<div style="font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
             }
-            // ОНОВЛЕНА ВЕРСТКА ДАТИ ТА ЗАГОЛОВКА
+
             grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
                 <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent);">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-size:1.05rem; font-weight:800; color:#fff; text-transform:uppercase;">${dayNames[i]}</span>
                         <span style="font-size:0.7rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">${headerBtns}</div>
+                    <div style="display:flex; align-items:center; margin-left:auto;">${headerBtns}</div>
                 </div>
                 ${content}
                 <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
@@ -1278,7 +1271,6 @@ const App = {
                         if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: unit };
                         details[detKey].val += val;
 
-                        // ФІКС 4: Графік рахує ВСІ міліграми, ігноруючи колір пігулки!
                         if (unit === 'mg') {
                             const nLow = name.toLowerCase();
                             const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('enan') || nLow.includes('cyp') || nLow.includes('prop') || nLow.includes('omna');
@@ -1427,7 +1419,6 @@ const App = {
             }
         });
     },
-
     toggleDataset(chartType, index, el) {
         const chart = chartType === 'main' ? this.chartInstance : this.measChartInstance;
         if (!chart) return;
@@ -1724,17 +1715,15 @@ const App = {
                 const val = parseFloat(valStr);
 
                 if(!isNaN(val)) { 
-                    const name = p.name.trim().toUpperCase(); // ФІКС 1: Уніфікація назви (щоб не плутав регістр)
+                    const name = p.name.trim().toUpperCase();
                     const dLow = p.dose.trim().toLowerCase();
                     
-                    // ФІКС 2: Жорсткий парсинг одиниць виміру
                     let u = "mg"; 
                     if(dLow.includes("iu") || dLow.includes("од")) u = "IU"; 
                     else if(dLow.includes("mcg") || dLow.includes("мкг")) u = "mcg";
                     else if(dLow.includes("ml") || dLow.includes("мл")) u = "ml";
                     else if(dLow.includes("tab") || dLow.includes("таб")) u = "tab";
 
-                    // ФІКС 3: Розділяємо математику, якщо юзер випадково змішав mg і ml для одного препу
                     const key = `${name}_${u}`; 
 
                     if(!stats[key]) {
@@ -1769,7 +1758,6 @@ const App = {
             let animClass = animate ? 'animate-enter' : '';
             let delayStr = animate ? `animation-delay: ${index * 0.04}s;` : '';
             
-            // Використовуємо v.rawName, бо ключ тепер містить технічну інформацію
             return `<div class="stat-card c-${color} ${animClass}" style="${delayStr}"><span class="stat-val">${parseFloat(v.v.toFixed(2))}${v.u}</span><span class="stat-label">${v.rawName}</span></div>`;
         }).join('') || '';
         
@@ -1910,11 +1898,11 @@ const App = {
         const btnColor = isOpen ? 'var(--primary)' : '#888';
         const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
         
+        // ФІКС: border-radius: 50%
         const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
 
         if (!isOpen) return btn;
 
-        // Тепер пункти використовують чисті CSS класи (без інлайну), тому НЕ будуть блимати, а контейнер обріже кути
         const dropdown = `
             <div class="kebab-menu-dropdown">
                 <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
@@ -1934,7 +1922,6 @@ const App = {
                 </div>
             </div>
         `;
-
         return btn + dropdown;
     },
    toggleMenu(w, d, i, name) {
