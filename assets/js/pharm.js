@@ -1062,7 +1062,7 @@ const App = {
             </span>`;
         }
     },
-    async renderProtocol(c) {
+        async renderProtocol(c) {
         let weekScrollPos = 0;
         const oldWeekBar = document.querySelector('.week-bar');
         if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
@@ -1204,6 +1204,7 @@ const App = {
         const newWeekBar = document.querySelector('.week-bar');
         if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
     },
+
     renderAnalytics(c) {
         c.innerHTML = `
             <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
