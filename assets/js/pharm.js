@@ -1887,38 +1887,48 @@ const App = {
     getMenuUI(w, d, i, name, isOpen) {
         const safeName = name.replace(/'/g, "\\'"); 
         
+        // Іконка шестірні (однакова для обох станів)
         const gearIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
-        const btnColor = isOpen ? 'var(--primary)' : '#888';
-        const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
-        
-        // Кнопка (залишаємо інлайн hover тільки для самої шестірні)
-        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:6px; transition:0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
+        let menuHtml = '';
+        if (isOpen) {
+            // Жорстко позиціонуємо меню absolute, щоб воно не ламало flex-контейнер
+            menuHtml = `
+            <div style="position:absolute; right:0; top:35px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; min-width:210px; display:flex; flex-direction:column; text-align:left; padding:4px 0;">
+                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem;">📋</span> <span>Копіювати</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; color:var(--blue)">📑</span> <span>На всю фазу</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
+                </div>
+                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:var(--red); font-weight:bold; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:1.1rem;">✕</span> <span>Видалити запис</span>
+                </div>
+            </div>`;
+        }
 
-        if (!isOpen) return btn;
+        const btnColor = isOpen ? 'var(--primary)' : 'var(--text)';
+        const btnBg = isOpen ? 'rgba(212,175,55,0.1)' : 'transparent';
+        const btnOpacity = isOpen ? '1' : '0.5';
 
-        // Використовуємо класи .kebab-menu-dropdown та .kebab-menu-item з чистого CSS
-        const dropdown = `
-            <div class="kebab-menu-dropdown" style="font-family:-apple-system, sans-serif; top:36px; padding:0;">
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
-                    <span style="font-size:1.1rem; width:20px; text-align:center;">📋</span> <span>Копіювати</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--blue)">📑</span> <span>На усю фазу</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})">
-                    <span style="font-size:1.1rem; width:20px; text-align:center; color:var(--red)">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
-                </div>
+        // Повертаємо лише ОДИН контейнер з кнопкою (меню лежить всередині неї як absolute)
+        return `
+            <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                ${menuHtml}
+                <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" 
+                      style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:${btnColor}; background:${btnBg}; opacity:${btnOpacity}; border-radius:6px; transition:0.2s;"
+                      onmouseover="this.style.opacity='1'; this.style.color='var(--primary)'" 
+                      onmouseout="if(!${isOpen}){this.style.opacity='0.5'; this.style.color='var(--text)'}">
+                    ${gearIcon}
+                </span>
             </div>
         `;
-
-        return btn + dropdown;
     },
    toggleMenu(w, d, i, name) {
         const id = `${w}-${d}-${i}`;
