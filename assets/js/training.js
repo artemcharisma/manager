@@ -516,17 +516,19 @@ const App = {
         this.renderGuide();
     },
 
+    // ДОДАНО
     saveTimer: null,
 
     save() { 
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => {
-            this.buildIndex(); // Оновлюємо кеш тільки перед реальним записом
-            this.state.save(this.data);
+            this.buildIndex(); // Будуємо індекс максів ТІЛЬКИ перед збереженням
+            this.state.save(this.data); 
             this.saveTimer = null;
         }, 800);
     },
 
+    // ДОДАНО: Екстрений запис
     forceSave() {
         this.buildIndex();
         this.state.save(this.data);
