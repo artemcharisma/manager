@@ -135,9 +135,31 @@ const App = {
         window.scrollTo({ left: 0, top: scrollY, behavior: 'instant' });
     },
     
+    saveTimer: null,
+    
     save() {
-        Utils.save(DB_KEY, this.data);
+        // UI оновлюємо миттєво (щоб прогрес-бари реагували без затримки)
         this.updateStats();
+        
+        // Важкий I/O запис на диск відкладаємо
+        if (this.saveTimer) clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+            Utils.save(DB_KEY, this.data);
+            this.saveTimer = null;
+        }, 800); // Чекаємо 800мс після останнього вводу
+    },
+
+    forceSave() {
+        // Екстрений запис (викликається при закритті/згортанні додатку)
+        Utils.save(DB_KEY, this.data);
+    },
+    
+    pushHistory() {
+        // ЗНИЖЕНО З 10 ДО 3: Жорсткий ліміт для запобігання RAM Leak
+        if(this.history.length > 3) this.history.shift();
+        this.history.push(JSON.stringify(this.data));
+        const undoFloat = document.getElementById('undoFloat');
+        if(undoFloat) undoFloat.classList.add('visible');
     },
     
     pushHistory() {
