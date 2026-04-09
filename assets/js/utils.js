@@ -49,7 +49,8 @@ const GlobalVitals = {
 };
 
 class StateManager {
-    constructor(storageKey, defaultData, maxHistory = 10) {
+    // ЗМІНЕНО: maxHistory з 10 на 3
+    constructor(storageKey, defaultData, maxHistory = 3) {
         this.key = storageKey;
         this.defaultData = defaultData;
         this.maxHistory = maxHistory;
@@ -58,6 +59,7 @@ class StateManager {
     init() { return Utils.load(this.key, this.defaultData); }
     push(data) {
         this.history.push(JSON.stringify(data));
+        // Якщо історія перевищує ліміт, старі кроки видаляються
         if (this.history.length > this.maxHistory) this.history.shift();
     }
     undo(currentData) {
