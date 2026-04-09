@@ -632,28 +632,20 @@ const App = {
                 opacity: 0; cursor: pointer; padding: 0; margin: 0; display: block !important;
             }
             
-            /* === ФІКС ДЛЯ МЕНЮ === */
-            .pill { overflow: visible !important; } /* КРИТИЧНО ВАЖЛИВО! Щоб меню не зрізалося */
+            /* === ЧИСТІ СТИЛІ ДЛЯ МЕНЮ === */
+            .pill { overflow: visible !important; }
             
             .kebab-menu-dropdown {
-                position: absolute; 
-                right: 0; 
-                top: calc(100% + 5px); /* З'являється чітко під іконкою */
-                background: #18181b; 
-                border: 1px solid #3f3f46;
-                border-radius: 12px; 
-                box-shadow: 0 10px 40px rgba(0,0,0,0.9); /* Посилили тінь */
-                z-index: 99999 !important; /* Поставили вище за все */
-                min-width: 220px; 
-                display: flex; 
-                flex-direction: column;
-                overflow: hidden; 
-                animation: fadeEffect 0.2s ease-out;
+                position: absolute; right: 0; top: calc(100% + 5px);
+                background: #18181b; border: 1px solid #3f3f46;
+                border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+                z-index: 99999; min-width: 220px; display: flex; flex-direction: column;
+                overflow: hidden; animation: fadeEffect 0.2s ease-out; text-align: left;
             }
             .kebab-menu-item {
                 padding: 12px 15px; display: flex; align-items: center; gap: 12px;
                 font-size: 0.85rem; color: #e4e4e7; cursor: pointer; transition: 0.2s;
-                border-bottom: 1px solid rgba(255,255,255,0.05); /* Легкий розділювач */
+                border-bottom: 1px solid rgba(255,255,255,0.05);
             }
             .kebab-menu-item:last-child { border-bottom: none; }
             .kebab-menu-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
@@ -663,12 +655,8 @@ const App = {
         await this.load(); 
     
         this.migrateVitals();
-        
-        // --- ЗАПУСК МІГРАЦІЇ НА ГЛОБАЛЬНІ ПОКАЗНИКИ ---
         this.migrateVitals();
-        
         await this.refreshPhotos();
-        
         this.initCustomDropdown();
         
         const now = new Date();
@@ -713,25 +701,27 @@ const App = {
             if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('gold_protocol');
                 localStorage.removeItem('pharm_manual_lock');
-                localStorage.removeItem('protocol_global_vitals'); // Очищення глобальної бази
+                localStorage.removeItem('protocol_global_vitals'); 
                 try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
                 location.reload();
             }
         };
-        document.addEventListener('click', (e) => {
-                if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
-                    const oldId = this.state.openMenu;
-                    this.state.openMenu = null;
-                    const oldEl = document.getElementById(`menu-${oldId}`);
-                    if(oldEl) {
-                        const name = oldEl.getAttribute('data-name') || '';
-                        const [w, d, i] = oldId.split('-');
-                        oldEl.innerHTML = this.getMenuUI(w, d, i, name, false);
-                    }
-                }
-            });
-        },
 
+        // ФІКС Z-INDEX ПРИ КЛІКУ ПОЗА МЕНЮ
+        document.addEventListener('click', (e) => {
+            if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
+                const oldId = this.state.openMenu;
+                this.state.openMenu = null;
+                const oldEl = document.getElementById(`menu-${oldId}`);
+                if(oldEl) {
+                    const name = oldEl.getAttribute('data-name') || '';
+                    const [w, d, i] = oldId.split('-');
+                    oldEl.innerHTML = this.getMenuUI(w, d, i, name, false);
+                    if(oldEl.closest('.pill')) oldEl.closest('.pill').style.zIndex = '1';
+                }
+            }
+        });
+    },
     // НОВА ФУНКЦІЯ: Міграція старих даних у GlobalVitals
     migrateVitals() {
         let migrated = false;
@@ -1887,48 +1877,37 @@ const App = {
     getMenuUI(w, d, i, name, isOpen) {
         const safeName = name.replace(/'/g, "\\'"); 
         
-        // Іконка шестірні (однакова для обох станів)
         const gearIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
-        let menuHtml = '';
-        if (isOpen) {
-            // Жорстко позиціонуємо меню absolute, щоб воно не ламало flex-контейнер
-            menuHtml = `
-            <div style="position:absolute; right:0; top:35px; background:#18181b; border:1px solid #3f3f46; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.9); z-index:99999; min-width:210px; display:flex; flex-direction:column; text-align:left; padding:4px 0;">
-                <div onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem;">📋</span> <span>Копіювати</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; color:var(--blue)">📑</span> <span>На всю фазу</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; color:#f59e0b">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:#e4e4e7; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem; color:var(--red)">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})" style="padding:12px 15px; display:flex; align-items:center; gap:12px; font-size:0.85rem; color:var(--red); font-weight:bold; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                    <span style="font-size:1.1rem;">✕</span> <span>Видалити запис</span>
-                </div>
-            </div>`;
-        }
+        const btnColor = isOpen ? 'var(--primary)' : '#888';
+        const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
+        
+        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:6px; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
 
-        const btnColor = isOpen ? 'var(--primary)' : 'var(--text)';
-        const btnBg = isOpen ? 'rgba(212,175,55,0.1)' : 'transparent';
-        const btnOpacity = isOpen ? '1' : '0.5';
+        if (!isOpen) return btn;
 
-        // Повертаємо лише ОДИН контейнер з кнопкою (меню лежить всередині неї як absolute)
-        return `
-            <div style="position:relative; display:flex; align-items:center; justify-content:center;">
-                ${menuHtml}
-                <span onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" 
-                      style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; cursor:pointer; color:${btnColor}; background:${btnBg}; opacity:${btnOpacity}; border-radius:6px; transition:0.2s;"
-                      onmouseover="this.style.opacity='1'; this.style.color='var(--primary)'" 
-                      onmouseout="if(!${isOpen}){this.style.opacity='0.5'; this.style.color='var(--text)'}">
-                    ${gearIcon}
-                </span>
+        // Тепер пункти використовують чисті CSS класи (без інлайну), тому НЕ будуть блимати, а контейнер обріже кути
+        const dropdown = `
+            <div class="kebab-menu-dropdown">
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
+                    <span style="width:20px; text-align:center; font-size:1.1rem;">📋</span> <span>Копіювати</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})">
+                    <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--blue);">📑</span> <span>На усю фазу</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})">
+                    <span style="width:20px; text-align:center; font-size:1.1rem; color:#f59e0b;">🗓️</span> <span>Видалити з тижня</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
+                    <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">🌍</span> <span>Видалити до кінця фази</span>
+                </div>
+                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})">
+                    <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
+                </div>
             </div>
         `;
+
+        return btn + dropdown;
     },
    toggleMenu(w, d, i, name) {
         const id = `${w}-${d}-${i}`;
