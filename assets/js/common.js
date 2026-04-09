@@ -158,7 +158,6 @@ const Modal = {
 
     close() {
         this.overlay.className = '';
-        setTimeout(() => modalResolve = null, 300);
     },
 
     async alert(text, title = "УВАГА", theme = "gold") { return this.show({ text, title, theme, type: 'alert' }); },
