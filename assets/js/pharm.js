@@ -218,7 +218,7 @@ const App = {
 
     stateManager: new StateManager('gold_protocol', DefaultData),
     
-    state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0 },
+    state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0, photoModalTicking: false },
     
     chartInstance: null,
     measChartInstance: null,
@@ -383,7 +383,15 @@ const App = {
                 
                 this.calculatePhotoBoundary(newImg);
                 this.enforcePhotoBoundary();
-                this.updatePhotoTransform();
+                
+                // Рендер через rAF (знімає лаги)
+                if (!this.state.photoModalTicking) {
+                    window.requestAnimationFrame(() => {
+                        this.updatePhotoTransform();
+                        this.state.photoModalTicking = false;
+                    });
+                    this.state.photoModalTicking = true;
+                }
             }
             else if (this.state.photoModalIsPanning && e.touches.length === 1 && !this.state.photoModalIsZooming) {
                 let newX = e.touches[0].clientX - this.state.photoModalTouchStart.x;
@@ -400,7 +408,15 @@ const App = {
 
                 this.state.photoModalTranslate.x = newX;
                 this.state.photoModalTranslate.y = newY;
-                this.updatePhotoTransform();
+                
+                // Рендер через rAF
+                if (!this.state.photoModalTicking) {
+                    window.requestAnimationFrame(() => {
+                        this.updatePhotoTransform();
+                        this.state.photoModalTicking = false;
+                    });
+                    this.state.photoModalTicking = true;
+                }
             }
         }, { passive: false });
 
@@ -1172,7 +1188,7 @@ const App = {
         const meas = GlobalVitals.get(mondayDateStr);
         const statsHtml = this.getStatsHtml(this.state.week);
 
-        c.innerHTML = `
+        const finalHtml = `
             <div class="stats-grid" id="stats-container">${statsHtml}</div>
             <div class="week-bar">${wHtml}</div>
             ${pasteToWeekHtml}
@@ -1200,8 +1216,12 @@ const App = {
                 <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
             </div>`;
 
-        const newWeekBar = document.querySelector('.week-bar');
-        if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
+        // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
+        window.requestAnimationFrame(() => {
+            c.innerHTML = finalHtml;
+            const newWeekBar = document.querySelector('.week-bar');
+            if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
+        });
     },
 
 
@@ -1320,7 +1340,13 @@ const App = {
         const y1Max = Math.ceil(maxWeight + 2);
     
         if (this.chartInstance) { this.chartInstance.destroy(); this.chartInstance = null; }
-        const ctx = document.getElementById('mainChart').getContext('2d');
+        const chartContainer = document.getElementById('mainChart').parentNode;
+        document.getElementById('mainChart').remove();
+        const newMainCanvas = document.createElement('canvas');
+        newMainCanvas.id = 'mainChart';
+        newMainCanvas.style.touchAction = 'pan-y';
+        chartContainer.appendChild(newMainCanvas);
+        const ctx = newMainCanvas.getContext('2d');
         
         const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
         gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.2)'); 
@@ -1382,7 +1408,13 @@ const App = {
         });
 
         if (this.measChartInstance) { this.measChartInstance.destroy(); this.measChartInstance = null; }
-        const ctxMeas = document.getElementById('measChart').getContext('2d');
+        const measContainer = document.getElementById('measChart').parentNode;
+        document.getElementById('measChart').remove();
+        const newMeasCanvas = document.createElement('canvas');
+        newMeasCanvas.id = 'measChart';
+        newMeasCanvas.style.touchAction = 'pan-y';
+        measContainer.appendChild(newMeasCanvas);
+        const ctxMeas = newMeasCanvas.getContext('2d');
         
         this.measChartInstance = new Chart(ctxMeas, {
             type: 'line',
