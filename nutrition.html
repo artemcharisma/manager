@@ -446,7 +446,7 @@
 
     <div class="hud">
         <div class="hud-hero">
-            <span class="k-label">DAILY INTAKE</span>
+            <span class="k-label">TOTAL INTAKE</span>
             <div class="k-val-wrap">
                 <span class="k-val" id="disp-k">0</span>
                 <span class="k-target">/ <span id="disp-k-hero-target">0</span></span>
@@ -455,19 +455,16 @@
 
         <div class="hud-grid">
             <div class="glass-badge" onclick="App.openTargets()">
-                <div class="gb-icon">🎯</div>
-                <div class="gb-val"><span id="disp-target" style="color: var(--theme);">0</span></div>
-                <div class="gb-title">ЦІЛЬ (KCAL)</div>
+                <div class="gb-val"><span id="disp-target" style="color: #fff;">0</span><small>kcal</small></div>
+                <div class="gb-title">TARGET</div>
             </div>
             <div class="glass-badge" onclick="App.editWater()">
-                <div class="gb-icon">💧</div>
-                <div class="gb-val"><span id="disp-w" style="color: var(--p-color);">0.00</span></div>
-                <div class="gb-title">ВОДА (L)</div>
+                <div class="gb-val"><span id="disp-w" style="color: var(--p-color);">0.00</span><small>L</small></div>
+                <div class="gb-title">WATER</div>
             </div>
             <div class="glass-badge" id="trend-badge" style="cursor: default;">
-                <div class="gb-icon">⚖️</div>
                 <div class="gb-val"><span id="disp-weight-avg">--</span><small id="disp-weight-delta"></small></div>
-                <div class="gb-title">ВАГА (KG)</div>
+                <div class="gb-title">WEIGHT</div>
             </div>
         </div>
         
@@ -479,11 +476,11 @@
                         <span class="mr-pct" id="lbl-p">0%</span>
                     </div>
                     <div class="mr-vals">
-                        <span class="mr-current" id="disp-p">0g</span>
+                        <span class="mr-current" id="disp-p">0</span>
                         <span class="mr-target-val">/ <span id="tgt-p">0</span>g</span>
                     </div>
                 </div>
-                <div class="mr-track"><div class="mr-fill" id="bar-p" style="width:0%; background:var(--p-color); box-shadow: 0 0 12px var(--p-color);"></div></div>
+                <div class="mr-track"><div class="mr-fill" id="bar-p" style="width:0%; background:var(--p-color)"></div></div>
             </div>
             <div class="macro-row">
                 <div class="mr-top">
@@ -492,11 +489,11 @@
                         <span class="mr-pct" id="lbl-f">0%</span>
                     </div>
                     <div class="mr-vals">
-                        <span class="mr-current" id="disp-f">0g</span>
+                        <span class="mr-current" id="disp-f">0</span>
                         <span class="mr-target-val">/ <span id="tgt-f">0</span>g</span>
                     </div>
                 </div>
-                <div class="mr-track"><div class="mr-fill" id="bar-f" style="width:0%; background:var(--f-color); box-shadow: 0 0 12px var(--f-color);"></div></div>
+                <div class="mr-track"><div class="mr-fill" id="bar-f" style="width:0%; background:var(--f-color)"></div></div>
             </div>
             <div class="macro-row">
                 <div class="mr-top">
@@ -505,11 +502,25 @@
                         <span class="mr-pct" id="lbl-c">0%</span>
                     </div>
                     <div class="mr-vals">
-                        <span class="mr-current" id="disp-c">0g</span>
+                        <span class="mr-current" id="disp-c">0</span>
                         <span class="mr-target-val">/ <span id="tgt-c">0</span>g</span>
                     </div>
                 </div>
-                <div class="mr-track"><div class="mr-fill" id="bar-c" style="width:0%; background:var(--c-color); box-shadow: 0 0 12px var(--c-color);"></div></div>
+                <div class="mr-track"><div class="mr-fill" id="bar-c" style="width:0%; background:var(--c-color)"></div></div>
+            </div>
+        </div>
+
+        <div class="macro-ratio-wrapper">
+            <div class="mr-header">MACROS SPLIT</div>
+            <div class="stacked-bar">
+                <div id="stack-p" style="width: 0%; background: var(--p-color);"></div>
+                <div id="stack-f" style="width: 0%; background: var(--f-color);"></div>
+                <div id="stack-c" style="width: 0%; background: var(--c-color);"></div>
+            </div>
+            <div class="stacked-labels">
+                <div class="s-label"><span class="dot" style="background: var(--p-color);"></span>P <b id="lbl-p-bot">0%</b></div>
+                <div class="s-label"><span class="dot" style="background: var(--f-color);"></span>F <b id="lbl-f-bot">0%</b></div>
+                <div class="s-label"><span class="dot" style="background: var(--c-color);"></span>C <b id="lbl-c-bot">0%</b></div>
             </div>
         </div>
     </div>
