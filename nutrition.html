@@ -212,27 +212,28 @@
         .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; white-space: nowrap; }
 
         /* --- ПРЕМІУМ HUD (ГЕРОЙ + СІТКА) --- */
-        .hud-hero { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; }
-        .hud-hero .k-label { font-size: 0.65rem; color: #777; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 2px; }
-        .hud-hero .k-val-wrap { display: flex; justify-content: center; align-items: baseline; gap: 4px; }
-        .hud-hero .k-val { font-family: var(--font-mono); font-size: 3.2rem; font-weight: 800; line-height: 1; color: #fff; letter-spacing: -2px; }
-        .hud-hero .k-unit { color: #555; font-weight: 700; font-size: 0.85rem; font-family: var(--font-mono); }
+        .hud-hero { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; }
+        .hud-hero .k-label { font-size: 0.7rem; color: var(--theme); font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+        .hud-hero .k-val-wrap { display: flex; justify-content: center; align-items: baseline; gap: 6px; }
+        .hud-hero .k-val { font-family: var(--font-mono); font-size: 3.8rem; font-weight: 800; line-height: 1; color: #fff; letter-spacing: -2px; }
+        .hud-hero .k-unit { color: #666; font-weight: 700; font-size: 1rem; font-family: var(--font-mono); }
 
-        .hud-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .hud-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
         .glass-badge {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 10px 4px;
+            background: #18181b; /* Преміальний темний цинк */
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 16px 8px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: 0.2s; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .glass-badge:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.06); }
-        .gb-icon { font-size: 1.1rem; margin-bottom: 4px; opacity: 0.9; }
-        .gb-title { font-size: 0.55rem; color: #666; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
-        .gb-val { display: flex; align-items: baseline; gap: 2px; }
-        .gb-val span { font-family: var(--font-mono); font-size: 1rem; font-weight: 800; color: #fff; }
-        .gb-val small { font-size: 0.6rem; color: #555; font-weight: 700; font-family: var(--font-mono); }
+        .glass-badge:active { transform: scale(0.96); background: #27272a; border-color: var(--theme); }
+        .gb-icon { font-size: 1.4rem; margin-bottom: 8px; line-height: 1; opacity: 0.9; }
+        .gb-val { display: flex; align-items: baseline; gap: 3px; margin-bottom: 4px; }
+        .gb-val span { font-family: var(--font-mono); font-size: 1.15rem; font-weight: 800; color: #fff; line-height: 1; }
+        .gb-val small { font-size: 0.65rem; color: #777; font-weight: 700; font-family: var(--font-mono); }
+        .gb-title { font-size: 0.55rem; color: #666; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
         /* --- 5. MEALS LIST --- */
         @keyframes popIn {
             0% { opacity: 0; transform: translateY(15px) scale(0.96); }
@@ -437,18 +438,18 @@
         <div class="hud-grid">
             <div class="glass-badge" onclick="App.openTargets()">
                 <div class="gb-icon">🎯</div>
-                <div class="gb-title">ЦІЛЬ</div>
                 <div class="gb-val"><span id="disp-target" style="color: var(--theme);">0</span><small>kcal</small></div>
+                <div class="gb-title">ЦІЛЬ</div>
             </div>
             <div class="glass-badge" onclick="App.editWater()">
                 <div class="gb-icon">💧</div>
-                <div class="gb-title">ВОДА</div>
                 <div class="gb-val"><span id="disp-w" style="color: var(--p-color);">0.00</span><small>L</small></div>
+                <div class="gb-title">ВОДА</div>
             </div>
             <div class="glass-badge" id="trend-badge" style="cursor: default;">
                 <div class="gb-icon" style="filter: grayscale(1);">⚖️</div>
-                <div class="gb-title">ВАГА</div>
                 <div class="gb-val"><span id="disp-weight-avg">--</span><small id="disp-weight-delta">kg</small></div>
+                <div class="gb-title">ВАГА</div>
             </div>
         </div>
         
