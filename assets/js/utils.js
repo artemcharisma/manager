@@ -61,6 +61,32 @@ const GlobalVitals = {
         const dates = Object.keys(all).sort((a, b) => new Date(b) - new Date(a));
         for (let d of dates) { if (all[d].w) return parseFloat(all[d].w); }
         return null;
+    },
+    // НОВИЙ МЕТОД: Розрахунок середньотижневої дельти
+    getWeightTrend() {
+        const all = this.getAll();
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        let currentSum = 0, currentCount = 0;
+        let prevSum = 0, prevCount = 0;
+
+        // Рахуємо середню вагу за останні 7 днів і за попередні 7 днів (8-14 днів тому)
+        for(let i=0; i<7; i++) {
+            let d1 = new Date(today); d1.setDate(d1.getDate() - i);
+            let v1 = all[this.formatDate(d1)];
+            if (v1 && v1.w) { currentSum += parseFloat(v1.w); currentCount++; }
+
+            let d2 = new Date(today); d2.setDate(d2.getDate() - (i + 7));
+            let v2 = all[this.formatDate(d2)];
+            if (v2 && v2.w) { prevSum += parseFloat(v2.w); prevCount++; }
+        }
+
+        const currentAvg = currentCount > 0 ? (currentSum / currentCount) : null;
+        const prevAvg = prevCount > 0 ? (prevSum / prevCount) : null;
+        const delta = (currentAvg !== null && prevAvg !== null) ? (currentAvg - prevAvg) : null;
+
+        return { currentAvg, prevAvg, delta };
     }
 };
 
