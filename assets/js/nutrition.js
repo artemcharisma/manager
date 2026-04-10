@@ -693,10 +693,11 @@ const App = {
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
         
         // ОНОВЛЕННЯ ЗНАЧЕННЯ ЦІЛІ В HERO
+        // ОНОВЛЕННЯ ЗНАЧЕННЯ ЦІЛІ В HERO
         const heroTarget = document.getElementById('disp-k-hero-target');
         if(heroTarget) heroTarget.innerText = tg.k;
 
-        // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ (НОВИЙ STACKED BAR)
+        // РОЗРАХУНОК ВІДСОТКІВ
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
         let pPct = 0, fPct = 0, cPct = 0;
         if (totalMacroKcal > 0) {
@@ -711,33 +712,30 @@ const App = {
             pPct += diff; 
         }
 
-        const stackP = document.getElementById('stack-p');
-        const stackF = document.getElementById('stack-f');
-        const stackC = document.getElementById('stack-c');
-        const lblP = document.getElementById('lbl-p');
-        const lblF = document.getElementById('lbl-f');
-        const lblC = document.getElementById('lbl-c');
-
-        if(stackP && stackF && stackC) {
-            stackP.style.width = pPct + '%';
-            stackF.style.width = fPct + '%';
-            stackC.style.width = cPct + '%';
-            
-            lblP.innerText = pPct + '%';
-            lblF.innerText = fPct + '%';
-            lblC.innerText = cPct + '%';
-        }
+        // Вписуємо дані в новий інтерфейс
+        const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
         
-        const updateBar = (id, val, max) => {
-            const el = document.getElementById('bar-'+id);
-            const txt = document.getElementById('disp-'+id);
-            if(el && txt) {
-                const pct = Math.min(100, (val/max)*100);
-                el.style.width = pct + '%';
-                txt.innerText = Math.round(val) + 'г (' + Math.round(pct) + '%)';
+        setVal('lbl-p', pPct + '%');
+        setVal('lbl-f', fPct + '%');
+        setVal('lbl-c', cPct + '%');
+
+        setVal('tgt-p', Math.round(tg.p));
+        setVal('tgt-f', Math.round(tg.f));
+        setVal('tgt-c', Math.round(tg.c));
+
+        const updateBar = (id, currentVal, targetVal) => {
+            const barEl = document.getElementById('bar-'+id);
+            const textEl = document.getElementById('disp-'+id);
+            if(barEl && textEl) {
+                const fillPct = Math.min(100, (currentVal / (targetVal || 1)) * 100);
+                barEl.style.width = fillPct + '%';
+                textEl.innerText = Math.round(currentVal) + 'g';
             }
         };
-        updateBar('p', t.p, tg.p); updateBar('f', t.f, tg.f); updateBar('c', t.c, tg.c);
+
+        updateBar('p', t.p, tg.p);
+        updateBar('f', t.f, tg.f);
+        updateBar('c', t.c, tg.c);
     },
     searchFood(q) {
         const list = document.getElementById('sugg-list');
