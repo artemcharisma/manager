@@ -637,58 +637,60 @@ const App = {
             if(t.k > tg.k) dispK.style.color = 'var(--danger)'; else dispK.style.color = '#fff';
         }
         
-        // --- ВІДНОВЛЕНИЙ КОД: ОНОВЛЕННЯ ЦІЛІ НА ЕКРАНІ ---
         const dispT = document.getElementById('disp-target');
         if(dispT) dispT.innerText = tg.k;
-        // -------------------------------------------------
         
         const dispW = document.getElementById('disp-w');
-        if(dispW) dispW.innerText = (day.water || 0).toFixed(2); // Показуємо 2 знаки (напр. 2.50)
-        // ОНОВЛЕННЯ ЕЛЕКТРОЛІТІВ (якщо є елементи в UI для їх показу, інакше просто зберігаємо в об'єкті)
+        if(dispW) dispW.innerText = (day.water || 0).toFixed(2);
+        
+        // --- СМАРТ АНАЛІТИКА ВАГИ (БЕЗПЕЧНИЙ БЛОК) ---
+        try {
+            if (typeof GlobalVitals !== 'undefined' && typeof GlobalVitals.getWeightTrend === 'function') {
+                const trend = GlobalVitals.getWeightTrend();
+                const dispWAvg = document.getElementById('disp-weight-avg');
+                const dispWDelta = document.getElementById('disp-weight-delta');
+                const badge = document.getElementById('trend-badge');
+                
+                if (dispWAvg && dispWDelta && badge) {
+                    if (trend.currentAvg !== null) {
+                        dispWAvg.innerText = trend.currentAvg.toFixed(1);
+                        if (trend.delta !== null) {
+                            const d = trend.delta;
+                            if (d <= -0.1) {
+                                dispWDelta.innerText = `▼${Math.abs(d).toFixed(1)}`;
+                                dispWDelta.style.color = 'var(--success)'; 
+                                badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                            } else if (d >= 0.1) {
+                                dispWDelta.innerText = `▲${d.toFixed(1)}`;
+                                dispWDelta.style.color = 'var(--danger)'; 
+                                badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                            } else {
+                                dispWDelta.innerText = `▶ ${Math.abs(d).toFixed(1)}`;
+                                dispWDelta.style.color = 'var(--theme)'; 
+                                badge.style.borderColor = 'rgba(212, 175, 55, 0.3)';
+                            }
+                        } else {
+                            dispWDelta.innerText = "kg";
+                            dispWDelta.style.color = "#666";
+                            badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        }
+                    } else {
+                        dispWAvg.innerText = "--";
+                        dispWDelta.innerText = "kg";
+                        badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                }
+            }
+        } catch(e) {
+            console.error("Помилка розрахунку тренду:", e);
+        }
+        // ----------------------------------------------
+
         const dispNa = document.getElementById('disp-na');
         const dispK_el = document.getElementById('disp-k-el');
         if(dispNa) dispNa.innerText = day.na || 0;
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
-        // --- СМАРТ АНАЛІТИКА ВАГИ (ТРЕНД) ---
-        if (typeof GlobalVitals !== 'undefined') {
-            const trend = GlobalVitals.getWeightTrend();
-            const dispWAvg = document.getElementById('disp-weight-avg');
-            const dispWDelta = document.getElementById('disp-weight-delta');
-            const badge = document.getElementById('trend-badge');
-            
-            if (dispWAvg && dispWDelta && badge) {
-                if (trend.currentAvg !== null) {
-                    dispWAvg.innerText = trend.currentAvg.toFixed(1);
-                    if (trend.delta !== null) {
-                        const d = trend.delta;
-                        // Підсвічуємо динаміку
-                        if (d <= -0.1) {
-                            dispWDelta.innerText = `▼${Math.abs(d).toFixed(1)}`;
-                            dispWDelta.style.color = 'var(--success)'; // Зелений (Сушка йде успішно)
-                            badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-                        } else if (d >= 0.1) {
-                            dispWDelta.innerText = `▲${d.toFixed(1)}`;
-                            dispWDelta.style.color = 'var(--danger)'; // Червоний (Набір або залило)
-                            badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-                        } else {
-                            dispWDelta.innerText = `▶ ${Math.abs(d).toFixed(1)}`;
-                            dispWDelta.style.color = 'var(--theme)'; // Жовтий (Плато/Стагнація)
-                            badge.style.borderColor = 'rgba(212, 175, 55, 0.3)';
-                        }
-                    } else {
-                        dispWDelta.innerText = "kg";
-                        dispWDelta.style.color = "#666";
-                        badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    }
-                } else {
-                    dispWAvg.innerText = "--";
-                    dispWDelta.innerText = "kg";
-                    badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                }
-            }
-        }
-        // ------------------------------------
-        // ОНОВЛЕННЯ ВІДСОТКІВ МАКРОСІВ
+        
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
         let pPct = 0, fPct = 0, cPct = 0;
         if (totalMacroKcal > 0) {
