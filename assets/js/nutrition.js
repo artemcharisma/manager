@@ -156,35 +156,33 @@ const App = {
     },
     
     pushHistory() {
-        // ЗМІНЕНО З 10 НА 3
         if(this.history.length > 3) this.history.shift();
-        this.history.push(JSON.stringify(this.data));
+        // Використовуємо новий швидкий метод з utils.js
+        this.history.push(Utils.deepClone(this.data));
         const undoFloat = document.getElementById('undoFloat');
         if(undoFloat) undoFloat.classList.add('visible');
     },
     
     undo() {
         if(!this.history.length) return;
-        this.data = JSON.parse(this.history.pop());
+        // Відновлюємо безпечно клонований стейт
+        this.data = Utils.deepClone(this.history.pop());
         
-        // Ховаємо кнопку, якщо історія пуста
         if(!this.history.length) {
             const undoFloat = document.getElementById('undoFloat');
             if(undoFloat) undoFloat.classList.remove('visible');
         }
         
-        // Безпечна перевірка існування дня
         if(!this.data.days.find(d => d.id === this.state.currentDayId)) {
             this.state.currentDayId = this.data.days.length > 0 ? this.data.days[0].id : null;
         }
         
         this.save(); 
-        this.renderDaysBar(); // КРИТИЧНО: Перемальовуємо панель днів (для ПК скролу)
-        this.render(false);   // Перемальовуємо контент без анімації стрибків
+        this.renderDaysBar(); 
+        this.render(false);   
         
         if(window.Haptics) window.Haptics.light();
     },
-
     getCurrentDay() {
         return this.data.days.find(d => d.id === this.state.currentDayId);
     },
