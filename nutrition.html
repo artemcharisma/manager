@@ -211,6 +211,28 @@
         .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
         .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; white-space: nowrap; }
 
+        /* --- ПРЕМІУМ HUD (ГЕРОЙ + СІТКА) --- */
+        .hud-hero { text-align: center; margin-bottom: 25px; margin-top: 5px; }
+        .hud-hero .k-label { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; letter-spacing: 2px; margin-bottom: 5px; }
+        .hud-hero .k-val-wrap { display: flex; justify-content: center; align-items: baseline; gap: 6px; }
+        .hud-hero .k-val { font-family: var(--font-mono); font-size: 4.5rem; font-weight: 800; line-height: 0.85; color: #fff; letter-spacing: -3px; }
+        .hud-hero .k-unit { color: #555; font-weight: 700; font-size: 1rem; }
+
+        .hud-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .glass-badge {
+            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(0,0,0,0.2));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 14px 5px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.2s; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+        }
+        .glass-badge:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
+        .gb-icon { font-size: 1.4rem; margin-bottom: 6px; line-height: 1; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
+        .gb-title { font-size: 0.6rem; color: #777; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+        .gb-val { display: flex; align-items: baseline; gap: 2px; }
+        .gb-val span { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; color: #fff; }
+        .gb-val small { font-size: 0.65rem; color: #555; font-weight: 700; font-family: var(--font-mono); }
         /* --- 5. MEALS LIST --- */
         @keyframes popIn {
             0% { opacity: 0; transform: translateY(15px) scale(0.96); }
@@ -404,28 +426,29 @@
 
 
     <div class="hud">
-        <div class="hud-header">
-            <div class="k-group">
+        <div class="hud-hero">
+            <span class="k-label">СПОЖИТО СЬОГОДНІ</span>
+            <div class="k-val-wrap">
                 <span class="k-val" id="disp-k">0</span>
-                <span class="k-label">ККАЛ СЬОГОДНІ</span>
+                <span class="k-unit">ккал</span>
             </div>
-            
-            <div class="hud-badges">
-                <div class="target-badge" onclick="App.openTargets()">
-                    <div style="display:flex; align-items:center; gap:2px;"><span style="font-size:1rem; line-height:1; display:inline-block; width:20px; text-align:center;">🎯</span> <span style="margin-top:3px;">ЦІЛЬ:</span></div>
-                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-target" style="color:var(--theme); font-weight:800; font-size:1.1rem;">0</span><small style="color:#666; font-size:0.65rem; font-weight:700;">ккал</small></div>
-                </div>
-                <div class="water-badge" onclick="App.editWater()">
-                    <div style="display:flex; align-items:center; gap:2px;"><span style="font-size:1rem; line-height:1; display:inline-block; width:20px; text-align:center;">💧</span> <span style="margin-top:3px;">ВОДА:</span></div>
-                    <div style="display:flex; align-items:baseline; gap:3px;"><span id="disp-w" style="color:var(--p-color); font-weight:800; font-size:1.1rem;">0.00</span><small style="color:#666; font-size:0.65rem; font-weight:700;">L</small></div>
-                </div>
-                <div id="trend-badge" style="display:flex; justify-content:space-between; align-items:center; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:8px 12px; border-radius:12px; font-family:var(--font-mono); font-size:0.75rem; color:#888; transition:0.3s; cursor:default;">
-                    <div style="display:flex; align-items:center; gap:2px;"><span style="font-size:1rem; line-height:1; display:inline-block; width:20px; text-align:center;">⚖️</span> <span style="margin-top:3px;">ВАГА:</span></div>
-                    <div style="display:flex; align-items:baseline; gap:4px;">
-                        <span id="disp-weight-avg" style="color:#fff; font-weight:800; font-size:1.1rem;">--</span>
-                        <small id="disp-weight-delta" style="color:#666; font-size:0.65rem; font-weight:700;">kg</small>
-                    </div>
-                </div>
+        </div>
+
+        <div class="hud-grid">
+            <div class="glass-badge" onclick="App.openTargets()">
+                <div class="gb-icon">🎯</div>
+                <div class="gb-title">ЦІЛЬ</div>
+                <div class="gb-val"><span id="disp-target" style="color: var(--theme);">0</span><small>kcal</small></div>
+            </div>
+            <div class="glass-badge" onclick="App.editWater()">
+                <div class="gb-icon">💧</div>
+                <div class="gb-title">ВОДА</div>
+                <div class="gb-val"><span id="disp-w" style="color: var(--p-color);">0.00</span><small>L</small></div>
+            </div>
+            <div class="glass-badge" id="trend-badge" style="cursor: default;">
+                <div class="gb-icon" style="filter: grayscale(1);">⚖️</div>
+                <div class="gb-title">ВАГА</div>
+                <div class="gb-val"><span id="disp-weight-avg">--</span><small id="disp-weight-delta">kg</small></div>
             </div>
         </div>
         
