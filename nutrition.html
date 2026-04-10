@@ -459,34 +459,6 @@
             </div>
         </div>
         
-        <div class="hud">
-        <div class="hud-hero">
-            <div class="hero-icon">⚡️</div>
-            <div class="k-val-wrap">
-                <span class="k-val" id="disp-k">0</span>
-                <span class="k-target">/ <span id="disp-k-hero-target">0</span></span>
-            </div>
-            <span class="k-label">СПОЖИТО ККАЛ</span>
-        </div>
-
-        <div class="hud-grid">
-            <div class="glass-badge" onclick="App.openTargets()">
-                <div class="gb-icon">🎯</div>
-                <div class="gb-val"><span id="disp-target" style="color: var(--theme);">0</span></div>
-                <div class="gb-title">ЦІЛЬ</div>
-            </div>
-            <div class="glass-badge" onclick="App.editWater()">
-                <div class="gb-icon">💧</div>
-                <div class="gb-val"><span id="disp-w" style="color: var(--p-color);">0.00</span></div>
-                <div class="gb-title">ВОДА (L)</div>
-            </div>
-            <div class="glass-badge" id="trend-badge" style="cursor: default;">
-                <div class="gb-icon" style="filter: grayscale(1);">⚖️</div>
-                <div class="gb-val"><span id="disp-weight-avg">--</span></div>
-                <div class="gb-title">ВАГА <span id="disp-weight-delta"></span></div>
-            </div>
-        </div>
-        
         <div class="hud-macros">
             <div class="macro-row">
                 <span class="mr-label color-p">PROT</span>
@@ -506,16 +478,16 @@
         </div>
 
         <div class="macro-ratio-wrapper">
-            <div class="mr-header">ВІДСОТКОВИЙ БАЛАНС</div>
+            <div class="mr-header">MACROS SPLIT</div>
             <div class="stacked-bar">
                 <div id="stack-p" style="width: 0%; background: var(--p-color);"></div>
                 <div id="stack-f" style="width: 0%; background: var(--f-color);"></div>
                 <div id="stack-c" style="width: 0%; background: var(--c-color);"></div>
             </div>
             <div class="stacked-labels">
-                <div class="s-label"><span class="dot" style="background: var(--p-color); box-shadow: 0 0 8px var(--p-color);"></span>Б <b id="lbl-p">0%</b></div>
-                <div class="s-label"><span class="dot" style="background: var(--f-color); box-shadow: 0 0 8px var(--f-color);"></span>Ж <b id="lbl-f">0%</b></div>
-                <div class="s-label"><span class="dot" style="background: var(--c-color); box-shadow: 0 0 8px var(--c-color);"></span>В <b id="lbl-c">0%</b></div>
+                <div class="s-label"><span class="dot" style="background: var(--p-color);"></span>PROT <b id="lbl-p">0%</b></div>
+                <div class="s-label"><span class="dot" style="background: var(--f-color);"></span>FATS <b id="lbl-f">0%</b></div>
+                <div class="s-label"><span class="dot" style="background: var(--c-color);"></span>CARB <b id="lbl-c">0%</b></div>
             </div>
         </div>
     </div>
