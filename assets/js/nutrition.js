@@ -693,9 +693,10 @@ const App = {
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
         
         // ОНОВЛЕННЯ ЗНАЧЕННЯ ЦІЛІ В HERO
-        // ОНОВЛЕННЯ ЗНАЧЕННЯ ЦІЛІ В HERO
         const heroTarget = document.getElementById('disp-k-hero-target');
         if(heroTarget) heroTarget.innerText = tg.k;
+
+        const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
         // РОЗРАХУНОК ВІДСОТКІВ
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
@@ -706,22 +707,32 @@ const App = {
             cPct = Math.round(((t.c * 4) / totalMacroKcal) * 100);
         }
         
-        // Математичний фікс: щоб сума завжди була рівно 100% при округленнях
+        // Математичний фікс
         if (totalMacroKcal > 0 && (pPct + fPct + cPct) !== 100) {
             const diff = 100 - (pPct + fPct + cPct);
             pPct += diff; 
         }
 
-        // Вписуємо дані в новий інтерфейс
-        const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
-        
         setVal('lbl-p', pPct + '%');
         setVal('lbl-f', fPct + '%');
         setVal('lbl-c', cPct + '%');
 
+        setVal('lbl-p-bot', pPct + '%');
+        setVal('lbl-f-bot', fPct + '%');
+        setVal('lbl-c-bot', cPct + '%');
+
         setVal('tgt-p', Math.round(tg.p));
         setVal('tgt-f', Math.round(tg.f));
         setVal('tgt-c', Math.round(tg.c));
+
+        const stackP = document.getElementById('stack-p');
+        const stackF = document.getElementById('stack-f');
+        const stackC = document.getElementById('stack-c');
+        if(stackP && stackF && stackC) {
+            stackP.style.width = pPct + '%';
+            stackF.style.width = fPct + '%';
+            stackC.style.width = cPct + '%';
+        }
 
         const updateBar = (id, currentVal, targetVal) => {
             const barEl = document.getElementById('bar-'+id);
@@ -729,7 +740,7 @@ const App = {
             if(barEl && textEl) {
                 const fillPct = Math.min(100, (currentVal / (targetVal || 1)) * 100);
                 barEl.style.width = fillPct + '%';
-                textEl.innerText = Math.round(currentVal) + 'g';
+                textEl.innerText = Math.round(currentVal);
             }
         };
 
