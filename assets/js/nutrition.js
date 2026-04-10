@@ -643,8 +643,7 @@ const App = {
         const dispW = document.getElementById('disp-w');
         if(dispW) dispW.innerText = (day.water || 0).toFixed(2);
         
-        // --- СМАРТ АНАЛІТИКА ВАГИ (БЕЗПЕЧНИЙ БЛОК) ---
-        // --- СМАРТ АНАЛІТИКА ВАГИ (БЕЗПЕЧНИЙ БЛОК) ---
+// --- СМАРТ АНАЛІТИКА ВАГИ (БЕЗПЕЧНИЙ БЛОК) ---
         try {
             if (typeof GlobalVitals !== 'undefined' && typeof GlobalVitals.getWeightTrend === 'function') {
                 const trend = GlobalVitals.getWeightTrend();
@@ -666,37 +665,32 @@ const App = {
                                 dispWDelta.style.color = 'var(--danger)'; 
                                 badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
                             } else {
-                                dispWDelta.innerText = `▶ ${Math.abs(d).toFixed(1)}`;
+                                dispWDelta.innerText = `▶${Math.abs(d).toFixed(1)}`;
                                 dispWDelta.style.color = 'var(--theme)'; 
                                 badge.style.borderColor = 'rgba(212, 175, 55, 0.3)';
                             }
                         } else {
-                            dispWDelta.innerText = "";
+                            dispWDelta.innerText = "kg";
                             dispWDelta.style.color = "#666";
-                            badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                            badge.style.borderColor = '#1f1f1f';
                         }
                     } else {
                         dispWAvg.innerText = "--";
                         dispWDelta.innerText = "kg";
-                        badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        badge.style.borderColor = '#1f1f1f';
                     }
                 }
             }
-        } catch(e) {
-            console.error("Помилка розрахунку тренду:", e);
-        }
-        // ----------------------------------------------
+        } catch(e) { console.error(e); }
 
         const dispNa = document.getElementById('disp-na');
         const dispK_el = document.getElementById('disp-k-el');
         if(dispNa) dispNa.innerText = day.na || 0;
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
         
-        // ОНОВЛЕННЯ ЗНАЧЕННЯ ЦІЛІ В HERO
+        // ОНОВЛЕННЯ ЦІЛІ
         const heroTarget = document.getElementById('disp-k-hero-target');
         if(heroTarget) heroTarget.innerText = tg.k;
-
-        const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
         // РОЗРАХУНОК ВІДСОТКІВ
         const totalMacroKcal = (t.p * 4) + (t.f * 9) + (t.c * 4);
@@ -707,16 +701,12 @@ const App = {
             cPct = Math.round(((t.c * 4) / totalMacroKcal) * 100);
         }
         
-        // Математичний фікс
         if (totalMacroKcal > 0 && (pPct + fPct + cPct) !== 100) {
-            const diff = 100 - (pPct + fPct + cPct);
-            pPct += diff; 
+            pPct += 100 - (pPct + fPct + cPct); 
         }
 
-        setVal('lbl-p', pPct + '%');
-        setVal('lbl-f', fPct + '%');
-        setVal('lbl-c', cPct + '%');
-
+        const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+        
         setVal('lbl-p-bot', pPct + '%');
         setVal('lbl-f-bot', fPct + '%');
         setVal('lbl-c-bot', cPct + '%');
