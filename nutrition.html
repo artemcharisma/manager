@@ -211,45 +211,48 @@
         .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
         .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; white-space: nowrap; }
 
-        /* --- ПРЕМІУМ HUD --- */
-        .hud-hero { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; padding: 15px 0 5px; }
-        .hud-hero .k-label { font-size: 0.65rem; color: #777; font-weight: 800; letter-spacing: 3px; margin-bottom: 10px; text-transform: uppercase; }
-        .hud-hero .k-val-wrap { display: flex; align-items: baseline; justify-content: center; gap: 6px; }
-        .hud-hero .k-val { font-family: var(--font-mono); font-size: 4.2rem; font-weight: 900; line-height: 0.8; color: #fff; letter-spacing: -3px; text-shadow: 0 0 40px rgba(212,175,55,0.25); }
-        .hud-hero .k-target { font-family: var(--font-mono); font-size: 1.2rem; color: #666; font-weight: 700; }
+        /* --- PRO HUD (STRICT) --- */
+        .hud { background: #121212; border: 1px solid #222; border-radius: 16px; padding: 25px 20px; margin-bottom: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        
+        .hud-hero { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        .hud-hero .k-label { font-size: 0.65rem; color: #666; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+        .hud-hero .k-val-wrap { display: flex; align-items: baseline; gap: 8px; }
+        .hud-hero .k-val { font-family: var(--font-mono); font-size: 4.5rem; font-weight: 900; line-height: 0.85; color: #fff; letter-spacing: -2.5px; }
+        .hud-hero .k-target { font-family: var(--font-mono); font-size: 1.2rem; color: #555; font-weight: 700; }
 
         .hud-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 30px; }
         .glass-badge {
-            background: linear-gradient(180deg, #1c1c1c 0%, #111 100%);
-            border: 1px solid #2a2a2a;
-            border-radius: 16px;
-            padding: 16px 8px;
+            background: #18181b; border: 1px solid #2a2a2a; border-radius: 12px; padding: 15px 8px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: 0.2s; cursor: pointer;
-            position: relative; overflow: hidden;
         }
-        .glass-badge::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); }
-        .glass-badge:active { transform: scale(0.95); border-color: var(--theme); }
-        .gb-icon { font-size: 1.4rem; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-        .gb-val { display: flex; align-items: baseline; gap: 2px; margin-bottom: 4px; }
+        .glass-badge:active { transform: scale(0.96); background: #222; border-color: var(--theme); }
+        .gb-val { display: flex; align-items: baseline; gap: 3px; margin-bottom: 6px; }
         .gb-val span { font-family: var(--font-mono); font-size: 1.2rem; font-weight: 800; color: #fff; line-height: 1; }
-        .gb-val small { font-size: 0.65rem; color: #777; font-weight: 700; font-family: var(--font-mono); margin-left: 2px;}
-        .gb-title { font-size: 0.55rem; color: #666; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .gb-val small { font-size: 0.65rem; color: #777; font-weight: 700; font-family: var(--font-mono); }
+        .gb-title { font-size: 0.55rem; color: var(--theme); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; opacity: 0.8; }
 
-        /* --- НОВІ МАКРОСИ --- */
-        .hud-macros { display: flex; flex-direction: column; gap: 18px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .hud-macros { display: flex; flex-direction: column; gap: 18px; }
         .macro-row { display: flex; flex-direction: column; gap: 8px; }
         .mr-top { display: flex; justify-content: space-between; align-items: flex-end; }
         .mr-label-group { display: flex; align-items: center; gap: 8px; }
-        .mr-label { font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; }
-        .mr-pct { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: #888; background: #161616; padding: 2px 6px; border-radius: 6px; border: 1px solid #222; }
+        .mr-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; }
+        .mr-pct { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: #888; background: #1a1a1a; padding: 2px 6px; border-radius: 6px; border: 1px solid #333; }
         .mr-vals { font-family: var(--font-mono); display: flex; align-items: baseline; gap: 4px; }
         .mr-current { font-size: 1.1rem; font-weight: 800; color: #fff; line-height: 1;}
-        .mr-target-val { font-size: 0.75rem; font-weight: 700; color: #666; }
+        .mr-target-val { font-size: 0.75rem; font-weight: 700; color: #555; }
         
-        .mr-track { height: 8px; background: #111; border-radius: 4px; overflow: hidden; border: 1px solid #222; }
-        .mr-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative; }
-        .mr-fill::after { content:''; position:absolute; top:0; right:0; bottom:0; left:0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 100%); }
+        .mr-track { height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; border: 1px solid #222; }
+        .mr-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        .macro-ratio-wrapper { margin-top: 25px; padding-top: 20px; border-top: 1px solid #222; }
+        .mr-header { font-size: 0.6rem; color: #555; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase; text-align: center; }
+        .stacked-bar { display: flex; height: 4px; border-radius: 2px; background: #111; overflow: hidden; margin-bottom: 15px; }
+        .stacked-bar div { transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+        .stacked-labels { display: flex; justify-content: center; gap: 20px; }
+        .s-label { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: #777; font-weight: 700; font-family: var(--font-mono); }
+        .s-label b { color: #ccc; font-size: 0.75rem; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
         @keyframes popIn {
             0% { opacity: 0; transform: translateY(15px) scale(0.96); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
