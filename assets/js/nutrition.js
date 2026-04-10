@@ -393,7 +393,7 @@ const App = {
         const l = parseInt(lVal) || 0;
         const ml = parseInt(mlVal) || 0;
         return l + (ml / 1000);
-    }
+    },
 
     editWater() {
         if(document.activeElement) document.activeElement.blur();
