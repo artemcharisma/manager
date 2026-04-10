@@ -390,10 +390,12 @@ const App = {
     },
 
     getWaterFromInputs() {
-        const l = parseInt(document.getElementById('inpWaterL').value) || 0;
-        const ml = parseInt(document.getElementById('inpWaterMl').value) || 0;
-        return l + (ml / 1000); // Тепер 2 л і 50 мл = 2.05
-    },
+        const lVal = document.getElementById('inpWaterL').value.replace(',', '.');
+        const mlVal = document.getElementById('inpWaterMl').value.replace(',', '.');
+        const l = parseInt(lVal) || 0;
+        const ml = parseInt(mlVal) || 0;
+        return l + (ml / 1000);
+    }
 
     editWater() {
         if(document.activeElement) document.activeElement.blur();
@@ -804,7 +806,8 @@ const App = {
 
     saveFood() {
         const n = document.getElementById('inpName').value;
-        const w = parseFloat(document.getElementById('inpWeight').value);
+        const wVal = document.getElementById('inpWeight').value.replace(',', '.');
+        const w = parseFloat(wVal);
         if(!n || isNaN(w)) return;
         const meal = this.getCurrentDay().meals.find(m=>m.id===this.state.mid);
         let item;
@@ -1134,14 +1137,41 @@ const App = {
     },
     
     importData(inp) {
+        if (!inp.files || inp.files.length === 0) return;
+        
+        const file = inp.files[0];
         const r = new FileReader();
-        r.onload = e => { 
-            this.pushHistory(); 
-            this.data = JSON.parse(e.target.result); 
-            this.save(); 
-            location.reload(); 
+        
+        r.onload = async (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                
+                // Базова валідація: перевіряємо, чи це дійсно наш бекап
+                if (!parsed || typeof parsed !== 'object' || !parsed.days || !parsed.bank) {
+                    throw new Error("Некоректна структура даних");
+                }
+                
+                this.pushHistory();
+                this.data = parsed;
+                this.save();
+                
+                // Успішне завантаження
+                location.reload();
+            } catch (err) {
+                console.error("Помилка імпорту:", err);
+                // Якщо є система модальних вікон - використовуємо її, інакше стандартний alert
+                if (typeof Modal !== 'undefined') {
+                    await Modal.alert("Помилка читання файлу. Переконайтесь, що це валідний бекап системи.", "ПОМИЛКА ІМПОРТУ", "red");
+                } else {
+                    alert("Помилка читання файлу. Некоректний формат JSON.");
+                }
+            } finally {
+                // Обов'язково скидаємо input, щоб подія onchange спрацювала при наступному виборі цього ж файлу
+                inp.value = '';
+            }
         };
-        r.readAsText(inp.files[0]);
+        
+        r.readAsText(file);
     }
 };
 // ЗАПОБІЖНИК: Гарантований запис при згортанні/закритті додатку
