@@ -15,12 +15,28 @@ const Utils = {
             localStorage.setItem(key, JSON.stringify(data));
         } catch (e) {
             console.error(`Error saving ${key}:`, e);
+            // Аварійний перехоплювач переповнення LocalStorage
+            if (e.name === 'QuotaExceededError' || e.code === 22 || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                if (typeof Modal !== 'undefined' && Modal.alert) {
+                    Modal.alert("Пам'ять браузера переповнена (Quota Exceeded). Дані не збережено! Зробіть експорт бекапу та очистіть історію/кеш.", "КРИТИЧНА ПОМИЛКА", "red");
+                } else {
+                    alert("КРИТИЧНА ПОМИЛКА: Пам'ять переповнена. Дані не збережено! Зробіть бекап.");
+                }
+            }
         }
     },
     loadSync(key, def) { return this.load(key, def); },
     saveSync(key, data) { return this.save(key, data); },
     id() { return Date.now(); },
-    date(d = new Date()) { return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }); }
+    date(d = new Date()) { return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }); },
+    
+    // Надвисокошвидкісне клонування об'єктів без навантаження на Garbage Collector
+    deepClone(obj) {
+        if (typeof structuredClone === 'function') {
+            try { return structuredClone(obj); } catch(e) { /* fallback */ }
+        }
+        return JSON.parse(JSON.stringify(obj));
+    }
 };
 
 const GlobalVitals = {
@@ -49,7 +65,6 @@ const GlobalVitals = {
 };
 
 class StateManager {
-    // ЗМІНЕНО: maxHistory з 10 на 3
     constructor(storageKey, defaultData, maxHistory = 3) {
         this.key = storageKey;
         this.defaultData = defaultData;
@@ -57,21 +72,25 @@ class StateManager {
         this.history = []; 
     }
     init() { return Utils.load(this.key, this.defaultData); }
+    
     push(data) {
-        this.history.push(JSON.stringify(data));
-        // Якщо історія перевищує ліміт, старі кроки видаляються
+        // Використовуємо оптимізоване бінарне клонування замість важкого парсингу тексту
+        this.history.push(Utils.deepClone(data));
         if (this.history.length > this.maxHistory) this.history.shift();
     }
+    
     undo(currentData) {
         if (this.history.length > 0) {
-            const prev = this.history.pop();
-            const prevObj = JSON.parse(prev);
+            const prevObj = this.history.pop();
             this.save(prevObj); 
-            return prevObj;
+            // Повертаємо клон, щоб уникнути мутацій в історії при подальшій роботі з об'єктом
+            return Utils.deepClone(prevObj);
         }
         return null;
     }
+    
     save(data) { Utils.save(this.key, data); }
+    
     export(data, filename) {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
