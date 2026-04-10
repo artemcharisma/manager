@@ -179,7 +179,7 @@
             padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
-        .hud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+        .hud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
         
         .k-group { display: flex; flex-direction: column; }
         .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
@@ -205,11 +205,11 @@
         .btn-sync:active { transform: scale(0.98); background: rgba(212, 175, 55, 0.2); }
 
         .hud-macros { display: flex; flex-direction: column; gap: 10px; }
-        .macro-row { display: grid; grid-template-columns: 35px 1fr 60px; align-items: center; gap: 10px; }
+        .macro-row { display: grid; grid-template-columns: 35px 1fr auto; align-items: center; gap: 10px; }
         .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #555; }
         .mr-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
         .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
-        .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; }
+        .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; white-space: nowrap; }
 
         /* --- 5. MEALS LIST --- */
         @keyframes popIn {
