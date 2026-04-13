@@ -1047,6 +1047,13 @@ const App = {
             this.renderStats(); 
         }
     },
+    async promptTarget(group, currentTarget) {
+        const val = await Modal.prompt(`Встановіть цільову кількість робочих підходів для групи <b>${group}</b>:`, "ЦІЛЬОВИЙ ОБ'ЄМ", currentTarget.toString());
+        if (val !== null && val !== "") {
+            const num = parseInt(val);
+            if (!isNaN(num) && num > 0) this.updateTarget(group, num);
+        }
+    },
     
     filterGuide(q) {
         const rows = document.querySelectorAll('.guide-table tbody tr');
@@ -1185,40 +1192,71 @@ const App = {
         const currentWeek = this.data.weeks[wIdx];
         
         if (!currentWeek) { 
-            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Немає даних</div>'; 
+            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px; font-family:\'JetBrains Mono\'">Немає даних</div>'; 
             return; 
         }
         
+        // НОВА ЛОГІКА РАХУНКУ З РОЗПОДІЛОМ ІНТЕНСИВНОСТІ
         const stats = {}; 
-        Groups.forEach(g => stats[g] = 0);
+        Groups.forEach(g => stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0 });
         
         currentWeek.days.forEach(d => {
             d.exercises.forEach(ex => {
                 const g = ex.g || ResolveGroup(ex.n);
-                if (stats[g] !== undefined) {
-                    // РАХУЄМО ТІЛЬКИ РОБОЧІ СЕТИ (Ігноруємо WU - Розминку)
-                    const workingSetsCount = ex.sets.filter(s => s.t !== 'WU').length;
-                    stats[g] += workingSetsCount;
+                if (stats[g]) {
+                    ex.sets.forEach(s => {
+                        // Рахуємо тільки стимулюючий об'єм (ігноруємо WU)
+                        if (s.t !== 'WU') { 
+                            stats[g].total++;
+                            if (s.t === 'TS') stats[g].ts++;
+                            else if (s.t === 'BO') stats[g].bo++;
+                            else if (s.t === 'DS') stats[g].ds++;
+                            else stats[g].norm++;
+                        }
+                    });
                 }
             });
         });
+
         let html = '';
-        for(const [k,v] of Object.entries(stats)) {
+        for(const [k, obj] of Object.entries(stats)) {
             if(k === "Інше") continue;
+            
             const target = this.data.targets[k] || 10; 
+            const v = obj.total;
             const pct = Math.min(100, (v / target) * 100);
             
-            let color = 'var(--mass)';
-            if (v >= target) color = 'var(--success)';
-            if (v > target * 1.5) color = 'var(--danger)';
+            // Логіка кольорів (Світлофор перетрену)
+            let color = 'var(--theme)'; // Золотий (Недобір, в процесі)
+            if (v >= target && v <= target + 2) color = 'var(--success)'; // Зелений (Ідеальне попадання)
+            else if (v > target + 2) color = 'var(--danger)'; // Червоний (Перебір об'єму / Ризик)
 
-            html += `<div class="stat-box">
-                <div class="stat-header-row">
-                    <span class="stat-label">${k}</span>
-                    <input class="stat-target-input" value="${target}" onchange="App.updateTarget('${k}', this.value)">
+            // Формуємо міні-аналітику
+            let breakdownHtml = '';
+            if (v > 0) {
+                if (obj.ts > 0) breakdownHtml += `<span style="color:var(--danger)">🔥 TS: ${obj.ts}</span>`;
+                if (obj.bo > 0) breakdownHtml += `<span style="color:#3b82f6; margin-top:2px;">💧 BO: ${obj.bo}</span>`;
+                if (obj.norm > 0) breakdownHtml += `<span style="color:#aaa; margin-top:2px;">⚪ Base: ${obj.norm}</span>`;
+                if (obj.ds > 0) breakdownHtml += `<span style="color:#8b5cf6; margin-top:2px;">🟣 DS: ${obj.ds}</span>`;
+            } else {
+                breakdownHtml = '<span style="color:#444">Відпочинок</span>';
+            }
+
+            html += `
+            <div class="stat-box-pro">
+                <div class="stat-indicator" style="background:${color}"></div>
+                <div class="stat-info">
+                    <div class="stat-label-pro">${k}</div>
+                    <div class="stat-breakdown">${breakdownHtml}</div>
                 </div>
-                <span class="stat-val">${v} <span style="font-size:0.8rem; color:#666">/ ${target}</span></span>
-                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${pct}%; background:${color}"></div></div>
+                <div class="stat-ring-wrapper" onclick="App.promptTarget('${k}', ${target})" title="Клікніть, щоб змінити ціль">
+                    <div class="stat-ring" style="background: conic-gradient(${color} ${pct}%, #222 ${pct}% 100%);">
+                        <div class="stat-ring-inner">
+                            <span class="stat-val-pro">${v}</span>
+                            <span class="stat-target-pro">/${target}</span>
+                        </div>
+                    </div>
+                </div>
             </div>`;
         }
         document.getElementById('statsContent').innerHTML = html;
