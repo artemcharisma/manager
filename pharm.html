@@ -482,7 +482,7 @@
     <div id="photoNavLeft" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(-1)">◀</div>
     <img id="customPhotoImg" src="" alt="Full view">
     <div id="photoNavRight" class="photo-nav-btn" onclick="event.stopPropagation(); App.navViewerPose(1)">▶</div>
-    <div id="photoWeekSelector" class="photo-week-bar"></div>
+    <div id="photoWeekSelector" class="photo-week-bar" ontouchmove="event.stopPropagation()"></div>
 </div>
 
 </body>
