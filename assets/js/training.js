@@ -467,65 +467,9 @@ const App = {
                             </div>`;
                         }
 
-                        const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
-
-                        const setsHtml = ex.sets.map((s, sIdx) => {
-                            if (m === 't') {
-                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)"><span class="set-unit">час</span></div></div>`;
-                            }
-
-                            let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
-                            let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
-
-                            // --- НОВА ЛОГІКА ТИПІВ ПІДХОДІВ ---
-                            let sType = s.t || '';
-                            let typeLabel = sIdx + 1;
-                            let typeClass = '';
-                            if (sType === 'WU') { typeLabel = 'WU'; typeClass = 'type-WU'; }
-                            else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
-                            else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
-                            else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
-
-                            // --- BEAT THE LOGBOOK (ПОРІВНЯННЯ) ---
-                            let progressHtml = '&nbsp;';
-                            if (ghostW && ghostR) {
-                                let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
-                                let curW = parseFloat(s.w) || 0;
-                                let curR = parseFloat(s.r) || 0;
-                                let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
-                                
-                                let icon = '<span style="color:#555">➖</span>';
-                                if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
-                                else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
-
-                                progressHtml = `<span style="color:#777; font-weight:600;">Минуло: ${ghostW}x${ghostR}</span> <span style="margin-left:3px">${icon}</span>`;
-                            }
-
-                            return `
-                            <div style="display:flex; flex-direction:column; gap:2px;">
-                                <div style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px;">
-                                    ${progressHtml}
-                                </div>
-                                <div class="set-row ${typeClass}">
-                                    <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
-                                    <div class="set-part">
-                                        <input type="text" inputmode="text" class="set-input w-val" value="${s.w||''}" 
-                                               onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
-                                               onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
-                                        <span class="set-unit">кг</span>
-                                    </div>
-                                    <div class="set-part">
-                                        <input type="number" inputmode="decimal" class="set-input r-val" value="${s.r||''}" 
-                                               onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
-                                        <span class="set-unit">x</span>
-                                    </div>
-                                </div>
-                            </div>`;
-                        }).join('');
-
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
-                        // --- РОЗУМНІ ПІДКАЗКИ (SMART GUIDE) ---
+                        // --- SMART GUIDE (Підказки) ---
                         const guideInfo = this.data.guidelines[week.type]?.find(g => g.n.trim().toLowerCase() === ex.n.trim().toLowerCase());
                         let smartGuideHtml = '';
                         if (guideInfo && !isEd) {
@@ -552,7 +496,6 @@ const App = {
                             exNameHtml = `<div style="display:flex; flex-direction:column;"><span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>${smartGuideHtml}</div>`;
                         }
 
-                        // --- ТАЙМЕР ТА СУПЕРСЕТИ ---
                         const isLinked = ex.linkNext === true;
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
 
@@ -566,6 +509,61 @@ const App = {
                                 ${exTime}s
                             </div>`;
                         }
+
+                        const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
+
+                        const setsHtml = ex.sets.map((s, sIdx) => {
+                            if (m === 't') {
+                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value, this)"><span class="set-unit">час</span></div></div>`;
+                            }
+
+                            let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
+                            let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
+
+                            let sType = s.t || '';
+                            let typeLabel = sIdx + 1;
+                            let typeClass = '';
+                            if (sType === 'WU') { typeLabel = 'WU'; typeClass = 'type-WU'; }
+                            else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
+                            else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
+                            else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
+
+                            // --- BEAT THE LOGBOOK HUD ---
+                            let progressHtml = '&nbsp;';
+                            if (ghostW && ghostR) {
+                                let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
+                                let curW = parseFloat(s.w) || 0;
+                                let curR = parseFloat(s.r) || 0;
+                                let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
+                                
+                                let icon = '<span style="color:#555">➖</span>';
+                                if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
+                                else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
+
+                                progressHtml = `<span style="color:#777; font-weight:600;">Минуло: ${ghostW}x${ghostR}</span> <span style="margin-left:3px">${icon}</span>`;
+                            }
+
+                            return `
+                            <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
+                                <div style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px; width:100%; white-space:nowrap;">
+                                    ${progressHtml}
+                                </div>
+                                <div class="set-row ${typeClass}">
+                                    <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
+                                    <div class="set-part">
+                                        <input type="text" inputmode="text" class="set-input w-val" value="${s.w||''}" 
+                                               onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
+                                               onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value, this)">
+                                        <span class="set-unit">кг</span>
+                                    </div>
+                                    <div class="set-part">
+                                        <input type="number" inputmode="decimal" class="set-input r-val" value="${s.r||''}" 
+                                               onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value, this)">
+                                        <span class="set-unit">x</span>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('');
 
                         return `<div class="exercise ${isLinked ? 'superset-link' : ''} ${isChild ? 'superset-child' : ''}">
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
@@ -915,7 +913,6 @@ const App = {
         const prog = this.data.currentProgram || 'balanced';
         let newData;
         
-        // Шукаємо реальний максимальний номер тижня у цій програмі
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
         const newWeekNum = maxNum + 1; 
@@ -923,23 +920,21 @@ const App = {
         const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
         
         if(lastWeek && !init) {
-            // РОЗУМНЕ КОПІЮВАННЯ (HARD COPY vs SOFT COPY)
             const hardCopy = await Modal.confirm(
-                "Скопіювати минулий тиждень <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (зручно для прогресії).<br>Скасувати — тільки структура (пусті клітинки).</span>", 
+                "Скопіювати минулий тиждень <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (для прогресії).<br>Скасувати — тільки структура.</span>", 
                 "РЕЖИМ КОПІЮВАННЯ", 
                 "var(--theme)"
             );
 
             newData = JSON.parse(JSON.stringify(lastWeek.days));
             newData.forEach(d => {
-                // МИ БІЛЬШЕ НЕ ОЧИЩАЄМО d.note! Твої інструкції переносяться завжди.
+                // Нотатки не видаляємо!
                 d.exercises.forEach(ex => { 
                     ex.sets.forEach(s => { 
                         if (!hardCopy) {
                             s.w = ""; 
                             s.r = ""; 
                         }
-                        // Типи підходів (s.t) зберігаються автоматично!
                         s.d = ""; 
                     }); 
                 });
@@ -950,10 +945,7 @@ const App = {
         
         const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
         this.data.weeks.push(w);
-        
-        // Одразу сортуємо масив тижнів
         this.data.weeks.sort((a, b) => a.num - b.num);
-
         this.updateBank();
         this.save(); 
         this.render();
@@ -1009,7 +1001,7 @@ const App = {
         this.save(); this.render();
     },
 
-    updateSet(w, d, e, s, f, val) {
+    updateSet(w, d, e, s, f, val, inputEl) {
         let finalVal = val;
         let needRender = false;
 
@@ -1023,12 +1015,17 @@ const App = {
                 if (e1RM > 0) {
                     const calcWeight = e1RM * (percent / 100);
                     finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
+                    
+                    // БЕЗ МЕРЕХТІННЯ: Оновлюємо DOM безпосередньо!
+                    if (inputEl) inputEl.value = finalVal;
+                    else needRender = true;
+                    
                     this.showToast(`🎯 1RM: ${e1RM}кг. ${percent}% = ${finalVal}кг`, 'var(--success)');
-                    needRender = true;
                 } else {
                     this.showToast(`⚠️ Немає історії для розрахунку`, 'var(--danger)');
                     finalVal = ""; 
-                    needRender = true;
+                    if (inputEl) inputEl.value = "";
+                    else needRender = true;
                 }
             }
         }
