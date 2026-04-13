@@ -645,15 +645,16 @@ const App = {
         
 // --- СМАРТ АНАЛІТИКА ВАГИ ---
         try {
-            if (typeof GlobalVitals !== 'undefined' && typeof GlobalVitals.getWeightTrend === 'function') {
-                const trend = GlobalVitals.getWeightTrend();
+            if (typeof GlobalVitals !== 'undefined') {
+                const latestWeight = GlobalVitals.getLatestWeight();
+                const trend = typeof GlobalVitals.getWeightTrend === 'function' ? GlobalVitals.getWeightTrend() : { delta: null };
                 const dispWAvg = document.getElementById('disp-weight-avg');
                 const dispWDelta = document.getElementById('disp-weight-delta');
                 const badge = document.getElementById('trend-badge');
                 
                 if (dispWAvg && dispWDelta && badge) {
-                    if (trend.currentAvg !== null) {
-                        dispWAvg.innerText = trend.currentAvg.toFixed(1);
+                    if (latestWeight !== null) {
+                        dispWAvg.innerText = latestWeight.toFixed(1); // Показуємо останню РЕАЛЬНУ вагу
                         if (trend.delta !== null) {
                             const d = trend.delta;
                             if (d <= -0.1) {
@@ -1095,10 +1096,13 @@ const App = {
             weight = parseFloat(inputWeight.replace(',', '.'));
             if (isNaN(weight) || weight <= 0) return await Modal.alert("Некоректна вага!", "ПОМИЛКА", "red");
             
-            this.data.userWeight = weight; // Зберігаємо локально
+            this.data.userWeight = weight; 
+            if (typeof GlobalVitals !== 'undefined') {
+                const todayStr = GlobalVitals.formatDate(new Date());
+                GlobalVitals.save(todayStr, 'w', weight.toString());
+            }
             this.save();
         }
-
         // БОДІБІЛДЕРСЬКІ КОЕФІЦІЄНТИ (на 1 кг маси тіла)
         let pMult, fMult, cMult;
 
@@ -1138,6 +1142,29 @@ const App = {
         if(window.Haptics) window.Haptics.success();
     },
 
+    async promptWeight() {
+        let current = "";
+        if (typeof GlobalVitals !== 'undefined') {
+            current = GlobalVitals.getLatestWeight() || "";
+        } else {
+            current = this.data.userWeight || "";
+        }
+
+        const inputWeight = await Modal.prompt("Введіть вашу поточну вагу (кг):", "ОНОВЛЕННЯ ВАГИ", current.toString());
+        if (!inputWeight) return;
+        
+        const weight = parseFloat(inputWeight.replace(',', '.'));
+        if (isNaN(weight) || weight <= 0) return await Modal.alert("Некоректна вага!", "ПОМИЛКА", "red");
+
+        if (typeof GlobalVitals !== 'undefined') {
+            const todayStr = GlobalVitals.formatDate(new Date());
+            GlobalVitals.save(todayStr, 'w', weight.toString());
+        }
+        this.data.userWeight = weight;
+        this.save();
+        this.updateStats();
+        if(window.Haptics) window.Haptics.success();
+    },
     calcTargetKcal() {
         const p = parseFloat(document.getElementById('tgP').value)||0;
         const f = parseFloat(document.getElementById('tgF').value)||0;
