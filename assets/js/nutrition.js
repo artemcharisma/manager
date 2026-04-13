@@ -643,7 +643,7 @@ const App = {
         const dispW = document.getElementById('disp-w');
         if(dispW) dispW.innerText = (day.water || 0).toFixed(2);
         
-// --- СМАРТ АНАЛІТИКА ВАГИ (БЕЗПЕЧНИЙ БЛОК) ---
+// --- СМАРТ АНАЛІТИКА ВАГИ ---
         try {
             if (typeof GlobalVitals !== 'undefined' && typeof GlobalVitals.getWeightTrend === 'function') {
                 const trend = GlobalVitals.getWeightTrend();
@@ -657,15 +657,15 @@ const App = {
                         if (trend.delta !== null) {
                             const d = trend.delta;
                             if (d <= -0.1) {
-                                dispWDelta.innerText = `▼${Math.abs(d).toFixed(1)}`;
+                                dispWDelta.innerText = `▼${Math.abs(d).toFixed(1)}kg`;
                                 dispWDelta.style.color = 'var(--success)'; 
                                 badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
                             } else if (d >= 0.1) {
-                                dispWDelta.innerText = `▲${d.toFixed(1)}`;
+                                dispWDelta.innerText = `▲${d.toFixed(1)}kg`;
                                 dispWDelta.style.color = 'var(--danger)'; 
                                 badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
                             } else {
-                                dispWDelta.innerText = `▶${Math.abs(d).toFixed(1)}`;
+                                dispWDelta.innerText = `▶${Math.abs(d).toFixed(1)}kg`;
                                 dispWDelta.style.color = 'var(--theme)'; 
                                 badge.style.borderColor = 'rgba(212, 175, 55, 0.3)';
                             }
@@ -688,7 +688,7 @@ const App = {
         if(dispNa) dispNa.innerText = day.na || 0;
         if(dispK_el) dispK_el.innerText = day.k_el || 0;
         
-        // ОНОВЛЕННЯ ЦІЛІ
+        // ОНОВЛЕННЯ ЦІЛІ В HERO
         const heroTarget = document.getElementById('disp-k-hero-target');
         if(heroTarget) heroTarget.innerText = tg.k;
 
