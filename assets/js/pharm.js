@@ -208,12 +208,13 @@ const App = {
         document.body.classList.add('modal-active');
     },
     unlockScroll() {
-        if (document.body.style.position !== 'fixed') return;
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
-        window.scrollTo(0, this.state.lockedScrollY || 0);
-        document.body.classList.remove('modal-active');
+        document.body.classList.remove('modal-active'); // Знімаємо завжди, без умов!
+        if (this.state.lockedScrollY !== undefined) {
+            window.scrollTo(0, this.state.lockedScrollY);
+        }
     },
 
     stateManager: new StateManager('gold_protocol', DefaultData),
@@ -1738,11 +1739,12 @@ const App = {
     closeModal() { 
         // Ховаємо всі можливі модалки
         document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        document.getElementById('customPhotoModal').classList.remove('active');
+        const customPhoto = document.getElementById('customPhotoModal');
+        if(customPhoto) customPhoto.classList.remove('active');
         
         // Гарантовано знімаємо блокування кліків
         this.unlockScroll();
-        document.body.classList.remove('modal-active', 'privacy-locked');
+        // ВАЖЛИВО: Видалено зняття privacy-locked, щоб не ламати безпеку!
     },
     
     calc(week) {
