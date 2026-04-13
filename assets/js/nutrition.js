@@ -66,6 +66,7 @@ const App = {
         this.setupHardReset();
         this.render();
         document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
+        this.setupSpacebarNavigation();
     },
     setupHardReset() {
         const brandBlock = document.getElementById('brandBlock');
@@ -106,6 +107,37 @@ const App = {
         }
     },
 
+    setupSpacebarNavigation() {
+        // Групи інпутів, між якими треба стрибати через пробіл
+        const groups = [
+            ['inpWeight', 'inpP', 'inpF', 'inpC', 'inpK'], // Модалка продукту
+            ['bankInpP', 'bankInpF', 'bankInpC', 'bankInpK'], // Модалка бази (пропускаємо назву, щоб там пробіл працював як пробіл)
+            ['tgP', 'tgF', 'tgC', 'tgK'], // Модалка цілей
+            ['inpWaterL', 'inpWaterMl'],  // Вода
+            ['inpSodium', 'inpPotassium'] // Електроліти
+        ];
+
+        groups.forEach(group => {
+            group.forEach((id, index) => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.addEventListener('keydown', (e) => {
+                        if (e.key === ' ') {
+                            e.preventDefault(); // Зупиняємо друк пробілу
+                            const nextId = group[index + 1];
+                            if (nextId) {
+                                const nextEl = document.getElementById(nextId);
+                                if (nextEl) {
+                                    nextEl.focus();
+                                    nextEl.select(); // Одразу виділяємо текст для швидкої заміни
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    },
     toggleFab(show) {
         const fab = document.getElementById('sys-fab');
         if(fab) fab.style.display = show ? 'flex' : 'none';
@@ -1107,10 +1139,10 @@ const App = {
         let pMult, fMult, cMult;
 
         switch(type) {
-            case 'mass': pMult = 2.2; fMult = 1.0; cMult = 5.0; break; // ЗАГРУЗКА
-            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.0; break; // БАЗА
-            case 'cut':  pMult = 2.8; fMult = 0.7; cMult = 1.5; break; // СУШКА
-            case 'zero': pMult = 3.0; fMult = 1.0; cMult = 0.5; break; // БЕЗВУГЛЕВОДКА
+            case 'mass': pMult = 2.5; fMult = 0.8; cMult = 5.0; break; // ПРОФІЦИТ (Синтез на максимумі, багато вуглів для помпи)
+            case 'base': pMult = 2.5; fMult = 0.8; cMult = 3.5; break; // ПІДТРИМКА (Міст/Круїз)
+            case 'cut':  pMult = 3.0; fMult = 0.6; cMult = 2.0; break; // ДЕФІЦИТ (Антикатаболіка, мінімум жирів)
+            case 'zero': pMult = 3.3; fMult = 1.0; cMult = 0.5; break; // ЯМА (Безвуглеводка, жири трохи вище для енергії)
         }
 
         document.getElementById('tgP').value = Math.round(weight * pMult);
