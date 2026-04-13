@@ -508,6 +508,7 @@ const App = {
                             </div>
                             <div class="sets-wrapper">${setsHtml}</div>
                         </div>`;
+                        }).join('');
 
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${realWIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
