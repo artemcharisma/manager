@@ -185,6 +185,7 @@ const App = {
         
         // --- ДОДАНО --- Ініціалізація назв вкладок (якщо їх ще немає)
         if(!this.data.customNames) this.data.customNames = { balanced: "ЗБАЛАНСОВАНА", arms: "РУКИ" };
+        if(!this.data.globalRules) this.data.globalRules = { mass: "", cut: "" };
         
         // CSS для анімації та підсвічування ghost data
         const extraStyles = document.createElement('style');
@@ -509,6 +510,20 @@ const App = {
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
                         let exNameHtml = '';
+                        // Знаходимо підказку з довідника
+                        const guideInfo = this.data.guidelines[week.type]?.find(g => g.n.trim().toLowerCase() === ex.n.trim().toLowerCase());
+                        let smartGuideHtml = '';
+                        if (guideInfo && !isEd) {
+                            smartGuideHtml = `
+                            <div style="margin-top: 4px; font-family: 'JetBrains Mono', monospace; line-height: 1.3;">
+                                <div style="font-size: 0.65rem; color: var(--theme); font-weight: 700; opacity: 0.9;">
+                                    ⚡ ${guideInfo.p} | ${guideInfo.s} | ${guideInfo.w}
+                                </div>
+                                ${guideInfo.i ? `<div style="font-size: 0.65rem; color: #777; font-style: italic; margin-top: 2px;">"${guideInfo.i}"</div>` : ''}
+                            </div>`;
+                        }
+
+                        let exNameHtml = '';
                         if (isEd) {
                             exNameHtml = `
                             <div style="position:relative; flex:1; margin-right:10px;">
@@ -519,7 +534,7 @@ const App = {
                                 <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
                             </div>`;
                         } else {
-                            exNameHtml = `<span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>`;
+                            exNameHtml = `<div style="display:flex; flex-direction:column;"><span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>${smartGuideHtml}</div>`;
                         }
 
                         // Логіка Суперсетів
@@ -903,14 +918,14 @@ const App = {
 
             newData = JSON.parse(JSON.stringify(lastWeek.days));
             newData.forEach(d => {
-                // МИ БІЛЬШЕ НЕ ОЧИЩАЄМО d.note! Твої інструкції до біомеханіки переносяться завжди.
+                // МИ БІЛЬШЕ НЕ ОЧИЩАЄМО d.note! Твої інструкції переносяться завжди.
                 d.exercises.forEach(ex => { 
                     ex.sets.forEach(s => { 
                         if (!hardCopy) {
                             s.w = ""; 
                             s.r = ""; 
                         }
-                        // Типи підходів (s.t) зберігаються автоматично в обох варіантах!
+                        // Типи підходів (s.t) зберігаються автоматично!
                         s.d = ""; 
                     }); 
                 });
@@ -1072,6 +1087,13 @@ const App = {
         if(v === 'guide') this.renderGuide();
     },
 
+    updateGlobalRule(m, v) { 
+        if(this.data.globalRules[m] !== v) {
+            this.pushHistory();
+            this.data.globalRules[m] = v; 
+            this.save(); 
+        }
+    },
     renderGuide() {
         const c = document.getElementById('guideContent');
         const m = this.data.guideMode || 'mass';
@@ -1086,8 +1108,16 @@ const App = {
         }
 
         const isEd = document.body.classList.contains('editing');
+        const globalRule = this.data.globalRules ? (this.data.globalRules[m] || "") : "";
         
         c.innerHTML = `
+        <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 15px;">
+            <div style="font-size: 0.7rem; color: var(--theme); font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">📌 МЕХАНІКА ВАГ ТА ГЛОБАЛЬНІ ПРАВИЛА (${m.toUpperCase()}):</div>
+            ${isEd ? 
+                `<textarea class="modal-input" style="min-height:80px; padding:8px; font-size:0.8rem;" placeholder="Впишіть правила прогресії, темп тощо..." onblur="App.updateGlobalRule('${m}', this.value)">${globalRule}</textarea>` : 
+                `<div style="font-size:0.8rem; color:#aaa; line-height:1.4; white-space: pre-wrap;">${globalRule || '<i style="color:#555">Немає глобальних правил. Натисніть Олівець, щоб додати.</i>'}</div>`
+            }
+        </div>
         <table class="guide-table">
             <thead>
                 <tr>
@@ -1161,7 +1191,6 @@ const App = {
                 }
             });
         });
-
         let html = '';
         for(const [k,v] of Object.entries(stats)) {
             if(k === "Інше") continue;
