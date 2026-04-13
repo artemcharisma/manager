@@ -370,7 +370,10 @@ const App = {
         }, { passive: false });
 
         newModal.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
+            // ФІКС СТРОЛУ: Дозволяємо нативний скрол, якщо торкаємось панелі тижнів
+            if (e.target.closest('.photo-week-bar')) return;
+            
+            e.preventDefault(); // Блокуємо скрол самого вікна для панорамування/зуму
 
             if (this.state.photoModalIsZooming && e.touches.length === 2) {
                 const dist = Math.hypot(
@@ -1733,8 +1736,13 @@ const App = {
     },
 
     closeModal() { 
-        document.getElementById('addPillModal').style.display = 'none'; 
+        // Ховаємо всі можливі модалки
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        document.getElementById('customPhotoModal').classList.remove('active');
+        
+        // Гарантовано знімаємо блокування кліків
         this.unlockScroll();
+        document.body.classList.remove('modal-active', 'privacy-locked');
     },
     
     calc(week) {
