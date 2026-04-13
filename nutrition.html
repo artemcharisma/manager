@@ -64,12 +64,15 @@
         }
 
         /* 3. ПАЛЕЦЬ (Тільки на реальних кнопках і клікабельних рядках) */
-        button, select, label, a, input[type="checkbox"], [class*="btn"],  
+        button, select, a, input[type="checkbox"], [class*="btn"],  
         .day-tab, .mh-del, .target-badge, .water-badge, .food-row,       
         .bank-row, .sugg-item, .sys-card, .sys-close, .mc-header span  
         {
             cursor: pointer !important;
         }
+        
+        /* Забороняємо палець на підписах інпутів БЖВ */
+        .stat-box label { cursor: default !important; pointer-events: none; }
 
         body {
             background-color: var(--bg-app); 
