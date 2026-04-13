@@ -49,6 +49,13 @@ const SysSwitch = {
     },
     close() {
         this.el.classList.remove('open');
+        // ФІКС: Чекаємо 300мс (поки пройде анімація згасання) 
+        // і гарантовано прибираємо невидимий блок з екрану
+        setTimeout(() => {
+            if (!this.el.classList.contains('open')) {
+                this.el.style.display = 'none';
+            }
+        }, 300);
     }
 };
 
