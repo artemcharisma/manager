@@ -173,27 +173,21 @@ if ('serviceWorker' in navigator) {
 }
 
 // ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
-document.addEventListener('click', function(e) {
-    // Якщо клік відбувся всередині вікна модалки - ігноруємо
-    if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content') || e.target.closest('.modal-card')) return;
-
-    // Якщо клік був саме по темному фону (.modal або .modal-overlay)
-    if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay')) {
+// Якщо клік був саме по темному фону (.modal або .modal-overlay)
+    if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay') || e.target.id === 'customPhotoModal') {
         
-        // УНІВЕРСАЛЬНИЙ ФІКС: Замість простого ховання, викликаємо правильний метод закриття додатку!
+        // Викликаємо універсальний метод закриття з pharm.js
         if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
             App.closeModal();
         } else {
+            // Фолбек для інших сторінок (food, training)
             e.target.style.display = 'none'; 
+            e.target.classList.remove('active');
             if (typeof App !== 'undefined' && typeof App.unlockScroll === 'function') {
                 App.unlockScroll(); 
             }
+            document.body.classList.remove('modal-active');
         }
-    }
-    
-    if (e.target.id === 'sysModal') {
-        e.target.remove();
-        document.body.classList.remove('modal-active');
     }
     if (e.target.id === 'protocol-modal-overlay') {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
