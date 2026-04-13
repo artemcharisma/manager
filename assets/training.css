@@ -461,26 +461,31 @@
             .day-card.collapsed .day-header { border-bottom: none; opacity: 0.8; }
             .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
 
-            /* ========================================= */
-             /* --- НОВИЙ ФУНКЦІОНАЛ: ТИПИ ПІДХОДІВ --- */
+             /* ========================================= */
+             /* --- НОВИЙ ФУНКЦІОНАЛ: ТИПИ ПІДХОДІВ (PRO) --- */
              /* ========================================= */
              .set-num { cursor: pointer !important; transition: 0.2s; user-select: none; }
              .set-num:active { transform: scale(0.9); }
      
-             /* W: Розминка (Жовтий/Оливковий) */
-             .set-num.type-W { background: rgba(212, 175, 55, 0.15); color: var(--theme); }
-             .set-row.type-W { border-color: rgba(212, 175, 55, 0.3); }
-             .set-row.type-W .set-input { color: var(--theme); opacity: 0.8; }
+             /* WU: Warm-up (Жовтий/Оливковий) */
+             .set-num.type-WU { background: rgba(212, 175, 55, 0.15); color: var(--theme); font-size: 0.6rem; }
+             .set-row.type-WU { border-color: rgba(212, 175, 55, 0.3); }
+             .set-row.type-WU .set-input { color: var(--theme); opacity: 0.8; }
      
-             /* D: Дроп-сет (Червоний) */
-             .set-num.type-D { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-             .set-row.type-D { border-color: rgba(239, 68, 68, 0.3); }
-             .set-row.type-D .set-input { color: var(--danger); }
+             /* TS: Top Set (Червоний) */
+             .set-num.type-TS { background: rgba(239, 68, 68, 0.2); color: var(--danger); font-size: 0.65rem; }
+             .set-row.type-TS { border-color: rgba(239, 68, 68, 0.5); box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.1); }
+             .set-row.type-TS .set-input { color: var(--danger); font-weight: 900; }
      
-             /* F: Відказ (Фіолетовий / Хардкор) */
-             .set-num.type-F { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
-             .set-row.type-F { border-color: rgba(139, 92, 246, 0.4); }
-             .set-row.type-F .set-input { color: #8b5cf6; }
+             /* BO: Back-off (Синій) */
+             .set-num.type-BO { background: rgba(59, 130, 246, 0.2); color: #3b82f6; font-size: 0.65rem; }
+             .set-row.type-BO { border-color: rgba(59, 130, 246, 0.4); }
+             .set-row.type-BO .set-input { color: #3b82f6; }
+     
+             /* DS: Drop-set (Фіолетовий) */
+             .set-num.type-DS { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; font-size: 0.65rem; }
+             .set-row.type-DS { border-color: rgba(139, 92, 246, 0.4); }
+             .set-row.type-DS .set-input { color: #8b5cf6; }
      
              /* ========================================= */
              /* --- НОВИЙ ФУНКЦІОНАЛ: СУПЕРСЕТИ --- */
