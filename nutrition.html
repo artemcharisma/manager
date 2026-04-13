@@ -173,45 +173,7 @@
         .btn-mini.del-day { color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
         .btn-mini.del-day:active { background: rgba(239, 68, 68, 0.2); }
 
-        /* --- 4. HUD --- */
-        .hud {
-            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
-            padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        }
-        .hud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
-        
-        .k-group { display: flex; flex-direction: column; }
-        .k-val { font-family: var(--font-mono); font-size: 3rem; font-weight: 700; line-height: 0.9; color: #fff; letter-spacing: -2px; }
-        .k-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;}
-
-        .hud-badges { display: flex; flex-direction: column; gap: 8px; min-width: 145px; }
-        .target-badge, .water-badge {
-            display: flex; justify-content: space-between; align-items: center;
-            width: 100%; box-sizing: border-box;
-            background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 8px 12px; border-radius: 12px; font-family: var(--font-mono); 
-            font-size: 0.75rem; color: #888; transition: 0.2s; cursor: pointer;
-        }
-        .water-badge { background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2); }
-        .target-badge:active, .water-badge:active { transform: scale(0.95); filter: brightness(1.2); }
-
-        .btn-sync {
-            width: 100%; background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), transparent);
-            border: 1px solid rgba(212, 175, 55, 0.3); color: var(--theme);
-            padding: 14px; border-radius: 12px; font-weight: 800; font-family: var(--font-mono);
-            font-size: 0.8rem; letter-spacing: 1px; margin-top: 10px; cursor: pointer; transition: 0.2s;
-        }
-        .btn-sync:active { transform: scale(0.98); background: rgba(212, 175, 55, 0.2); }
-
-        .hud-macros { display: flex; flex-direction: column; gap: 10px; }
-        .macro-row { display: grid; grid-template-columns: 35px 1fr auto; align-items: center; gap: 10px; }
-        .mr-label { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: #555; }
-        .mr-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
-        .mr-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
-        .mr-val { font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: #fff; white-space: nowrap; }
-
-        /* --- PRO HUD (STRICT & CLEAN) --- */
+        /* --- 4. PRO HUD (STRICT & CLEAN) --- */
         .hud { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 16px; padding: 20px; margin-bottom: 25px; }
         
         .hud-hero { text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #1f1f1f; }
@@ -221,7 +183,7 @@
         .hero-target { font-family: var(--font-mono); font-size: 1.2rem; color: #555; font-weight: 700; margin-left: 4px; }
         
         .hud-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
-        .metric-card { background: #111; border: 1px solid #1f1f1f; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: 0.2s; cursor: pointer; }
+        .metric-card { background: #111; border: 1px solid #1f1f1f; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; cursor: pointer; }
         .metric-card:active { background: #1a1a1a; border-color: var(--theme); }
         .m-title { font-size: 0.6rem; color: #666; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .m-value-wrap { display: flex; align-items: baseline; gap: 4px; }
