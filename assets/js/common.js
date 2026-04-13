@@ -173,7 +173,8 @@ if ('serviceWorker' in navigator) {
 }
 
 // ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
-// Якщо клік був саме по темному фону (.modal або .modal-overlay)
+document.addEventListener('click', (e) => {
+    // Якщо клік був саме по темному фону (.modal або .modal-overlay)
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay') || e.target.id === 'customPhotoModal') {
         
         // Викликаємо універсальний метод закриття з pharm.js
@@ -193,7 +194,6 @@ if ('serviceWorker' in navigator) {
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
 });
-
 // 1. Розумне зняття фокусу (ФІКС ДЛЯ ЗБЕРЕЖЕННЯ КЛАВІАТУРИ В МОДАЛКАХ)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
