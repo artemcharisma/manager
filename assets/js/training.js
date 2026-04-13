@@ -151,6 +151,10 @@ const App = {
                     if (ex.sets) {
                         ex.sets.forEach(s => {
                             if (s.w || s.r) hasValidSets = true;
+                            
+                            // ІГНОРУЄМО РОЗМИНКУ для Ghost Data та 1RM
+                            if (s.t === 'W') return; 
+
                             const w = parseFloat(s.w) || 0;
                             const r = parseFloat(s.r) || 0;
                             if (w > 0 && r > 0) {
@@ -159,7 +163,6 @@ const App = {
                             }
                         });
                     }
-
                     this.historyIndex[name].push({
                         wNum: week.num,
                         prog: week.prog,
@@ -332,7 +335,26 @@ const App = {
         }
         return Math.round(maxRM);
     },
-    
+    cycleSetType(w, d, e, s) {
+        // Циклічне перемикання типів: Нормальний -> Розминка (W) -> Дроп-сет (D) -> Відказ (F)
+        const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
+        if (!setObj.t) setObj.t = 'W';
+        else if (setObj.t === 'W') setObj.t = 'D';
+        else if (setObj.t === 'D') setObj.t = 'F';
+        else delete setObj.t;
+        
+        // Зберігаємо без пушу в історію, щоб не забивати її мікрокліками
+        this.save();
+        this.render();
+    },
+
+    toggleSuperset(w, d, e) {
+        this.pushHistory();
+        const ex = this.data.weeks[w].days[d].exercises[e];
+        ex.linkNext = !ex.linkNext;
+        this.save();
+        this.render();
+    },
     render() {
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
@@ -407,15 +429,22 @@ const App = {
                             let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
                             let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
 
+                            // --- НОВА ЛОГІКА ТИПІВ ПІДХОДІВ ---
+                            let sType = s.t || '';
+                            let typeLabel = sIdx + 1;
+                            let typeClass = '';
+                            if (sType === 'W') { typeLabel = 'W'; typeClass = 'type-W'; }
+                            else if (sType === 'D') { typeLabel = 'D'; typeClass = 'type-D'; }
+                            else if (sType === 'F') { typeLabel = 'F'; typeClass = 'type-F'; }
+
                             let classW = ghostW ? "set-input w-val ghost-active" : "set-input w-val";
                             let classR = ghostR ? "set-input r-val ghost-active" : "set-input r-val";
                             
                             let placeholderW = ghostW ? `placeholder="${ghostW}"` : "";
                             let placeholderR = ghostR ? `placeholder="${ghostR}"` : "";
 
-                            // ТУТ БІЛЬШЕ НЕМАЄ ТАЙМЕРА ДЛЯ КОЖНОГО ПІДХОДУ
-                            return `<div class="set-row">
-                                <div class="set-num">${sIdx+1}</div>
+                            return `<div class="set-row ${typeClass}">
+                                <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
                                 <div class="set-part">
                                     <input type="text" inputmode="text" class="${classW}" ${placeholderW} value="${s.w||''}" 
                                            onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
@@ -457,7 +486,11 @@ const App = {
                             </div>`;
                         }
 
-                        return `<div class="exercise">
+                        // Логіка Суперсетів (визначаємо, чи лінкується ця вправа до наступної, або чи підхоплюється від попередньої)
+                        const isLinked = ex.linkNext === true;
+                        const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
+
+                        return `<div class="exercise ${isLinked ? 'superset-link' : ''} ${isChild ? 'superset-child' : ''}">
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
                             <div class="ex-info">
                                 <div class="ex-name-row">
@@ -467,14 +500,14 @@ const App = {
                                         ${timerHtml}
                                     </div>
                                 </div>
-                                <div class="edit-ui">
+                                <div class="edit-ui" style="gap:5px; align-items:center;">
+                                    <div class="btn-link ${isLinked ? 'active' : ''}" title="Зв'язати в суперсет" onclick="App.toggleSuperset(${realWIdx},${dIdx},${eIdx})">🔗</div>
                                     <div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},-1)">-</div>
                                     <div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},1)">+</div>
                                 </div>
                             </div>
                             <div class="sets-wrapper">${setsHtml}</div>
                         </div>`;
-                    }).join('');
 
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${realWIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
