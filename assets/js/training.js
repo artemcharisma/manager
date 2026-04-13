@@ -485,24 +485,40 @@ const App = {
                             else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
-                            let classW = ghostW ? "set-input w-val ghost-active" : "set-input w-val";
-                            let classR = ghostR ? "set-input r-val ghost-active" : "set-input r-val";
-                            
-                            let placeholderW = ghostW ? `placeholder="${ghostW}"` : "";
-                            let placeholderR = ghostR ? `placeholder="${ghostR}"` : "";
 
-                            return `<div class="set-row ${typeClass}">
-                                <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
-                                <div class="set-part">
-                                    <input type="text" inputmode="text" class="${classW}" ${placeholderW} value="${s.w||''}" 
-                                           onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
-                                           onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
-                                    <span class="set-unit">кг</span>
+                            // --- BEAT THE LOGBOOK (ПОРІВНЯННЯ) ---
+                            let progressHtml = '&nbsp;';
+                            if (ghostW && ghostR) {
+                                let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
+                                let curW = parseFloat(s.w) || 0;
+                                let curR = parseFloat(s.r) || 0;
+                                let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
+                                
+                                let icon = '<span style="color:#555">➖</span>';
+                                if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
+                                else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
+
+                                progressHtml = `<span style="color:#777; font-weight:600;">Минуло: ${ghostW}x${ghostR}</span> <span style="margin-left:3px">${icon}</span>`;
+                            }
+
+                            return `
+                            <div style="display:flex; flex-direction:column; gap:2px;">
+                                <div style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px;">
+                                    ${progressHtml}
                                 </div>
-                                <div class="set-part">
-                                    <input type="number" inputmode="decimal" class="${classR}" ${placeholderR} value="${s.r||''}" 
-                                           onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
-                                    <span class="set-unit">x</span>
+                                <div class="set-row ${typeClass}">
+                                    <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
+                                    <div class="set-part">
+                                        <input type="text" inputmode="text" class="set-input w-val" value="${s.w||''}" 
+                                               onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
+                                               onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value)">
+                                        <span class="set-unit">кг</span>
+                                    </div>
+                                    <div class="set-part">
+                                        <input type="number" inputmode="decimal" class="set-input r-val" value="${s.r||''}" 
+                                               onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value)">
+                                        <span class="set-unit">x</span>
+                                    </div>
                                 </div>
                             </div>`;
                         }).join('');
