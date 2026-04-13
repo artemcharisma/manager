@@ -460,3 +460,64 @@
             .day-card.collapsed .ex-list { display: none !important; }
             .day-card.collapsed .day-header { border-bottom: none; opacity: 0.8; }
             .day-card.collapsed .day-chevron { transform: rotate(-90deg); color: #555; }
+
+            /* ========================================= */
+             /* --- НОВИЙ ФУНКЦІОНАЛ: ТИПИ ПІДХОДІВ --- */
+             /* ========================================= */
+             .set-num { cursor: pointer !important; transition: 0.2s; user-select: none; }
+             .set-num:active { transform: scale(0.9); }
+     
+             /* W: Розминка (Жовтий/Оливковий) */
+             .set-num.type-W { background: rgba(212, 175, 55, 0.15); color: var(--theme); }
+             .set-row.type-W { border-color: rgba(212, 175, 55, 0.3); }
+             .set-row.type-W .set-input { color: var(--theme); opacity: 0.8; }
+     
+             /* D: Дроп-сет (Червоний) */
+             .set-num.type-D { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+             .set-row.type-D { border-color: rgba(239, 68, 68, 0.3); }
+             .set-row.type-D .set-input { color: var(--danger); }
+     
+             /* F: Відказ (Фіолетовий / Хардкор) */
+             .set-num.type-F { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+             .set-row.type-F { border-color: rgba(139, 92, 246, 0.4); }
+             .set-row.type-F .set-input { color: #8b5cf6; }
+     
+             /* ========================================= */
+             /* --- НОВИЙ ФУНКЦІОНАЛ: СУПЕРСЕТИ --- */
+             /* ========================================= */
+             .btn-link { 
+                 width: 28px; height: 28px; border-radius: 6px; border: 1px solid #333; 
+                 background: #111; display: flex; align-items: center; justify-content: center; 
+                 cursor: pointer; color: #555; transition: 0.2s; font-size: 0.8rem; 
+                 margin-right: 5px; 
+             }
+             .btn-link.active { 
+                 border-color: var(--theme); color: var(--theme); 
+                 background: rgba(212,175,55,0.1); 
+                 box-shadow: 0 0 10px rgba(212,175,55,0.2);
+             }
+     
+             .exercise.superset-link {
+                 border-bottom: 2px dashed var(--theme);
+                 padding-bottom: 20px;
+                 margin-bottom: 0;
+             }
+             .exercise.superset-link::after {
+                 content: '🔗 SUPERSET';
+                 position: absolute;
+                 bottom: -10px;
+                 left: 50%;
+                 transform: translateX(-50%);
+                 background: #000;
+                 padding: 2px 12px;
+                 font-size: 0.65rem;
+                 color: var(--theme);
+                 font-weight: 800;
+                 border-radius: 12px;
+                 border: 1px dashed var(--theme);
+                 z-index: 2;
+             }
+             .exercise.superset-child {
+                 padding-top: 25px; /* Місце під плашку суперсету */
+                 background: linear-gradient(to bottom, rgba(212,175,55,0.05), transparent 60px);
+             }
