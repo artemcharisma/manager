@@ -522,17 +522,6 @@ const App = {
                             exNameHtml = `<span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>`;
                         }
 
-                        let timerHtml = '';
-                        if (!isEd && m !== 'cardio') {
-                            const exTime = ex.t || App.timerState.default;
-                            timerHtml = `
-                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation; user-select: none;"
-                                 onclick="App.handleTimerClick(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime})">
-                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                ${exTime}s
-                            </div>`;
-                        }
-
                         // Логіка Суперсетів
                         const isLinked = ex.linkNext === true;
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
@@ -996,20 +985,10 @@ const App = {
                     finalVal = ""; 
                     needRender = true;
                 }
-                } else {
-                    const toast = document.createElement('div');
-                    toast.innerText = `⚠️ Немає історії для розрахунку`;
-                    toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--danger); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 3000);
-                    finalVal = ""; 
-                    needRender = true;
-                }
             }
         }
 
         if(this.data.weeks[w].days[d].exercises[e].sets[s][f] !== finalVal) {
-            // ВАЖЛИВО: Видалено this.pushHistory() щоб уникнути мікро-фрізів та дьоргання екрану під час вводу цифр!
             this.data.weeks[w].days[d].exercises[e].sets[s][f] = finalVal;
             this.save();
             if (needRender) this.render();
