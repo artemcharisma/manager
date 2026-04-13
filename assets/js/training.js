@@ -509,8 +509,7 @@ const App = {
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
-                        let exNameHtml = '';
-                        // Знаходимо підказку з довідника
+                        // --- РОЗУМНІ ПІДКАЗКИ (SMART GUIDE) ---
                         const guideInfo = this.data.guidelines[week.type]?.find(g => g.n.trim().toLowerCase() === ex.n.trim().toLowerCase());
                         let smartGuideHtml = '';
                         if (guideInfo && !isEd) {
@@ -537,12 +536,11 @@ const App = {
                             exNameHtml = `<div style="display:flex; flex-direction:column;"><span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>${smartGuideHtml}</div>`;
                         }
 
-                        // Логіка Суперсетів
+                        // --- ТАЙМЕР ТА СУПЕРСЕТИ ---
                         const isLinked = ex.linkNext === true;
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
 
                         let timerHtml = '';
-                        // ТАЙМЕР НЕ ПОКАЗУЄТЬСЯ ЯКЩО ЦЕ ПЕРША ВПРАВА СУПЕРСЕТУ (!isLinked)
                         if (!isEd && m !== 'cardio' && !isLinked) {
                             const exTime = ex.t || App.timerState.default;
                             timerHtml = `
