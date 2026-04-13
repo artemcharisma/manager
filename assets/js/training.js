@@ -153,8 +153,7 @@ const App = {
                             if (s.w || s.r) hasValidSets = true;
                             
                             // ІГНОРУЄМО РОЗМИНКУ для Ghost Data та 1RM
-                            if (s.t === 'W') return; 
-
+                            if (s.t === 'WU') return;
                             const w = parseFloat(s.w) || 0;
                             const r = parseFloat(s.r) || 0;
                             if (w > 0 && r > 0) {
@@ -336,16 +335,64 @@ const App = {
         return Math.round(maxRM);
     },
     cycleSetType(w, d, e, s) {
-        // Циклічне перемикання типів: Нормальний -> Розминка (W) -> Дроп-сет (D) -> Відказ (F)
         const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
-        if (!setObj.t) setObj.t = 'W';
-        else if (setObj.t === 'W') setObj.t = 'D';
-        else if (setObj.t === 'D') setObj.t = 'F';
-        else delete setObj.t;
+        let msg = "";
+        let color = "";
+
+        if (!setObj.t) {
+            setObj.t = 'WU';
+            msg = "🟡 WU: Підвідний / Розминка (Не йде в рекорди)";
+            color = "var(--theme)";
+        }
+        else if (setObj.t === 'WU') {
+            setObj.t = 'TS';
+            msg = "🔴 TS: Top Set (Максимальна відмова)";
+            color = "var(--danger)";
+        }
+        else if (setObj.t === 'TS') {
+            setObj.t = 'BO';
+            msg = "🔵 BO: Back-off (-20% ваги)";
+            color = "#3b82f6";
+        }
+        else if (setObj.t === 'BO') {
+            setObj.t = 'DS';
+            msg = "🟣 DS: Drop-set (Інтенсифікація)";
+            color = "#8b5cf6";
+        }
+        else {
+            delete setObj.t;
+            msg = "⚪ Робочий / Filler підхід";
+            color = "#444";
+        }
         
-        // Зберігаємо без пушу в історію, щоб не забивати її мікрокліками
         this.save();
         this.render();
+        this.showToast(msg, color);
+    },
+
+    showToast(msg, color="var(--success)") {
+        document.querySelectorAll('.sys-toast').forEach(t => t.remove());
+        const toast = document.createElement('div');
+        toast.className = 'sys-toast';
+        toast.innerText = msg;
+        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.8rem; white-space: nowrap; animation: fadeInDown 0.2s ease forwards;`;
+        document.body.appendChild(toast);
+        setTimeout(() => { if(toast) toast.remove(); }, 2500);
+    },
+
+    moveEx(w, d, e, direction) {
+        const arr = this.data.weeks[w].days[d].exercises;
+        if (direction === -1 && e > 0) {
+            [arr[e-1], arr[e]] = [arr[e], arr[e-1]];
+            this.pushHistory();
+            this.save();
+            this.render();
+        } else if (direction === 1 && e < arr.length - 1) {
+            [arr[e+1], arr[e]] = [arr[e], arr[e+1]];
+            this.pushHistory();
+            this.save();
+            this.render();
+        }
     },
 
     toggleSuperset(w, d, e) {
@@ -433,10 +480,10 @@ const App = {
                             let sType = s.t || '';
                             let typeLabel = sIdx + 1;
                             let typeClass = '';
-                            if (sType === 'W') { typeLabel = 'W'; typeClass = 'type-W'; }
-                            else if (sType === 'D') { typeLabel = 'D'; typeClass = 'type-D'; }
-                            else if (sType === 'F') { typeLabel = 'F'; typeClass = 'type-F'; }
-
+                            if (sType === 'WU') { typeLabel = 'WU'; typeClass = 'type-WU'; }
+                            else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
+                            else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
+                            else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
                             let classW = ghostW ? "set-input w-val ghost-active" : "set-input w-val";
                             let classR = ghostR ? "set-input r-val ghost-active" : "set-input r-val";
                             
@@ -486,9 +533,21 @@ const App = {
                             </div>`;
                         }
 
-                        // Логіка Суперсетів (визначаємо, чи лінкується ця вправа до наступної, або чи підхоплюється від попередньої)
+                        // Логіка Суперсетів
                         const isLinked = ex.linkNext === true;
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
+
+                        let timerHtml = '';
+                        // ТАЙМЕР НЕ ПОКАЗУЄТЬСЯ ЯКЩО ЦЕ ПЕРША ВПРАВА СУПЕРСЕТУ (!isLinked)
+                        if (!isEd && m !== 'cardio' && !isLinked) {
+                            const exTime = ex.t || App.timerState.default;
+                            timerHtml = `
+                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation; user-select: none;"
+                                 onclick="App.handleTimerClick(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime})">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                ${exTime}s
+                            </div>`;
+                        }
 
                         return `<div class="exercise ${isLinked ? 'superset-link' : ''} ${isChild ? 'superset-child' : ''}">
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
@@ -501,6 +560,8 @@ const App = {
                                     </div>
                                 </div>
                                 <div class="edit-ui" style="gap:5px; align-items:center;">
+                                    <div class="set-btn" onclick="App.moveEx(${realWIdx},${dIdx},${eIdx},-1)" style="font-size:1.2rem; line-height:1" title="Вгору">↑</div>
+                                    <div class="set-btn" onclick="App.moveEx(${realWIdx},${dIdx},${eIdx},1)" style="font-size:1.2rem; line-height:1" title="Вниз">↓</div>
                                     <div class="btn-link ${isLinked ? 'active' : ''}" title="Зв'язати в суперсет" onclick="App.toggleSuperset(${realWIdx},${dIdx},${eIdx})">🔗</div>
                                     <div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},-1)">-</div>
                                     <div class="set-btn" onclick="App.changeSets(${realWIdx},${dIdx},${eIdx},1)">+</div>
@@ -928,14 +989,13 @@ const App = {
                 if (e1RM > 0) {
                     const calcWeight = e1RM * (percent / 100);
                     finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
-                    
-                    const toast = document.createElement('div');
-                    toast.innerText = `🎯 1RM: ${e1RM}кг. ${percent}% = ${finalVal}кг`;
-                    toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--success); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5);";
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 4000);
-                    
+                    this.showToast(`🎯 1RM: ${e1RM}кг. ${percent}% = ${finalVal}кг`, 'var(--success)');
                     needRender = true;
+                } else {
+                    this.showToast(`⚠️ Немає історії для розрахунку`, 'var(--danger)');
+                    finalVal = ""; 
+                    needRender = true;
+                }
                 } else {
                     const toast = document.createElement('div');
                     toast.innerText = `⚠️ Немає історії для розрахунку`;
