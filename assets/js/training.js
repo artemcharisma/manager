@@ -880,24 +880,40 @@ const App = {
         this.openBank();
     },
 
-    addWeek(type, init=false) {
+    async addWeek(type, init=false) {
         if (!init) this.pushHistory(); 
         
         const prog = this.data.currentProgram || 'balanced';
         let newData;
         
-        // 1. Шукаємо реальний максимальний номер тижня у цій програмі
+        // Шукаємо реальний максимальний номер тижня у цій програмі
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
-        const newWeekNum = maxNum + 1; // Завжди наступний по порядку
+        const newWeekNum = maxNum + 1; 
 
         const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
         
         if(lastWeek && !init) {
+            // РОЗУМНЕ КОПІЮВАННЯ (HARD COPY vs SOFT COPY)
+            const hardCopy = await Modal.confirm(
+                "Скопіювати минулий тиждень <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (зручно для прогресії).<br>Скасувати — тільки структура (пусті клітинки).</span>", 
+                "РЕЖИМ КОПІЮВАННЯ", 
+                "var(--theme)"
+            );
+
             newData = JSON.parse(JSON.stringify(lastWeek.days));
             newData.forEach(d => {
-                d.note = "";
-                d.exercises.forEach(ex => { ex.sets.forEach(s => { s.w=""; s.r=""; s.d=""; }); });
+                // МИ БІЛЬШЕ НЕ ОЧИЩАЄМО d.note! Твої інструкції до біомеханіки переносяться завжди.
+                d.exercises.forEach(ex => { 
+                    ex.sets.forEach(s => { 
+                        if (!hardCopy) {
+                            s.w = ""; 
+                            s.r = ""; 
+                        }
+                        // Типи підходів (s.t) зберігаються автоматично в обох варіантах!
+                        s.d = ""; 
+                    }); 
+                });
             });
         } else {
             newData = JSON.parse(JSON.stringify(Templates[prog][type]));
@@ -906,7 +922,7 @@ const App = {
         const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
         this.data.weeks.push(w);
         
-        // 2. Одразу сортуємо масив тижнів
+        // Одразу сортуємо масив тижнів
         this.data.weeks.sort((a, b) => a.num - b.num);
 
         this.updateBank();
@@ -1138,7 +1154,11 @@ const App = {
         currentWeek.days.forEach(d => {
             d.exercises.forEach(ex => {
                 const g = ex.g || ResolveGroup(ex.n);
-                if (stats[g] !== undefined) stats[g] += ex.sets.length;
+                if (stats[g] !== undefined) {
+                    // РАХУЄМО ТІЛЬКИ РОБОЧІ СЕТИ (Ігноруємо WU - Розминку)
+                    const workingSetsCount = ex.sets.filter(s => s.t !== 'WU').length;
+                    stats[g] += workingSetsCount;
+                }
             });
         });
 
