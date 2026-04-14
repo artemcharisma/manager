@@ -128,7 +128,7 @@ const InitialData = {
 const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
-    timerState: { interval: null, left: 0, default: 90, el: null, endTime: null },
+    timerState: { interval: null, left: 0, default: 90, el: null, endTime: null, currentExKey: null },
     historyIndex: {}, // ДОДАНО: Кеш для швидкого пошуку 1RM та Ghost Data
 
     // ДОДАНО: Метод, який один раз будує індекс усієї історії для миттєвого доступу
@@ -470,20 +470,27 @@ const App = {
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
                         // --- SMART GUIDE ТА НАЛАШТУВАННЯ ТРЕНАЖЕРА ---
-                        const guideInfo = this.data.guidelines[week.type]?.find(g => g.n.trim().toLowerCase() === ex.n.trim().toLowerCase());
                         let smartGuideHtml = '';
-                        if (guideInfo && !isEd) {
-                            smartGuideHtml = `
-                            <div style="margin-top: 4px; font-family: 'JetBrains Mono', monospace; line-height: 1.3;">
-                                <div style="font-size: 0.65rem; color: var(--theme); font-weight: 700; opacity: 0.9;">
-                                    ⚡ ${guideInfo.p} | ${guideInfo.s} | ${guideInfo.w}
-                                </div>
-                                ${guideInfo.i ? `<div style="font-size: 0.65rem; color: #777; font-style: italic; margin-top: 2px;">"${guideInfo.i}"</div>` : ''}
-                            </div>`;
+                        let exKeyName = "";
+                        
+                        // Захист від пустих вправ (які щойно створили)
+                        if (ex.n && typeof ex.n === 'string') {
+                            exKeyName = ex.n.trim().toLowerCase();
+                            
+                            const guideInfo = this.data.guidelines[week.type]?.find(g => g.n && g.n.trim().toLowerCase() === exKeyName);
+                            if (guideInfo && !isEd) {
+                                smartGuideHtml = `
+                                <div style="margin-top: 4px; font-family: 'JetBrains Mono', monospace; line-height: 1.3;">
+                                    <div style="font-size: 0.65rem; color: var(--theme); font-weight: 700; opacity: 0.9;">
+                                        ⚡ ${guideInfo.p} | ${guideInfo.s} | ${guideInfo.w}
+                                    </div>
+                                    ${guideInfo.i ? `<div style="font-size: 0.65rem; color: #777; font-style: italic; margin-top: 2px;">"${guideInfo.i}"</div>` : ''}
+                                </div>`;
+                            }
                         }
 
                         // Логіка Налаштувань (Equipment)
-                        const exKeyName = ex.n.trim().toLowerCase();
+                        const currentSetting = (exKeyName && this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
                         const currentSetting = (this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
                         let settingHtml = '';
                         
@@ -512,9 +519,10 @@ const App = {
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
 
                         let timerHtml = '';
+                        // ТАЙМЕР НЕ ПОКАЗУЄТЬСЯ ЯКЩО ЦЕ ПЕРША ВПРАВА СУПЕРСЕТУ (!isLinked)
                         if (!isEd && m !== 'cardio' && !isLinked) {
-                            const exTime = ex.t || App.timerState.default;
-                            const isTimerRunningForThisEx = this.timerState.interval && this.timerState.currentExKey === `${realWIdx}-${dIdx}-${eIdx}`;
+                            const exTime = ex.t || (this.timerState ? this.timerState.default : 90);
+                            const isTimerRunningForThisEx = this.timerState && this.timerState.interval && this.timerState.currentExKey === `${realWIdx}-${dIdx}-${eIdx}`;
                             
                             if (isTimerRunningForThisEx) {
                                 timerHtml = `
