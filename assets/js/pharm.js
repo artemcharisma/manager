@@ -1137,7 +1137,35 @@ const App = {
         if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
 
         const ph = this.data.phases.find(x => x.id === this.state.phaseId);
-        const wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
+        let wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
+        
+        // Додаємо селект ПІСЛЯ кнопок, позиціонуючи його абсолютно, щоб не ламати стрічку
+        if (ph) {
+            wHtml += `
+            <select style="
+                position: absolute; 
+                right: 0; 
+                top: 0; 
+                height: 100%; 
+                background: #1e1e1e; 
+                color: var(--primary); 
+                border: none;
+                border-left: 1px solid #333; 
+                border-radius: 0 12px 12px 0; 
+                padding: 0 12px; 
+                font-weight: 800; 
+                font-family: 'JetBrains Mono', monospace; 
+                font-size: 0.85rem; 
+                outline: none; 
+                cursor: pointer; 
+                box-shadow: -5px 0 15px rgba(0,0,0,0.8);
+                -webkit-appearance: none;
+                appearance: none;" 
+                onchange="App.setWeek(parseInt(this.value))">
+                <option value="" disabled selected>▾ W${this.state.week}</option>
+                ${ph.weeks.map(w => `<option value="${w}">Тиждень ${w}</option>`).join('')}
+            </select>`;
+        }
         const pasteToWeekHtml = (this.state.editing && this.pillBuffer) ? `
             <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed var(--green); color: var(--green); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; cursor: pointer; font-weight: 800; font-size: 0.9rem;" onclick="App.pastePillToWeek(${this.state.week})">
                 🗓 ВСТАВИТИ [${this.pillBuffer.name.toUpperCase()}] НА ВЕСЬ ТИЖДЕНЬ
@@ -1243,9 +1271,8 @@ const App = {
 
         const finalHtml = `
             <div class="stats-grid" id="stats-container">${statsHtml}</div>
-            <div class="week-bar">${wHtml}</div>
+            <div class="week-bar" style="position: relative; padding-right: 70px;">${wHtml}</div>
             ${pasteToWeekHtml}
-            ${grid}
             
             <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
