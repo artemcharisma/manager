@@ -742,7 +742,56 @@ const App = {
                 }
             }
         });
+
+        // ПІДКЛЮЧАЄМО СКРОЛ ДЛЯ ФАЗ ПРИ СТАРТІ ДОДАТКУ
+        this.attachDragScroll('.phase-scroll');
     },
+
+    // --- ПЛАВНИЙ ПК-СКРОЛ ТА СВАЙП ---
+    attachDragScroll(selector) {
+        const sliders = document.querySelectorAll(selector);
+        sliders.forEach(slider => {
+            // Запобіжник від дублювання подій при рендері
+            if (slider.dataset.scrollAttached === 'true') return; 
+            slider.dataset.scrollAttached = 'true';
+            
+            // Прокрутка звичайним коліщатком миші
+            slider.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    slider.scrollLeft += e.deltaY;
+                }
+            });
+
+            // Імітація свайпу на ПК (Drag-to-scroll)
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.style.cursor = 'grabbing';
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.style.cursor = 'pointer'; 
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.style.cursor = 'pointer';
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 1.5; // Швидкість свайпу
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        });
+    },
+    
     // НОВА ФУНКЦІЯ: Міграція старих даних у GlobalVitals
     migrateVitals() {
         let migrated = false;
@@ -1224,7 +1273,11 @@ const App = {
         window.requestAnimationFrame(() => {
             c.innerHTML = finalHtml;
             const newWeekBar = document.querySelector('.week-bar');
-            if (newWeekBar) newWeekBar.scrollLeft = weekScrollPos;
+            if (newWeekBar) {
+                newWeekBar.scrollLeft = weekScrollPos;
+                // ПІДКЛЮЧАЄМО СКРОЛ ДЛЯ ТИЖНІВ ПІСЛЯ ЇХ РЕНДЕРУ
+                this.attachDragScroll('.week-bar'); 
+            }
         });
     },
 
