@@ -242,6 +242,46 @@ const App = {
         this.render();
         this.save();
         this.initTimer();
+        this.initDesktopScroll();
+    },
+    // --- ПЛАВНИЙ СКРОЛ ДЛЯ ПК (Коліщатко + Мишка) ---
+    initDesktopScroll() {
+        const sliders = document.querySelectorAll('.week-scroll');
+        
+        sliders.forEach(slider => {
+            // 1. Прокрутка звичайним коліщатком миші (без Shift)
+            slider.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                slider.scrollLeft += e.deltaY;
+            });
+
+            // 2. Імітація свайпу на ПК (Drag-to-scroll)
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.style.cursor = 'grabbing';
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.style.cursor = 'default';
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.style.cursor = 'default';
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 1.5; // Швидкість свайпу мишкою
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        });
     },
 
     openExList(w, d, e) {
