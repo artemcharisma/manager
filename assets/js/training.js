@@ -531,7 +531,6 @@ const App = {
 
                         // Логіка Налаштувань (Equipment)
                         const currentSetting = (exKeyName && this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
-                        const currentSetting = (this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
                         let settingHtml = '';
                         
                         if (isEd) {
