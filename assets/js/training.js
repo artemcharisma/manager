@@ -242,20 +242,21 @@ const App = {
         this.render();
         this.save();
         this.initTimer();
-        this.initDesktopScroll();
+        this.initDesktopScroll(); // <--- ДОДАНО ВИКЛИК СКРОЛУ
     },
+
     // --- ПЛАВНИЙ СКРОЛ ДЛЯ ПК (Коліщатко + Мишка) ---
     initDesktopScroll() {
         const sliders = document.querySelectorAll('.week-scroll');
         
         sliders.forEach(slider => {
-            // 1. Прокрутка звичайним коліщатком миші (без Shift)
+            // Прокрутка коліщатком
             slider.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 slider.scrollLeft += e.deltaY;
             });
 
-            // 2. Імітація свайпу на ПК (Drag-to-scroll)
+            // Свайп мишкою (Drag-to-scroll)
             let isDown = false;
             let startX;
             let scrollLeft;
@@ -278,7 +279,7 @@ const App = {
                 if (!isDown) return;
                 e.preventDefault();
                 const x = e.pageX - slider.offsetLeft;
-                const walk = (x - startX) * 1.5; // Швидкість свайпу мишкою
+                const walk = (x - startX) * 1.5; 
                 slider.scrollLeft = scrollLeft - walk;
             });
         });
