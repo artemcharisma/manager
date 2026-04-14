@@ -185,7 +185,7 @@ const App = {
         
         // --- ДОДАНО --- Ініціалізація назв вкладок (якщо їх ще немає)
         if(!this.data.customNames) this.data.customNames = { balanced: "ЗБАЛАНСОВАНА", arms: "РУКИ" };
-        if(!this.data.globalRules) this.data.globalRules = { mass: "", cut: "" };
+        if(!this.data.settings) this.data.settings = {}; // Пам'ять тренажерів
         
         // CSS для анімації та підсвічування ghost data
         const extraStyles = document.createElement('style');
@@ -469,7 +469,7 @@ const App = {
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
-                        // --- SMART GUIDE (Підказки) ---
+                        // --- SMART GUIDE ТА НАЛАШТУВАННЯ ТРЕНАЖЕРА ---
                         const guideInfo = this.data.guidelines[week.type]?.find(g => g.n.trim().toLowerCase() === ex.n.trim().toLowerCase());
                         let smartGuideHtml = '';
                         if (guideInfo && !isEd) {
@@ -482,6 +482,17 @@ const App = {
                             </div>`;
                         }
 
+                        // Логіка Налаштувань (Equipment)
+                        const exKeyName = ex.n.trim().toLowerCase();
+                        const currentSetting = (this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
+                        let settingHtml = '';
+                        
+                        if (isEd) {
+                            settingHtml = `<input type="text" class="modal-input" style="padding:4px 8px; font-size:0.65rem; margin-top:4px; border:1px dashed #333; background:rgba(0,0,0,0.5); width:100%;" placeholder="Налаштування (Спинка 4, Валик 2)..." value="${currentSetting}" onblur="App.updateSetting('${exKeyName.replace(/'/g, "\\'")}', this.value)">`;
+                        } else if (currentSetting) {
+                            settingHtml = `<div style="font-size:0.6rem; color:#8b5cf6; margin-top:4px; font-family:'JetBrains Mono'; font-weight:700;">⚙️ ${currentSetting}</div>`;
+                        }
+
                         let exNameHtml = '';
                         if (isEd) {
                             exNameHtml = `
@@ -490,17 +501,17 @@ const App = {
                                        onfocus="App.openExList(${realWIdx}, ${dIdx}, ${eIdx})" 
                                        oninput="App.filterExList(this.value, ${realWIdx}, ${dIdx}, ${eIdx})" 
                                        onblur="setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n',document.getElementById('ex-${realWIdx}-${dIdx}-${eIdx}').value), 200)">
+                                ${settingHtml}
                                 <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
                             </div>`;
                         } else {
-                            exNameHtml = `<div style="display:flex; flex-direction:column;"><span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>${smartGuideHtml}</div>`;
+                            exNameHtml = `<div style="display:flex; flex-direction:column;"><span class="ex-name">${ex.n || '<span style="color:#555;font-size:0.8rem">Вправа</span>'}</span>${settingHtml}${smartGuideHtml}</div>`;
                         }
 
                         const isLinked = ex.linkNext === true;
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
 
                         let timerHtml = '';
-                        // ТАЙМЕР НЕ ПОКАЗУЄТЬСЯ ЯКЩО ЦЕ ПЕРША ВПРАВА СУПЕРСЕТУ (!isLinked)
                         if (!isEd && m !== 'cardio' && !isLinked) {
                             const exTime = ex.t || App.timerState.default;
                             const isTimerRunningForThisEx = this.timerState.interval && this.timerState.currentExKey === `${realWIdx}-${dIdx}-${eIdx}`;
@@ -541,7 +552,7 @@ const App = {
 
                             // --- BEAT THE LOGBOOK HUD ---
                             let progressHtml = '&nbsp;';
-                            if (ghostW && ghostR) {
+                            if (ghostW && ghostR && sType !== 'WU') {
                                 let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
                                 let curW = parseFloat(s.w) || 0;
                                 let curR = parseFloat(s.r) || 0;
@@ -556,7 +567,7 @@ const App = {
 
                             return `
                             <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
-                                <div style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px; width:100%; white-space:nowrap;">
+                                <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px; width:100%; white-space:nowrap;">
                                     ${progressHtml}
                                 </div>
                                 <div class="set-row ${typeClass}">
@@ -962,6 +973,7 @@ const App = {
         this.data.weeks.push(w);
         this.data.weeks.sort((a, b) => a.num - b.num);
         this.updateBank();
+        this.buildIndex(); // <--- ДОДАЙ ЦЕЙ РЯДОК (Примусово оновлює рекорди)
         this.save(); 
         this.render();
     },
@@ -999,6 +1011,14 @@ const App = {
         }
     },
 
+    updateSetting(key, val) {
+        if (!this.data.settings) this.data.settings = {};
+        if (this.data.settings[key] !== val) {
+            this.pushHistory();
+            this.data.settings[key] = val;
+            this.save();
+        }
+    },
     updateEx(w, d, e, field, val) {
         if(this.data.weeks[w].days[d].exercises[e][field] !== val) {
             this.pushHistory();
@@ -1018,8 +1038,8 @@ const App = {
 
     updateSet(w, d, e, s, f, val, inputEl) {
         let finalVal = val;
-        let needRender = false;
 
+        // Логіка відсотків
         if (f === 'w' && typeof val === 'string' && (val.includes('%') || val.toLowerCase().includes('p'))) {
             const percent = parseFloat(val);
             if (!isNaN(percent) && percent > 0) {
@@ -1030,25 +1050,46 @@ const App = {
                 if (e1RM > 0) {
                     const calcWeight = e1RM * (percent / 100);
                     finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
-                    
-                    // БЕЗ МЕРЕХТІННЯ: Оновлюємо DOM безпосередньо!
                     if (inputEl) inputEl.value = finalVal;
-                    else needRender = true;
-                    
                     this.showToast(`🎯 1RM: ${e1RM}кг. ${percent}% = ${finalVal}кг`, 'var(--success)');
                 } else {
                     this.showToast(`⚠️ Немає історії для розрахунку`, 'var(--danger)');
                     finalVal = ""; 
                     if (inputEl) inputEl.value = "";
-                    else needRender = true;
                 }
             }
         }
 
-        if(this.data.weeks[w].days[d].exercises[e].sets[s][f] !== finalVal) {
-            this.data.weeks[w].days[d].exercises[e].sets[s][f] = finalVal;
-            this.save();
-            if (needRender) this.render();
+        const exObj = this.data.weeks[w].days[d].exercises[e];
+        const setObj = exObj.sets[s];
+
+        if(setObj[f] !== finalVal) {
+            setObj[f] = finalVal;
+            
+            // ЖИВЕ ОНОВЛЕННЯ HUD (Без render і мерехтіння)
+            if (setObj.t !== 'WU') {
+                const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
+                if (ghostSets && ghostSets[s]) {
+                    let ghostW = ghostSets[s].w;
+                    let ghostR = ghostSets[s].r;
+                    if (ghostW && ghostR) {
+                        let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
+                        let curW = parseFloat(setObj.w) || 0;
+                        let curR = parseFloat(setObj.r) || 0;
+                        let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
+                        
+                        let icon = '<span style="color:#555">➖</span>';
+                        if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
+                        else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
+
+                        const hudEl = document.getElementById(`hud-${w}-${d}-${e}-${s}`);
+                        if (hudEl) {
+                            hudEl.innerHTML = `<span style="color:#777; font-weight:600;">Минуло: ${ghostW}x${ghostR}</span> <span style="margin-left:3px">${icon}</span>`;
+                        }
+                    }
+                }
+            }
+            this.save(); // Тільки тихе збереження даних
         }
     },
     setGuideMode(m) { this.data.guideMode = m; this.save(); this.renderGuide(); },
