@@ -1265,10 +1265,17 @@ const App = {
         }
     },
     
-    filterGuide(q) {
+        filterGuide(q) {
         const rows = document.querySelectorAll('.guide-table tbody tr');
-        rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(q.toLowerCase()) ? '' : 'none');
+        const query = q.toLowerCase();
+        rows.forEach(r => {
+            // Збираємо текст як з простого HTML, так і з полів вводу
+            const inputsText = Array.from(r.querySelectorAll('input, textarea')).map(inp => inp.value).join(' ').toLowerCase();
+            const rowText = r.innerText.toLowerCase();
+            r.style.display = (rowText.includes(query) || inputsText.includes(query)) ? '' : 'none';
+        });
     },
+
 
     updateGuide(p, m, i, f, v) { 
         if(this.data.guidelines[p][m][i][f] !== v) {
@@ -1332,7 +1339,7 @@ const App = {
             this.save(); 
         }
     },
-    renderGuide() {
+        renderGuide() {
         const c = document.getElementById('guideContent');
         const m = this.data.guideMode || 'mass';
         const p = this.data.currentProgram || 'balanced'; // ДОДАНО: отримуємо поточну програму
@@ -1351,6 +1358,7 @@ const App = {
         const ruleKey = p + '_' + m; // Глобальні правила тепер теж розділені: balanced_mass, arms_cut і тд
         const globalRule = this.data.globalRules ? (this.data.globalRules[ruleKey] || "") : "";
         
+        // --- ПОЧАТОК ЗМІНЕНОГО БЛОКУ HTML ---
         c.innerHTML = `
         <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 15px;">
             <div style="font-size: 0.7rem; color: var(--theme); font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">📌 МЕХАНІКА ВАГ ТА ГЛОБАЛЬНІ ПРАВИЛА (${m.toUpperCase()}):</div>
@@ -1359,6 +1367,14 @@ const App = {
                 `<div style="font-size:0.8rem; color:#aaa; line-height:1.4; white-space: pre-wrap;">${globalRule || '<i style="color:#555">Немає глобальних правил. Натисніть Олівець, щоб додати.</i>'}</div>`
             }
         </div>
+
+        ${isEd ? `
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div class="btn-add" style="flex:1; text-align:center; font-weight:bold;" onclick="App.addGuideRow('${p}', '${m}')">+ НОВИЙ РЯДОК</div>
+            <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОНІЗУВАТИ З РОЗКЛАДОМ</div>
+        </div>
+        ` : ''}
+
         <table class="guide-table">
             <thead>
                 <tr>
@@ -1393,17 +1409,55 @@ const App = {
                 `).join('')}
             </tbody>
         </table>
-        ${isEd ? `<div class="btn-add" style="margin-top:10px" onclick="App.addGuideRow('${p}', '${m}')">+ Додати рядок</div>` : ''}
         `;
+        // --- КІНЕЦЬ ЗМІНЕНОГО БЛОКУ HTML ---
     },
+
     
-    addGuideRow(p, m) {
+        addGuideRow(p, m) {
         this.pushHistory();
         if (!this.data.guidelines[p]) this.data.guidelines[p] = { mass: [], cut: [] };
-        this.data.guidelines[p][m].push({n:"", p:"", s:"", w:"", i:""});
+        // unshift додає елемент на початок масиву (зверху таблиці)
+        this.data.guidelines[p][m].unshift({n:"", p:"", s:"", w:"", i:""});
         this.save(); 
         this.renderGuide();
     },
+    syncGuide(p, m) {
+        if (!this.data.weeks || !this.data.guidelines[p] || !this.data.guidelines[p][m]) return;
+        
+        this.pushHistory();
+        const guideList = this.data.guidelines[p][m];
+        // Збираємо назви існуючих в довіднику вправ, щоб не дублювати
+        const existingNames = new Set(guideList.map(g => (g.n || "").trim().toLowerCase()));
+        let addedCount = 0;
+
+        // Скануємо розклад для поточної програми (p) і типу (m)
+        this.data.weeks.filter(w => w.prog === p && w.type === m).forEach(w => {
+            w.days.forEach(d => {
+                d.exercises.forEach(ex => {
+                    // Ігноруємо порожні рядки та кардіо
+                    if (ex.n && ex.n.length > 2 && ex.m !== 'cardio') {
+                        const nameToSync = ex.n.trim();
+                        if (!existingNames.has(nameToSync.toLowerCase())) {
+                            // Додаємо нову вправу нагору таблиці
+                            guideList.unshift({ n: nameToSync, p: "", s: "", w: "", i: "" });
+                            existingNames.add(nameToSync.toLowerCase());
+                            addedCount++;
+                        }
+                    }
+                });
+            });
+        });
+
+        if (addedCount > 0) {
+            this.save();
+            this.renderGuide();
+            this.showToast(`✅ Синхронізовано: додано ${addedCount} нових вправ з розкладу`, 'var(--success)');
+        } else {
+            this.showToast(`ℹ️ Усі вправи з розкладу вже є у довіднику`, '#3b82f6');
+        }
+    },
+
 
    renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
