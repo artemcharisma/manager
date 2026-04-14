@@ -88,12 +88,41 @@
         .course-progress { width: 100%; height: 6px; background: #222; border-radius: 3px; margin: 0 0 25px 0; position: relative; }
         .prog-bar { height: 100%; background: linear-gradient(90deg, var(--primary), #fcd34d); transition: width 0.5s ease; }
         .prog-text { position: absolute; top: 8px; right: 0; font-size: 0.7rem; color: #666; font-family: 'JetBrains Mono'; }
-        .phase-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px 20px 5px; margin-bottom: 15px; align-items: center; }
+/* --- PRO-Скрол для Фаз --- */
+        .phase-scroll { 
+            display: flex; 
+            flex-wrap: nowrap; /* КРИТИЧНО: Не даємо падати на новий рядок */
+            gap: 12px; 
+            overflow-x: auto; 
+            padding: 10px 5px 20px 5px; 
+            margin-bottom: 15px; 
+            align-items: center; 
+            scrollbar-width: none; /* Ховає скрол у Firefox */
+            -webkit-overflow-scrolling: touch; /* Плавність на iOS */
+            cursor: pointer; /* Курсор для мишки */
+        }
+        .phase-scroll::-webkit-scrollbar { display: none; } /* Ховає скрол Chrome/Safari */
+        
         .phase-btn small { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
         .phase-btn span { font-weight: 700; font-size: 0.9rem; color: #fff; }
         .phase-btn.active { background: rgba(212, 175, 55, 0.1); border-color: var(--primary); }
         .phase-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--primary); }
-        .week-bar { display: flex; gap: 6px; background: #000; padding: 6px; border-radius: 12px; margin-bottom: 25px; overflow-x: auto; }
+        
+        /* --- PRO-Скрол для Тижнів --- */
+        .week-bar { 
+            display: flex; 
+            flex-wrap: nowrap; /* КРИТИЧНО: Не даємо падати на новий рядок */
+            gap: 6px; 
+            background: #000; 
+            padding: 6px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            overflow-x: auto; 
+            scrollbar-width: none; /* Ховає скрол у Firefox */
+            -webkit-overflow-scrolling: touch; /* Плавність на iOS */
+            cursor: pointer; /* Курсор для мишки */
+        }
+        .week-bar::-webkit-scrollbar { display: none; } /* Ховає скрол Chrome/Safari */
         .week-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; color: #52525b; font-weight: 700; font-size: 0.85rem; transition: 0.2s; flex-shrink: 0; }
         .week-btn:hover { background: var(--bg-element); color: #fff; }
         .week-btn.active { background: var(--primary); color: #000; }
