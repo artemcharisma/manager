@@ -48,8 +48,12 @@
 
         /* --- Фікс вкладок тижнів (щоб не плющило) --- */
         .week-scroll { 
-            display: flex; gap: 8px; overflow-x: auto; 
-            padding: 5px 10px 15px 10px; margin: 0 -10px 15px -10px; 
+            display: flex; 
+            flex-wrap: nowrap; /* Забороняє кнопкам падати на 2 рядок */
+            gap: 8px; 
+            overflow-x: auto; 
+            padding: 5px 10px 15px 10px; 
+            margin: 0 -10px 15px -10px; 
             scrollbar-width: none; /* Ховає скрол у Firefox */
             -webkit-overflow-scrolling: touch; /* Плавність на iOS */
         }
@@ -57,12 +61,22 @@
         .week-scroll::-webkit-scrollbar {
             display: none;
         }
+        
         .week-btn { 
             flex: 0 0 auto; /* ЗАБОРОНА СТИСКАННЯ */
-            min-width: 75px; padding: 12px 0; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            border-radius: 12px; cursor: pointer; color: #555; border: 1px solid var(--border); 
-            background: var(--bg-panel); position: relative; transition: 0.2s;
+            min-width: 75px; 
+            padding: 12px 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            color: #555; 
+            border: 1px solid var(--border); 
+            background: var(--bg-panel); 
+            position: relative; 
+            transition: 0.2s;
         }
         .week-btn.active { border-color: var(--theme); color: #fff; background: #1a1a1a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
         .week-btn.is-arms {
