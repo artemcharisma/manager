@@ -500,14 +500,25 @@ const App = {
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
 
                         let timerHtml = '';
+                        // ТАЙМЕР НЕ ПОКАЗУЄТЬСЯ ЯКЩО ЦЕ ПЕРША ВПРАВА СУПЕРСЕТУ (!isLinked)
                         if (!isEd && m !== 'cardio' && !isLinked) {
                             const exTime = ex.t || App.timerState.default;
-                            timerHtml = `
-                            <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation; user-select: none;"
-                                 onclick="App.handleTimerClick(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime})">
-                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                ${exTime}s
-                            </div>`;
+                            const isTimerRunningForThisEx = this.timerState.interval && this.timerState.currentExKey === `${realWIdx}-${dIdx}-${eIdx}`;
+                            
+                            if (isTimerRunningForThisEx) {
+                                timerHtml = `
+                                <div class="ex-timer-btn active-timer" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation; user-select: none; background: var(--success); color: #fff; border-color: var(--success);"
+                                     onclick="App.stopTimer()">
+                                    ⏳ Іде відпочинок
+                                </div>`;
+                            } else {
+                                timerHtml = `
+                                <div class="ex-timer-btn" id="timer-btn-${realWIdx}-${dIdx}-${eIdx}" style="touch-action: manipulation; user-select: none;"
+                                     onclick="App.handleTimerClick(${realWIdx}, ${dIdx}, ${eIdx}, ${exTime})">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    ${exTime}s
+                                </div>`;
+                            }
                         }
 
                         const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
@@ -751,10 +762,11 @@ const App = {
         }
     },
 
-    startTimer(seconds) {
+    startTimer(seconds, exKey = null) {
         this.stopTimer();
         this.timerState.left = seconds;
         this.timerState.endTime = Date.now() + (seconds * 1000);
+        this.timerState.currentExKey = exKey; // Зберігаємо ключ вправи
         
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
@@ -800,6 +812,7 @@ const App = {
         if(this.timerState.interval) clearInterval(this.timerState.interval);
         this.timerState.interval = null;
         this.timerState.endTime = null; 
+        this.timerState.currentExKey = null; // ДОДАНО
         
         this.timerState.el.style.background = 'rgba(20, 20, 22, 0.95)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
@@ -807,6 +820,7 @@ const App = {
         
         this.timerState.el.style.display = 'none';
         this.timerState.left = this.timerState.default;
+        this.render(); // Оновлюємо кнопку назад на стандартну
     },
 
     updateTimerUI() {
@@ -854,7 +868,8 @@ const App = {
             // Одинарний тап: чекаємо 250мс, якщо другого тапу не було - запускаємо таймер
             this._timerTaps[key] = setTimeout(() => {
                 this._timerTaps[key] = null;
-                this.startTimer(time);
+                this.startTimer(time, key); // Передаємо key
+                this.render(); // Перемальовуємо, щоб показати статус таймера
             }, 250);
         }
     },
