@@ -823,12 +823,28 @@ const App = {
 
     updateBank() {
         const allNames = new Set(this.data.exBank);
-        this.data.weeks.forEach(w => w.days.forEach(d => d.exercises.forEach(e => {
-            if(e.n && e.n.length > 2) allNames.add(e.n);
-        })));
-        Object.values(this.data.guidelines).forEach(list => list.forEach(r => {
-            if(r.n && r.n.length > 2) allNames.add(r.n);
-        }));
+        
+        // Збираємо вправи з поточного розкладу
+        if (this.data.weeks) {
+            this.data.weeks.forEach(w => w.days.forEach(d => d.exercises.forEach(e => {
+                if(e.n && e.n.length > 2) allNames.add(e.n);
+            })));
+        }
+        
+        // Збираємо вправи з оновленого довідника (проходимо по 2 рівнях вкладеності)
+        if (this.data.guidelines) {
+            Object.values(this.data.guidelines).forEach(progObj => {
+                if (progObj) {
+                    Object.values(progObj).forEach(list => {
+                        if (Array.isArray(list)) {
+                            list.forEach(r => {
+                                if(r.n && r.n.length > 2) allNames.add(r.n);
+                            });
+                        }
+                    });
+                }
+            });
+        }
         
         this.data.exBank = Array.from(allNames).sort();
     },
