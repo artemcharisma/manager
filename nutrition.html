@@ -117,16 +117,18 @@
 
         /* --- 3. DAY NAVIGATION --- */
         .day-bar {
-            display: flex; overflow-x: auto; gap: 8px; 
-            padding: 10px 10px 20px 10px; margin-bottom: 0; 
-            scrollbar-width: thin; scrollbar-color: var(--theme) transparent;
-            margin-left: -10px; margin-right: -10px; scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch; touch-action: pan-x;
+            display: flex; 
+            flex-wrap: nowrap; /* Не даємо падати на новий рядок */
+            overflow-x: auto; 
+            gap: 8px; 
+            padding: 10px 10px 20px 10px; 
+            margin-bottom: 0; 
+            margin-left: -10px; margin-right: -10px; 
+            scrollbar-width: none; /* Ховає скрол у Firefox */
+            -webkit-overflow-scrolling: touch; /* Плавність на iOS */
+            cursor: pointer; /* Курсор для мишки */
         }
-        .day-bar::-webkit-scrollbar { height: 4px; display: block; }
-        .day-bar::-webkit-scrollbar-track { background: transparent; }
-        .day-bar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        .day-bar:hover::-webkit-scrollbar-thumb { background: var(--theme); }
+        .day-bar::-webkit-scrollbar { display: none; } /* Ховає скрол у Chrome/Safari */
 
         .day-tab {
             min-width: 75px; max-width: 110px; padding: 8px 5px; min-height: 56px; 
