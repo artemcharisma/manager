@@ -345,6 +345,52 @@ const App = {
         this.unlockScroll();
     },
 
+    // --- SIDE-BY-SIDE ПРОГРЕС ---
+    async openCompareModal() {
+        if(document.activeElement) document.activeElement.blur();
+        this.lockScroll();
+        
+        const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
+        if(keys.length === 0) {
+            this.unlockScroll();
+            alert("Немає фото для порівняння!");
+            return;
+        }
+
+        const selL = document.getElementById('compSelectL');
+        const selR = document.getElementById('compSelectR');
+        
+        selL.innerHTML = '';
+        selR.innerHTML = '';
+
+        keys.forEach(k => {
+            const opt1 = `<option value="${k}">Week ${k}</option>`;
+            selL.innerHTML += opt1;
+            selR.innerHTML += opt1;
+        });
+
+        // Ліворуч ставимо перше фото, праворуч - останнє (найсвіжіше)
+        selL.value = keys[0];
+        selR.value = keys[keys.length - 1];
+
+        document.getElementById('compareModal').style.display = 'flex';
+
+        this.loadCompareImage('L', selL.value);
+        this.loadCompareImage('R', selR.value);
+    },
+
+    async loadCompareImage(side, week) {
+        const box = document.getElementById('imgBox' + side);
+        box.innerHTML = '<span style="opacity:0.3; font-weight:bold; font-family:var(--font-mono)">Завантаження...</span>';
+        
+        const photos = await PhotoDB.get(Number(week));
+        if(photos && photos.length > 0) {
+            // Беремо перше фото з обраного тижня
+            box.innerHTML = `<img src="${photos[0].data}" alt="W${week}">`;
+        } else {
+            box.innerHTML = '<span style="opacity:0.3; font-weight:bold; font-family:var(--font-mono)">Немає фото</span>';
+        }
+    },
     initPhotoGestures(modal, img) {
         const newModal = modal.cloneNode(true);
         modal.parentNode.replaceChild(newModal, modal);
@@ -1267,6 +1313,7 @@ const App = {
                 <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
                 <div class="photo-grid">${pHtml}</div>
                 <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
+                ${this.photoKeys.size > 0 ? `<button class="btn-compare" style="margin-top:15px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="App.openCompareModal()">⚔️ ПОРІВНЯТИ ПРОГРЕС</button>` : ''}
             </div>`;
 
         // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
