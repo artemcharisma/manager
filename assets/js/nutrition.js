@@ -67,7 +67,52 @@ const App = {
         this.render();
         document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
         this.setupSpacebarNavigation();
+        
+        this.attachDragScroll('#dayBar'); // <--- ПІДКЛЮЧАЄМО СКРОЛ ТУТ
     },
+
+    // --- ПЛАВНИЙ ПК-СКРОЛ ТА СВАЙП ---
+    attachDragScroll(selector) {
+        const sliders = document.querySelectorAll(selector);
+        sliders.forEach(slider => {
+            if (slider.dataset.scrollAttached === 'true') return; 
+            slider.dataset.scrollAttached = 'true';
+            
+            slider.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    slider.scrollLeft += e.deltaY;
+                }
+            });
+
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.style.cursor = 'grabbing';
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.style.cursor = 'pointer';
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.style.cursor = 'pointer';
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 1.5; 
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        });
+    },
+
     setupHardReset() {
         const brandBlock = document.getElementById('brandBlock');
         if(!brandBlock) return;
@@ -599,38 +644,22 @@ const App = {
         const bar = document.getElementById('dayBar');
         if(!bar) return;
         bar.innerHTML = '';
+        
         this.data.days.forEach(d => {
             const el = document.createElement('div');
             el.className = `day-tab ${d.id === this.state.currentDayId ? 'active' : ''}`;
-            el.style.cursor = 'pointer'; // ГАРАНТІЯ клікабельності
+            el.style.cursor = 'pointer'; 
             
             let t = d.name;
-            let s = ''; // За замовчуванням пусто! Ніяких крапок. (Підпис)
+            let s = ''; 
             if (d.name.includes('|')) {
                 const parts = d.name.split('|');
                 t = parts[0];
                 s = parts[1] || '';
             }
             
-            // Якщо підпис є - малюємо тег <small>. Якщо ні - малюємо тільки головну назву.
             const subHtml = s ? `<small style="pointer-events:none;">${s}</small>` : '';
             el.innerHTML = `<span style="pointer-events:none;">${t}</span>${subHtml}`;
-            // Додати в самий кінець renderDaysBar()
-            const bar = document.getElementById('dayBar');
-            let isDown = false; let startX; let scrollLeft;
-            bar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft; });
-            bar.addEventListener('mouseleave', () => { isDown = false; });
-            bar.addEventListener('mouseup', () => { isDown = false; });
-            bar.addEventListener('mousemove', (e) => {
-                if(!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - bar.offsetLeft;
-                const walk = (x - startX) * 2;
-                bar.scrollLeft = scrollLeft - walk;
-            });
-            
-            // Запобігаємо клікам по внутрішніх елементах (span/small), щоб спрацьовував клік по всьому табу
-            el.innerHTML = `<span style="pointer-events:none;">${t}</span><small style="pointer-events:none;">${s}</small>`;
             
             el.onclick = () => {
                 if(this.state.currentDayId !== d.id) {
