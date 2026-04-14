@@ -67,9 +67,9 @@
     </div>
 
     <div id="viewStats" style="display:none">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center">
-            <h3 style="color:#fff; margin:0">Об'єм (Сети)</h3>
-            <select id="statsWeekSelect" class="group-select" style="font-size:0.9rem; padding:8px" onchange="App.renderStats()"></select>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:15px;">
+            <h3 style="color:#fff; margin:0; letter-spacing:1px; font-size:1rem; font-weight:800;">📊 АНАЛІТИКА ОБ'ЄМУ</h3>
+            <div id="statsWeekNav" class="week-scroll" style="margin:0; padding-bottom:5px;"></div>
         </div>
         <div id="statsContent" class="stats-grid"></div>
     </div>
