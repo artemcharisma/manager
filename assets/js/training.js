@@ -855,12 +855,71 @@ const App = {
         this.data.exBank = Array.from(allNames).sort();
     },
 
-    openBank() {
+        openBank() {
         this.toggleFab(false);
         const list = document.getElementById('bankList');
-        list.innerHTML = this.data.exBank.map(n => `<div class="bank-item"><span>${n}</span><span class="bank-del" onclick="App.deleteFromBank('${n.replace(/'/g, "\\'")}')">✕</span></div>`).join('');
+        list.innerHTML = this.data.exBank.map(n => `
+            <div class="bank-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #333;">
+                <span style="cursor:pointer; color:#fff; flex:1;" onclick="App.renameGlobalEx('${n.replace(/'/g, "\\'")}')" title="Редагувати">
+                    ${n} <span style="font-size:0.7rem; color:var(--theme); margin-left:8px;">✎</span>
+                </span>
+                <span class="bank-del" style="color:var(--danger); cursor:pointer; padding:0 10px; font-weight:bold;" onclick="App.deleteFromBank('${n.replace(/'/g, "\\'")}')">✕</span>
+            </div>
+        `).join('');
         document.getElementById('bankModal').style.display = 'flex';
     },
+        async renameGlobalEx(oldName) {
+        const newName = await Modal.prompt(`Перейменувати "<b>${oldName}</b>" у всій базі?<br><br><span style="font-size:0.8rem; color:#888;">Це оновить історію, довідники та налаштування.</span>`, "ГЛОБАЛЬНЕ ПЕРЕЙМЕНУВАННЯ", oldName);
+        
+        if (!newName || newName.trim() === "" || newName.trim().toLowerCase() === oldName.trim().toLowerCase()) return;
+        
+        const oldKey = oldName.trim().toLowerCase();
+        const newKey = newName.trim().toLowerCase();
+        
+        this.pushHistory();
+        
+        // 1. Оновлюємо всі тижні та підходи (для Ghost Data та 1RM)
+        if (this.data.weeks) {
+            this.data.weeks.forEach(w => w.days.forEach(d => d.exercises.forEach(e => {
+                if (e.n && e.n.trim().toLowerCase() === oldKey) {
+                    e.n = newName.trim();
+                }
+            })));
+        }
+        
+        // 2. Оновлюємо всі довідники (Guidelines)
+        if (this.data.guidelines) {
+            Object.values(this.data.guidelines).forEach(progObj => {
+                if (progObj) {
+                    Object.values(progObj).forEach(list => {
+                        if (Array.isArray(list)) {
+                            list.forEach(r => {
+                                if (r.n && r.n.trim().toLowerCase() === oldKey) {
+                                    r.n = newName.trim();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 3. Оновлюємо налаштування тренажерів (Спинка, валики і т.д.)
+        if (this.data.settings && this.data.settings[oldKey] !== undefined) {
+            this.data.settings[newKey] = this.data.settings[oldKey];
+            delete this.data.settings[oldKey];
+        }
+        
+        // 4. Оновлюємо сам банк вправ
+        this.data.exBank = this.data.exBank.map(n => n.trim().toLowerCase() === oldKey ? newName.trim() : n);
+        
+        this.updateBank();
+        this.save();
+        this.render();
+        this.openBank(); // Оновлюємо модалку банку
+        this.showToast(`✅ "${oldName}" успішно змінено на "${newName}" скрізь!`, 'var(--success)');
+    },
+
     
     calc1RM() {
         const w = parseFloat(document.getElementById('rm-w').value) || 0;
