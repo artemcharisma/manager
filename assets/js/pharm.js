@@ -219,7 +219,108 @@ const App = {
 
     stateManager: new StateManager('gold_protocol', DefaultData),
     
-    state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0, photoModalTicking: false },
+    state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0, photoModalTicking: false, pinnedWeek: null },
+
+    togglePinWeek() {
+        if (this.state.pinnedWeek === this.state.week) {
+            this.state.pinnedWeek = null; // Відкріпити, якщо натиснули на той самий
+        } else {
+            this.state.pinnedWeek = this.state.week; // Закріпити поточний
+        }
+        this.renderView();
+    },
+
+    // Універсальний генератор сітки днів (заміняє хардкод у renderProtocol)
+    getWeekGridHtml(weekNum, isPinned = false) {
+        // Якщо це закріплений тиждень, робимо його меншим (zoom: 0.85) і забороняємо кліки (pointer-events: none)
+        let grid = `<div class="days-grid" ${isPinned ? 'style="opacity: 0.9; zoom: 0.85; pointer-events: none;"' : ''}>`;
+        const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+
+        for (let i = 0; i < 7; i++) {
+            const realDate = this.getRealDate(weekNum, i);
+            const isToday = this.isToday(weekNum, i);
+            const pills = this.data.schedule[weekNum]?.[i] || [];
+            const dateStr = GlobalVitals.formatDate(this.getRealDateObj(weekNum, i));
+            const v = GlobalVitals.get(dateStr) || {};
+            let sys = "", dia = "";
+            if (v.bp && v.bp.includes('/')) {
+                const parts = v.bp.split('/');
+                sys = parts[0]; dia = parts[1];
+            } else if (v.bp) {
+                sys = v.bp;
+            }
+
+            let content = pills.map((m, idx) => {
+                const pillId = `${weekNum}-${i}-${idx}`;
+                const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
+                const checkIcon = m.done ? `<div style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>` : '';
+                
+                // Блокуємо редагування для закріпленого тижня
+                const textPointer = (this.state.editing && !isPinned) ? 'auto' : 'none';
+                const innerStop = (this.state.editing && !isPinned) ? 'onclick="event.stopPropagation()"' : '';
+                const clickAction = (this.state.editing || isPinned) ? '' : `onclick="App.togglePillDone(${weekNum}, ${i}, ${idx})"`;
+                const isMenuOpen = this.state.openMenu === pillId;
+
+                return `
+                <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:${isPinned ? 'default' : 'pointer'}; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
+                    ${checkIcon}
+                    <div style="flex:1; pointer-events:${textPointer}; display:flex; flex-direction:column; justify-content:center; padding-right:10px;">
+                        <div contenteditable="${this.state.editing && !isPinned}" onblur="App.updatePill(${weekNum},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; line-height:1.2;">${m.name}</div>
+                        <div class="pill-meta" contenteditable="${this.state.editing && !isPinned}" onblur="App.updatePill(${weekNum},${i},${idx},'meta',this.innerText)" ${innerStop} style="margin-top:2px;">${m.meta || ""}</div>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; margin-left:auto; gap:12px;">
+                        <span contenteditable="${this.state.editing && !isPinned}" onblur="App.updatePill(${weekNum},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; text-align:right; font-weight:800; font-family:'JetBrains Mono', monospace;" ${innerStop}>${m.dose}</span>
+                        ${(this.state.editing && !isPinned) ? `
+                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; pointer-events:auto;">
+                                ${this.getMenuUI(weekNum, i, idx, m.name, isMenuOpen)}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+                
+            let headerBtns = '';
+            if (this.state.editing && !isPinned) {
+                if (this.pillBuffer) {
+                    headerBtns += `<div style="flex-shrink:0; font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${weekNum}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
+                }
+                headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${weekNum}, ${i})" title="Копіювати день">📋</div>`;
+            }
+
+            grid += `<div class="day-card" style="${(isToday && !isPinned) ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
+                <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent); border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.05rem; font-weight:800; color:#fff; text-transform:uppercase;">${dayNames[i]}</span>
+                        <span style="font-size:0.75rem; color:var(--primary); font-weight:700; letter-spacing:1px; background:rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); padding:3px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">${realDate}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; margin-left:auto;">${headerBtns}</div>
+                </div>
+                ${content}
+                ${(!isPinned) ? `<div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${weekNum},${i})">+</div>` : ''}
+                
+                <div class="vitals-row">
+                    <div class="bp-wrapper" title="Тиск (Систолічний / Діастолічний)">
+                        <input class="bp-input" type="number" inputmode="numeric" placeholder="120" value="${sys}" 
+                            id="sys-${weekNum}-${i}"
+                            ${isPinned ? 'readonly tabindex="-1"' : `oninput="if(this.value.length >= 3) document.getElementById('dia-${weekNum}-${i}').focus()"`} 
+                            onblur="App.saveBP(${weekNum},${i},'sys',this.value)">
+                        <span class="bp-separator">/</span>
+                        <input class="bp-input" type="number" inputmode="numeric" placeholder="80" value="${dia}" 
+                            id="dia-${weekNum}-${i}"
+                            ${isPinned ? 'readonly tabindex="-1"' : `onkeydown="if(event.key === 'Backspace' && this.value === '') document.getElementById('sys-${weekNum}-${i}').focus()"`}
+                            onblur="App.saveBP(${weekNum},${i},'dia',this.value)">
+                    </div>
+                    <input class="vital-input" type="number" inputmode="numeric" placeholder="Пульс" value="${v.hr || ''}" ${isPinned ? 'readonly tabindex="-1"' : ''} onblur="App.saveVital(${weekNum},${i},'hr',this.value)">
+                    <input class="vital-input" type="text" inputmode="decimal" placeholder="Вага" value="${v.w || ''}" 
+                        ${isPinned ? 'readonly tabindex="-1"' : `oninput="this.value = this.value.replace(',', '.').replace(/[^0-9.]/g, '')"`} 
+                        onblur="App.saveVital(${weekNum},${i},'w',this.value)">
+                </div>
+            </div>`;
+        }
+        grid += '</div>';
+        return grid;
+    },
     
     chartInstance: null,
     measChartInstance: null,
