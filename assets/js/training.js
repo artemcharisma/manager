@@ -1167,7 +1167,17 @@ const App = {
         if(this.data.weeks[w].days[d].exercises[e][field] !== val) {
             this.pushHistory();
             this.data.weeks[w].days[d].exercises[e][field] = val;
-            if(field === 'n') this.updateBank();
+            
+            if(field === 'n') {
+                // ОПТИМІЗАЦІЯ: Якщо назва нова — оновлюємо базу одразу
+                if (val.length > 2 && !this.data.exBank.includes(val)) {
+                    this.updateBank();
+                } else {
+                    // Якщо назва вже є, робимо фонове очищення (garbage collection) старих/видалених назв без блокування UI
+                    setTimeout(() => this.updateBank(), 500);
+                }
+            }
+            
             this.save();
         }
     },
@@ -1264,7 +1274,16 @@ const App = {
         if(this.data.guidelines[p][m][i][f] !== v) {
             this.pushHistory();
             this.data.guidelines[p][m][i][f] = v; 
-            if(f==='n') this.updateBank();
+            
+            if(f === 'n') {
+                // Аналогічна оптимізація для Довідника
+                if (v.length > 2 && !this.data.exBank.includes(v)) {
+                    this.updateBank();
+                } else {
+                    setTimeout(() => this.updateBank(), 500);
+                }
+            }
+            
             this.save(); 
         }
     },
