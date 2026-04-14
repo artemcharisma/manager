@@ -62,6 +62,69 @@ const InitialData = {
     exBank: [],
     targets: { "Груди": 12, "Спина": 14, "Ноги": 16, "Плечі": 10, "Руки": 10, "Прес": 6, "Кардіо": 3 },
     guidelines: {
+        balanced: {
+        mass: [
+            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"порожній гриф 1×10-15, 40% ×8, 60% ×5, 75% ×3", i:"тримати вагу, 1-2 повт в запасі"},
+            {n:"Підтягування (з/без ваги)", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети вага тіла", i:"якщо з вагою: розминка без диска"},
+            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"зупинитись 1-2 повт до відказу"},
+            {n:"Тяга штанги в нахилі", p:"70-80%", s:"2x8-10", w:"40% ×8, 60% ×5, 75% ×3", i:"контроль корпусу, спина рівна"},
+            {n:"Махи на середню дельту", p:"60-70%", s:"3x12-15", w:"легка вага 1×15", i:"контроль, без ривків"},
+            {n:"Розводка гантелями/пек-дек", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"макс. розтяг"},
+            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"без розкачки корпусом"},
+            {n:"Розгинання трицепса в кросі", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"контрольний темп"},
+            {n:"Присідання (штанга)", p:"70-80%", s:"3-4x6-8", w:"порожній гриф 1×10, 40% ×8, 60% ×5, 75% ×3", i:"глибина контрольована"},
+            {n:"Жим ногами", p:"70-80%", s:"3x8-10", w:"легка вага 1×10, 50% ×8, 70% ×5", i:"не відривати таз"},
+            {n:"Румунська/мертва тяга", p:"70-80%", s:"3x6-10", w:"40% ×8, 60% ×5, 75% ×3", i:"тримати спину"},
+            {n:"Згинання ніг", p:"65-75%", s:"3x10-15", w:"легка вага 1×15", i:"затримка в піку"},
+            {n:"Ікри стоячи/сидячи", p:"65-75%", s:"3-4x10-15", w:"легка вага 1×15", i:"повний ROM, пауза вгорі"},
+            {n:"Прес", p:"-", s:"3x15-20", w:"легкий сет 1×15", i:"контроль без ривків"},
+            {n:"Жим штанги/гантелей під кутом", p:"70-80%", s:"3x8-10", w:"порожній гриф, 40% ×8, 60% ×5, 75% ×3", i:"1-2 повт в запасі"},
+            {n:"Жим у тренажері", p:"70-80%", s:"2x10-12", w:"легка вага 1×10, 50% ×8", i:"повний контроль"},
+            {n:"Розводка в кросі", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"відчути розтяг"},
+            {n:"Жим гантелей сидячи", p:"70-75%", s:"2x8-10", w:"легкі гантелі 1×10, 50% ×8", i:"не кидати лікті"},
+            {n:"Задня дельта", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"не читінгувати"},
+            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"лікоть фіксований"},
+            {n:"Тяга T-bar/штанги", p:"70-80%", s:"3x8-10", w:"40% ×8, 60% ×5, 75% ×3", i:"контроль корпусу"},
+            {n:"Горизонтальна тяга", p:"70-75%", s:"2x10-12", w:"легка вага 1×10, 50% ×8", i:"повний ROM"},
+            {n:"Пуловер/верхній блок", p:"60-70%", s:"2x10-12", w:"легка вага 1×12", i:"фокус на латах"},
+            {n:"Згинання з EZ-грифом", p:"65-75%", s:"2-3x8-12", w:"легка штанга 1×10", i:"повний контроль"},
+            {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі 1×12", i:"не гойдати корпус"},
+            {n:"Згинання/Розгинання зап'ястка", p:"60-70%", s:"2-3x12-20", w:"легка вага 1×15", i:"повний ROM"},
+            {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"глибина без втрати техніки"},
+            {n:"Згинання гантелей сидячи (інклайн)", p:"65-75%", s:"3x10-15", w:"легка вага 1×12", i:"розтяг біцепса"},
+            {n:"Французький жим лежачи", p:"70-75%", s:"3x8-12", w:"гриф 1x15, 50% 1x10", i:"лікті до стелі"},
+            {n:"Розгинання з-за голови", p:"65-70%", s:"3x10-15", w:"легка вага 1x15", i:"акцент на довгу голівку"}
+        ],
+        cut: [
+            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"гриф 1×15, 40%, 60%, 75%", i:"тримати вагу, 1-2 RIR"},
+            {n:"Підтягування", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети", i:"розминка без диска"},
+            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"не гнатися за рекордом"},
+            {n:"Тяга штанги в нахилі", p:"70-80%", s:"2x8-10", w:"40%, 60%, 75%", i:"контроль корпусу"},
+            {n:"Махи на середню дельту", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"без ривків"},
+            {n:"Розводка гантелями/пек-дек", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"контроль, розтяг"},
+            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"RIR 1-2"},
+            {n:"Розгинання трицепса", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"без різких рухів"},
+            {n:"Присідання", p:"70-80%", s:"3x6-8", w:"гриф, 40%, 60%, 75%", i:"фокус на техніці"},
+            {n:"Жим ногами", p:"70-80%", s:"2-3x8-10", w:"легка, 50%, 70%", i:"не відривати таз"},
+            {n:"Румунська тяга", p:"70-80%", s:"2-3x6-10", w:"40%, 60%, 75%", i:"не округляти спину"},
+            {n:"Згинання ніг", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"з паузою"},
+            {n:"Ікри", p:"65-75%", s:"3x10-15", w:"легка вага 1×15", i:"повний ROM"},
+            {n:"Прес", p:"-", s:"2x15-20", w:"легкий сет", i:"контроль"},
+            {n:"Жим під кутом", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"зберегти вагу"},
+            {n:"Жим у тренажері", p:"70-80%", s:"2x10-12", w:"легка, 50%", i:"контроль, без відказу"},
+            {n:"Розводка в кросі", p:"60-70%", s:"2x12-15", w:"легка вага", i:"акцент на відчутті"},
+            {n:"Жим гантелей сидячи", p:"70-75%", s:"2x8-10", w:"легкі гантелі, 50%", i:"не кидати лікті"},
+            {n:"Задня дельта", p:"60-70%", s:"2x12-15", w:"легка вага", i:"без читінгу"},
+            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"RIR 1-2"},
+            {n:"Тяга T-bar/штанги", p:"70-80%", s:"3x8-10", w:"40%, 60%, 75%", i:"стабільний корпус"},
+            {n:"Горизонтальна тяга", p:"70-75%", s:"2x10-12", w:"легка, 50%", i:"контроль лопаток"},
+            {n:"Згинання з EZ", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"без розкачки"},
+            {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі", i:"RIR 1-2"},
+            {n:"Згинання зап'ястка", p:"60-70%", s:"2x12-20", w:"легка вага", i:"повний ROM"},
+            {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"контроль глибини"}
+        ]
+    },
+        arms: {
         mass: [
             {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"порожній гриф 1×10-15, 40% ×8, 60% ×5, 75% ×3", i:"тримати вагу, 1-2 повт в запасі"},
             {n:"Підтягування (з/без ваги)", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети вага тіла", i:"якщо з вагою: розминка без диска"},
@@ -180,6 +243,15 @@ const App = {
 
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
         if(!this.data.guidelines) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
+        // Міграція довідника: перехід від плоского (mass/cut) до спеціалізованого (balanced/arms -> mass/cut)
+        if (this.data.guidelines.mass && Array.isArray(this.data.guidelines.mass)) {
+            const oldG = this.data.guidelines;
+            this.data.guidelines = {
+                balanced: { mass: JSON.parse(JSON.stringify(oldG.mass || [])), cut: JSON.parse(JSON.stringify(oldG.cut || [])) },
+                arms: { mass: JSON.parse(JSON.stringify(oldG.mass || [])), cut: JSON.parse(JSON.stringify(oldG.cut || [])) }
+            };
+            this.save();
+        }
         if(!this.data.exBank) this.data.exBank = [];
         if(!this.data.opened) this.data.opened = {}; 
         
@@ -518,7 +590,9 @@ const App = {
                         if (ex.n && typeof ex.n === 'string') {
                             exKeyName = ex.n.trim().toLowerCase();
                             
-                            const guideInfo = this.data.guidelines[week.type]?.find(g => g.n && g.n.trim().toLowerCase() === exKeyName);
+                            const guideInfo = this.data.guidelines[prog] && this.data.guidelines[prog][week.type] 
+                            ? this.data.guidelines[prog][week.type].find(g => g.n && g.n.trim().toLowerCase() === exKeyName) 
+                            : null;
                             if (guideInfo && !isEd) {
                                 smartGuideHtml = `
                                 <div style="margin-top: 4px; font-family: 'JetBrains Mono', monospace; line-height: 1.3;">
@@ -1164,19 +1238,19 @@ const App = {
         rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(q.toLowerCase()) ? '' : 'none');
     },
 
-    updateGuide(m, i, f, v) { 
-        if(this.data.guidelines[m][i][f] !== v) {
+    updateGuide(p, m, i, f, v) { 
+        if(this.data.guidelines[p][m][i][f] !== v) {
             this.pushHistory();
-            this.data.guidelines[m][i][f] = v; 
+            this.data.guidelines[p][m][i][f] = v; 
             if(f==='n') this.updateBank();
             this.save(); 
         }
     },
     
-    async delGuideRow(m, i) {
+    async delGuideRow(p, m, i) {
         if(!(await Modal.confirm("Видалити цю вправу з довідника?", "ВИДАЛЕННЯ", "red"))) return;
         this.pushHistory();
-        this.data.guidelines[m].splice(i, 1);
+        this.data.guidelines[p][m].splice(i, 1);
         this.save();
         this.renderGuide();
     },
@@ -1219,24 +1293,27 @@ const App = {
     renderGuide() {
         const c = document.getElementById('guideContent');
         const m = this.data.guideMode || 'mass';
+        const p = this.data.currentProgram || 'balanced'; // ДОДАНО: отримуємо поточну програму
         
         document.getElementById('btnG-mass').classList.toggle('active', m==='mass');
         document.getElementById('btnG-cut').classList.toggle('active', m==='cut');
 
-        const list = this.data.guidelines[m];
+        // Змінюємо шлях до масиву
+        const list = this.data.guidelines[p] ? this.data.guidelines[p][m] : [];
         if(!list || list.length === 0) {
             c.innerHTML = '<div style="padding:20px; text-align:center; color:#666">Список порожній</div>';
             return;
         }
 
         const isEd = document.body.classList.contains('editing');
-        const globalRule = this.data.globalRules ? (this.data.globalRules[m] || "") : "";
+        const ruleKey = p + '_' + m; // Глобальні правила тепер теж розділені: balanced_mass, arms_cut і тд
+        const globalRule = this.data.globalRules ? (this.data.globalRules[ruleKey] || "") : "";
         
         c.innerHTML = `
         <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 15px;">
             <div style="font-size: 0.7rem; color: var(--theme); font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">📌 МЕХАНІКА ВАГ ТА ГЛОБАЛЬНІ ПРАВИЛА (${m.toUpperCase()}):</div>
             ${isEd ? 
-                `<textarea class="modal-input" style="min-height:80px; padding:8px; font-size:0.8rem;" placeholder="Впишіть правила прогресії, темп тощо..." onblur="App.updateGlobalRule('${m}', this.value)">${globalRule}</textarea>` : 
+                `<textarea class="modal-input" style="min-height:80px; padding:8px; font-size:0.8rem;" placeholder="Впишіть правила прогресії, темп тощо..." onblur="App.updateGlobalRule('${ruleKey}', this.value)">${globalRule}</textarea>` : 
                 `<div style="font-size:0.8rem; color:#aaa; line-height:1.4; white-space: pre-wrap;">${globalRule || '<i style="color:#555">Немає глобальних правил. Натисніть Олівець, щоб додати.</i>'}</div>`
             }
         </div>
@@ -1253,28 +1330,37 @@ const App = {
                 ${list.map((r, i) => `
                 <tr>
                     <td>
-                        ${isEd ? `<input class="modal-input" style="padding:4px" value="${r.n}" onblur="App.updateGuide('${m}',${i},'n',this.value)">` : `<strong style="color:#fff">${r.n}</strong>`}
+                        ${isEd ? `<input class="modal-input" style="padding:4px" value="${r.n}" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:#fff">${r.n}</strong>`}
                     </td>
                     <td>
+                        ${isEd ? `
+                        <div style="display:flex; gap:5px; margin-bottom:4px">
+                            <input class="modal-input" style="padding:4px; font-size:0.7rem; width:50%; text-align:center;" value="${r.p}" placeholder="%" onblur="App.updateGuide('${p}', '${m}',${i},'p',this.value)">
+                            <input class="modal-input" style="padding:4px; font-size:0.7rem; width:50%; text-align:center;" value="${r.s}" placeholder="Sets" onblur="App.updateGuide('${p}', '${m}',${i},'s',this.value)">
+                        </div>
+                        ` : `
                         <div style="margin-bottom:4px"><span style="color:var(--theme); font-weight:800">${r.p}</span> <span style="color:#666">|</span> ${r.s}</div>
-                        ${isEd ? `<input class="modal-input" style="padding:4px; font-size:0.7rem" value="${r.w}" onblur="App.updateGuide('${m}',${i},'w',this.value)">` : `<div style="font-size:0.75rem; color:#888">${r.w}</div>`}
+                        `}
+                        ${isEd ? `<input class="modal-input" style="padding:4px; font-size:0.7rem; width:100%; box-sizing:border-box;" value="${r.w}" onblur="App.updateGuide('${p}', '${m}',${i},'w',this.value)">` : `<div style="font-size:0.75rem; color:#888">${r.w}</div>`}
                     </td>
                     <td>
-                        ${isEd ? `<textarea class="modal-input" style="padding:4px; min-height:40px" onblur="App.updateGuide('${m}',${i},'i',this.value)">${r.i}</textarea>` : `<span class="row-note">${r.i}</span>`}
+                        ${isEd ? `<textarea class="modal-input" style="padding:4px; min-height:40px" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>` : `<span class="row-note">${r.i}</span>`}
                     </td>
-                    ${isEd ? `<td style="vertical-align:middle; text-align:center"><span style="color:var(--danger); cursor:pointer" onclick="App.delGuideRow('${m}',${i})">✕</span></td>` : ''}
+                    ${isEd ? `<td style="vertical-align:middle; text-align:center"><span style="color:var(--danger); cursor:pointer" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</span></td>` : ''}
                 </tr>
                 `).join('')}
             </tbody>
         </table>
-        ${isEd ? `<div class="btn-add" style="margin-top:10px" onclick="App.addGuideRow('${m}')">+ Додати рядок</div>` : ''}
+        ${isEd ? `<div class="btn-add" style="margin-top:10px" onclick="App.addGuideRow('${p}', '${m}')">+ Додати рядок</div>` : ''}
         `;
     },
     
-    addGuideRow(m) {
+    addGuideRow(p, m) {
         this.pushHistory();
-        this.data.guidelines[m].push({n:"", p:"", s:"", w:"", i:""});
-        this.save(); this.renderGuide();
+        if (!this.data.guidelines[p]) this.data.guidelines[p] = { mass: [], cut: [] };
+        this.data.guidelines[p][m].push({n:"", p:"", s:"", w:"", i:""});
+        this.save(); 
+        this.renderGuide();
     },
 
    renderStats(forceIndex = null) {
