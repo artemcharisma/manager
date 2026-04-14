@@ -855,21 +855,41 @@ const App = {
         this.data.exBank = Array.from(allNames).sort();
     },
 
-        openBank() {
+            openBank() {
         this.toggleFab(false);
+        document.getElementById('bankModal').style.display = 'flex';
+        this.renderBankList(); // Викликаємо новий рендер
+    },
+    
+    // НОВА ФУНКЦІЯ: Рендер списку з урахуванням пошуку
+    renderBankList(query = '') {
         const list = document.getElementById('bankList');
-        list.innerHTML = this.data.exBank.map(n => `
+        const q = query.toLowerCase().trim();
+        const filtered = this.data.exBank.filter(n => n.toLowerCase().includes(q));
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:#666; font-size:0.8rem;">Нічого не знайдено</div>`;
+            return;
+        }
+
+        list.innerHTML = filtered.map(n => `
             <div class="bank-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #333;">
-                <span style="cursor:pointer; color:#fff; flex:1;" onclick="App.renameGlobalEx('${n.replace(/'/g, "\\'")}')" title="Редагувати">
-                    ${n} <span style="font-size:0.7rem; color:var(--theme); margin-left:8px;">✎</span>
+                <span style="cursor:pointer; color:#fff; flex:1; transition:0.2s;" onclick="App.renameGlobalEx('${n.replace(/'/g, "\\'")}')" title="Натисніть, щоб перейменувати скрізь" onmouseover="this.style.color='var(--theme)'" onmouseout="this.style.color='#fff'">
+                    ${n} <span style="font-size:0.65rem; color:var(--theme); margin-left:8px; opacity:0.7">✏️ Змінити</span>
                 </span>
-                <span class="bank-del" style="color:var(--danger); cursor:pointer; padding:0 10px; font-weight:bold;" onclick="App.deleteFromBank('${n.replace(/'/g, "\\'")}')">✕</span>
+                <span class="bank-del" style="color:var(--danger); cursor:pointer; padding:0 10px; font-weight:bold; font-size:1.1rem;" onclick="App.deleteFromBank('${n.replace(/'/g, "\\'")}')">✕</span>
             </div>
         `).join('');
-        document.getElementById('bankModal').style.display = 'flex';
     },
-        async renameGlobalEx(oldName) {
-        const newName = await Modal.prompt(`Перейменувати "<b>${oldName}</b>" у всій базі?<br><br><span style="font-size:0.8rem; color:#888;">Це оновить історію, довідники та налаштування.</span>`, "ГЛОБАЛЬНЕ ПЕРЕЙМЕНУВАННЯ", oldName);
+
+    // НОВА ФУНКЦІЯ: Обробник пошуку
+    filterBank(q) {
+        this.renderBankList(q);
+    },
+
+    // НОВА ФУНКЦІЯ: Глобальне перейменування (вирішує проблему логіки зв'язків)
+    async renameGlobalEx(oldName) {
+        const newName = await Modal.prompt(`Змінити назву "<b>${oldName}</b>"?<br><br><span style="font-size:0.75rem; color:#888;">Вона автоматично оновиться в розкладі, історії, довідниках та налаштуваннях тренажерів.</span>`, "ПЕРЕЙМЕНУВАННЯ", oldName);
         
         if (!newName || newName.trim() === "" || newName.trim().toLowerCase() === oldName.trim().toLowerCase()) return;
         
@@ -878,25 +898,21 @@ const App = {
         
         this.pushHistory();
         
-        // 1. Оновлюємо всі тижні та підходи (для Ghost Data та 1RM)
+        // 1. Оновлюємо розклад (всі тижні)
         if (this.data.weeks) {
             this.data.weeks.forEach(w => w.days.forEach(d => d.exercises.forEach(e => {
-                if (e.n && e.n.trim().toLowerCase() === oldKey) {
-                    e.n = newName.trim();
-                }
+                if (e.n && e.n.trim().toLowerCase() === oldKey) e.n = newName.trim();
             })));
         }
         
-        // 2. Оновлюємо всі довідники (Guidelines)
+        // 2. Оновлюємо довідники
         if (this.data.guidelines) {
             Object.values(this.data.guidelines).forEach(progObj => {
                 if (progObj) {
                     Object.values(progObj).forEach(list => {
                         if (Array.isArray(list)) {
                             list.forEach(r => {
-                                if (r.n && r.n.trim().toLowerCase() === oldKey) {
-                                    r.n = newName.trim();
-                                }
+                                if (r.n && r.n.trim().toLowerCase() === oldKey) r.n = newName.trim();
                             });
                         }
                     });
@@ -904,21 +920,44 @@ const App = {
             });
         }
         
-        // 3. Оновлюємо налаштування тренажерів (Спинка, валики і т.д.)
+        // 3. Оновлюємо налаштування (equipment)
         if (this.data.settings && this.data.settings[oldKey] !== undefined) {
             this.data.settings[newKey] = this.data.settings[oldKey];
             delete this.data.settings[oldKey];
         }
         
-        // 4. Оновлюємо сам банк вправ
+        // 4. Оновлюємо саму базу
         this.data.exBank = this.data.exBank.map(n => n.trim().toLowerCase() === oldKey ? newName.trim() : n);
         
         this.updateBank();
         this.save();
         this.render();
-        this.openBank(); // Оновлюємо модалку банку
-        this.showToast(`✅ "${oldName}" успішно змінено на "${newName}" скрізь!`, 'var(--success)');
+        this.renderBankList(document.querySelector('#bankModal input[placeholder="🔍 Пошук по базі..."]').value);
+        this.showToast(`✅ Вправу оновлено скрізь!`, 'var(--success)');
     },
+
+    addToBank() {
+        const val = document.getElementById('newBankItem').value.trim();
+        if(val && !this.data.exBank.includes(val)) {
+            this.pushHistory();
+            this.data.exBank.push(val);
+            this.data.exBank.sort();
+            this.save();
+            this.updateBank(); 
+            this.renderBankList(); 
+            document.getElementById('newBankItem').value = '';
+        }
+    },
+
+    async deleteFromBank(name) {
+        if(!(await Modal.confirm(`Видалити "${name}" з бази назавжди?`, "ВИДАЛЕННЯ", "red"))) return;
+        this.pushHistory();
+        this.data.exBank = this.data.exBank.filter(x => x !== name);
+        this.save();
+        this.updateBank();
+        this.renderBankList(document.querySelector('#bankModal input[placeholder="🔍 Пошук по базі..."]').value);
+    },
+
 
     
     calc1RM() {
