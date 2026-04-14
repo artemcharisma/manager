@@ -1137,12 +1137,15 @@ const App = {
         if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
 
         const ph = this.data.phases.find(x => x.id === this.state.phaseId);
-        const wBtns = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
+        let wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
         
-        // Випадаючий список для миттєвого стрибка між тижнями (без скролу)
-        const wSelect = ph ? `<select style="background:var(--bg-panel); color:var(--primary); border:1px solid #333; border-radius:12px; padding:0 10px; font-weight:800; outline:none; cursor:pointer; height:52px; font-family:'JetBrains Mono', monospace;" onchange="App.setWeek(parseInt(this.value))">
-            ${ph.weeks.map(w => `<option value="${w}" ${w === this.state.week ? 'selected' : ''}>W${w}</option>`).join('')}
-        </select>` : '';
+        // Додаємо селект прямо всередину панелі, притискаючи його до правого краю (margin-left: auto)
+        if (ph) {
+            wHtml += `<select style="background:var(--bg-element); color:var(--primary); border:1px solid #333; border-radius:8px; padding:0 8px; margin-left:auto; font-weight:800; font-family:'JetBrains Mono', monospace; font-size:0.85rem; outline:none; cursor:pointer; flex-shrink:0;" onchange="App.setWeek(parseInt(this.value))">
+                <option value="" disabled selected>▾ W${this.state.week}</option>
+                ${ph.weeks.map(w => `<option value="${w}">W${w}</option>`).join('')}
+            </select>`;
+        }
 
         // Огортаємо стрічку і селект у спільний контейнер
         const wHtml = `<div style="display:flex; gap:8px; align-items:center; margin-bottom:25px;">
@@ -1254,7 +1257,7 @@ const App = {
 
         const finalHtml = `
             <div class="stats-grid" id="stats-container">${statsHtml}</div>
-            ${wHtml}
+            <div class="week-bar">${wHtml}</div>
             ${pasteToWeekHtml}
             
             <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
