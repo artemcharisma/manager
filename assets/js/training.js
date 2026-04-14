@@ -185,6 +185,7 @@ const InitialData = {
             {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"контроль глибини"}
         ]
     }
+ }
 };
 
 const App = {
@@ -253,6 +254,13 @@ const App = {
         }
         if(!this.data.exBank) this.data.exBank = [];
         if(!this.data.opened) this.data.opened = {}; 
+        if (this.data.guidelines && this.data.guidelines.arms && this.data.guidelines.arms.mass && this.data.guidelines.arms.mass.length > 0) {
+            if (this.data.guidelines.arms.mass[0].day) {
+                this.data.guidelines.arms = JSON.parse(JSON.stringify(InitialData.guidelines.arms));
+                this.save();
+            }
+        }
+        // -----------------------------------
         
         // --- ДОДАНО --- Ініціалізація назв вкладок (якщо їх ще немає)
         if(!this.data.customNames) this.data.customNames = { balanced: "ЗБАЛАНСОВАНА", arms: "РУКИ" };
