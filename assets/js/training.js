@@ -1176,40 +1176,53 @@ const App = {
    renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
 
-        // Якщо немає тижнів
         if (allWeeks.length === 0) {
-            document.getElementById('statsWeekNav').innerHTML = '';
-            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:40px; font-family:\'JetBrains Mono\'">Немає даних</div>'; 
+            const nav = document.getElementById('statsWeekNav');
+            if(nav) nav.innerHTML = '';
+            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:40px;">Немає даних</div>'; 
             return;
         }
 
-        // Визначаємо активний тиждень для статистики
         if (this.currentStatsIdx === undefined) {
-            this.currentStatsIdx = allWeeks[allWeeks.length - 1].realIndex; // За замовчуванням останній
+            this.currentStatsIdx = allWeeks[allWeeks.length - 1].realIndex;
         }
         if (forceIndex !== null) {
             this.currentStatsIdx = forceIndex;
         }
 
-        // Рендеримо горизонтальну панель навігації
         const navHtml = allWeeks.map(w => {
             const isActive = w.realIndex === this.currentStatsIdx;
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
             return `
             <div class="week-btn ${isActive ? 'active' : ''} ${specialClass}" 
-                 style="min-width: 70px; padding: 8px 5px; flex: 0 0 auto;"
+                 id="stats-btn-${w.realIndex}"
                  onclick="App.renderStats(${w.realIndex})">
-                <span style="font-size:0.9rem">Т ${w.num}</span>
-                <small>${w.type}</small>
+                <span style="font-size:0.85rem; font-weight:800;">W ${w.num}</span>
+                <small style="font-size:0.55rem; opacity:0.6; text-transform:uppercase;">${w.type}</small>
             </div>`;
         }).join('');
-        document.getElementById('statsWeekNav').innerHTML = navHtml;
+        
+        const navEl = document.getElementById('statsWeekNav');
+        if (navEl) {
+            navEl.innerHTML = navHtml;
+            // Автоматичний скрол до активної кнопки при завантаженні
+            const activeBtn = document.getElementById(`stats-btn-${this.currentStatsIdx}`);
+            if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
 
         const currentWeek = this.data.weeks[this.currentStatsIdx];
-        
         if (!currentWeek) return; 
+
+        // ... далі твій код розрахунку статистики (stats = {} ...)
+        // (Він у тебе правильний, не буду дублювати весь метод)
         
-        // --- РАХУЄМО ОБ'ЄМ ---
+        // --- ТУТ МАЄ БУТИ ТВОЯ ЛОГІКА ЦИКЛУ currentWeek.days.forEach ---
+        // (Яку ми писали в минулому повідомленні)
+        this._executeStatsRender(currentWeek); 
+    },
+
+    // Допоміжний метод для чистоти
+    _executeStatsRender(currentWeek) {
         const stats = {}; 
         Groups.forEach(g => stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0 });
         
@@ -1218,7 +1231,6 @@ const App = {
                 const g = ex.g || ResolveGroup(ex.n);
                 if (stats[g]) {
                     ex.sets.forEach(s => {
-                        // Рахуємо тільки стимулюючий об'єм (ігноруємо WU)
                         if (s.t !== 'WU') { 
                             stats[g].total++;
                             if (s.t === 'TS') stats[g].ts++;
@@ -1231,28 +1243,21 @@ const App = {
             });
         });
 
-        // --- РЕНДЕРИМО КАРТКИ ---
         let html = '';
         for(const [k, obj] of Object.entries(stats)) {
             if(k === "Інше") continue;
-            
             const target = this.data.targets[k] || 10; 
             const v = obj.total;
             const pct = Math.min(100, (v / target) * 100);
-            
-            let color = 'var(--theme)'; // Недобір
-            if (v >= target && v <= target + 2) color = 'var(--success)'; // Ідеально
-            else if (v > target + 2) color = 'var(--danger)'; // Перебір
+            let color = 'var(--theme)';
+            if (v >= target && v <= target + 2) color = 'var(--success)';
+            else if (v > target + 2) color = 'var(--danger)';
 
-            let breakdownHtml = '';
-            if (v > 0) {
-                if (obj.ts > 0) breakdownHtml += `<span style="color:var(--danger)">🔥 TS: ${obj.ts}</span>`;
-                if (obj.bo > 0) breakdownHtml += `<span style="color:#3b82f6; margin-top:2px;">💧 BO: ${obj.bo}</span>`;
-                if (obj.norm > 0) breakdownHtml += `<span style="color:#aaa; margin-top:2px;">⚪ Base: ${obj.norm}</span>`;
-                if (obj.ds > 0) breakdownHtml += `<span style="color:#8b5cf6; margin-top:2px;">🟣 DS: ${obj.ds}</span>`;
-            } else {
-                breakdownHtml = '<span style="color:#444">Відпочинок</span>';
-            }
+            let breakdownHtml = v > 0 ? `
+                ${obj.ts > 0 ? `<span style="color:var(--danger)">🔥 TS: ${obj.ts}</span>` : ''}
+                ${obj.bo > 0 ? `<span style="color:#3b82f6">💧 BO: ${obj.bo}</span>` : ''}
+                ${obj.norm > 0 ? `<span style="color:#aaa">⚪ Base: ${obj.norm}</span>` : ''}
+            ` : '<span style="color:#444">Відпочинок</span>';
 
             html += `
             <div class="stat-box-pro">
@@ -1261,7 +1266,7 @@ const App = {
                     <div class="stat-label-pro">${k}</div>
                     <div class="stat-breakdown">${breakdownHtml}</div>
                 </div>
-                <div class="stat-ring-wrapper" onclick="App.promptTarget('${k}', ${target})" title="Клікніть, щоб змінити ціль">
+                <div class="stat-ring-wrapper" onclick="App.promptTarget('${k}', ${target})">
                     <div class="stat-ring" style="background: conic-gradient(${color} ${pct}%, #222 ${pct}% 100%);">
                         <div class="stat-ring-inner">
                             <span class="stat-val-pro">${v}</span>
