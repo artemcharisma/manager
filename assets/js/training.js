@@ -1173,30 +1173,43 @@ const App = {
         this.save(); this.renderGuide();
     },
 
-   renderStats() {
-        const sel = document.getElementById('statsWeekSelect');
+   renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
 
-        if (sel.innerHTML === "" || sel.options.length !== allWeeks.length) {
-            sel.innerHTML = allWeeks.map(w => {
-                const progLabel = w.prog === 'arms' ? '[ARMS]' : '[BALANCED]';
-                return `<option value="${w.realIndex}">Тиждень ${w.num} (${w.type.toUpperCase()}) ${progLabel}</option>`;
-            }).join('');
-            
-            if (allWeeks.length > 0) {
-                sel.value = allWeeks[allWeeks.length - 1].realIndex;
-            }
+        // Якщо немає тижнів
+        if (allWeeks.length === 0) {
+            document.getElementById('statsWeekNav').innerHTML = '';
+            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:40px; font-family:\'JetBrains Mono\'">Немає даних</div>'; 
+            return;
         }
 
-        const wIdx = sel.value; 
-        const currentWeek = this.data.weeks[wIdx];
-        
-        if (!currentWeek) { 
-            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:20px; font-family:\'JetBrains Mono\'">Немає даних</div>'; 
-            return; 
+        // Визначаємо активний тиждень для статистики
+        if (this.currentStatsIdx === undefined) {
+            this.currentStatsIdx = allWeeks[allWeeks.length - 1].realIndex; // За замовчуванням останній
         }
+        if (forceIndex !== null) {
+            this.currentStatsIdx = forceIndex;
+        }
+
+        // Рендеримо горизонтальну панель навігації
+        const navHtml = allWeeks.map(w => {
+            const isActive = w.realIndex === this.currentStatsIdx;
+            const specialClass = w.prog === 'arms' ? 'is-arms' : '';
+            return `
+            <div class="week-btn ${isActive ? 'active' : ''} ${specialClass}" 
+                 style="min-width: 70px; padding: 8px 5px; flex: 0 0 auto;"
+                 onclick="App.renderStats(${w.realIndex})">
+                <span style="font-size:0.9rem">Т ${w.num}</span>
+                <small>${w.type}</small>
+            </div>`;
+        }).join('');
+        document.getElementById('statsWeekNav').innerHTML = navHtml;
+
+        const currentWeek = this.data.weeks[this.currentStatsIdx];
         
-        // НОВА ЛОГІКА РАХУНКУ З РОЗПОДІЛОМ ІНТЕНСИВНОСТІ
+        if (!currentWeek) return; 
+        
+        // --- РАХУЄМО ОБ'ЄМ ---
         const stats = {}; 
         Groups.forEach(g => stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0 });
         
@@ -1218,6 +1231,7 @@ const App = {
             });
         });
 
+        // --- РЕНДЕРИМО КАРТКИ ---
         let html = '';
         for(const [k, obj] of Object.entries(stats)) {
             if(k === "Інше") continue;
@@ -1226,12 +1240,10 @@ const App = {
             const v = obj.total;
             const pct = Math.min(100, (v / target) * 100);
             
-            // Логіка кольорів (Світлофор перетрену)
-            let color = 'var(--theme)'; // Золотий (Недобір, в процесі)
-            if (v >= target && v <= target + 2) color = 'var(--success)'; // Зелений (Ідеальне попадання)
-            else if (v > target + 2) color = 'var(--danger)'; // Червоний (Перебір об'єму / Ризик)
+            let color = 'var(--theme)'; // Недобір
+            if (v >= target && v <= target + 2) color = 'var(--success)'; // Ідеально
+            else if (v > target + 2) color = 'var(--danger)'; // Перебір
 
-            // Формуємо міні-аналітику
             let breakdownHtml = '';
             if (v > 0) {
                 if (obj.ts > 0) breakdownHtml += `<span style="color:var(--danger)">🔥 TS: ${obj.ts}</span>`;
