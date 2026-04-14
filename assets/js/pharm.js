@@ -341,52 +341,55 @@ const App = {
     // --- SIDE-BY-SIDE ПРОГРЕС ---
     // =========================================================================
     
+    // --- ПРОСТЕ ПОРІВНЯННЯ ФОТО ---
     async openCompareModal() {
         if(document.activeElement) document.activeElement.blur();
         this.lockScroll();
         
-        // Оновлюємо ключі, щоб мати актуальні дані
+        // Отримуємо всі тижні, де є фото
         await this.refreshPhotos();
         const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
-
-        if(keys.length < 2) {
-            this.unlockScroll();
-            return; // Запобіжник (кнопка і так не покажеться, але про всяк випадок)
-        }
-
+        
         const selL = document.getElementById('compSelectL');
         const selR = document.getElementById('compSelectR');
         
-        let optionsHtml = '';
+        // Заповнюємо випадаючі списки
+        let optionsHtml = '<option value="">-- Оберіть тиждень --</option>';
         keys.forEach(k => {
             optionsHtml += `<option value="${k}">Тиждень ${k}</option>`;
         });
-
         selL.innerHTML = optionsHtml;
         selR.innerHTML = optionsHtml;
 
-        // Ліворуч - найперший тиждень, Праворуч - найновіший
-        selL.value = keys[0];
-        selR.value = keys[keys.length - 1];
+        // Якщо є фото, автоматично ставимо перше і останнє для зручності
+        if (keys.length > 0) {
+            selL.value = keys[0];
+            this.loadCompareImage('L', keys[0]);
+            
+            if (keys.length > 1) {
+                selR.value = keys[keys.length - 1];
+                this.loadCompareImage('R', keys[keys.length - 1]);
+            }
+        }
 
         document.getElementById('compareModal').style.display = 'flex';
-
-        this.loadCompareImage('L', selL.value);
-        this.loadCompareImage('R', selR.value);
     },
 
     async loadCompareImage(side, week) {
         const box = document.getElementById('imgBox' + side);
-        box.innerHTML = `<span style="color:#666; font-family:var(--font-mono); font-size:0.8rem;">Завантаження...</span>`;
+        if (!week) {
+            box.innerHTML = '<span style="opacity:0.3">Оберіть тиждень</span>';
+            return;
+        }
         
+        box.innerHTML = '<span style="opacity:0.3">Loading...</span>';
         const photos = await PhotoDB.get(Number(week));
         
         if(photos && photos.length > 0) {
-            // Якщо за тиждень кілька фото, беремо останнє завантажене (найактуальніше)
-            const latestPhoto = photos[photos.length - 1];
-            box.innerHTML = `<img src="${latestPhoto.data}" alt="W${week}">`;
+            // Беремо останнє завантажене фото за цей тиждень
+            box.innerHTML = `<img src="${photos[photos.length - 1].data}" alt="W${week}">`;
         } else {
-            box.innerHTML = `<span style="color:var(--danger); font-family:var(--font-mono); font-size:0.8rem;">Немає фото</span>`;
+            box.innerHTML = '<span style="opacity:0.3">Немає фото</span>';
         }
     },
     initPhotoGestures(modal, img) {
@@ -1311,7 +1314,8 @@ const App = {
                 <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
                 <div class="photo-grid">${pHtml}</div>
                 <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
-                ${this.photoKeys.size >= 2 ? `<button class="btn-compare" onclick="App.openCompareModal()">⚔️ ПОРІВНЯТИ ПРОГРЕС</button>` : ''}
+                
+                <button class="btn-compare" onclick="App.openCompareModal()">⚔️ ПОРІВНЯТИ ПРОГРЕС</button>
             </div>`;
 
         // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
