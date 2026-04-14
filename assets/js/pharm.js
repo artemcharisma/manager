@@ -1706,7 +1706,7 @@ const App = {
             svg += `<path d="${m.d}" class="muscle-group ${isActive?'active':''}" onclick="App.setInjectionSite('${m.id}')" />`;
             
             if(isActive) {
-                svg += `<text x="${m.cx}" y="${m.cy}" font-size="16" text-anchor="middle" dominant-baseline="middle" style="pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">💉</text>`;
+                svg += `<text x="${m.cx}" y="${m.cy}" dy=".35em" font-size="16" text-anchor="middle" style="pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">💉</text>`;
             }
         });
         svg += `</svg>`;
