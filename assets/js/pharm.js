@@ -344,56 +344,6 @@ const App = {
         modal.classList.remove('active');
         this.unlockScroll();
     },
-    async openCompareModal() {
-        this.lockScroll();
-        document.getElementById('compareModal').style.display = 'flex';
-        
-        // Отримуємо унікальні тижні, для яких існують фото, та сортуємо їх за зростанням
-        const keys = Array.from(this.photoKeys).sort((a, b) => a - b);
-        
-        const selL = document.getElementById('compSelectL');
-        const selR = document.getElementById('compSelectR');
-        
-        if (keys.length === 0) {
-            selL.innerHTML = '<option value="">Немає фото</option>';
-            selR.innerHTML = '<option value="">Немає фото</option>';
-            this.loadCompareImage('L', null);
-            this.loadCompareImage('R', null);
-            return;
-        }
-
-        // Заповнюємо селекти
-        const optionsHtml = keys.map(k => `<option value="${k}">Тиждень ${k}</option>`).join('');
-        selL.innerHTML = optionsHtml;
-        selR.innerHTML = optionsHtml;
-
-        // Автоматично вибираємо найперший тиждень зліва, і найостанніший (або поточний) справа
-        selL.value = keys[0];
-        selR.value = keys[keys.length - 1];
-
-        this.loadCompareImage('L', selL.value);
-        this.loadCompareImage('R', selR.value);
-    },
-
-    async loadCompareImage(side, weekStr) {
-        const box = document.getElementById(`imgBox${side}`);
-        
-        if (!weekStr) {
-            box.innerHTML = '<span style="opacity:0.3; font-weight:bold;">НЕМАЄ ДАНИХ</span>';
-            return;
-        }
-
-        box.innerHTML = '<span style="opacity:0.5; font-weight:bold;">ЗАВАНТАЖЕННЯ...</span>';
-        const weekNum = parseInt(weekStr);
-        const photos = await PhotoDB.get(weekNum);
-
-        if (photos && photos.length > 0) {
-            // Відображаємо перше фото з обраного тижня. Object-fit: contain гарантує, що пропорції не спотворяться
-            box.innerHTML = `<img src="${photos[0].data}" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">`;
-        } else {
-            box.innerHTML = '<span style="opacity:0.3; font-weight:bold;">ФОТО ВІДСУТНЄ</span>';
-        }
-    },
 
     initPhotoGestures(modal, img) {
         const newModal = modal.cloneNode(true);
@@ -1290,41 +1240,34 @@ const App = {
         const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, 0));
         const meas = GlobalVitals.get(mondayDateStr);
         const statsHtml = this.getStatsHtml(this.state.week);
-        
-        // Додаємо кнопку порівняння, якщо є фото мінімум за 2 різні тижні
-        const compareBtnHtml = this.photoKeys.size > 1 ? 
-            `<div onclick="App.openCompareModal()" style="color:var(--primary); font-size:0.75rem; font-weight:800; cursor:pointer; background:rgba(212,175,55,0.1); padding:6px 12px; border-radius:8px; border:1px solid rgba(212,175,55,0.3); text-transform:uppercase; transition:0.2s;">⚖️ Порівняти</div>` : '';
 
-        const finalHtml = `
-            <div class="stats-grid" id="stats-container">${statsHtml}</div>
-            <div class="week-bar">${wHtml}</div>
-            ${pasteToWeekHtml}
-            ${grid}
-            
-            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
-                    <span style="color:#fff; font-size:0.9rem; font-weight:800; letter-spacing:1px;">📏 ЗАМІРИ ТІЛА (см)</span>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px;">
-                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГРУДИ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.chest || ''}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'chest', this.value)" style="padding:6px 2px;"></div>
-                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ТАЛІЯ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.waist || ''}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'waist', this.value)" style="padding:6px 2px;"></div>
-                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">БІЦЕПС</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.arm || ''}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'arm', this.value)" style="padding:6px 2px;"></div>
-                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">СТЕГНО</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.leg || ''}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'leg', this.value)" style="padding:6px 2px;"></div>
-                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГОМІЛКА</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.calf || ''}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'calf', this.value)" style="padding:6px 2px;"></div>
-                </div>
+        const finalHtml = `
+            <div class="stats-grid" id="stats-container">${statsHtml}</div>
+            <div class="week-bar">${wHtml}</div>
+            ${pasteToWeekHtml}
+            ${grid}
+            
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #333;">
+                    <span style="color:#fff; font-size:0.9rem; font-weight:800; letter-spacing:1px;">📏 ЗАМІРИ ТІЛА (см)</span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px;">
+                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГРУДИ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.chest}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'chest', this.value)" style="padding:6px 2px;"></div>
+                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ТАЛІЯ</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.waist}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'waist', this.value)" style="padding:6px 2px;"></div>
+                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">БІЦЕПС</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.arm}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'arm', this.value)" style="padding:6px 2px;"></div>
+                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">СТЕГНО</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.leg}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'leg', this.value)" style="padding:6px 2px;"></div>
+                    <div style="text-align:center"><div style="font-size:0.55rem; color:#888; font-weight:700; margin-bottom:4px;">ГОМІЛКА</div><input class="vital-input" type="text" inputmode="decimal" placeholder="-" value="${meas.calf}" oninput="this.value = this.value.replace(/[^0-9.,]/g, '')" onblur="App.saveMeas(${this.state.week}, 'calf', this.value)" style="padding:6px 2px;"></div>
+                </div>
 
-                <textarea class="note-input" style="margin-top:0; border-color:#222; background:#0a0a0a;" placeholder="Звіт за тиждень, самопочуття, нотатки..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week] || ""}</textarea>
-            </div>
+                <textarea class="note-input" style="margin-top:0; border-color:#222; background:#0a0a0a;" placeholder="Звіт за тиждень, самопочуття, нотатки..." onblur="App.saveNote(${this.state.week}, this.value)">${this.data.notes[this.state.week] || ""}</textarea>
+            </div>
 
-            <div class="photo-area">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:#fff;font-size:1rem;margin:0">📸 ФОТО W${this.state.week}</h3>
-                    ${compareBtnHtml}
-                </div>
-                <div class="photo-grid">${pHtml}</div>
-                <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
-            </div>`;
+            <div class="photo-area">
+                <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
+                <div class="photo-grid">${pHtml}</div>
+                <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
+            </div>`;
 
         // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
         window.requestAnimationFrame(() => {
