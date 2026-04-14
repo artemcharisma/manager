@@ -320,12 +320,27 @@
         .privacy-modal-content.success { border-color: var(--green) !important; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2) !important; }
         .privacy-modal-content.success .btn-privacy-unlock { background: var(--green); color: #000; border: 1px solid var(--green); }
 
-        .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .compare-col { display: flex; flex-direction: column; gap: 5px; }
-        .compare-label { text-align: center; font-size: 0.75rem; color: var(--primary); font-weight: 800; background: rgba(212, 175, 55, 0.1); padding: 5px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2); }
-        .compare-img-box { aspect-ratio: 3/4; background: #000; border-radius: 8px; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; overflow: hidden; color: #555; position: relative; }
+        /* --- PRO PROGRESS COMPARISON --- */
+        .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 5px; }
+        .compare-col { display: flex; flex-direction: column; gap: 8px; }
+        #compSelectL, #compSelectR { 
+            background: #111; color: var(--primary); border: 1px solid #333; 
+            padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; 
+            font-weight: 800; text-align: center; font-size: 0.9rem; outline: none; cursor: pointer;
+            -webkit-appearance: none; appearance: none;
+        }
+        .compare-img-box { 
+            aspect-ratio: 3/4; background: #050505; border-radius: 12px; 
+            border: 1px solid #222; display: flex; align-items: center; 
+            justify-content: center; overflow: hidden; width: 100%; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
         .compare-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .btn-compare { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-compare { 
+            background: rgba(59, 130, 246, 0.1); color: var(--blue); border: 1px dashed var(--blue); 
+            padding: 15px; border-radius: 12px; width: 100%; text-align: center; 
+            cursor: pointer; font-weight: 800; display: block; margin-top: 15px; transition: 0.2s;
+        }
+        .btn-compare:active { background: var(--blue); color: #000; transform: scale(0.98); }
         body.privacy-mode .btn-compare { display: none !important; }
 
         .photo-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(0,0,0,0.5); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; z-index: 5002; backdrop-filter: blur(5px); transition: 0.2s; user-select: none; border: 1px solid rgba(255,255,255,0.1); }
