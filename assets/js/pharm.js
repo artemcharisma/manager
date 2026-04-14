@@ -345,50 +345,6 @@ const App = {
         this.unlockScroll();
     },
 
-    async openCompareModal() {
-        this.lockScroll();
-        document.getElementById('compareModal').style.display = 'flex';
-        
-        const keys = Array.from(this.photoKeys).sort((a, b) => a - b);
-        const selL = document.getElementById('compSelectL');
-        const selR = document.getElementById('compSelectR');
-        
-        if (keys.length === 0) {
-            selL.innerHTML = '<option value="">Немає фото</option>';
-            selR.innerHTML = '<option value="">Немає фото</option>';
-            this.loadCompareImage('L', null);
-            this.loadCompareImage('R', null);
-            return;
-        }
-
-        const optionsHtml = keys.map(k => `<option value="${k}">Тиждень ${k}</option>`).join('');
-        selL.innerHTML = optionsHtml;
-        selR.innerHTML = optionsHtml;
-
-        selL.value = keys[0];
-        selR.value = keys[keys.length - 1]; // За замовчуванням: зліва перший тиждень, справа останній
-
-        this.loadCompareImage('L', selL.value);
-        this.loadCompareImage('R', selR.value);
-    },
-
-    async loadCompareImage(side, weekStr) {
-        const box = document.getElementById(`imgBox${side}`);
-        if (!weekStr) {
-            box.innerHTML = '<span style="opacity:0.3; font-size:0.8rem; font-weight:bold;">НЕМАЄ ДАНИХ</span>';
-            return;
-        }
-
-        box.innerHTML = '<span style="opacity:0.5; font-size:0.8rem; font-weight:bold;">ЗАВАНТАЖЕННЯ...</span>';
-        const photos = await PhotoDB.get(parseInt(weekStr));
-
-        if (photos && photos.length > 0) {
-            // Твій CSS (.compare-img-box img) вже має правильний object-fit: cover
-            box.innerHTML = `<img src="${photos[0].data}">`; 
-        } else {
-            box.innerHTML = '<span style="opacity:0.3; font-size:0.8rem; font-weight:bold;">ФОТО ВІДСУТНЄ</span>';
-        }
-    },
     initPhotoGestures(modal, img) {
         const newModal = modal.cloneNode(true);
         modal.parentNode.replaceChild(newModal, modal);
@@ -1310,7 +1266,6 @@ const App = {
             <div class="photo-area">
                 <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
                 <div class="photo-grid">${pHtml}</div>
-                ${this.photoKeys.size > 1 ? `<button class="btn-compare" onclick="App.openCompareModal()">⚖️ ПОРІВНЯТИ ПРОГРЕС</button>` : ''}
                 <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
             </div>`;
 
@@ -1706,7 +1661,7 @@ const App = {
             svg += `<path d="${m.d}" class="muscle-group ${isActive?'active':''}" onclick="App.setInjectionSite('${m.id}')" />`;
             
             if(isActive) {
-                svg += `<text x="${m.cx}" y="${m.cy}" dy=".35em" font-size="16" text-anchor="middle" style="pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">💉</text>`;
+                svg += `<text x="${m.cx}" y="${m.cy}" font-size="16" text-anchor="middle" dominant-baseline="middle" style="pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">💉</text>`;
             }
         });
         svg += `</svg>`;
