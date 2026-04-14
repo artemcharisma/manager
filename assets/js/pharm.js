@@ -312,14 +312,26 @@ const App = {
 
         if (bar) {
             const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
-            bar.innerHTML = keys.map(k => 
-                `<div class="p-week ${k === this.viewerState.week ? 'active' : ''}" onclick="event.stopPropagation(); App.changeViewerWeek(${k})">W${k}</div>`
-            ).join('');
             
-            bar.style.display = keys.length > 0 ? 'flex' : 'none';
+            if (keys.length > 0) {
+                // Замінюємо скрол-стрічку на один зручний селект-кнопку
+                bar.innerHTML = `
+                    <select style="background: transparent; color: var(--primary); border: none; font-size: 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; outline: none; appearance: none; -webkit-appearance: none; padding: 5px 25px 5px 15px; cursor: pointer; width: 100%; text-align: center;" onchange="App.changeViewerWeek(parseInt(this.value))">
+                        ${keys.map(k => `<option value="${k}" style="color: #000; background: #fff;" ${k === this.viewerState.week ? 'selected' : ''}>W${k}</option>`).join('')}
+                    </select>
+                    <div style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 0.7rem; color: var(--primary);">▼</div>
+                `;
+                bar.style.display = 'flex';
+                bar.style.position = 'absolute';
+                bar.style.padding = '0';
+                bar.style.border = '1px solid var(--primary)';
+                bar.style.borderRadius = '20px';
+                bar.style.background = 'rgba(10,10,10,0.9)';
+            } else {
+                bar.style.display = 'none';
+            }
         }
     },
-
     navViewerPose(dir) {
         this.viewerState.idx += dir;
         this.state.photoModalScale = 1;
