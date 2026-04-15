@@ -499,8 +499,9 @@ const App = {
         document.querySelectorAll('.sys-toast').forEach(t => t.remove());
         const toast = document.createElement('div');
         toast.className = 'sys-toast';
-        toast.innerHTML = msg; // Дозволяємо HTML теги
-        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: max-content; max-width: 90%; text-align: center; white-space: normal; line-height: 1.4; word-wrap: break-word; animation: fadeInDown 0.2s ease forwards;`;
+        toast.innerHTML = msg; // Дозволяємо HTML
+        // ФІКС: max-width 90%, white-space: normal, text-align: center
+        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: max-content; max-width: 90vw; text-align: center; white-space: normal; line-height: 1.4; animation: fadeInDown 0.2s ease forwards;`;
         document.body.appendChild(toast);
         setTimeout(() => { if(toast) toast.remove(); }, 2500);
     },
@@ -694,6 +695,23 @@ const App = {
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
 
                             // --- BEAT THE LOGBOOK HUD ---
+                            const setsHtml = ex.sets.map((s, sIdx) => {
+                            if (m === 't') {
+                                return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value, this)"><span class="set-unit">час</span></div></div>`;
+                            }
+
+                            let ghostW = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].w) ? ghostSets[sIdx].w : '';
+                            let ghostR = (ghostSets && ghostSets[sIdx] && ghostSets[sIdx].r) ? ghostSets[sIdx].r : '';
+
+                            let sType = s.t || '';
+                            let typeLabel = sIdx + 1;
+                            let typeClass = '';
+                            if (sType === 'WU') { typeLabel = 'WU'; typeClass = 'type-WU'; }
+                            else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
+                            else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
+                            else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
+
+                            // --- BEAT THE LOGBOOK HUD ---
                             let progressHtml = '&nbsp;';
                             if (ghostW && ghostR && sType !== 'WU') {
                                 let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
@@ -705,7 +723,21 @@ const App = {
                                 if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
                                 else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
 
-                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, ${ghostW}, ${ghostR})" title="Натисни, щоб скопіювати">Минуло: ${ghostW}x${ghostR} ${icon}</span>`;
+                                // ФІКС: Замінено "Минуло" на іконку і додано можливість кліку
+                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
+                            }
+
+                            // --- РОЗУМНИЙ БЕК-ОФФ (АВТО-ПІДКАЗКА ВАГИ) ---
+                            let placeholderW = "";
+                            if (sType === 'BO' && sIdx > 0 && !s.w) {
+                                // Шукаємо попередній TS, щоб відняти 20%
+                                const prevSet = ex.sets[sIdx - 1];
+                                if (prevSet && prevSet.t === 'TS' && prevSet.w) {
+                                    const tsWeight = parseFloat(prevSet.w);
+                                    if (!isNaN(tsWeight) && tsWeight > 0) {
+                                        placeholderW = Math.round((tsWeight * 0.8) / 2.5) * 2.5; // -20% і округлення
+                                    }
+                                }
                             }
 
                             return `
@@ -716,7 +748,7 @@ const App = {
                                 <div class="set-row ${typeClass}">
                                     <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
                                     <div class="set-part">
-                                        <input type="text" inputmode="text" class="set-input w-val" value="${s.w||''}" 
+                                        <input type="text" inputmode="text" class="set-input w-val ${placeholderW ? 'ghost-active' : ''}" value="${s.w||''}" placeholder="${placeholderW}" 
                                                onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
                                                onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value, this)">
                                         <span class="set-unit">кг</span>
@@ -1315,7 +1347,7 @@ const App = {
         this.data.weeks[w].days[d].exercises[e].sets[s].r = gr.toString();
         this.save();
         this.render();
-        this.showToast(`✅ Скопійовано: ${gw}кг × ${gr}`, "var(--success)");
+        this.showToast(`✅ Вставлено: ${gw}кг × ${gr}`, "var(--success)");
     },
 
     updateSet(w, d, e, s, f, val, inputEl) {
@@ -1504,51 +1536,42 @@ const App = {
         </div>
         ` : ''}
 
-        <table class="guide-table">
-            <thead>
-                <tr>
-                    <th style="width:30%">ВПРАВА</th>
-                    <th style="width:35%">% / S / W</th>
-                    <th style="width:25%">INFO</th>
-                    ${isEd ? '<th style="width:10%; text-align:center;">X</th>' : ''}
-                </tr>
-            </thead>
-            <tbody>
-                ${list.map((r, i) => `
-                <tr>
-                    <td>
-                        ${isEd ? `<input class="modal-input" style="padding:6px; font-size:16px; margin:0;" value="${r.n}" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:#fff">${r.n}</strong>`}
-                    </td>
-                    
-                    <td>
-                        ${isEd ? `
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <div style="display:flex; gap:4px;">
-                                <input class="modal-input" style="padding:6px; font-size:16px; flex:1; text-align:center; margin:0;" value="${r.p}" placeholder="%" onblur="App.updateGuide('${p}', '${m}',${i},'p',this.value)">
-                                <input class="modal-input" style="padding:6px; font-size:16px; flex:1; text-align:center; margin:0;" value="${r.s}" placeholder="Sets" onblur="App.updateGuide('${p}', '${m}',${i},'s',this.value)">
-                            </div>
-                            <input class="modal-input" style="padding:6px; font-size:16px; width:100%; box-sizing:border-box; margin:0;" value="${r.w}" placeholder="Warm-up" onblur="App.updateGuide('${p}', '${m}',${i},'w',this.value)">
-                        </div>
-                        ` : `
-                        <div style="margin-bottom:4px"><span style="color:var(--theme); font-weight:800">${r.p}</span> <span style="color:#666">|</span> ${r.s}</div>
-                        <div style="font-size:0.75rem; color:#888">${r.w}</div>
-                        `}
-                    </td>
-                    
-                    <td style="position:relative;">
-                        ${isEd ? `
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <textarea class="modal-input" style="padding:6px; min-height:50px; font-size:16px; margin:0; width:100%; box-sizing:border-box;" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>
-                            <div class="btn-add" style="padding:6px; border-color:var(--theme); color:var(--theme); font-size:0.8rem; background:rgba(212,175,55,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold;" onclick="App.generateProPlan('${p}', '${m}', ${i})" title="PRO-Шаблон">⚡ Шаблон</div>
-                        </div>
-                        ` : `<span class="row-note" style="white-space:pre-wrap;">${r.i}</span>`}
-                    </td>
-                    
-                    ${isEd ? `<td style="vertical-align:middle; text-align:center"><span style="color:var(--danger); cursor:pointer; padding:10px; font-weight:bold; font-size:1.2rem;" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</span></td>` : ''}
-                </tr>
-                `).join('')}
-            </tbody>
-        </table>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            ${list.map((r, i) => `
+            <div style="background:rgba(255,255,255,0.02); border:1px solid #333; border-radius:12px; padding:12px; position:relative;">
+                
+                ${isEd ? `<div style="position:absolute; top:12px; right:12px; color:var(--danger); cursor:pointer; font-weight:bold; font-size:1.2rem; background:#000; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #333;" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</div>` : ''}
+
+                <div style="margin-bottom:10px; padding-right:${isEd ? '40px' : '0'};">
+                    ${isEd ? `<input class="modal-input" style="padding:8px; font-size:16px; margin:0; width:100%; border-color:#555; color:var(--theme); font-weight:bold;" value="${r.n}" placeholder="Назва вправи" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:var(--theme); font-size:1.1rem;">${r.n}</strong>`}
+                </div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:0.65rem; color:#666; margin-bottom:2px;">ІНТЕНСИВНІСТЬ (%)</div>
+                        ${isEd ? `<input class="modal-input" style="padding:8px; font-size:16px; margin:0; width:100%; text-align:center;" value="${r.p}" placeholder="TS+BO" onblur="App.updateGuide('${p}', '${m}',${i},'p',this.value)">` : `<div style="font-weight:900; color:#fff;">${r.p || '-'}</div>`}
+                    </div>
+                    <div>
+                        <div style="font-size:0.65rem; color:#666; margin-bottom:2px;">ПІДХОДИ (SETS)</div>
+                        ${isEd ? `<input class="modal-input" style="padding:8px; font-size:16px; margin:0; width:100%; text-align:center;" value="${r.s}" placeholder="1+1" onblur="App.updateGuide('${p}', '${m}',${i},'s',this.value)">` : `<div style="color:#aaa;">${r.s || '-'}</div>`}
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:0.65rem; color:#666; margin-bottom:2px;">РОЗМИНКА / ВАГА</div>
+                    ${isEd ? `<input class="modal-input" style="padding:8px; font-size:16px; margin:0; width:100%;" value="${r.w}" placeholder="40%, 60%, 80%" onblur="App.updateGuide('${p}', '${m}',${i},'w',this.value)">` : `<div style="font-size:0.8rem; color:#888; background:#000; padding:6px 10px; border-radius:6px; border:1px dashed #333;">${r.w || '-'}</div>`}
+                </div>
+                
+                <div>
+                    <div style="font-size:0.65rem; color:#666; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>ОПИС (INFO)</span>
+                        ${isEd ? `<span style="color:var(--theme); font-weight:bold; cursor:pointer; padding:2px 8px; background:rgba(212,175,55,0.1); border-radius:4px; border:1px solid var(--theme);" onclick="App.generateProPlan('${p}', '${m}', ${i})">⚡ Шаблони</span>` : ''}
+                    </div>
+                    ${isEd ? `<textarea class="modal-input" style="padding:8px; min-height:60px; font-size:16px; margin:0; width:100%;" placeholder="Техніка, RIR..." onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>` : `<div class="row-note" style="white-space:pre-wrap; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; color:#ddd;">${r.i || '-'}</div>`}
+                </div>
+            </div>
+            `).join('')}
+        </div>
         `;
         // --- КІНЕЦЬ ЗМІНЕНОГО БЛОКУ HTML ---
     },
