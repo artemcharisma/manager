@@ -1305,36 +1305,16 @@ const App = {
         document.getElementById('btnG-cut').classList.toggle('active', m==='cut');
 
         const list = this.data.guidelines[p] ? this.data.guidelines[p][m] : [];
-        if(!list || list.length === 0) {
-            c.innerHTML = '<div style="padding:20px; text-align:center; color:#666">Список порожній</div>';
-            return;
-        }
-
         const isEd = document.body.classList.contains('editing');
         const ruleKey = p + '_' + m; 
         const globalRule = this.data.globalRules ? (this.data.globalRules[ruleKey] || "") : "";
         
-        c.innerHTML = `
-        <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 15px;">
-            <div style="font-size: 0.7rem; color: var(--theme); font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">📌 МЕХАНІКА ВАГ ТА ГЛОБАЛЬНІ ПРАВИЛА (${m.toUpperCase()}):</div>
-            ${isEd ? 
-                `<textarea class="modal-input" style="min-height:80px; padding:8px; font-size:0.8rem;" placeholder="Впишіть правила прогресії, темп тощо..." onblur="App.updateGlobalRule('${ruleKey}', this.value)">${globalRule}</textarea>` : 
-                `<div style="font-size:0.8rem; color:#aaa; line-height:1.4; white-space: pre-wrap;">${globalRule || '<i style="color:#555">Немає глобальних правил. Натисніть Олівець, щоб додати.</i>'}</div>`
-            }
-        </div>
-
-        ${isEd ? `
-        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
-            <div style="display:flex; gap:8px;">
-                <div class="btn-add" style="flex:1; text-align:center; font-weight:bold; height:40px;" onclick="App.addGuideRow('${p}', '${m}')">+ РЯДОК</div>
-                <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none; height:40px;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОН</div>
-            </div>
-            <div class="btn-add" style="font-size:0.7rem; padding:6px; border-style:dashed; opacity:0.8; height:30px;" onclick="App.copyGuideFromOther('${p}', '${m}')">📥 Копіювати описи з іншої програми</div>
-        </div>
-        ` : ''}
-
-        <div class="guide-table" style="display:flex; flex-direction:column; gap:10px;">
-            ${list.map((r, i) => `
+        // Генеруємо HTML для списку вправ АБО повідомлення "Порожньо"
+        let listHtml = '';
+        if (!list || list.length === 0) {
+            listHtml = `<div style="padding:40px 20px; text-align:center; color:#666; font-size:0.9rem; background:rgba(255,255,255,0.02); border:1px dashed #333; border-radius:12px;">Список порожній.<br><br>Увімкніть Олівець (✎) зверху та натисніть "СИНХРОН", щоб підтягнути вправи з розкладу.</div>`;
+        } else {
+            listHtml = list.map((r, i) => `
             <div style="background:rgba(255,255,255,0.02); border:1px solid #333; border-radius:12px; padding:12px; position:relative;">
                 
                 ${isEd ? `<div style="position:absolute; top:12px; right:12px; color:var(--danger); cursor:pointer; font-weight:bold; font-size:1.2rem; background:#000; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #333;" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</div>` : ''}
@@ -1362,12 +1342,36 @@ const App = {
                 <div>
                     <div style="font-size:0.65rem; color:#666; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
                         <span>ОПИС (INFO)</span>
-                        ${isEd ? `<span style="color:var(--theme); font-weight:bold; cursor:pointer; padding:2px 8px; background:rgba(212,175,55,0.1); border-radius:4px; border:1px solid var(--theme);" onclick="App.generateProPlan('${p}', '${m}', ${i})">⚡ Шаблони</span>` : ''}
+                        ${isEd ? `<span style="color:var(--theme); font-weight:bold; cursor:pointer; padding:4px 10px; background:rgba(212,175,55,0.1); border-radius:6px; border:1px solid var(--theme);" onclick="App.generateProPlan('${p}', '${m}', ${i})">⚡ ШАБЛОН</span>` : ''}
                     </div>
                     ${isEd ? `<textarea class="modal-input" style="padding:8px; min-height:60px; font-size:16px; margin:0; width:100%;" placeholder="Техніка, RIR..." onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>` : `<div class="row-note" style="white-space:pre-wrap; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; color:#ddd;">${r.i || '-'}</div>`}
                 </div>
             </div>
-            `).join('')}
+            `).join('');
+        }
+
+        // Рендеримо головний каркас: Правила -> Кнопки -> Список
+        c.innerHTML = `
+        <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 15px;">
+            <div style="font-size: 0.7rem; color: var(--theme); font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">📌 МЕХАНІКА ВАГ ТА ГЛОБАЛЬНІ ПРАВИЛА (${m.toUpperCase()}):</div>
+            ${isEd ? 
+                `<textarea class="modal-input" style="min-height:80px; padding:8px; font-size:0.8rem;" placeholder="Впишіть правила прогресії, темп тощо..." onblur="App.updateGlobalRule('${ruleKey}', this.value)">${globalRule}</textarea>` : 
+                `<div style="font-size:0.8rem; color:#aaa; line-height:1.4; white-space: pre-wrap;">${globalRule || '<i style="color:#555">Немає глобальних правил. Натисніть Олівець, щоб додати.</i>'}</div>`
+            }
+        </div>
+
+        ${isEd ? `
+        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
+            <div style="display:flex; gap:8px;">
+                <div class="btn-add" style="flex:1; text-align:center; font-weight:bold; height:40px;" onclick="App.addGuideRow('${p}', '${m}')">+ РЯДОК</div>
+                <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none; height:40px;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОН</div>
+            </div>
+            <div class="btn-add" style="font-size:0.75rem; padding:6px; border-style:dashed; opacity:0.8; height:30px;" onclick="App.copyGuideFromOther('${p}', '${m}')">📥 Копіювати базу з іншої програми</div>
+        </div>
+        ` : ''}
+
+        <div class="guide-table" style="display:flex; flex-direction:column; gap:10px;">
+            ${listHtml}
         </div>
         `;
     },
