@@ -365,11 +365,11 @@ const App = {
         const toast = document.createElement('div');
         toast.className = 'sys-toast';
         toast.innerHTML = msg; 
-        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: max-content; max-width: 90vw; text-align: center; white-space: normal; line-height: 1.4; animation: fadeInDown 0.2s ease forwards;`;
+        // ФІКС для iPhone: жорстко задана ширина 85% для ідеального перенесення тексту
+        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:12px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: 85%; max-width: 320px; text-align: center; line-height: 1.4; animation: fadeInDown 0.2s ease forwards; display: flex; align-items: center; justify-content: center;`;
         document.body.appendChild(toast);
         setTimeout(() => { if(toast) toast.remove(); }, 2500);
     },
-
     moveEx(w, d, e, direction) {
         const arr = this.data.weeks[w].days[d].exercises;
         if (direction === -1 && e > 0) {
@@ -484,8 +484,9 @@ const App = {
                             if (guideInfo && !isEd) {
                                 let weightHint = "";
                                 const e1RM = this.getEstimated1RM(exKeyName, week.num, dIdx, prog);
+                                // ФІКС: Шукаємо відсоток ТІЛЬКИ на початку рядка (напр. "70%"). Ігноруємо "TS + BO (-20%)".
                                 if (e1RM > 0 && guideInfo.p) {
-                                    const match = guideInfo.p.match(/(\d+)\s*%/);
+                                    const match = guideInfo.p.match(/^\s*(\d{2,3})\s*%/); 
                                     if (match) {
                                         const pct = parseInt(match[1]);
                                         const calcW = Math.round((e1RM * (pct/100)) / 2.5) * 2.5;
@@ -828,13 +829,25 @@ const App = {
 
     addToBank() {
         const val = document.getElementById('newBankItem').value.trim();
-        if(val && !this.data.exBank.includes(val)) {
+        if(val) {
             this.pushHistory();
-            this.data.exBank.push(val);
+            
+            // ФІКС: Звільняємо вправу з чорного списку, якщо ти її туди випадково додав раніше
+            if (this.data.hiddenBank) {
+                this.data.hiddenBank = this.data.hiddenBank.filter(x => x.toLowerCase() !== val.toLowerCase());
+            }
+            
+            if (!this.data.exBank.includes(val)) {
+                this.data.exBank.push(val);
+            }
+            
             this.data.exBank.sort();
             this.save();
             this.updateBank(); 
-            this.renderBankList(); 
+            
+            // Зберігаємо пошуковий запит, щоб список не стрибав
+            const searchInput = document.querySelector('#bankModal input[placeholder*="Пошук"]');
+            this.renderBankList(searchInput ? searchInput.value : ''); 
             document.getElementById('newBankItem').value = '';
         }
     },
@@ -849,9 +862,11 @@ const App = {
         
         this.save();
         this.updateBank();
-        this.renderBankList(document.querySelector('#bankModal input[placeholder="🔍 Пошук по базі..."]').value);
+        
+        // Зберігаємо пошуковий запит
+        const searchInput = document.querySelector('#bankModal input[placeholder*="Пошук"]');
+        this.renderBankList(searchInput ? searchInput.value : '');
     },
-
     calc1RM() {
         const w = parseFloat(document.getElementById('rm-w').value) || 0;
         const r = parseFloat(document.getElementById('rm-r').value) || 0;
