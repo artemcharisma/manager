@@ -499,8 +499,8 @@ const App = {
         document.querySelectorAll('.sys-toast').forEach(t => t.remove());
         const toast = document.createElement('div');
         toast.className = 'sys-toast';
-        toast.innerText = msg;
-        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.8rem; white-space: nowrap; animation: fadeInDown 0.2s ease forwards;`;
+        toast.innerHTML = msg; // Дозволяємо HTML теги
+        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: max-content; max-width: 90%; text-align: center; white-space: normal; line-height: 1.4; word-wrap: break-word; animation: fadeInDown 0.2s ease forwards;`;
         document.body.appendChild(toast);
         setTimeout(() => { if(toast) toast.remove(); }, 2500);
     },
@@ -605,10 +605,20 @@ const App = {
                             ? this.data.guidelines[prog][week.type].find(g => g.n && g.n.trim().toLowerCase() === exKeyName) 
                             : null;
                             if (guideInfo && !isEd) {
+                                let weightHint = "";
+                                const e1RM = this.getEstimated1RM(exKeyName, week.num, dIdx, prog);
+                                if (e1RM > 0 && guideInfo.p) {
+                                    const match = guideInfo.p.match(/(\d+)\s*%/);
+                                    if (match) {
+                                        const pct = parseInt(match[1]);
+                                        const calcW = Math.round((e1RM * (pct/100)) / 2.5) * 2.5;
+                                        weightHint = ` <span style="color:#10b981; font-weight:900;">(≈${calcW}кг)</span>`;
+                                    }
+                                }
                                 smartGuideHtml = `
                                 <div style="margin-top: 4px; font-family: 'JetBrains Mono', monospace; line-height: 1.3;">
                                     <div style="font-size: 0.65rem; color: var(--theme); font-weight: 700; opacity: 0.9;">
-                                        ⚡ ${guideInfo.p} | ${guideInfo.s} | ${guideInfo.w}
+                                        ⚡ ${guideInfo.p}${weightHint} | ${guideInfo.s} | ${guideInfo.w}
                                     </div>
                                     ${guideInfo.i ? `<div style="font-size: 0.65rem; color: #777; font-style: italic; margin-top: 2px;">"${guideInfo.i}"</div>` : ''}
                                 </div>`;
@@ -695,7 +705,7 @@ const App = {
                                 if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
                                 else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
 
-                                progressHtml = `<span style="color:#777; font-weight:600;">Минуло: ${ghostW}x${ghostR}</span> <span style="margin-left:3px">${icon}</span>`;
+                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, ${ghostW}, ${ghostR})" title="Натисни, щоб скопіювати">Минуло: ${ghostW}x${ghostR} ${icon}</span>`;
                             }
 
                             return `
@@ -1298,6 +1308,15 @@ const App = {
         else if(ex.sets.length > 1) ex.sets.pop();
         this.save(); this.render();
     },
+    copyGhostToSet(w, d, e, s, gw, gr) {
+        if (!gw || !gr) return;
+        this.pushHistory();
+        this.data.weeks[w].days[d].exercises[e].sets[s].w = gw.toString();
+        this.data.weeks[w].days[d].exercises[e].sets[s].r = gr.toString();
+        this.save();
+        this.render();
+        this.showToast(`✅ Скопійовано: ${gw}кг × ${gr}`, "var(--success)");
+    },
 
     updateSet(w, d, e, s, f, val, inputEl) {
         let finalVal = val;
@@ -1488,41 +1507,44 @@ const App = {
         <table class="guide-table">
             <thead>
                 <tr>
-                    <th style="width:40%">ВПРАВА</th>
-                    <th>% / S / W</th>
-                    <th>INFO</th>
-                    ${isEd ? '<th>X</th>' : ''}
+                    <th style="width:30%">ВПРАВА</th>
+                    <th style="width:35%">% / S / W</th>
+                    <th style="width:25%">INFO</th>
+                    ${isEd ? '<th style="width:10%; text-align:center;">X</th>' : ''}
                 </tr>
             </thead>
             <tbody>
                 ${list.map((r, i) => `
                 <tr>
                     <td>
-                        ${isEd ? `<input class="modal-input" style="padding:4px" value="${r.n}" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:#fff">${r.n}</strong>`}
+                        ${isEd ? `<input class="modal-input" style="padding:6px; font-size:16px; margin:0;" value="${r.n}" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:#fff">${r.n}</strong>`}
                     </td>
                     
                     <td>
                         ${isEd ? `
-                        <div style="display:flex; gap:5px; margin-bottom:4px">
-                            <input class="modal-input" style="padding:4px; font-size:0.7rem; width:50%; text-align:center;" value="${r.p}" placeholder="%" onblur="App.updateGuide('${p}', '${m}',${i},'p',this.value)">
-                            <input class="modal-input" style="padding:4px; font-size:0.7rem; width:50%; text-align:center;" value="${r.s}" placeholder="Sets" onblur="App.updateGuide('${p}', '${m}',${i},'s',this.value)">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; gap:4px;">
+                                <input class="modal-input" style="padding:6px; font-size:16px; flex:1; text-align:center; margin:0;" value="${r.p}" placeholder="%" onblur="App.updateGuide('${p}', '${m}',${i},'p',this.value)">
+                                <input class="modal-input" style="padding:6px; font-size:16px; flex:1; text-align:center; margin:0;" value="${r.s}" placeholder="Sets" onblur="App.updateGuide('${p}', '${m}',${i},'s',this.value)">
+                            </div>
+                            <input class="modal-input" style="padding:6px; font-size:16px; width:100%; box-sizing:border-box; margin:0;" value="${r.w}" placeholder="Warm-up" onblur="App.updateGuide('${p}', '${m}',${i},'w',this.value)">
                         </div>
                         ` : `
                         <div style="margin-bottom:4px"><span style="color:var(--theme); font-weight:800">${r.p}</span> <span style="color:#666">|</span> ${r.s}</div>
+                        <div style="font-size:0.75rem; color:#888">${r.w}</div>
                         `}
-                        ${isEd ? `<input class="modal-input" style="padding:4px; font-size:0.7rem; width:100%; box-sizing:border-box;" value="${r.w}" onblur="App.updateGuide('${p}', '${m}',${i},'w',this.value)">` : `<div style="font-size:0.75rem; color:#888">${r.w}</div>`}
                     </td>
                     
                     <td style="position:relative;">
                         ${isEd ? `
-                        <div style="display:flex; gap:5px; align-items:flex-start;">
-                            <textarea class="modal-input" style="padding:4px; min-height:40px; flex:1;" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>
-                            <div class="btn-icon" style="width:36px; height:36px; flex-shrink:0; border:1px solid var(--theme); color:var(--theme); font-size:1.1rem; background:rgba(212,175,55,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="App.generateProPlan('${p}', '${m}', ${i})" title="PRO-Шаблон">⚡</div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <textarea class="modal-input" style="padding:6px; min-height:50px; font-size:16px; margin:0; width:100%; box-sizing:border-box;" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>
+                            <div class="btn-add" style="padding:6px; border-color:var(--theme); color:var(--theme); font-size:0.8rem; background:rgba(212,175,55,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold;" onclick="App.generateProPlan('${p}', '${m}', ${i})" title="PRO-Шаблон">⚡ Шаблон</div>
                         </div>
                         ` : `<span class="row-note" style="white-space:pre-wrap;">${r.i}</span>`}
                     </td>
                     
-                    ${isEd ? `<td style="vertical-align:middle; text-align:center"><span style="color:var(--danger); cursor:pointer" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</span></td>` : ''}
+                    ${isEd ? `<td style="vertical-align:middle; text-align:center"><span style="color:var(--danger); cursor:pointer; padding:10px; font-weight:bold; font-size:1.2rem;" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</span></td>` : ''}
                 </tr>
                 `).join('')}
             </tbody>
