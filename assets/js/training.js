@@ -274,6 +274,42 @@ const App = {
         document.getElementById(`list-${w}-${d}-${e}`).style.display = 'none';
     },
 
+    openGuideExList(p, m, i) {
+        const inp = document.getElementById(`guide-ex-${p}-${m}-${i}`);
+        if(inp) this.filterGuideExList(inp.value, p, m, i);
+    },
+
+    filterGuideExList(q, p, m, i) {
+        document.querySelectorAll('.custom-dropdown').forEach(el => el.style.display = 'none');
+        
+        const list = document.getElementById(`guide-list-${p}-${m}-${i}`);
+        if (!list) return;
+        
+        const matches = this.data.exBank.filter(x => x.toLowerCase().includes(q.toLowerCase()));
+        
+        if (matches.length === 0) {
+            list.innerHTML = `<div style="padding:10px; color:#666; font-size:0.8rem; text-align:center;">Немає збігів</div>`;
+        } else {
+            list.innerHTML = matches.map(name => `
+                <div style="padding: 12px 15px; border-bottom: 1px solid #222; color: #fff; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" 
+                     onclick="App.selectGuideEx('${name.replace(/'/g, "\\'")}', '${p}', '${m}', ${i})"
+                     onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
+                    ${name}
+                </div>
+            `).join('');
+        }
+        list.style.display = 'block';
+        list.style.animation = 'fadeInDown 0.2s ease forwards';
+    },
+
+    selectGuideEx(val, p, m, i) {
+        const inp = document.getElementById(`guide-ex-${p}-${m}-${i}`);
+        if (inp) {
+            inp.value = val;
+            this.updateGuide(p, m, i, 'n', val); 
+        }
+        document.getElementById(`guide-list-${p}-${m}-${i}`).style.display = 'none';
+    },
     toggleDay(uid, el) {
         if(!this.data.opened) this.data.opened = {};
         
@@ -832,12 +868,12 @@ const App = {
         if(val) {
             this.pushHistory();
             
-            // ФІКС: Звільняємо вправу з чорного списку, якщо ти її туди випадково додав раніше
             if (this.data.hiddenBank) {
                 this.data.hiddenBank = this.data.hiddenBank.filter(x => x.toLowerCase() !== val.toLowerCase());
             }
             
-            if (!this.data.exBank.includes(val)) {
+            const exists = this.data.exBank.find(x => x.toLowerCase() === val.toLowerCase());
+            if (!exists) {
                 this.data.exBank.push(val);
             }
             
@@ -845,10 +881,10 @@ const App = {
             this.save();
             this.updateBank(); 
             
-            // Зберігаємо пошуковий запит, щоб список не стрибав
             const searchInput = document.querySelector('#bankModal input[placeholder*="Пошук"]');
             this.renderBankList(searchInput ? searchInput.value : ''); 
             document.getElementById('newBankItem').value = '';
+            this.showToast("✅ Додано в базу", "var(--success)");
         }
     },
 
@@ -1407,8 +1443,14 @@ const App = {
                 
                 ${isEd ? `<div style="position:absolute; top:12px; right:12px; color:var(--danger); cursor:pointer; font-weight:bold; font-size:1.2rem; background:#000; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #333;" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</div>` : ''}
 
-                <div style="margin-bottom:10px; padding-right:${isEd ? '40px' : '0'};">
-                    ${isEd ? `<input class="modal-input" style="padding:8px; font-size:16px; margin:0; width:100%; border-color:#555; color:var(--theme); font-weight:bold;" value="${r.n}" placeholder="Назва вправи" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:var(--theme); font-size:1.1rem;">${r.n}</strong>`}
+                <div style="margin-bottom:10px; padding-right:${isEd ? '40px' : '0'}; position:relative;">
+                    ${isEd ? `
+                        <input class="ex-name-input modal-input" id="guide-ex-${p}-${m}-${i}" autocomplete="off" style="padding:8px; font-size:16px; margin:0; width:100%; border-color:#555; color:var(--theme); font-weight:bold;" value="${r.n}" placeholder="Назва вправи" 
+                               onfocus="App.openGuideExList('${p}', '${m}', ${i})" 
+                               oninput="App.filterGuideExList(this.value, '${p}', '${m}', ${i})" 
+                               onblur="setTimeout(() => App.updateGuide('${p}', '${m}',${i},'n',document.getElementById('guide-ex-${p}-${m}-${i}').value), 200)">
+                        <div id="guide-list-${p}-${m}-${i}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
+                    ` : `<strong style="color:var(--theme); font-size:1.1rem;">${r.n}</strong>`}
                 </div>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
