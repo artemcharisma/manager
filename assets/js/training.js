@@ -166,6 +166,10 @@ const App = {
             if (!e.target.closest('.ex-name-input') && !e.target.closest('.custom-dropdown')) {
                 document.querySelectorAll('.custom-dropdown').forEach(el => el.style.display = 'none');
             }
+            // ФІКС: Закриття модалок при кліку на темний фон (без мерехтіння)
+            if (e.target.classList.contains('modal')) {
+                App.closeModal();
+            }
         });
 
         const brandBlock = document.getElementById('brandBlock');
@@ -322,39 +326,38 @@ const App = {
         return Math.round(maxRM);
     },
 
-    cycleSetType(w, d, e, s) {
+    cycleSetType(w, d, e, s, event) {
         const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
-        let msg = "";
-        let color = "";
+        let msg = ""; let color = ""; let newLabel = s + 1; let newClass = "";
 
         if (!setObj.t) {
-            setObj.t = 'WU';
-            msg = "🟡 WU: Підвідний / Розминка";
-            color = "var(--theme)";
-        }
-        else if (setObj.t === 'WU') {
-            setObj.t = 'TS';
-            msg = "🔴 TS: Top Set (Максимальна відмова)";
-            color = "var(--danger)";
-        }
-        else if (setObj.t === 'TS') {
-            setObj.t = 'BO';
-            msg = "🔵 BO: Back-off (-20% ваги)";
-            color = "#3b82f6";
-        }
-        else if (setObj.t === 'BO') {
-            setObj.t = 'DS';
-            msg = "🟣 DS: Drop-set (Інтенсифікація)";
-            color = "#8b5cf6";
-        }
-        else {
-            delete setObj.t;
-            msg = "⚪ Робочий / Filler підхід";
-            color = "#444";
+            setObj.t = 'WU'; msg = "🟡 WU: Підвідний / Розминка"; color = "var(--theme)";
+            newLabel = "WU"; newClass = "type-WU";
+        } else if (setObj.t === 'WU') {
+            setObj.t = 'TS'; msg = "🔴 TS: Top Set (Максимальна відмова)"; color = "var(--danger)";
+            newLabel = "TS"; newClass = "type-TS";
+        } else if (setObj.t === 'TS') {
+            setObj.t = 'BO'; msg = "🔵 BO: Back-off (-20% ваги)"; color = "#3b82f6";
+            newLabel = "BO"; newClass = "type-BO";
+        } else if (setObj.t === 'BO') {
+            setObj.t = 'DS'; msg = "🟣 DS: Drop-set (Інтенсифікація)"; color = "#8b5cf6";
+            newLabel = "DS"; newClass = "type-DS";
+        } else {
+            delete setObj.t; msg = "⚪ Робочий / Filler підхід"; color = "#444";
         }
         
         this.save();
-        this.render();
+        
+        // ФІКС: Пряме оновлення DOM без перемальовування екрану (прибирає мерехтіння)
+        if (event && event.target) {
+            const numEl = event.target;
+            const rowEl = numEl.closest('.set-row');
+            numEl.innerText = newLabel;
+            numEl.className = `set-num ${newClass}`;
+            if (rowEl) rowEl.className = `set-row ${newClass}`;
+        } else {
+            this.render(); // Запасний варіант
+        }
         this.showToast(msg, color);
     },
 
@@ -597,7 +600,7 @@ const App = {
                                     ${progressHtml}
                                 </div>
                                 <div class="set-row ${typeClass}">
-                                    <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx})">${typeLabel}</div>
+                                    <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx}, event)">${typeLabel}</div>
                                     <div class="set-part">
                                         <input type="text" inputmode="text" class="set-input w-val ${placeholderW ? 'ghost-active' : ''}" value="${s.w||''}" placeholder="${placeholderW}" 
                                                onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
@@ -1089,7 +1092,6 @@ const App = {
         const sourceP = targetP === 'balanced' ? 'arms' : 'balanced';
         const sourceName = this.data.customNames[sourceP] || sourceP;
         
-        // Знаходимо всі тижні в іншій програмі і сортуємо від найновішого
         const sourceWeeks = this.data.weeks.filter(w => w.prog === sourceP).sort((a, b) => b.num - a.num);
         
         if (sourceWeeks.length === 0) {
@@ -1097,10 +1099,10 @@ const App = {
             return;
         }
 
-        // Будуємо красиве меню вибору тижня
-        let menuHtml = `<div style="text-align:left; font-size:0.8rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
+        // ФІКС: Ідеально рівні стовпчики через display: flex
+        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
         sourceWeeks.forEach((w, idx) => {
-            menuHtml += `<b style="color:var(--theme)">${idx + 1}</b> - Тиждень ${w.num} <span style="font-size:0.6rem; color:#666">(${w.type.toUpperCase()})</span><br>`;
+            menuHtml += `<div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">${idx + 1}.</b> <span>Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></span></div>`;
         });
         menuHtml += `</div>`;
 
@@ -1112,7 +1114,6 @@ const App = {
 
         const weekToCopy = sourceWeeks[selectedIdx];
         
-        // Питаємо, чи очистити ваги (зробити чистий шаблон)
         const hardCopy = await Modal.confirm(
             "Скопіювати <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (з цифрами).<br>Скасувати — тільки структура (як чистий шаблон).</span>", 
             "РЕЖИМ КОПІЮВАННЯ", 
@@ -1126,9 +1127,7 @@ const App = {
             newData.forEach(d => {
                 d.exercises.forEach(ex => { 
                     ex.sets.forEach(s => { 
-                        s.w = ""; 
-                        s.r = ""; 
-                        s.d = ""; 
+                        s.w = ""; s.r = ""; s.d = ""; 
                     }); 
                 });
             });
@@ -1138,15 +1137,7 @@ const App = {
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
         const newWeekNum = maxNum + 1; 
 
-        // Створюємо новий тиждень і прив'язуємо до ПОТОЧНОЇ програми
-        const newWeek = { 
-            id: Date.now(), 
-            type: weekToCopy.type, 
-            prog: targetP, 
-            num: newWeekNum, 
-            days: newData 
-        };
-        
+        const newWeek = { id: Date.now(), type: weekToCopy.type, prog: targetP, num: newWeekNum, days: newData };
         this.data.weeks.push(newWeek);
         this.data.weeks.sort((a, b) => a.num - b.num);
         this.updateBank();
@@ -1462,26 +1453,53 @@ const App = {
     async generateProPlan(p, m, i) {
         if (!this.data.customTemplates) this.data.customTemplates = [];
         
-        let menuHtml = `<div style="text-align:left; font-size:0.75rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
-        <b style="color:var(--theme)">1</b> - Важка База (ПП: 4 кроки, TS+BO)<br>
-        <b style="color:var(--theme)">2</b> - Ізоляція (ПП: 2 кроки, TS+BO)<br>
-        <b style="color:var(--theme)">3</b> - Класика (3x10-12, RIR 1-2)<br>
-        <b style="color:var(--theme)">4</b> - Памп/Філлер (3x15-20)<br>`;
+        // ФІКС: Ідеальне вирівнювання та кнопка 'D' для видалення
+        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">1.</b> <span>Важка База (ПП: 4 кроки, TS+BO)</span></div>
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">2.</b> <span>Ізоляція (ПП: 2 кроки, TS+BO)</span></div>
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">3.</b> <span>Класика (3x10-12, RIR 1-2)</span></div>
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">4.</b> <span>Памп/Філлер (3x15-20)</span></div>`;
         
         let startIndex = 5;
         this.data.customTemplates.forEach((tpl, idx) => {
-            menuHtml += `<b style="color:var(--theme)">${startIndex + idx}</b> - ${tpl.name}<br>`;
+            menuHtml += `<div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">${startIndex + idx}.</b> <span>${tpl.name}</span></div>`;
         });
 
         menuHtml += `<hr style="border-color:#333; margin:8px 0;">
-        <b style="color:#10b981">S</b> - 💾 Зберегти поточний рядок як шаблон<br>
-        <b style="color:#ef4444">0</b> - 🗑 Очистити рядок
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#10b981; width:20px; text-align:right;">S.</b> <span>💾 Зберегти рядок як шаблон</span></div>
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#ef4444; width:20px; text-align:right;">D.</b> <span>🗑 Видалити шаблон</span></div>
+        <div style="display:flex; gap:10px;"><b style="color:#ef4444; width:20px; text-align:right;">0.</b> <span>🧹 Очистити рядок</span></div>
         </div>`;
 
         const val = await Modal.prompt(`Виберіть дію (введіть цифру або букву):<br><br>${menuHtml}`, "⚡ ШАБЛОНИ", "");
         if (!val) return;
 
         const choice = val.trim().toUpperCase();
+
+        // ЛОГІКА ВИДАЛЕННЯ ШАБЛОНУ
+        if (choice === 'D') {
+            if (this.data.customTemplates.length === 0) {
+                this.showToast("Немає власних шаблонів для видалення", "var(--danger)");
+                return;
+            }
+            let delHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
+            this.data.customTemplates.forEach((tpl, idx) => {
+                delHtml += `<div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--danger); width:20px; text-align:right;">${startIndex + idx}.</b> <span>${tpl.name}</span></div>`;
+            });
+            delHtml += `</div>`;
+            
+            const delVal = await Modal.prompt(`Введіть номер шаблону для видалення:<br><br>${delHtml}`, "ВИДАЛЕННЯ", "");
+            if (!delVal) return;
+            const delIdx = parseInt(delVal) - startIndex;
+            if (!isNaN(delIdx) && delIdx >= 0 && delIdx < this.data.customTemplates.length) {
+                const deletedName = this.data.customTemplates[delIdx].name;
+                this.data.customTemplates.splice(delIdx, 1);
+                this.save();
+                this.showToast(`✅ Шаблон "${deletedName}" видалено!`, 'var(--success)');
+            }
+            return;
+        }
+
         this.pushHistory();
         const row = this.data.guidelines[p][m][i];
 
@@ -1489,11 +1507,7 @@ const App = {
             const tplName = await Modal.prompt("Введіть назву для нового шаблону:", "ЗБЕРЕГТИ ШАБЛОН", "Мій шаблон");
             if (tplName && tplName.trim() !== "") {
                 this.data.customTemplates.push({
-                    name: tplName.trim(),
-                    p: row.p || "",
-                    s: row.s || "",
-                    w: row.w || "",
-                    i: row.i || ""
+                    name: tplName.trim(), p: row.p || "", s: row.s || "", w: row.w || "", i: row.i || ""
                 });
                 this.save();
                 this.showToast(`✅ Шаблон "${tplName}" збережено!`, 'var(--success)');
@@ -1503,9 +1517,7 @@ const App = {
 
         if (choice === '0') {
             row.p = ""; row.s = ""; row.w = ""; row.i = "";
-            this.save();
-            this.renderGuide();
-            return;
+            this.save(); this.renderGuide(); return;
         }
 
         if (choice === "1") {
@@ -1520,20 +1532,14 @@ const App = {
             const customIdx = parseInt(choice) - startIndex;
             if (!isNaN(customIdx) && customIdx >= 0 && customIdx < this.data.customTemplates.length) {
                 const tpl = this.data.customTemplates[customIdx];
-                row.p = tpl.p;
-                row.s = tpl.s;
-                row.w = tpl.w;
-                row.i = tpl.i;
-            } else {
-                return; 
-            }
+                row.p = tpl.p; row.s = tpl.s; row.w = tpl.w; row.i = tpl.i;
+            } else { return; }
         }
 
         this.save();
         this.renderGuide();
         this.showToast(`✅ Шаблон застосовано`, 'var(--theme)');
     },
-
     syncGuide(p, m) {
         if (!this.data.weeks || !this.data.guidelines[p] || !this.data.guidelines[p][m]) return;
         
