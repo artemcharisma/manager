@@ -1098,12 +1098,12 @@ const App = {
             return;
         }
 
-        // ФІКС ВІЗУАЛУ: Жорстка CSS Grid сітка для ідеального вирівнювання цифр
+        // ФІКС ВІЗУАЛУ: Жорсткий Flex + Monospace для ідеальної лінії
         let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
         sourceWeeks.forEach((w, idx) => {
-            menuHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;">
-                <div style="color:var(--theme); font-weight:bold; text-align:right;">${idx + 1}.</div>
-                <div>Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></div>
+            menuHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;">
+                <div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">${idx + 1}.</div>
+                <div style="flex:1;">Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></div>
             </div>`;
         });
         menuHtml += `</div>`;
@@ -1460,23 +1460,23 @@ const App = {
     async generateProPlan(p, m, i) {
         if (!this.data.customTemplates) this.data.customTemplates = [];
         
-        // ФІКС ВІЗУАЛУ: CSS Grid для ідеального вирівнювання цифр та букв
+        // ГОЛОВНЕ МЕНЮ (Ідеально рівні колонки)
         let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">1.</div> <div>Важка База (ПП: 4 кроки, TS+BO)</div></div>
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">2.</div> <div>Ізоляція (ПП: 2 кроки, TS+BO)</div></div>
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">3.</div> <div>Класика (3x10-12, RIR 1-2)</div></div>
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">4.</div> <div>Памп/Філлер (3x15-20)</div></div>`;
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">1.</div> <div style="flex:1;">Важка База (ПП: 4 кроки, TS+BO)</div></div>
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">2.</div> <div style="flex:1;">Ізоляція (ПП: 2 кроки, TS+BO)</div></div>
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">3.</div> <div style="flex:1;">Класика (3x10-12, RIR 1-2)</div></div>
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">4.</div> <div style="flex:1;">Памп/Філлер (3x15-20)</div></div>`;
         
         let startIndex = 5;
         this.data.customTemplates.forEach((tpl, idx) => {
-            menuHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">${startIndex + idx}.</div> <div>${tpl.name}</div></div>`;
+            menuHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">${startIndex + idx}.</div> <div style="flex:1;">${tpl.name}</div></div>`;
         });
 
-        menuHtml += `<hr style="border-color:#333; margin:8px 0;">
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#10b981; font-weight:bold; text-align:right;">S.</div> <div>💾 Зберегти рядок як шаблон</div></div>
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#eab308; font-weight:bold; text-align:right;">E.</div> <div>✏️ Редагувати шаблон</div></div>
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#ef4444; font-weight:bold; text-align:right;">D.</div> <div>🗑 Видалити шаблон</div></div>
-        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; align-items:start;"><div style="color:#ef4444; font-weight:bold; text-align:right;">0.</div> <div>🧹 Очистити рядок</div></div>
+        menuHtml += `<hr style="border-color:#333; margin:10px 0;">
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:#10b981; font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">S.</div> <div style="flex:1;">💾 Зберегти рядок як шаблон</div></div>
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:#eab308; font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">E.</div> <div style="flex:1;">✏️ Редагувати шаблон</div></div>
+        <div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:#ef4444; font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">D.</div> <div style="flex:1;">🗑 Видалити шаблон</div></div>
+        <div style="display:flex; align-items:flex-start;"><div style="flex:0 0 30px; color:#ef4444; font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">0.</div> <div style="flex:1;">🧹 Очистити рядок</div></div>
         </div>`;
 
         const val = await Modal.prompt(`Виберіть дію (введіть цифру або букву):<br><br>${menuHtml}`, "⚡ ШАБЛОНИ", "");
@@ -1484,12 +1484,12 @@ const App = {
 
         const choice = val.trim().toUpperCase();
 
-        // 🗑 ВИДАЛЕННЯ ШАБЛОНУ
+        // 🗑 ВИДАЛЕННЯ ШАБЛОНУ (з рівним меню)
         if (choice === 'D') {
             if (this.data.customTemplates.length === 0) return this.showToast("Немає власних шаблонів", "var(--danger)");
             let delHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
             this.data.customTemplates.forEach((tpl, idx) => {
-                delHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--danger); font-weight:bold; text-align:right;">${startIndex + idx}.</div> <div>${tpl.name}</div></div>`;
+                delHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:var(--danger); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">${startIndex + idx}.</div> <div style="flex:1;">${tpl.name}</div></div>`;
             });
             delHtml += `</div>`;
             
@@ -1505,12 +1505,12 @@ const App = {
             return;
         }
 
-        // ✏️ РЕДАГУВАННЯ ШАБЛОНУ
+        // ✏️ РЕДАГУВАННЯ ШАБЛОНУ (з рівним меню)
         if (choice === 'E') {
             if (this.data.customTemplates.length === 0) return this.showToast("Немає власних шаблонів", "var(--danger)");
             let editHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
             this.data.customTemplates.forEach((tpl, idx) => {
-                editHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#eab308; font-weight:bold; text-align:right;">${startIndex + idx}.</div> <div>${tpl.name}</div></div>`;
+                editHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;"><div style="flex:0 0 30px; color:#eab308; font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">${startIndex + idx}.</div> <div style="flex:1;">${tpl.name}</div></div>`;
             });
             editHtml += `</div>`;
             const editVal = await Modal.prompt(`Введіть номер шаблону для РЕДАГУВАННЯ (починаючи з ${startIndex}):<br><br>${editHtml}`, "РЕДАГУВАННЯ", "");
