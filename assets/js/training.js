@@ -326,7 +326,7 @@ const App = {
         return Math.round(maxRM);
     },
 
-    cycleSetType(w, d, e, s, event) {
+    cycleSetType(w, d, e, s, event) { // Додано event
         const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
         let msg = ""; let color = ""; let newLabel = s + 1; let newClass = "";
 
@@ -348,7 +348,7 @@ const App = {
         
         this.save();
         
-        // ФІКС: Пряме оновлення DOM без перемальовування екрану (прибирає мерехтіння)
+        // ФІКС МЕРЕХТІННЯ: Оновлюємо DOM точково
         if (event && event.target) {
             const numEl = event.target;
             const rowEl = numEl.closest('.set-row');
@@ -356,11 +356,10 @@ const App = {
             numEl.className = `set-num ${newClass}`;
             if (rowEl) rowEl.className = `set-row ${newClass}`;
         } else {
-            this.render(); // Запасний варіант
+            this.render(); // Запасний план
         }
         this.showToast(msg, color);
     },
-
     showToast(msg, color="var(--success)") {
         document.querySelectorAll('.sys-toast').forEach(t => t.remove());
         const toast = document.createElement('div');
@@ -1099,10 +1098,13 @@ const App = {
             return;
         }
 
-        // ФІКС: Ідеально рівні стовпчики через display: flex
-        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
+        // ФІКС ВІЗУАЛУ: Таблична розмітка для ідеально рівних колонок
+        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto; display:table; width:100%;">`;
         sourceWeeks.forEach((w, idx) => {
-            menuHtml += `<div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">${idx + 1}.</b> <span>Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></span></div>`;
+            menuHtml += `<div style="display:table-row;">
+                <div style="display:table-cell; color:var(--theme); font-weight:bold; width:30px; padding-bottom:6px; text-align:right; padding-right:8px;">${idx + 1}.</div>
+                <div style="display:table-cell; padding-bottom:6px;">Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></div>
+            </div>`;
         });
         menuHtml += `</div>`;
 
@@ -1453,7 +1455,6 @@ const App = {
     async generateProPlan(p, m, i) {
         if (!this.data.customTemplates) this.data.customTemplates = [];
         
-        // ФІКС: Ідеальне вирівнювання та кнопка 'D' для видалення
         let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
         <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">1.</b> <span>Важка База (ПП: 4 кроки, TS+BO)</span></div>
         <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">2.</b> <span>Ізоляція (ПП: 2 кроки, TS+BO)</span></div>
@@ -1467,6 +1468,7 @@ const App = {
 
         menuHtml += `<hr style="border-color:#333; margin:8px 0;">
         <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#10b981; width:20px; text-align:right;">S.</b> <span>💾 Зберегти рядок як шаблон</span></div>
+        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#eab308; width:20px; text-align:right;">E.</b> <span>✏️ Редагувати шаблон</span></div>
         <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#ef4444; width:20px; text-align:right;">D.</b> <span>🗑 Видалити шаблон</span></div>
         <div style="display:flex; gap:10px;"><b style="color:#ef4444; width:20px; text-align:right;">0.</b> <span>🧹 Очистити рядок</span></div>
         </div>`;
@@ -1476,19 +1478,10 @@ const App = {
 
         const choice = val.trim().toUpperCase();
 
-        // ЛОГІКА ВИДАЛЕННЯ ШАБЛОНУ
+        // 🗑 ВИДАЛЕННЯ ШАБЛОНУ
         if (choice === 'D') {
-            if (this.data.customTemplates.length === 0) {
-                this.showToast("Немає власних шаблонів для видалення", "var(--danger)");
-                return;
-            }
-            let delHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
-            this.data.customTemplates.forEach((tpl, idx) => {
-                delHtml += `<div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--danger); width:20px; text-align:right;">${startIndex + idx}.</b> <span>${tpl.name}</span></div>`;
-            });
-            delHtml += `</div>`;
-            
-            const delVal = await Modal.prompt(`Введіть номер шаблону для видалення:<br><br>${delHtml}`, "ВИДАЛЕННЯ", "");
+            if (this.data.customTemplates.length === 0) return this.showToast("Немає власних шаблонів", "var(--danger)");
+            const delVal = await Modal.prompt(`Введіть номер шаблону для ВИДАЛЕННЯ (починаючи з ${startIndex}):`, "ВИДАЛЕННЯ", "");
             if (!delVal) return;
             const delIdx = parseInt(delVal) - startIndex;
             if (!isNaN(delIdx) && delIdx >= 0 && delIdx < this.data.customTemplates.length) {
@@ -1500,9 +1493,28 @@ const App = {
             return;
         }
 
+        // ✏️ РЕДАГУВАННЯ ШАБЛОНУ
+        if (choice === 'E') {
+            if (this.data.customTemplates.length === 0) return this.showToast("Немає власних шаблонів", "var(--danger)");
+            const editVal = await Modal.prompt(`Введіть номер шаблону для РЕДАГУВАННЯ (починаючи з ${startIndex}):`, "РЕДАГУВАННЯ", "");
+            if (!editVal) return;
+            const editIdx = parseInt(editVal) - startIndex;
+            if (!isNaN(editIdx) && editIdx >= 0 && editIdx < this.data.customTemplates.length) {
+                const tpl = this.data.customTemplates[editIdx];
+                const newName = await Modal.prompt("Введіть нову назву для шаблону:", "РЕДАГУВАННЯ", tpl.name);
+                if (newName && newName.trim() !== "") {
+                    tpl.name = newName.trim();
+                    this.save();
+                    this.showToast(`✅ Назву змінено на "${tpl.name}"`, 'var(--success)');
+                }
+            }
+            return;
+        }
+
         this.pushHistory();
         const row = this.data.guidelines[p][m][i];
 
+        // 💾 ЗБЕРЕЖЕННЯ ШАБЛОНУ
         if (choice === 'S') {
             const tplName = await Modal.prompt("Введіть назву для нового шаблону:", "ЗБЕРЕГТИ ШАБЛОН", "Мій шаблон");
             if (tplName && tplName.trim() !== "") {
