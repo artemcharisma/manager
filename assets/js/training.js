@@ -1514,8 +1514,13 @@ const App = {
                         `}
                         ${isEd ? `<input class="modal-input" style="padding:4px; font-size:0.7rem; width:100%; box-sizing:border-box;" value="${r.w}" onblur="App.updateGuide('${p}', '${m}',${i},'w',this.value)">` : `<div style="font-size:0.75rem; color:#888">${r.w}</div>`}
                     </td>
-                    <td>
-                        ${isEd ? `<textarea class="modal-input" style="padding:4px; min-height:40px" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>` : `<span class="row-note">${r.i}</span>`}
+                    <td style="position:relative;">
+                        ${isEd ? `
+                        <div style="display:flex; gap:5px; align-items:flex-start;">
+                            <textarea class="modal-input" style="padding:4px; min-height:40px; flex:1;" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>
+                            <div class="btn-icon" style="width:36px; height:36px; flex-shrink:0; border:1px solid var(--theme); color:var(--theme); font-size:1.1rem; background:rgba(212,175,55,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="App.generateProPlan('${p}', '${m}', ${i})" title="PRO-Генератор">⚡</div>
+                        </div>
+                        ` : `<span class="row-note" style="white-space:pre-wrap;">${r.i}</span>`}
                     </td>
                     ${isEd ? `<td style="vertical-align:middle; text-align:center"><span style="color:var(--danger); cursor:pointer" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</span></td>` : ''}
                 </tr>
@@ -1536,13 +1541,13 @@ const App = {
         this.renderGuide();
     },
     async generateProPlan(p, m, i) {
-        const val = await Modal.prompt("Введіть цільову вагу для Top Set (кг):<br><br><span style='font-size:0.75rem; color:#888'>Скрипт автоматично розрахує розминку (40, 60, 80, 90%) та Back-off (-20%).</span>", "⚡ PRO ГЕНЕРАТОР", "");
+        const val = await Modal.prompt("Введіть цільову вагу для Top Set (кг):<br><br><span style='font-size:0.75rem; color:#888'>Авторозрахунок: Розминка (40%, 60%, 80%, 90%) та Back-off (-20%).</span>", "⚡ PRO ГЕНЕРАТОР", "");
         
         if (!val) return;
         const ts = parseFloat(val);
         if (isNaN(ts) || ts <= 0) return;
 
-        // Формула округлення до 2.5 кг (стандартні бліни)
+        // Округлення до 2.5 кг (стандартні бліни)
         const round = (w) => Math.round(w / 2.5) * 2.5;
         
         const w40 = round(ts * 0.4);
@@ -1553,7 +1558,7 @@ const App = {
 
         this.pushHistory();
         
-        // Автозаповнення полів Довідника
+        // Автоматично розставляємо значення по клітинках
         this.data.guidelines[p][m][i].p = "TS + BO";
         this.data.guidelines[p][m][i].s = "1 + 1";
         this.data.guidelines[p][m][i].w = `ПП: ${w40}, ${w60}, ${w80}, ${w90}`;
