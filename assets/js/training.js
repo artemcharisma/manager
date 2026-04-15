@@ -59,6 +59,7 @@ const InitialData = {
     guideMode: 'mass',
     currentProgram: 'balanced', 
     exBank: [],
+    hiddenBank: [],
     targets: { "Груди": 12, "Спина": 14, "Ноги": 16, "Плечі": 10, "Руки": 10, "Прес": 6, "Кардіо": 3 },
     guidelines: {
         balanced: {
@@ -253,6 +254,7 @@ const App = {
             this.save();
         }
         if(!this.data.exBank) this.data.exBank = [];
+        if(!this.data.hiddenBank) this.data.hiddenBank = [];
         if(!this.data.opened) this.data.opened = {}; 
         if (this.data.guidelines && this.data.guidelines.arms && this.data.guidelines.arms.mass && this.data.guidelines.arms.mass.length > 0) {
             if (this.data.guidelines.arms.mass[0].day) {
@@ -781,6 +783,7 @@ const App = {
 
     // ДОДАНО
     saveTimer: null,
+    bankTimer: null,
 
     save() { 
         if (this.saveTimer) clearTimeout(this.saveTimer);
@@ -852,7 +855,8 @@ const App = {
             });
         }
         
-        this.data.exBank = Array.from(allNames).sort();
+        // Фільтруємо базу через чорний список
+        this.data.exBank = Array.from(allNames).filter(n => !this.data.hiddenBank || !this.data.hiddenBank.includes(n)).sort();
     },
 
             openBank() {
@@ -953,6 +957,11 @@ const App = {
         if(!(await Modal.confirm(`Видалити "${name}" з бази назавжди?`, "ВИДАЛЕННЯ", "red"))) return;
         this.pushHistory();
         this.data.exBank = this.data.exBank.filter(x => x !== name);
+        
+        // ДОДАНО: Заносимо в чорний список, щоб вона більше ніколи не сканувалася
+        if (!this.data.hiddenBank) this.data.hiddenBank = [];
+        if (!this.data.hiddenBank.includes(name)) this.data.hiddenBank.push(name);
+        
         this.save();
         this.updateBank();
         this.renderBankList(document.querySelector('#bankModal input[placeholder="🔍 Пошук по базі..."]').value);
@@ -1271,8 +1280,8 @@ const App = {
                 if (val.length > 2 && !this.data.exBank.includes(val)) {
                     this.updateBank();
                 } else {
-                    // Якщо назва вже є, робимо фонове очищення (garbage collection) старих/видалених назв без блокування UI
-                    setTimeout(() => this.updateBank(), 500);
+                    if(this.bankTimer) clearTimeout(this.bankTimer);
+                    this.bankTimer = setTimeout(() => this.updateBank(), 500);
                 }
             }
             
@@ -1385,7 +1394,8 @@ const App = {
                 if (v.length > 2 && !this.data.exBank.includes(v)) {
                     this.updateBank();
                 } else {
-                    setTimeout(() => this.updateBank(), 500);
+                    if(this.bankTimer) clearTimeout(this.bankTimer);
+                    this.bankTimer = setTimeout(() => this.updateBank(), 500);
                 }
             }
             
@@ -1485,8 +1495,13 @@ const App = {
             <tbody>
                 ${list.map((r, i) => `
                 <tr>
-                    <td>
-                        ${isEd ? `<input class="modal-input" style="padding:4px" value="${r.n}" onblur="App.updateGuide('${p}', '${m}',${i},'n',this.value)">` : `<strong style="color:#fff">${r.n}</strong>`}
+                    <td style="position:relative;">
+                        ${isEd ? `
+                        <div style="display:flex; gap:5px; align-items:flex-start;">
+                            <textarea class="modal-input" style="padding:4px; min-height:40px; flex:1;" onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>
+                            <div class="btn-icon" style="width:32px; height:32px; flex-shrink:0; border-color:var(--theme); color:var(--theme); font-size:1.1rem; background:rgba(212,175,55,0.1);" onclick="App.generateProPlan('${p}', '${m}', ${i})" title="PRO-Генератор">⚡</div>
+                        </div>
+                        ` : `<span class="row-note" style="white-space:pre-wrap;">${r.i}</span>`}
                     </td>
                     <td>
                         ${isEd ? `
@@ -1519,6 +1534,34 @@ const App = {
         this.data.guidelines[p][m].unshift({n:"", p:"", s:"", w:"", i:""});
         this.save(); 
         this.renderGuide();
+    },
+    async generateProPlan(p, m, i) {
+        const val = await Modal.prompt("Введіть цільову вагу для Top Set (кг):<br><br><span style='font-size:0.75rem; color:#888'>Скрипт автоматично розрахує розминку (40, 60, 80, 90%) та Back-off (-20%).</span>", "⚡ PRO ГЕНЕРАТОР", "");
+        
+        if (!val) return;
+        const ts = parseFloat(val);
+        if (isNaN(ts) || ts <= 0) return;
+
+        // Формула округлення до 2.5 кг (стандартні бліни)
+        const round = (w) => Math.round(w / 2.5) * 2.5;
+        
+        const w40 = round(ts * 0.4);
+        const w60 = round(ts * 0.6);
+        const w80 = round(ts * 0.8);
+        const w90 = round(ts * 0.9);
+        const bo = round(ts * 0.8); // Back-off: мінус 20% = 80% від TS
+
+        this.pushHistory();
+        
+        // Автозаповнення полів Довідника
+        this.data.guidelines[p][m][i].p = "TS + BO";
+        this.data.guidelines[p][m][i].s = "1 + 1";
+        this.data.guidelines[p][m][i].w = `ПП: ${w40}, ${w60}, ${w80}, ${w90}`;
+        this.data.guidelines[p][m][i].i = `🔥 TS: ${ts} кг (Відмова)\n💧 BO: ${bo} кг (-20%)`;
+        
+        this.save();
+        this.renderGuide();
+        this.showToast(`✅ Схему для TS ${ts}кг згенеровано!`, 'var(--theme)');
     },
     syncGuide(p, m) {
         if (!this.data.weeks || !this.data.guidelines[p] || !this.data.guidelines[p][m]) return;
