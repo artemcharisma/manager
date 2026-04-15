@@ -255,7 +255,8 @@ const App = {
         }
         if(!this.data.exBank) this.data.exBank = [];
         if(!this.data.hiddenBank) this.data.hiddenBank = [];
-        if(!this.data.opened) this.data.opened = {}; 
+        if(!this.data.customTemplates) this.data.customTemplates = []; // <--- ДОДАЙ ЦЕЙ РЯДОК
+        if(!this.data.opened) this.data.opened = {};
         if (this.data.guidelines && this.data.guidelines.arms && this.data.guidelines.arms.mass && this.data.guidelines.arms.mass.length > 0) {
             if (this.data.guidelines.arms.mass[0].day) {
                 this.data.guidelines.arms = JSON.parse(JSON.stringify(InitialData.guidelines.arms));
@@ -1540,58 +1541,83 @@ const App = {
         this.renderGuide();
     },
     async generateProPlan(p, m, i) {
-        // Формуємо красиве меню вибору шаблонів
-        const msg = `Виберіть шаблон (введіть цифру):<br><br>
-        <div style="text-align:left; font-size:0.75rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">
+        if (!this.data.customTemplates) this.data.customTemplates = [];
+        
+        // Формуємо динамічне меню (базові + кастомні шаблони)
+        let menuHtml = `<div style="text-align:left; font-size:0.75rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
         <b style="color:var(--theme)">1</b> - Важка База (ПП: 4 кроки, TS+BO)<br>
         <b style="color:var(--theme)">2</b> - Ізоляція (ПП: 2 кроки, TS+BO)<br>
         <b style="color:var(--theme)">3</b> - Класика (3x10-12, RIR 1-2)<br>
-        <b style="color:var(--theme)">4</b> - Памп/Філлер (3x15-20, без відмови)<br>
-        <b style="color:var(--danger)">0</b> - Очистити рядок
+        <b style="color:var(--theme)">4</b> - Памп/Філлер (3x15-20)<br>`;
+        
+        let startIndex = 5;
+        this.data.customTemplates.forEach((tpl, idx) => {
+            menuHtml += `<b style="color:var(--theme)">${startIndex + idx}</b> - ${tpl.name}<br>`;
+        });
+
+        menuHtml += `<hr style="border-color:#333; margin:8px 0;">
+        <b style="color:#10b981">S</b> - 💾 Зберегти поточний рядок як шаблон<br>
+        <b style="color:#ef4444">0</b> - 🗑 Очистити рядок
         </div>`;
 
-        const val = await Modal.prompt(msg, "⚡ ШАБЛОНИ", "1");
+        const val = await Modal.prompt(`Виберіть дію (введіть цифру або букву):<br><br>${menuHtml}`, "⚡ ШАБЛОНИ", "");
         if (!val) return;
 
+        const choice = val.trim().toUpperCase();
         this.pushHistory();
         const row = this.data.guidelines[p][m][i];
 
-        // Заповнюємо Довідник правильними ВІДСОТКОВИМИ формулами, без жорстких кілограмів
-        switch(val.trim()) {
-            case "1":
-                row.p = "TS + BO";
-                row.s = "1 + 1";
-                row.w = "40%, 60%, 80%, 90%";
-                row.i = "🔥 TS: 6-9 (Відмова)\n💧 BO: -20% (10-14)\n⏳ Темп 3-0-1-0";
-                break;
-            case "2":
-                row.p = "TS + BO";
-                row.s = "1 + 1";
-                row.w = "50%, 75%";
-                row.i = "🔥 TS: Відмова\n💧 BO: -20%\n⏳ Максимальний контроль";
-                break;
-            case "3":
-                row.p = "70-75%";
-                row.s = "3x10-12";
-                row.w = "50% x 10";
-                row.i = "Залишати 1-2 RIR.\nБез мертвої відмови.";
-                break;
-            case "4":
-                row.p = "60%";
-                row.s = "3x15-20";
-                row.w = "Легка вага";
-                row.i = "Памп, нагнітання крові.\nВідмова суворо заборонена.";
-                break;
-            case "0":
-                row.p = ""; row.s = ""; row.w = ""; row.i = "";
-                break;
-            default:
-                return; // Якщо ввели якусь дурницю — нічого не робимо
+        // ДІЯ: Зберегти кастомний шаблон
+        if (choice === 'S') {
+            const tplName = await Modal.prompt("Введіть назву для нового шаблону:", "ЗБЕРЕГТИ ШАБЛОН", "Мій шаблон");
+            if (tplName && tplName.trim() !== "") {
+                this.data.customTemplates.push({
+                    name: tplName.trim(),
+                    p: row.p || "",
+                    s: row.s || "",
+                    w: row.w || "",
+                    i: row.i || ""
+                });
+                this.save();
+                this.showToast(`✅ Шаблон "${tplName}" збережено!`, 'var(--success)');
+            }
+            return;
+        }
+
+        // ДІЯ: Очистити
+        if (choice === '0') {
+            row.p = ""; row.s = ""; row.w = ""; row.i = "";
+            this.save();
+            this.renderGuide();
+            return;
+        }
+
+        // ДІЯ: Застосувати базові шаблони
+        if (choice === "1") {
+            row.p = "TS + BO"; row.s = "1 + 1"; row.w = "40%, 60%, 80%, 90%"; row.i = "🔥 TS: 6-9 (Відмова)\n💧 BO: -20% (10-14)\n⏳ Темп 3-0-1-0";
+        } else if (choice === "2") {
+            row.p = "TS + BO"; row.s = "1 + 1"; row.w = "50%, 75%"; row.i = "🔥 TS: Відмова\n💧 BO: -20%\n⏳ Максимальний контроль";
+        } else if (choice === "3") {
+            row.p = "70-75%"; row.s = "3x10-12"; row.w = "50% x 10"; row.i = "Залишати 1-2 RIR.\nБез мертвої відмови.";
+        } else if (choice === "4") {
+            row.p = "60%"; row.s = "3x15-20"; row.w = "Легка вага"; row.i = "Памп, нагнітання крові.\nВідмова суворо заборонена.";
+        } else {
+            // ДІЯ: Застосувати КАСТОМНІ шаблони
+            const customIdx = parseInt(choice) - startIndex;
+            if (!isNaN(customIdx) && customIdx >= 0 && customIdx < this.data.customTemplates.length) {
+                const tpl = this.data.customTemplates[customIdx];
+                row.p = tpl.p;
+                row.s = tpl.s;
+                row.w = tpl.w;
+                row.i = tpl.i;
+            } else {
+                return; // Неправильний ввід
+            }
         }
 
         this.save();
         this.renderGuide();
-        this.showToast(`✅ Шаблон [${val}] успішно застосовано`, 'var(--theme)');
+        this.showToast(`✅ Шаблон застосовано`, 'var(--theme)');
     },
     syncGuide(p, m) {
         if (!this.data.weeks || !this.data.guidelines[p] || !this.data.guidelines[p][m]) return;
