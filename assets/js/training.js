@@ -1224,7 +1224,7 @@ const App = {
     },
     
     filterGuide(q) {
-        const rows = document.querySelectorAll('.guide-table > div > div'); // Змінено для блоків
+        const rows = document.querySelectorAll('.guide-table > div'); // ФІКС: шукаємо блоки-картки
         const query = q.toLowerCase();
         rows.forEach(r => {
             const inputsText = Array.from(r.querySelectorAll('input, textarea')).map(inp => inp.value).join(' ').toLowerCase();
@@ -1326,10 +1326,10 @@ const App = {
         ${isEd ? `
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
             <div style="display:flex; gap:8px;">
-                <div class="btn-add" style="flex:1; text-align:center; font-weight:bold;" onclick="App.addGuideRow('${p}', '${m}')">+ НОВИЙ РЯДОК</div>
-                <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОН</div>
+                <div class="btn-add" style="flex:1; text-align:center; font-weight:bold; height:40px;" onclick="App.addGuideRow('${p}', '${m}')">+ РЯДОК</div>
+                <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none; height:40px;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОН</div>
             </div>
-            <div class="btn-add" style="font-size:0.75rem; padding:6px; border-style:dashed; opacity:0.8;" onclick="App.copyGuideFromOther('${p}', '${m}')">📥 Копіювати базу з іншої програми</div>
+            <div class="btn-add" style="font-size:0.7rem; padding:6px; border-style:dashed; opacity:0.8; height:30px;" onclick="App.copyGuideFromOther('${p}', '${m}')">📥 Копіювати описи з іншої програми</div>
         </div>
         ` : ''}
 
@@ -1489,19 +1489,19 @@ const App = {
 
     async copyGuideFromOther(targetP, m) {
         const sourceP = targetP === 'balanced' ? 'arms' : 'balanced';
-        const sourceName = this.data.customNames[sourceP];
+        const sourceName = this.data.customNames[sourceP] || sourceP;
         
-        if (!(await Modal.confirm(`Скопіювати всі вправи та налаштування з програми "<b>${sourceName}</b>" у поточну?`, "КОПІЮВАННЯ БАЗИ", "var(--theme)"))) return;
+        const ok = await Modal.confirm(`Скопіювати всі описи вправ з програми "<b>${sourceName}</b>" у поточну?<br><br><small style="color:#888">Це замінить поточні дані у цьому довіднику.</small>`, "ПЕРЕНЕСЕННЯ БАЗИ");
         
-        this.pushHistory();
-        const sourceList = this.data.guidelines[sourceP][m] || [];
-        
-        // Клонуємо дані, щоб не було прямого посилання
-        this.data.guidelines[targetP][m] = JSON.parse(JSON.stringify(sourceList));
-        
-        this.save();
-        this.renderGuide();
-        this.showToast("✅ Базу успішно перенесено!", "var(--success)");
+        if (ok) {
+            this.pushHistory();
+            const sourceList = this.data.guidelines[sourceP][m] || [];
+            // Глибоке копіювання масиву
+            this.data.guidelines[targetP][m] = JSON.parse(JSON.stringify(sourceList));
+            this.save();
+            this.renderGuide();
+            this.showToast("✅ Базу вправ перенесено!", "var(--theme)");
+        }
     },
     renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
