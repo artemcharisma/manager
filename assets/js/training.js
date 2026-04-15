@@ -163,10 +163,10 @@ const App = {
         });
 
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.ex-name-input') && !e.target.closest('.custom-dropdown')) {
+            if (!e.target.closest('.ex-name-input') && !e.target.closest('.custom-dropdown') && e.target.id !== 'newBankItem') {
                 document.querySelectorAll('.custom-dropdown').forEach(el => el.style.display = 'none');
             }
-            // ФІКС: Закриття модалок при кліку на темний фон (без мерехтіння)
+            // ФІКС: Закриття модалок при кліку на темний фон
             if (e.target.classList.contains('modal')) {
                 App.closeModal();
             }
@@ -401,8 +401,8 @@ const App = {
         const toast = document.createElement('div');
         toast.className = 'sys-toast';
         toast.innerHTML = msg; 
-        // ФІКС для iPhone: жорстко задана ширина 85% для ідеального перенесення тексту
-        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:12px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: 85%; max-width: 320px; text-align: center; line-height: 1.4; animation: fadeInDown 0.2s ease forwards; display: flex; align-items: center; justify-content: center;`;
+        // ФІКС: z-index змінено з 9999 на 20000, щоб віконце було ПОВЕРХ розмитої модалки
+        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:12px; z-index:20000; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: 85%; max-width: 320px; text-align: center; white-space: normal; line-height: 1.4; animation: fadeInDown 0.2s ease forwards; display: flex; align-items: center; justify-content: center;`;
         document.body.appendChild(toast);
         setTimeout(() => { if(toast) toast.remove(); }, 2500);
     },
@@ -817,6 +817,36 @@ const App = {
 
     filterBank(q) {
         this.renderBankList(q);
+    },
+    filterNewBankItem(q) {
+        const drop = document.getElementById('newBankDropdown');
+        if (!drop) return;
+        
+        if (!q || q.trim().length === 0) {
+            drop.style.display = 'none';
+            return;
+        }
+
+        // Збираємо всі унікальні назви з бази та всієї історії тренувань
+        let allNames = new Set(this.data.exBank);
+        this.data.weeks.forEach(w => w.days.forEach(d => d.exercises.forEach(e => {
+            if(e.n && e.n.length > 2) allNames.add(e.n.trim());
+        })));
+        
+        const matches = Array.from(allNames).filter(x => x.toLowerCase().includes(q.toLowerCase())).sort();
+        
+        if (matches.length === 0) {
+            drop.style.display = 'none';
+        } else {
+            drop.innerHTML = matches.map(m => `
+                <div style="padding: 12px 15px; border-bottom: 1px solid #222; color: #fff; font-size: 0.85rem; cursor: pointer;" 
+                     onclick="document.getElementById('newBankItem').value='${m.replace(/'/g, "\\'")}'; document.getElementById('newBankDropdown').style.display='none';">
+                    ${m}
+                </div>
+            `).join('');
+            drop.style.display = 'block';
+            drop.style.animation = 'fadeInDown 0.2s ease forwards';
+        }
     },
 
     async renameGlobalEx(oldName) {
