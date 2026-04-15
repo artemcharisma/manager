@@ -12,44 +12,46 @@ const ResolveGroup = (n) => {
     return "Інше";
 };
 
+// ЧИСТИЙ КАРКАС ТЕМПЛЕЙТІВ (Без дублювання і сміття)
 const Templates = {
     balanced: {
         mass: [
-            { day: "Понеділок", group: "Upper", exercises: [{n:"Жим штанги лежачи", g:"Груди", m:"wr", sets:[{},{},{}]}, {n:"Підтягування", g:"Спина", m:"wr", sets:[{},{},{}]}, {n:"Жим гантелей під кутом", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Тяга штанги в нахилі", g:"Спина", m:"wr", sets:[{},{}]}, {n:"Махи на середню дельту", g:"Плечі", m:"wr", sets:[{},{},{}]}, {n:"Розводка гантелями/пек-дек", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Згинання штанги стоячи", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Розгинання трицепса в кросі", g:"Руки", m:"wr", sets:[{},{}]}] },
-            { day: "Вівторок", group: "Lower", exercises: [{n:"Присідання", g:"Ноги", m:"wr", sets:[{},{},{},{}]}, {n:"Жим ногами", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Румунська тяга", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Згинання ніг", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Ікри", g:"Ноги", m:"wr", sets:[{},{},{},{}]}, {n:"Прес", g:"Прес", m:"wr", sets:[{},{},{}]}] },
-            { day: "Середа", group: "Відновлення", exercises: [{n:"Легке кардіо (ходьба/вело)", g:"Кардіо", m:"cardio", sets:[{}]}, {n:"Мобільність/розтяжка", g:"Інше", m:"t", sets:[{r:"15 хв"}]}] },
-            { day: "Четвер", group: "Push", exercises: [{n:"Жим гантелей під кутом", g:"Груди", m:"wr", sets:[{},{},{}]}, {n:"Жим у тренажері", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Розводка в кросі/пек-дек", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Жим гантелей сидячи", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Махи на середню дельту", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Задня дельта", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Французький жим", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Розгинання трицепса в кросі", g:"Руки", m:"wr", sets:[{},{}]}] },
-            { day: "П'ятниця", group: "Pull", exercises: [{n:"Підтягування", g:"Спина", m:"wr", sets:[{},{},{}]}, {n:"Тяга T-bar", g:"Спина", m:"wr", sets:[{},{},{}]}, {n:"Горизонтальна тяга", g:"Спина", m:"wr", sets:[{},{}]}, {n:"Пуловер/верхній блок", g:"Спина", m:"wr", sets:[{},{}]}, {n:"Задня дельта", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Згинання штанги з EZ-грифом", g:"Руки", m:"wr", sets:[{},{},{}]}, {n:"Молотки", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Згинання зап'ястка", g:"Руки", m:"wr", sets:[{},{},{}]}, {n:"Розгинання зап'ястка", g:"Руки", m:"wr", sets:[{},{},{}]}] },
-            { day: "Субота", group: "Legs + Core", exercises: [{n:"Фронтальні присіди/хакк", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Жим ногами", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Згинання ніг", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Ікри", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Прес/планка", g:"Прес", m:"t", sets:[{},{},{}]}] },
+            { day: "Понеділок", group: "Upper", exercises: [] },
+            { day: "Вівторок", group: "Lower", exercises: [] },
+            { day: "Середа", group: "Відновлення", exercises: [] },
+            { day: "Четвер", group: "Push", exercises: [] },
+            { day: "П'ятниця", group: "Pull", exercises: [] },
+            { day: "Субота", group: "Legs + Core", exercises: [] },
             { day: "Неділя", group: "Відпочинок", exercises: [] }
         ],
         cut: [
-            { day: "Понеділок", group: "Upper", exercises: [{n:"Жим штанги лежачи", g:"Груди", m:"wr", sets:[{},{},{}]}, {n:"Підтягування", g:"Спина", m:"wr", sets:[{},{},{}]}, {n:"Жим гантелей під кутом", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Тяга штанги в нахилі", g:"Спина", m:"wr", sets:[{},{}]}, {n:"Махи на середню дельту", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Розводка гантелями/пек-дек", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Згинання штанги стоячи", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Розгинання трицепса в кросі", g:"Руки", m:"wr", sets:[{},{}]}] },
-            { day: "Вівторок", group: "Lower", exercises: [{n:"Присідання", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Жим ногами", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Румунська тяга", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Згинання ніг", g:"Ноги", m:"wr", sets:[{},{}]}, {n:"Ікри", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Прес", g:"Прес", m:"wr", sets:[{},{}]}] },
-            { day: "Середа", group: "LISS", exercises: [{n:"Кардіо LISS", g:"Кардіо", m:"cardio", sets:[{}]}, {n:"Мобільність", g:"Інше", m:"t", sets:[{r:"15 хв"}]}] },
-            { day: "Четвер", group: "Push", exercises: [{n:"Жим гантелей під кутом", g:"Груди", m:"wr", sets:[{},{},{}]}, {n:"Жим у тренажері", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Розводка в кросі/пек-дек", g:"Груди", m:"wr", sets:[{},{}]}, {n:"Жим гантелей сидячи", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Махи на середню дельту", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Задня дельта", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Французький жим", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Розгинання трицепса в кросі", g:"Руки", m:"wr", sets:[{},{}]}] },
-            { day: "П'ятниця", group: "Pull", exercises: [{n:"Підтягування", g:"Спина", m:"wr", sets:[{},{},{}]}, {n:"Тяга T-bar", g:"Спина", m:"wr", sets:[{},{},{}]}, {n:"Горизонтальна тяга", g:"Спина", m:"wr", sets:[{},{}]}, {n:"Задня дельта", g:"Плечі", m:"wr", sets:[{},{}]}, {n:"Згинання штанги з EZ-грифом", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Молотки", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Згинання зап'ястка", g:"Руки", m:"wr", sets:[{},{}]}, {n:"Розгинання зап'ястка", g:"Руки", m:"wr", sets:[{},{}]}] },
-            { day: "Субота", group: "Legs + Core", exercises: [{n:"Фронтальні присіди/хакк", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Жим ногами", g:"Ноги", m:"wr", sets:[{},{}]}, {n:"Згинання ніг", g:"Ноги", m:"wr", sets:[{},{}]}, {n:"Ікри", g:"Ноги", m:"wr", sets:[{},{},{}]}, {n:"Прес/планка", g:"Прес", m:"t", sets:[{},{}]}] },
+            { day: "Понеділок", group: "Upper", exercises: [] },
+            { day: "Вівторок", group: "Lower", exercises: [] },
+            { day: "Середа", group: "LISS", exercises: [] },
+            { day: "Четвер", group: "Push", exercises: [] },
+            { day: "П'ятниця", group: "Pull", exercises: [] },
+            { day: "Субота", group: "Legs + Core", exercises: [] },
             { day: "Неділя", group: "Відпочинок", exercises: [] }
         ]
     },
     arms: {
         mass: [
-            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"порожній гриф 1×10-15, 40% ×8, 60% ×5, 75% ×3", i:"тримати вагу, 1-2 повт в запасі"},
-            {n:"Підтягування (з/без ваги)", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети вага тіла", i:"якщо з вагою: розминка без диска"},
-            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"зупинитись 1-2 повт до відказу"},
-            {n:"Згинання штанги стоячи", p:"70-75%", s:"3x8-10", w:"легка штанга 1×10", i:"без розкачки корпусом"},
-            {n:"Французький жим", p:"70-75%", s:"3x8-10", w:"легка штанга 1×10", i:"лікоть фіксований"},
-            {n:"Присідання (штанга)", p:"70-80%", s:"3-4x6-8", w:"порожній гриф 1×10, 40% ×8, 60% ×5, 75% ×3", i:"глибина контрольована"},
-            {n:"Румунська/мертва тяга", p:"70-80%", s:"3x6-10", w:"40% ×8, 60% ×5, 75% ×3", i:"тримати спину"}
+            { day: "Понеділок", group: "Тренування 1", exercises: [] },
+            { day: "Вівторок", group: "Тренування 2", exercises: [] },
+            { day: "Середа", group: "Відновлення", exercises: [] },
+            { day: "Четвер", group: "Тренування 3", exercises: [] },
+            { day: "П'ятниця", group: "Тренування 4", exercises: [] },
+            { day: "Субота", group: "Тренування 5", exercises: [] },
+            { day: "Неділя", group: "Відпочинок", exercises: [] }
         ],
         cut: [
-            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"гриф 1×15, 40%, 60%, 75%", i:"тримати вагу, 1-2 RIR"},
-            {n:"Підтягування", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети", i:"розминка без диска"},
-            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"RIR 1-2"},
-            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"RIR 1-2"},
-            {n:"Присідання", p:"70-80%", s:"3x6-8", w:"гриф, 40%, 60%, 75%", i:"фокус на техніці"},
-            {n:"Румунська тяга", p:"70-80%", s:"2-3x6-10", w:"40%, 60%, 75%", i:"не округляти спину"}
+            { day: "Понеділок", group: "Тренування 1", exercises: [] },
+            { day: "Вівторок", group: "Тренування 2", exercises: [] },
+            { day: "Середа", group: "Відновлення", exercises: [] },
+            { day: "Четвер", group: "Тренування 3", exercises: [] },
+            { day: "П'ятниця", group: "Тренування 4", exercises: [] },
+            { day: "Субота", group: "Тренування 5", exercises: [] },
+            { day: "Неділя", group: "Відпочинок", exercises: [] }
         ]
     }
 };
@@ -60,131 +62,11 @@ const InitialData = {
     currentProgram: 'balanced', 
     exBank: [],
     hiddenBank: [],
+    customTemplates: [],
     targets: { "Груди": 12, "Спина": 14, "Ноги": 16, "Плечі": 10, "Руки": 10, "Прес": 6, "Кардіо": 3 },
     guidelines: {
-        balanced: {
-        mass: [
-            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"порожній гриф 1×10-15, 40% ×8, 60% ×5, 75% ×3", i:"тримати вагу, 1-2 повт в запасі"},
-            {n:"Підтягування (з/без ваги)", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети вага тіла", i:"якщо з вагою: розминка без диска"},
-            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"зупинитись 1-2 повт до відказу"},
-            {n:"Тяга штанги в нахилі", p:"70-80%", s:"2x8-10", w:"40% ×8, 60% ×5, 75% ×3", i:"контроль корпусу, спина рівна"},
-            {n:"Махи на середню дельту", p:"60-70%", s:"3x12-15", w:"легка вага 1×15", i:"контроль, без ривків"},
-            {n:"Розводка гантелями/пек-дек", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"макс. розтяг"},
-            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"без розкачки корпусом"},
-            {n:"Розгинання трицепса в кросі", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"контрольний темп"},
-            {n:"Присідання (штанга)", p:"70-80%", s:"3-4x6-8", w:"порожній гриф 1×10, 40% ×8, 60% ×5, 75% ×3", i:"глибина контрольована"},
-            {n:"Жим ногами", p:"70-80%", s:"3x8-10", w:"легка вага 1×10, 50% ×8, 70% ×5", i:"не відривати таз"},
-            {n:"Румунська/мертва тяга", p:"70-80%", s:"3x6-10", w:"40% ×8, 60% ×5, 75% ×3", i:"тримати спину"},
-            {n:"Згинання ніг", p:"65-75%", s:"3x10-15", w:"легка вага 1×15", i:"затримка в піку"},
-            {n:"Ікри стоячи/сидячи", p:"65-75%", s:"3-4x10-15", w:"легка вага 1×15", i:"повний ROM, пауза вгорі"},
-            {n:"Прес", p:"-", s:"3x15-20", w:"легкий сет 1×15", i:"контроль без ривків"},
-            {n:"Жим штанги/гантелей під кутом", p:"70-80%", s:"3x8-10", w:"порожній гриф, 40% ×8, 60% ×5, 75% ×3", i:"1-2 повт в запасі"},
-            {n:"Жим у тренажері", p:"70-80%", s:"2x10-12", w:"легка вага 1×10, 50% ×8", i:"повний контроль"},
-            {n:"Розводка в кросі", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"відчути розтяг"},
-            {n:"Жим гантелей сидячи", p:"70-75%", s:"2x8-10", w:"легкі гантелі 1×10, 50% ×8", i:"не кидати лікті"},
-            {n:"Задня дельта", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"не читінгувати"},
-            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"лікоть фіксований"},
-            {n:"Тяга T-bar/штанги", p:"70-80%", s:"3x8-10", w:"40% ×8, 60% ×5, 75% ×3", i:"контроль корпусу"},
-            {n:"Горизонтальна тяга", p:"70-75%", s:"2x10-12", w:"легка вага 1×10, 50% ×8", i:"повний ROM"},
-            {n:"Пуловер/верхній блок", p:"60-70%", s:"2x10-12", w:"легка вага 1×12", i:"фокус на латах"},
-            {n:"Згинання з EZ-грифом", p:"65-75%", s:"2-3x8-12", w:"легка штанга 1×10", i:"повний контроль"},
-            {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі 1×12", i:"не гойдати корпус"},
-            {n:"Згинання/Розгинання зап'ястка", p:"60-70%", s:"2-3x12-20", w:"легка вага 1×15", i:"повний ROM"},
-            {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"глибина без втрати техніки"},
-            {n:"Згинання гантелей сидячи (інклайн)", p:"65-75%", s:"3x10-15", w:"легка вага 1×12", i:"розтяг біцепса"},
-            {n:"Французький жим лежачи", p:"70-75%", s:"3x8-12", w:"гриф 1x15, 50% 1x10", i:"лікті до стелі"},
-            {n:"Розгинання з-за голови", p:"65-70%", s:"3x10-15", w:"легка вага 1x15", i:"акцент на довгу голівку"}
-        ],
-        cut: [
-            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"гриф 1×15, 40%, 60%, 75%", i:"тримати вагу, 1-2 RIR"},
-            {n:"Підтягування", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети", i:"розминка без диска"},
-            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"не гнатися за рекордом"},
-            {n:"Тяга штанги в нахилі", p:"70-80%", s:"2x8-10", w:"40%, 60%, 75%", i:"контроль корпусу"},
-            {n:"Махи на середню дельту", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"без ривків"},
-            {n:"Розводка гантелями/пек-дек", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"контроль, розтяг"},
-            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"RIR 1-2"},
-            {n:"Розгинання трицепса", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"без різких рухів"},
-            {n:"Присідання", p:"70-80%", s:"3x6-8", w:"гриф, 40%, 60%, 75%", i:"фокус на техніці"},
-            {n:"Жим ногами", p:"70-80%", s:"2-3x8-10", w:"легка, 50%, 70%", i:"не відривати таз"},
-            {n:"Румунська тяга", p:"70-80%", s:"2-3x6-10", w:"40%, 60%, 75%", i:"не округляти спину"},
-            {n:"Згинання ніг", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"з паузою"},
-            {n:"Ікри", p:"65-75%", s:"3x10-15", w:"легка вага 1×15", i:"повний ROM"},
-            {n:"Прес", p:"-", s:"2x15-20", w:"легкий сет", i:"контроль"},
-            {n:"Жим під кутом", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"зберегти вагу"},
-            {n:"Жим у тренажері", p:"70-80%", s:"2x10-12", w:"легка, 50%", i:"контроль, без відказу"},
-            {n:"Розводка в кросі", p:"60-70%", s:"2x12-15", w:"легка вага", i:"акцент на відчутті"},
-            {n:"Жим гантелей сидячи", p:"70-75%", s:"2x8-10", w:"легкі гантелі, 50%", i:"не кидати лікті"},
-            {n:"Задня дельта", p:"60-70%", s:"2x12-15", w:"легка вага", i:"без читінгу"},
-            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"RIR 1-2"},
-            {n:"Тяга T-bar/штанги", p:"70-80%", s:"3x8-10", w:"40%, 60%, 75%", i:"стабільний корпус"},
-            {n:"Горизонтальна тяга", p:"70-75%", s:"2x10-12", w:"легка, 50%", i:"контроль лопаток"},
-            {n:"Згинання з EZ", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"без розкачки"},
-            {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі", i:"RIR 1-2"},
-            {n:"Згинання зап'ястка", p:"60-70%", s:"2x12-20", w:"легка вага", i:"повний ROM"},
-            {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"контроль глибини"}
-        ]
-    },
-        arms: {
-        mass: [
-            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"порожній гриф 1×10-15, 40% ×8, 60% ×5, 75% ×3", i:"тримати вагу, 1-2 повт в запасі"},
-            {n:"Підтягування (з/без ваги)", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети вага тіла", i:"якщо з вагою: розминка без диска"},
-            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"зупинитись 1-2 повт до відказу"},
-            {n:"Тяга штанги в нахилі", p:"70-80%", s:"2x8-10", w:"40% ×8, 60% ×5, 75% ×3", i:"контроль корпусу, спина рівна"},
-            {n:"Махи на середню дельту", p:"60-70%", s:"3x12-15", w:"легка вага 1×15", i:"контроль, без ривків"},
-            {n:"Розводка гантелями/пек-дек", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"макс. розтяг"},
-            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"без розкачки корпусом"},
-            {n:"Розгинання трицепса в кросі", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"контрольний темп"},
-            {n:"Присідання (штанга)", p:"70-80%", s:"3-4x6-8", w:"порожній гриф 1×10, 40% ×8, 60% ×5, 75% ×3", i:"глибина контрольована"},
-            {n:"Жим ногами", p:"70-80%", s:"3x8-10", w:"легка вага 1×10, 50% ×8, 70% ×5", i:"не відривати таз"},
-            {n:"Румунська/мертва тяга", p:"70-80%", s:"3x6-10", w:"40% ×8, 60% ×5, 75% ×3", i:"тримати спину"},
-            {n:"Згинання ніг", p:"65-75%", s:"3x10-15", w:"легка вага 1×15", i:"затримка в піку"},
-            {n:"Ікри стоячи/сидячи", p:"65-75%", s:"3-4x10-15", w:"легка вага 1×15", i:"повний ROM, пауза вгорі"},
-            {n:"Прес", p:"-", s:"3x15-20", w:"легкий сет 1×15", i:"контроль без ривків"},
-            {n:"Жим штанги/гантелей під кутом", p:"70-80%", s:"3x8-10", w:"порожній гриф, 40% ×8, 60% ×5, 75% ×3", i:"1-2 повт в запасі"},
-            {n:"Жим у тренажері", p:"70-80%", s:"2x10-12", w:"легка вага 1×10, 50% ×8", i:"повний контроль"},
-            {n:"Розводка в кросі", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"відчути розтяг"},
-            {n:"Жим гантелей сидячи", p:"70-75%", s:"2x8-10", w:"легкі гантелі 1×10, 50% ×8", i:"не кидати лікті"},
-            {n:"Задня дельта", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"не читінгувати"},
-            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"лікоть фіксований"},
-            {n:"Тяга T-bar/штанги", p:"70-80%", s:"3x8-10", w:"40% ×8, 60% ×5, 75% ×3", i:"контроль корпусу"},
-            {n:"Горизонтальна тяга", p:"70-75%", s:"2x10-12", w:"легка вага 1×10, 50% ×8", i:"повний ROM"},
-            {n:"Пуловер/верхній блок", p:"60-70%", s:"2x10-12", w:"легка вага 1×12", i:"фокус на латах"},
-            {n:"Згинання з EZ-грифом", p:"65-75%", s:"2-3x8-12", w:"легка штанга 1×10", i:"повний контроль"},
-            {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі 1×12", i:"не гойдати корпус"},
-            {n:"Згинання/Розгинання зап'ястка", p:"60-70%", s:"2-3x12-20", w:"легка вага 1×15", i:"повний ROM"},
-            {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"глибина без втрати техніки"},
-            {n:"Згинання гантелей сидячи (інклайн)", p:"65-75%", s:"3x10-15", w:"легка вага 1×12", i:"розтяг біцепса"},
-            {n:"Французький жим лежачи", p:"70-75%", s:"3x8-12", w:"гриф 1x15, 50% 1x10", i:"лікті до стелі"},
-            {n:"Розгинання з-за голови", p:"65-70%", s:"3x10-15", w:"легка вага 1x15", i:"акцент на довгу голівку"}
-        ],
-        cut: [
-            {n:"Жим штанги лежачи", p:"70-80%", s:"3x6-8", w:"гриф 1×15, 40%, 60%, 75%", i:"тримати вагу, 1-2 RIR"},
-            {n:"Підтягування", p:"RIR 1-2", s:"3x6-10", w:"1-2 легкі сети", i:"розминка без диска"},
-            {n:"Жим гантелей під кутом", p:"70-75%", s:"2x8-10", w:"легка вага 1×10, 50% ×8", i:"не гнатися за рекордом"},
-            {n:"Тяга штанги в нахилі", p:"70-80%", s:"2x8-10", w:"40%, 60%, 75%", i:"контроль корпусу"},
-            {n:"Махи на середню дельту", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"без ривків"},
-            {n:"Розводка гантелями/пек-дек", p:"60-70%", s:"2x12-15", w:"легка вага 1×15", i:"контроль, розтяг"},
-            {n:"Згинання штанги стоячи", p:"65-75%", s:"2x8-12", w:"легка штанга 1×10", i:"RIR 1-2"},
-            {n:"Розгинання трицепса", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"без різких рухів"},
-            {n:"Присідання", p:"70-80%", s:"3x6-8", w:"гриф, 40%, 60%, 75%", i:"фокус на техніці"},
-            {n:"Жим ногами", p:"70-80%", s:"2-3x8-10", w:"легка, 50%, 70%", i:"не відривати таз"},
-            {n:"Румунська тяга", p:"70-80%", s:"2-3x6-10", w:"40%, 60%, 75%", i:"не округляти спину"},
-            {n:"Згинання ніг", p:"65-75%", s:"2x10-15", w:"легка вага 1×15", i:"з паузою"},
-            {n:"Ікри", p:"65-75%", s:"3x10-15", w:"легка вага 1×15", i:"повний ROM"},
-            {n:"Прес", p:"-", s:"2x15-20", w:"легкий сет", i:"контроль"},
-            {n:"Жим під кутом", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"зберегти вагу"},
-            {n:"Жим у тренажері", p:"70-80%", s:"2x10-12", w:"легка, 50%", i:"контроль, без відказу"},
-            {n:"Розводка в кросі", p:"60-70%", s:"2x12-15", w:"легка вага", i:"акцент на відчутті"},
-            {n:"Жим гантелей сидячи", p:"70-75%", s:"2x8-10", w:"легкі гантелі, 50%", i:"не кидати лікті"},
-            {n:"Задня дельта", p:"60-70%", s:"2x12-15", w:"легка вага", i:"без читінгу"},
-            {n:"Французький жим", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"RIR 1-2"},
-            {n:"Тяга T-bar/штанги", p:"70-80%", s:"3x8-10", w:"40%, 60%, 75%", i:"стабільний корпус"},
-            {n:"Горизонтальна тяга", p:"70-75%", s:"2x10-12", w:"легка, 50%", i:"контроль лопаток"},
-            {n:"Згинання з EZ", p:"65-75%", s:"2x8-12", w:"легка штанга", i:"без розкачки"},
-            {n:"Молотки", p:"65-75%", s:"2x10-15", w:"легкі гантелі", i:"RIR 1-2"},
-            {n:"Згинання зап'ястка", p:"60-70%", s:"2x12-20", w:"легка вага", i:"повний ROM"},
-            {n:"Фронтальні присіди", p:"70-80%", s:"3x8-10", w:"гриф, 40%, 60%, 75%", i:"контроль глибини"}
-        ]
+        balanced: { mass: [], cut: [] },
+        arms: { mass: [], cut: [] }
     }
 };
 
@@ -192,9 +74,8 @@ const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
     timerState: { interval: null, left: 0, default: 90, el: null, endTime: null, currentExKey: null },
-    historyIndex: {}, // ДОДАНО: Кеш для швидкого пошуку 1RM та Ghost Data
+    historyIndex: {}, 
 
-    // ДОДАНО: Метод, який один раз будує індекс усієї історії для миттєвого доступу
     buildIndex() {
         this.historyIndex = {};
         if (!this.data || !this.data.weeks) return;
@@ -215,7 +96,6 @@ const App = {
                         ex.sets.forEach(s => {
                             if (s.w || s.r) hasValidSets = true;
                             
-                            // ІГНОРУЄМО РОЗМИНКУ для Ghost Data та 1RM
                             if (s.t === 'WU') return;
                             const w = parseFloat(s.w) || 0;
                             const r = parseFloat(s.r) || 0;
@@ -243,7 +123,7 @@ const App = {
 
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
         if(!this.data.guidelines) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
-        // Міграція довідника: перехід від плоского (mass/cut) до спеціалізованого (balanced/arms -> mass/cut)
+        
         if (this.data.guidelines.mass && Array.isArray(this.data.guidelines.mass)) {
             const oldG = this.data.guidelines;
             this.data.guidelines = {
@@ -254,22 +134,13 @@ const App = {
         }
         if(!this.data.exBank) this.data.exBank = [];
         if(!this.data.hiddenBank) this.data.hiddenBank = [];
-        if(!this.data.customTemplates) this.data.customTemplates = []; // <--- ДОДАЙ ЦЕЙ РЯДОК
-        if(!this.data.opened) this.data.opened = {};
-        if (this.data.guidelines && this.data.guidelines.arms && this.data.guidelines.arms.mass && this.data.guidelines.arms.mass.length > 0) {
-            if (this.data.guidelines.arms.mass[0].day) {
-                this.data.guidelines.arms = JSON.parse(JSON.stringify(InitialData.guidelines.arms));
-                this.save();
-            }
-        }
-        // -----------------------------------
+        if(!this.data.customTemplates) this.data.customTemplates = [];
+        if(!this.data.opened) this.data.opened = {}; 
         
-        // --- ДОДАНО --- Ініціалізація назв вкладок (якщо їх ще немає)
         if(!this.data.customNames) this.data.customNames = { balanced: "ЗБАЛАНСОВАНА", arms: "РУКИ" };
-        if(!this.data.settings) this.data.settings = {}; // Пам'ять тренажерів
+        if(!this.data.settings) this.data.settings = {}; 
         if(!this.data.globalRules) this.data.globalRules = {};
         
-        // CSS для анімації та підсвічування ghost data
         const extraStyles = document.createElement('style');
         extraStyles.innerHTML = `
             @keyframes fadeInDown {
@@ -311,7 +182,6 @@ const App = {
         brandBlock.ondblclick = async () => {
             if(await Modal.confirm("⚠ HARD RESET?<br><br>Це незворотно видалить усі дані тренувань.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('training_protocol');
-                // ДОДАНО: Знищуємо нову базу даних IndexedDB
                 try { indexedDB.deleteDatabase('ProtocolOS_DB'); } catch(e) {}
                 location.reload();
             }
@@ -324,21 +194,18 @@ const App = {
         this.render();
         this.save();
         this.initTimer();
-        this.initDesktopScroll(); // <--- ДОДАНО ВИКЛИК СКРОЛУ
+        this.initDesktopScroll(); 
     },
 
-    // --- ПЛАВНИЙ СКРОЛ ДЛЯ ПК (Коліщатко + Мишка) ---
     initDesktopScroll() {
         const sliders = document.querySelectorAll('.week-scroll');
         
         sliders.forEach(slider => {
-            // Прокрутка коліщатком
             slider.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 slider.scrollLeft += e.deltaY;
             });
 
-            // Свайп мишкою (Drag-to-scroll)
             let isDown = false;
             let startX;
             let scrollLeft;
@@ -427,12 +294,10 @@ const App = {
         const history = this.historyIndex[name];
         if (!history) return null;
 
-        // Шукаємо з кінця історії (найсвіжіші дані)
         for (let i = history.length - 1; i >= 0; i--) {
             const entry = history[i];
             if (entry.prog !== prog) continue;
             
-            // Шукаємо перший запис, який був ДО поточного дня
             if (entry.wNum < currentWNum || (entry.wNum === currentWNum && entry.dIdx < currentDIdx)) {
                 if (entry.hasData) return entry.sets;
             }
@@ -451,13 +316,13 @@ const App = {
             const entry = history[i];
             if (entry.prog !== prog) continue;
             
-            // Враховуємо тільки ті рекорди, що були ДО поточного дня
             if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
             
             if (entry.maxRM > maxRM) maxRM = entry.maxRM;
         }
         return Math.round(maxRM);
     },
+
     cycleSetType(w, d, e, s) {
         const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
         let msg = "";
@@ -465,7 +330,7 @@ const App = {
 
         if (!setObj.t) {
             setObj.t = 'WU';
-            msg = "🟡 WU: Підвідний / Розминка (Не йде в рекорди)";
+            msg = "🟡 WU: Підвідний / Розминка";
             color = "var(--theme)";
         }
         else if (setObj.t === 'WU') {
@@ -498,8 +363,7 @@ const App = {
         document.querySelectorAll('.sys-toast').forEach(t => t.remove());
         const toast = document.createElement('div');
         toast.className = 'sys-toast';
-        toast.innerHTML = msg; // Дозволяємо HTML
-        // ФІКС: max-width 90%, white-space: normal, text-align: center
+        toast.innerHTML = msg; 
         toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:20px; z-index:9999; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: max-content; max-width: 90vw; text-align: center; white-space: normal; line-height: 1.4; animation: fadeInDown 0.2s ease forwards;`;
         document.body.appendChild(toast);
         setTimeout(() => { if(toast) toast.remove(); }, 2500);
@@ -527,13 +391,23 @@ const App = {
         this.save();
         this.render();
     },
+
+    copyGhostToSet(w, d, e, s, gw, gr) {
+        if (!gw || !gr) return;
+        this.pushHistory();
+        this.data.weeks[w].days[d].exercises[e].sets[s].w = gw.toString();
+        this.data.weeks[w].days[d].exercises[e].sets[s].r = gr.toString();
+        this.save();
+        this.render();
+        this.showToast(`✅ Вставлено: ${gw}кг × ${gr}`, "var(--success)");
+    },
+
     render() {
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
         const isEd = document.body.classList.contains('editing');
         const prog = this.data.currentProgram;
 
-        // --- ДИНАМІЧНІ НАЗВИ ВКЛАДОК (Редагуються подвійним тапом) ---
         const nameBal = this.data.customNames ? this.data.customNames.balanced : "ЗБАЛАНСОВАНА";
         const nameArms = this.data.customNames ? this.data.customNames.arms : "РУКИ";
 
@@ -593,11 +467,9 @@ const App = {
 
                         const groupSelect = isEd ? `<select class="group-select" onchange="App.updateEx(${realWIdx},${dIdx},${eIdx},'g',this.value)">${Groups.map(g => `<option value="${g}" ${ex.g===g?'selected':''}>${g}</option>`).join('')}</select>` : `<span class="ex-badge group">${ex.g || ResolveGroup(ex.n)}</span>`;
                         
-                        // --- SMART GUIDE ТА НАЛАШТУВАННЯ ТРЕНАЖЕРА ---
                         let smartGuideHtml = '';
                         let exKeyName = "";
                         
-                        // Захист від пустих вправ (які щойно створили)
                         if (ex.n && typeof ex.n === 'string') {
                             exKeyName = ex.n.trim().toLowerCase();
                             
@@ -625,7 +497,6 @@ const App = {
                             }
                         }
 
-                        // Логіка Налаштувань (Equipment)
                         const currentSetting = (exKeyName && this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
                         let settingHtml = '';
                         
@@ -654,7 +525,6 @@ const App = {
                         const isChild = eIdx > 0 && day.exercises[eIdx-1].linkNext === true;
 
                         let timerHtml = '';
-                        // ТАЙМЕР НЕ ПОКАЗУЄТЬСЯ ЯКЩО ЦЕ ПЕРША ВПРАВА СУПЕРСЕТУ (!isLinked)
                         if (!isEd && m !== 'cardio' && !isLinked) {
                             const exTime = ex.t || (this.timerState ? this.timerState.default : 90);
                             const isTimerRunningForThisEx = this.timerState && this.timerState.interval && this.timerState.currentExKey === `${realWIdx}-${dIdx}-${eIdx}`;
@@ -677,8 +547,7 @@ const App = {
 
                         const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
 
-                        
-                            const setsHtml = ex.sets.map((s, sIdx) => {
+                        const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
                                 return `<div class="set-row"><div class="set-num">${sIdx+1}</div><div class="set-part"><input class="set-input" type="number" inputmode="decimal" value="${s.r||''}" onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value, this)"><span class="set-unit">час</span></div></div>`;
                             }
@@ -706,7 +575,7 @@ const App = {
                                 if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
                                 else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
 
-                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб скопіювати">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
+                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
                             }
 
                             // --- РОЗУМНИЙ БЕК-ОФФ (АВТО-ПІДКАЗКА ВАГИ) ---
@@ -787,7 +656,6 @@ const App = {
                     </div>`;
                 }).join('');
 
-                // В режимі редагування номер тижня - це інпут, а не костиль з модалкою
                 const weekNumHtml = isEd 
                     ? `<input type="number" inputmode="numeric" value="${week.num}" style="width:40px; background:transparent; border:1px dashed #666; border-radius:4px; color:var(--${week.type}); font-size:1.1rem; text-align:center; padding:0; font-weight:800; font-family:'JetBrains Mono';" onblur="App.updateWeekNum(${week.id}, this.value)" onclick="event.stopPropagation()">`
                     : week.num;
@@ -805,20 +673,18 @@ const App = {
         this.renderGuide();
     },
 
-    // ДОДАНО
     saveTimer: null,
     bankTimer: null,
 
     save() { 
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => {
-            this.buildIndex(); // Будуємо індекс максів ТІЛЬКИ перед збереженням
+            this.buildIndex(); 
             this.state.save(this.data); 
             this.saveTimer = null;
         }, 800);
     },
 
-    // ДОДАНО: Екстрений запис
     forceSave() {
         this.buildIndex();
         this.state.save(this.data);
@@ -835,6 +701,7 @@ const App = {
             }
         }
     },
+    
     pushHistory() {
         this.state.push(this.data);
         const btn = document.getElementById('undoBtn');
@@ -879,17 +746,15 @@ const App = {
             });
         }
         
-        // Фільтруємо базу через чорний список
         this.data.exBank = Array.from(allNames).filter(n => !this.data.hiddenBank || !this.data.hiddenBank.includes(n)).sort();
     },
 
-            openBank() {
+    openBank() {
         this.toggleFab(false);
         document.getElementById('bankModal').style.display = 'flex';
-        this.renderBankList(); // Викликаємо новий рендер
+        this.renderBankList(); 
     },
     
-    // НОВА ФУНКЦІЯ: Рендер списку з урахуванням пошуку
     renderBankList(query = '') {
         const list = document.getElementById('bankList');
         const q = query.toLowerCase().trim();
@@ -900,7 +765,6 @@ const App = {
             return;
         }
 
-        // Прибрано напис "✏️ Змінити", залишено тільки гарний ховер-ефект
         list.innerHTML = filtered.map(n => `
             <div class="bank-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #333;">
                 <span style="cursor:pointer; color:#fff; flex:1; transition:0.2s;" onclick="App.renameGlobalEx('${n.replace(/'/g, "\\'")}')" title="Натисніть, щоб перейменувати" onmouseover="this.style.color='var(--theme)'" onmouseout="this.style.color='#fff'">
@@ -911,12 +775,10 @@ const App = {
         `).join('');
     },
 
-    // НОВА ФУНКЦІЯ: Обробник пошуку
     filterBank(q) {
         this.renderBankList(q);
     },
 
-    // НОВА ФУНКЦІЯ: Глобальне перейменування (вирішує проблему логіки зв'язків)
     async renameGlobalEx(oldName) {
         const newName = await Modal.prompt(`Змінити назву "<b>${oldName}</b>"?<br><br><span style="font-size:0.75rem; color:#888;">Вона автоматично оновиться в розкладі, історії, довідниках та налаштуваннях тренажерів.</span>`, "ПЕРЕЙМЕНУВАННЯ", oldName);
         
@@ -927,14 +789,12 @@ const App = {
         
         this.pushHistory();
         
-        // 1. Оновлюємо розклад (всі тижні)
         if (this.data.weeks) {
             this.data.weeks.forEach(w => w.days.forEach(d => d.exercises.forEach(e => {
                 if (e.n && e.n.trim().toLowerCase() === oldKey) e.n = newName.trim();
             })));
         }
         
-        // 2. Оновлюємо довідники
         if (this.data.guidelines) {
             Object.values(this.data.guidelines).forEach(progObj => {
                 if (progObj) {
@@ -949,13 +809,11 @@ const App = {
             });
         }
         
-        // 3. Оновлюємо налаштування (equipment)
         if (this.data.settings && this.data.settings[oldKey] !== undefined) {
             this.data.settings[newKey] = this.data.settings[oldKey];
             delete this.data.settings[oldKey];
         }
         
-        // 4. Оновлюємо саму базу
         this.data.exBank = this.data.exBank.map(n => n.trim().toLowerCase() === oldKey ? newName.trim() : n);
         
         this.updateBank();
@@ -983,7 +841,6 @@ const App = {
         this.pushHistory();
         this.data.exBank = this.data.exBank.filter(x => x !== name);
         
-        // ДОДАНО: Заносимо в чорний список, щоб вона більше ніколи не сканувалася
         if (!this.data.hiddenBank) this.data.hiddenBank = [];
         if (!this.data.hiddenBank.includes(name)) this.data.hiddenBank.push(name);
         
@@ -992,8 +849,6 @@ const App = {
         this.renderBankList(document.querySelector('#bankModal input[placeholder="🔍 Пошук по базі..."]').value);
     },
 
-
-    
     calc1RM() {
         const w = parseFloat(document.getElementById('rm-w').value) || 0;
         const r = parseFloat(document.getElementById('rm-r').value) || 0;
@@ -1015,7 +870,6 @@ const App = {
         this.toggleFab(true);
     },
 
-    // --- РОЗУМНИЙ REST TIMER ---
     initTimer() {
         const t = document.createElement('div');
         t.id = 'rest-timer';
@@ -1032,7 +886,7 @@ const App = {
         
         t.onclick = (e) => {
             e.preventDefault();
-            this.stopTimer(); // Клік по активному таймеру зупиняє і ховає його
+            this.stopTimer(); 
         };
 
         document.body.appendChild(t);
@@ -1041,6 +895,7 @@ const App = {
         const savedTime = localStorage.getItem('rest_timer_default');
         if (savedTime) this.timerState.default = parseInt(savedTime);
     },
+
     toggleTimer() {
         if (this.timerState.interval) {
             this.stopTimer();
@@ -1053,7 +908,7 @@ const App = {
         this.stopTimer();
         this.timerState.left = seconds;
         this.timerState.endTime = Date.now() + (seconds * 1000);
-        this.timerState.currentExKey = exKey; // Зберігаємо ключ вправи
+        this.timerState.currentExKey = exKey; 
         
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
@@ -1099,7 +954,7 @@ const App = {
         if(this.timerState.interval) clearInterval(this.timerState.interval);
         this.timerState.interval = null;
         this.timerState.endTime = null; 
-        this.timerState.currentExKey = null; // ДОДАНО
+        this.timerState.currentExKey = null; 
         
         this.timerState.el.style.background = 'rgba(20, 20, 22, 0.95)';
         this.timerState.el.style.color = 'var(--theme, #d4af37)';
@@ -1107,7 +962,7 @@ const App = {
         
         this.timerState.el.style.display = 'none';
         this.timerState.left = this.timerState.default;
-        this.render(); // Оновлюємо кнопку назад на стандартну
+        this.render(); 
     },
 
     updateTimerUI() {
@@ -1142,26 +997,22 @@ const App = {
         }
     },
         
-    // --- КАСТОМНИЙ DOUBLE TAP (ЩОБ ТАЙМЕР НЕ СТАРТУВАВ ПРИ РЕДАГУВАННІ) ---
     _timerTaps: {},
     handleTimerClick(w, d, e, time) {
         const key = `${w}-${d}-${e}`;
         if (this._timerTaps[key]) {
-            // Подвійний тап: скасовуємо старт таймера і відкриваємо налаштування
             clearTimeout(this._timerTaps[key]);
             this._timerTaps[key] = null;
             this.setTimerForExercise(w, d, e, time);
         } else {
-            // Одинарний тап: чекаємо 250мс, якщо другого тапу не було - запускаємо таймер
             this._timerTaps[key] = setTimeout(() => {
                 this._timerTaps[key] = null;
-                this.startTimer(time, key); // Передаємо key
-                this.render(); // Перемальовуємо, щоб показати статус таймера
+                this.startTimer(time, key); 
+                this.render(); 
             }, 250);
         }
     },
 
-    // --- РЕДАГУВАННЯ ТИЖНЯ (БЕЗ МОДАЛОК) ---
     updateWeekNum(id, val) {
         const num = parseInt(val);
         if (!isNaN(num) && num > 0) {
@@ -1169,7 +1020,7 @@ const App = {
             if (w && w.num !== num) {
                 this.pushHistory();
                 w.num = num;
-                this.data.weeks.sort((a, b) => a.num - b.num); // Сортуємо одразу
+                this.data.weeks.sort((a, b) => a.num - b.num); 
                 this.save();
                 this.render();
             }
@@ -1186,27 +1037,6 @@ const App = {
             this.save();
             this.render();
         }
-    },
-    addToBank() {
-        const val = document.getElementById('newBankItem').value.trim();
-        if(val && !this.data.exBank.includes(val)) {
-            this.pushHistory();
-            this.data.exBank.push(val);
-            this.data.exBank.sort();
-            this.save();
-            this.updateBank(); 
-            this.openBank(); 
-            document.getElementById('newBankItem').value = '';
-        }
-    },
-
-    async deleteFromBank(name) {
-        if(!(await Modal.confirm(`Видалити "${name}" з бази назавжди?`, "ВИДАЛЕННЯ", "red"))) return;
-        this.pushHistory();
-        this.data.exBank = this.data.exBank.filter(x => x !== name);
-        this.save();
-        this.updateBank();
-        this.openBank();
     },
 
     async addWeek(type, init=false) {
@@ -1230,7 +1060,6 @@ const App = {
 
             newData = JSON.parse(JSON.stringify(lastWeek.days));
             newData.forEach(d => {
-                // Нотатки не видаляємо!
                 d.exercises.forEach(ex => { 
                     ex.sets.forEach(s => { 
                         if (!hardCopy) {
@@ -1249,7 +1078,7 @@ const App = {
         this.data.weeks.push(w);
         this.data.weeks.sort((a, b) => a.num - b.num);
         this.updateBank();
-        this.buildIndex(); // <--- ДОДАЙ ЦЕЙ РЯДОК (Примусово оновлює рекорди)
+        this.buildIndex(); 
         this.save(); 
         this.render();
     },
@@ -1295,13 +1124,13 @@ const App = {
             this.save();
         }
     },
+
     updateEx(w, d, e, field, val) {
         if(this.data.weeks[w].days[d].exercises[e][field] !== val) {
             this.pushHistory();
             this.data.weeks[w].days[d].exercises[e][field] = val;
             
             if(field === 'n') {
-                // ОПТИМІЗАЦІЯ: Якщо назва нова — оновлюємо базу одразу
                 if (val.length > 2 && !this.data.exBank.includes(val)) {
                     this.updateBank();
                 } else {
@@ -1321,20 +1150,10 @@ const App = {
         else if(ex.sets.length > 1) ex.sets.pop();
         this.save(); this.render();
     },
-    copyGhostToSet(w, d, e, s, gw, gr) {
-        if (!gw || !gr) return;
-        this.pushHistory();
-        this.data.weeks[w].days[d].exercises[e].sets[s].w = gw.toString();
-        this.data.weeks[w].days[d].exercises[e].sets[s].r = gr.toString();
-        this.save();
-        this.render();
-        this.showToast(`✅ Вставлено: ${gw}кг × ${gr}`, "var(--success)");
-    },
 
     updateSet(w, d, e, s, f, val, inputEl) {
         let finalVal = val;
 
-        // Логіка відсотків
         if (f === 'w' && typeof val === 'string' && (val.includes('%') || val.toLowerCase().includes('p'))) {
             const percent = parseFloat(val);
             if (!isNaN(percent) && percent > 0) {
@@ -1361,7 +1180,6 @@ const App = {
         if(setObj[f] !== finalVal) {
             setObj[f] = finalVal;
             
-            // ЖИВЕ ОНОВЛЕННЯ HUD (Без render і мерехтіння)
             if (setObj.t !== 'WU') {
                 const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
                 if (ghostSets && ghostSets[s]) {
@@ -1379,14 +1197,15 @@ const App = {
 
                         const hudEl = document.getElementById(`hud-${w}-${d}-${e}-${s}`);
                         if (hudEl) {
-                            hudEl.innerHTML = `<span style="color:#777; font-weight:600;">Минуло: ${ghostW}x${ghostR}</span> <span style="margin-left:3px">${icon}</span>`;
+                            hudEl.innerHTML = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${w},${d},${e},${s}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
                         }
                     }
                 }
             }
-            this.save(); // Тільки тихе збереження даних
+            this.save(); 
         }
     },
+
     setGuideMode(m) { this.data.guideMode = m; this.save(); this.renderGuide(); },
     
     updateTarget(group, val) { 
@@ -1398,6 +1217,7 @@ const App = {
             this.renderStats(); 
         }
     },
+
     async promptTarget(group, currentTarget) {
         const val = await Modal.prompt(`Встановіть цільову кількість робочих підходів для групи <b>${group}</b>:`, "ЦІЛЬОВИЙ ОБ'ЄМ", currentTarget.toString());
         if (val !== null && val !== "") {
@@ -1406,17 +1226,15 @@ const App = {
         }
     },
     
-        filterGuide(q) {
-        const rows = document.querySelectorAll('.guide-table > div');
+    filterGuide(q) {
+        const rows = document.querySelectorAll('.guide-table > div > div'); // Змінено для блоків
         const query = q.toLowerCase();
         rows.forEach(r => {
-            // Збираємо текст як з простого HTML, так і з полів вводу
             const inputsText = Array.from(r.querySelectorAll('input, textarea')).map(inp => inp.value).join(' ').toLowerCase();
             const rowText = r.innerText.toLowerCase();
             r.style.display = (rowText.includes(query) || inputsText.includes(query)) ? '' : 'none';
         });
     },
-
 
     updateGuide(p, m, i, f, v) { 
         if(this.data.guidelines[p][m][i][f] !== v) {
@@ -1424,7 +1242,6 @@ const App = {
             this.data.guidelines[p][m][i][f] = v; 
             
             if(f === 'n') {
-                // Аналогічна оптимізація для Довідника
                 if (v.length > 2 && !this.data.exBank.includes(v)) {
                     this.updateBank();
                 } else {
@@ -1474,22 +1291,22 @@ const App = {
     },
 
     updateGlobalRule(m, v) { 
-        if(!this.data.globalRules) this.data.globalRules = {}; // Захист
+        if(!this.data.globalRules) this.data.globalRules = {}; 
         if(this.data.globalRules[m] !== v) {
             this.pushHistory();
             this.data.globalRules[m] = v; 
             this.save(); 
         }
     },
-        renderGuide() {
+
+    renderGuide() {
         const c = document.getElementById('guideContent');
         const m = this.data.guideMode || 'mass';
-        const p = this.data.currentProgram || 'balanced'; // ДОДАНО: отримуємо поточну програму
+        const p = this.data.currentProgram || 'balanced'; 
         
         document.getElementById('btnG-mass').classList.toggle('active', m==='mass');
         document.getElementById('btnG-cut').classList.toggle('active', m==='cut');
 
-        // Змінюємо шлях до масиву
         const list = this.data.guidelines[p] ? this.data.guidelines[p][m] : [];
         if(!list || list.length === 0) {
             c.innerHTML = '<div style="padding:20px; text-align:center; color:#666">Список порожній</div>';
@@ -1497,10 +1314,9 @@ const App = {
         }
 
         const isEd = document.body.classList.contains('editing');
-        const ruleKey = p + '_' + m; // Глобальні правила тепер теж розділені: balanced_mass, arms_cut і тд
+        const ruleKey = p + '_' + m; 
         const globalRule = this.data.globalRules ? (this.data.globalRules[ruleKey] || "") : "";
         
-        // --- ПОЧАТОК ЗМІНЕНОГО БЛОКУ HTML ---
         c.innerHTML = `
         <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 12px; padding: 15px;">
             <div style="font-size: 0.7rem; color: var(--theme); font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">📌 МЕХАНІКА ВАГ ТА ГЛОБАЛЬНІ ПРАВИЛА (${m.toUpperCase()}):</div>
@@ -1517,7 +1333,7 @@ const App = {
         </div>
         ` : ''}
 
-        <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="guide-table" style="display:flex; flex-direction:column; gap:10px;">
             ${list.map((r, i) => `
             <div style="background:rgba(255,255,255,0.02); border:1px solid #333; border-radius:12px; padding:12px; position:relative;">
                 
@@ -1554,22 +1370,19 @@ const App = {
             `).join('')}
         </div>
         `;
-        // --- КІНЕЦЬ ЗМІНЕНОГО БЛОКУ HTML ---
     },
-
     
-        addGuideRow(p, m) {
+    addGuideRow(p, m) {
         this.pushHistory();
         if (!this.data.guidelines[p]) this.data.guidelines[p] = { mass: [], cut: [] };
-        // unshift додає елемент на початок масиву (зверху таблиці)
         this.data.guidelines[p][m].unshift({n:"", p:"", s:"", w:"", i:""});
         this.save(); 
         this.renderGuide();
     },
+
     async generateProPlan(p, m, i) {
         if (!this.data.customTemplates) this.data.customTemplates = [];
         
-        // Формуємо динамічне меню (базові + кастомні шаблони)
         let menuHtml = `<div style="text-align:left; font-size:0.75rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
         <b style="color:var(--theme)">1</b> - Важка База (ПП: 4 кроки, TS+BO)<br>
         <b style="color:var(--theme)">2</b> - Ізоляція (ПП: 2 кроки, TS+BO)<br>
@@ -1593,7 +1406,6 @@ const App = {
         this.pushHistory();
         const row = this.data.guidelines[p][m][i];
 
-        // ДІЯ: Зберегти кастомний шаблон
         if (choice === 'S') {
             const tplName = await Modal.prompt("Введіть назву для нового шаблону:", "ЗБЕРЕГТИ ШАБЛОН", "Мій шаблон");
             if (tplName && tplName.trim() !== "") {
@@ -1610,7 +1422,6 @@ const App = {
             return;
         }
 
-        // ДІЯ: Очистити
         if (choice === '0') {
             row.p = ""; row.s = ""; row.w = ""; row.i = "";
             this.save();
@@ -1618,7 +1429,6 @@ const App = {
             return;
         }
 
-        // ДІЯ: Застосувати базові шаблони
         if (choice === "1") {
             row.p = "TS + BO"; row.s = "1 + 1"; row.w = "40%, 60%, 80%, 90%"; row.i = "🔥 TS: 6-9 (Відмова)\n💧 BO: -20% (10-14)\n⏳ Темп 3-0-1-0";
         } else if (choice === "2") {
@@ -1628,7 +1438,6 @@ const App = {
         } else if (choice === "4") {
             row.p = "60%"; row.s = "3x15-20"; row.w = "Легка вага"; row.i = "Памп, нагнітання крові.\nВідмова суворо заборонена.";
         } else {
-            // ДІЯ: Застосувати КАСТОМНІ шаблони
             const customIdx = parseInt(choice) - startIndex;
             if (!isNaN(customIdx) && customIdx >= 0 && customIdx < this.data.customTemplates.length) {
                 const tpl = this.data.customTemplates[customIdx];
@@ -1637,7 +1446,7 @@ const App = {
                 row.w = tpl.w;
                 row.i = tpl.i;
             } else {
-                return; // Неправильний ввід
+                return; 
             }
         }
 
@@ -1645,24 +1454,21 @@ const App = {
         this.renderGuide();
         this.showToast(`✅ Шаблон застосовано`, 'var(--theme)');
     },
+
     syncGuide(p, m) {
         if (!this.data.weeks || !this.data.guidelines[p] || !this.data.guidelines[p][m]) return;
         
         this.pushHistory();
         const guideList = this.data.guidelines[p][m];
-        // Збираємо назви існуючих в довіднику вправ, щоб не дублювати
         const existingNames = new Set(guideList.map(g => (g.n || "").trim().toLowerCase()));
         let addedCount = 0;
 
-        // Скануємо розклад для поточної програми (p) і типу (m)
         this.data.weeks.filter(w => w.prog === p && w.type === m).forEach(w => {
             w.days.forEach(d => {
                 d.exercises.forEach(ex => {
-                    // Ігноруємо порожні рядки та кардіо
                     if (ex.n && ex.n.length > 2 && ex.m !== 'cardio') {
                         const nameToSync = ex.n.trim();
                         if (!existingNames.has(nameToSync.toLowerCase())) {
-                            // Додаємо нову вправу нагору таблиці
                             guideList.unshift({ n: nameToSync, p: "", s: "", w: "", i: "" });
                             existingNames.add(nameToSync.toLowerCase());
                             addedCount++;
@@ -1681,8 +1487,7 @@ const App = {
         }
     },
 
-
-   renderStats(forceIndex = null) {
+    renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
 
         if (allWeeks.length === 0) {
@@ -1715,7 +1520,6 @@ const App = {
         const navEl = document.getElementById('statsWeekNav');
         if (navEl) {
             navEl.innerHTML = navHtml;
-            // Авто-скрол
             const activeBtn = document.getElementById(`stats-btn-${this.currentStatsIdx}`);
             if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
@@ -1802,7 +1606,7 @@ const App = {
         if(fab) fab.style.display = show ? 'flex' : 'none';
     }
 };
-// ЗАПОБІЖНИК: Гарантований запис при згортанні/закритті додатку
+
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && App.saveTimer) {
         clearTimeout(App.saveTimer);
@@ -1818,4 +1622,5 @@ window.addEventListener('beforeunload', () => {
         App.forceSave();
     }
 });
+
 document.addEventListener('DOMContentLoaded', () => App.init());
