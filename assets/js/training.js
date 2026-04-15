@@ -1098,12 +1098,12 @@ const App = {
             return;
         }
 
-        // ФІКС ВІЗУАЛУ: Таблична розмітка для ідеально рівних колонок
-        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto; display:table; width:100%;">`;
+        // ФІКС ВІЗУАЛУ: Жорстка CSS Grid сітка для ідеального вирівнювання цифр
+        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
         sourceWeeks.forEach((w, idx) => {
-            menuHtml += `<div style="display:table-row;">
-                <div style="display:table-cell; color:var(--theme); font-weight:bold; width:30px; padding-bottom:6px; text-align:right; padding-right:8px;">${idx + 1}.</div>
-                <div style="display:table-cell; padding-bottom:6px;">Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></div>
+            menuHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;">
+                <div style="color:var(--theme); font-weight:bold; text-align:right;">${idx + 1}.</div>
+                <div>Тиждень ${w.num} <span style="font-size:0.65rem; color:#666">(${w.type.toUpperCase()})</span></div>
             </div>`;
         });
         menuHtml += `</div>`;
@@ -1124,16 +1124,21 @@ const App = {
 
         this.pushHistory();
 
-        let newData = JSON.parse(JSON.stringify(weekToCopy.days));
-        if (!hardCopy) {
-            newData.forEach(d => {
-                d.exercises.forEach(ex => { 
-                    ex.sets.forEach(s => { 
-                        s.w = ""; s.r = ""; s.d = ""; 
-                    }); 
-                });
-            });
-        }
+        // ФІКС ДНІВ: Беремо каркас днів із ЦІЛЬОВОГО шаблону, щоб "Тренування 1" залишалося "Тренуванням 1"
+        let targetTemplate = Templates[targetP][weekToCopy.type];
+        let newData = JSON.parse(JSON.stringify(targetTemplate)); 
+        
+        newData.forEach((targetDay, dIdx) => {
+            if (weekToCopy.days[dIdx]) {
+                // Вставляємо тільки самі вправи у правильні дні
+                targetDay.exercises = JSON.parse(JSON.stringify(weekToCopy.days[dIdx].exercises));
+                if (!hardCopy) {
+                    targetDay.exercises.forEach(ex => { 
+                        ex.sets.forEach(s => { s.w = ""; s.r = ""; s.d = ""; }); 
+                    });
+                }
+            }
+        });
 
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === targetP);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
@@ -1455,22 +1460,23 @@ const App = {
     async generateProPlan(p, m, i) {
         if (!this.data.customTemplates) this.data.customTemplates = [];
         
+        // ФІКС ВІЗУАЛУ: CSS Grid для ідеального вирівнювання цифр та букв
         let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">1.</b> <span>Важка База (ПП: 4 кроки, TS+BO)</span></div>
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">2.</b> <span>Ізоляція (ПП: 2 кроки, TS+BO)</span></div>
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">3.</b> <span>Класика (3x10-12, RIR 1-2)</span></div>
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">4.</b> <span>Памп/Філлер (3x15-20)</span></div>`;
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">1.</div> <div>Важка База (ПП: 4 кроки, TS+BO)</div></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">2.</div> <div>Ізоляція (ПП: 2 кроки, TS+BO)</div></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">3.</div> <div>Класика (3x10-12, RIR 1-2)</div></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">4.</div> <div>Памп/Філлер (3x15-20)</div></div>`;
         
         let startIndex = 5;
         this.data.customTemplates.forEach((tpl, idx) => {
-            menuHtml += `<div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:var(--theme); width:20px; text-align:right;">${startIndex + idx}.</b> <span>${tpl.name}</span></div>`;
+            menuHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--theme); font-weight:bold; text-align:right;">${startIndex + idx}.</div> <div>${tpl.name}</div></div>`;
         });
 
         menuHtml += `<hr style="border-color:#333; margin:8px 0;">
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#10b981; width:20px; text-align:right;">S.</b> <span>💾 Зберегти рядок як шаблон</span></div>
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#eab308; width:20px; text-align:right;">E.</b> <span>✏️ Редагувати шаблон</span></div>
-        <div style="display:flex; gap:10px; margin-bottom:6px;"><b style="color:#ef4444; width:20px; text-align:right;">D.</b> <span>🗑 Видалити шаблон</span></div>
-        <div style="display:flex; gap:10px;"><b style="color:#ef4444; width:20px; text-align:right;">0.</b> <span>🧹 Очистити рядок</span></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#10b981; font-weight:bold; text-align:right;">S.</div> <div>💾 Зберегти рядок як шаблон</div></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#eab308; font-weight:bold; text-align:right;">E.</div> <div>✏️ Редагувати шаблон</div></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#ef4444; font-weight:bold; text-align:right;">D.</div> <div>🗑 Видалити шаблон</div></div>
+        <div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; align-items:start;"><div style="color:#ef4444; font-weight:bold; text-align:right;">0.</div> <div>🧹 Очистити рядок</div></div>
         </div>`;
 
         const val = await Modal.prompt(`Виберіть дію (введіть цифру або букву):<br><br>${menuHtml}`, "⚡ ШАБЛОНИ", "");
@@ -1481,7 +1487,13 @@ const App = {
         // 🗑 ВИДАЛЕННЯ ШАБЛОНУ
         if (choice === 'D') {
             if (this.data.customTemplates.length === 0) return this.showToast("Немає власних шаблонів", "var(--danger)");
-            const delVal = await Modal.prompt(`Введіть номер шаблону для ВИДАЛЕННЯ (починаючи з ${startIndex}):`, "ВИДАЛЕННЯ", "");
+            let delHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
+            this.data.customTemplates.forEach((tpl, idx) => {
+                delHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:var(--danger); font-weight:bold; text-align:right;">${startIndex + idx}.</div> <div>${tpl.name}</div></div>`;
+            });
+            delHtml += `</div>`;
+            
+            const delVal = await Modal.prompt(`Введіть номер шаблону для ВИДАЛЕННЯ (починаючи з ${startIndex}):<br><br>${delHtml}`, "ВИДАЛЕННЯ", "");
             if (!delVal) return;
             const delIdx = parseInt(delVal) - startIndex;
             if (!isNaN(delIdx) && delIdx >= 0 && delIdx < this.data.customTemplates.length) {
@@ -1496,7 +1508,12 @@ const App = {
         // ✏️ РЕДАГУВАННЯ ШАБЛОНУ
         if (choice === 'E') {
             if (this.data.customTemplates.length === 0) return this.showToast("Немає власних шаблонів", "var(--danger)");
-            const editVal = await Modal.prompt(`Введіть номер шаблону для РЕДАГУВАННЯ (починаючи з ${startIndex}):`, "РЕДАГУВАННЯ", "");
+            let editHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
+            this.data.customTemplates.forEach((tpl, idx) => {
+                editHtml += `<div style="display:grid; grid-template-columns: 25px 1fr; gap:8px; margin-bottom:6px; align-items:start;"><div style="color:#eab308; font-weight:bold; text-align:right;">${startIndex + idx}.</div> <div>${tpl.name}</div></div>`;
+            });
+            editHtml += `</div>`;
+            const editVal = await Modal.prompt(`Введіть номер шаблону для РЕДАГУВАННЯ (починаючи з ${startIndex}):<br><br>${editHtml}`, "РЕДАГУВАННЯ", "");
             if (!editVal) return;
             const editIdx = parseInt(editVal) - startIndex;
             if (!isNaN(editIdx) && editIdx >= 0 && editIdx < this.data.customTemplates.length) {
@@ -1514,7 +1531,6 @@ const App = {
         this.pushHistory();
         const row = this.data.guidelines[p][m][i];
 
-        // 💾 ЗБЕРЕЖЕННЯ ШАБЛОНУ
         if (choice === 'S') {
             const tplName = await Modal.prompt("Введіть назву для нового шаблону:", "ЗБЕРЕГТИ ШАБЛОН", "Мій шаблон");
             if (tplName && tplName.trim() !== "") {
