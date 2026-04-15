@@ -434,7 +434,11 @@ const App = {
                 <span>${w.num}</span>
                 <small>${w.type}</small>
             </div>`;
-        }).join('') + `<div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5; font-size:0.7rem">+ MASS</div><div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444; opacity:0.5; font-size:0.7rem">+ CUT</div>`;
+        }).join('') + `
+        <div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5; font-size:0.7rem">+ MASS</div>
+        <div class="week-btn" onclick="App.addWeek('cut')" style="border:1px dashed #444; opacity:0.5; font-size:0.7rem">+ CUT</div>
+        <div class="week-btn" onclick="App.copyWeekFromOther()" style="border:1px dashed var(--theme); color:var(--theme); background:rgba(212,175,55,0.05); font-size:0.7rem" title="Імпорт з іншої програми">📥 ІМПОРТ</div>
+        `;
 
         if (filteredWeeks.length === 0) {
             c.innerHTML = `<div style="text-align:center; padding:40px; color:#666">Програма порожня. Натисніть + MASS або + CUT зверху.</div>`;
@@ -1080,6 +1084,77 @@ const App = {
         this.render();
     },
 
+    async copyWeekFromOther() {
+        const targetP = this.data.currentProgram;
+        const sourceP = targetP === 'balanced' ? 'arms' : 'balanced';
+        const sourceName = this.data.customNames[sourceP] || sourceP;
+        
+        // Знаходимо всі тижні в іншій програмі і сортуємо від найновішого
+        const sourceWeeks = this.data.weeks.filter(w => w.prog === sourceP).sort((a, b) => b.num - a.num);
+        
+        if (sourceWeeks.length === 0) {
+            this.showToast(`У програмі "${sourceName}" немає тижнів для копіювання.`, "var(--danger)");
+            return;
+        }
+
+        // Будуємо красиве меню вибору тижня
+        let menuHtml = `<div style="text-align:left; font-size:0.8rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
+        sourceWeeks.forEach((w, idx) => {
+            menuHtml += `<b style="color:var(--theme)">${idx + 1}</b> - Тиждень ${w.num} <span style="font-size:0.6rem; color:#666">(${w.type.toUpperCase()})</span><br>`;
+        });
+        menuHtml += `</div>`;
+
+        const val = await Modal.prompt(`Введіть цифру, щоб імпортувати тиждень з "<b>${sourceName}</b>" сюди:<br><br>${menuHtml}`, "📥 ІМПОРТ ТИЖНЯ", "1");
+        if (!val) return;
+        
+        const selectedIdx = parseInt(val) - 1;
+        if (isNaN(selectedIdx) || selectedIdx < 0 || selectedIdx >= sourceWeeks.length) return;
+
+        const weekToCopy = sourceWeeks[selectedIdx];
+        
+        // Питаємо, чи очистити ваги (зробити чистий шаблон)
+        const hardCopy = await Modal.confirm(
+            "Скопіювати <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (з цифрами).<br>Скасувати — тільки структура (як чистий шаблон).</span>", 
+            "РЕЖИМ КОПІЮВАННЯ", 
+            "var(--theme)"
+        );
+
+        this.pushHistory();
+
+        let newData = JSON.parse(JSON.stringify(weekToCopy.days));
+        if (!hardCopy) {
+            newData.forEach(d => {
+                d.exercises.forEach(ex => { 
+                    ex.sets.forEach(s => { 
+                        s.w = ""; 
+                        s.r = ""; 
+                        s.d = ""; 
+                    }); 
+                });
+            });
+        }
+
+        const currentProgWeeks = this.data.weeks.filter(w => w.prog === targetP);
+        const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
+        const newWeekNum = maxNum + 1; 
+
+        // Створюємо новий тиждень і прив'язуємо до ПОТОЧНОЇ програми
+        const newWeek = { 
+            id: Date.now(), 
+            type: weekToCopy.type, 
+            prog: targetP, 
+            num: newWeekNum, 
+            days: newData 
+        };
+        
+        this.data.weeks.push(newWeek);
+        this.data.weeks.sort((a, b) => a.num - b.num);
+        this.updateBank();
+        this.buildIndex(); 
+        this.save(); 
+        this.render();
+        this.showToast(`✅ Тиждень імпортовано як базу!`, "var(--success)");
+    },
     async delWeek(id) {
         if(!(await Modal.confirm("Видалити цей тиждень повністю?", "ВИДАЛЕННЯ ТИЖНЯ", "red"))) return;
         this.pushHistory();
