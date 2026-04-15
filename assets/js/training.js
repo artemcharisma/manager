@@ -69,7 +69,6 @@ const InitialData = {
         arms: { mass: [], cut: [] }
     }
 };
-
 const App = {
     data: null, 
     state: new StateManager('training_protocol', InitialData), 
@@ -563,7 +562,6 @@ const App = {
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
 
-                            // --- BEAT THE LOGBOOK HUD ---
                             let progressHtml = '&nbsp;';
                             if (ghostW && ghostR && sType !== 'WU') {
                                 let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
@@ -575,10 +573,9 @@ const App = {
                                 if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
                                 else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
 
-                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
+                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Вставити дані">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
                             }
 
-                            // --- РОЗУМНИЙ БЕК-ОФФ (АВТО-ПІДКАЗКА ВАГИ) ---
                             let placeholderW = "";
                             if (sType === 'BO' && sIdx > 0 && !s.w) {
                                 const prevSet = ex.sets[sIdx - 1];
@@ -1327,9 +1324,12 @@ const App = {
         </div>
 
         ${isEd ? `
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div class="btn-add" style="flex:1; text-align:center; font-weight:bold;" onclick="App.addGuideRow('${p}', '${m}')">+ НОВИЙ РЯДОК</div>
-            <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОНІЗУВАТИ З РОЗКЛАДОМ</div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
+            <div style="display:flex; gap:8px;">
+                <div class="btn-add" style="flex:1; text-align:center; font-weight:bold;" onclick="App.addGuideRow('${p}', '${m}')">+ НОВИЙ РЯДОК</div>
+                <div class="btn-add" style="flex:1; text-align:center; background:var(--theme); color:#000; font-weight:bold; border:none;" onclick="App.syncGuide('${p}', '${m}')">🔄 СИНХРОН</div>
+            </div>
+            <div class="btn-add" style="font-size:0.75rem; padding:6px; border-style:dashed; opacity:0.8;" onclick="App.copyGuideFromOther('${p}', '${m}')">📥 Копіювати базу з іншої програми</div>
         </div>
         ` : ''}
 
@@ -1487,6 +1487,22 @@ const App = {
         }
     },
 
+    async copyGuideFromOther(targetP, m) {
+        const sourceP = targetP === 'balanced' ? 'arms' : 'balanced';
+        const sourceName = this.data.customNames[sourceP];
+        
+        if (!(await Modal.confirm(`Скопіювати всі вправи та налаштування з програми "<b>${sourceName}</b>" у поточну?`, "КОПІЮВАННЯ БАЗИ", "var(--theme)"))) return;
+        
+        this.pushHistory();
+        const sourceList = this.data.guidelines[sourceP][m] || [];
+        
+        // Клонуємо дані, щоб не було прямого посилання
+        this.data.guidelines[targetP][m] = JSON.parse(JSON.stringify(sourceList));
+        
+        this.save();
+        this.renderGuide();
+        this.showToast("✅ Базу успішно перенесено!", "var(--success)");
+    },
     renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
 
