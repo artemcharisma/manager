@@ -761,17 +761,30 @@ const App = {
         if (prev) {
             this.data = prev;
             this.render();
+            
+            // Якщо історія порожня — ховаємо обидві кнопки (і верхню, і плаваючу)
             if (this.state.history.length === 0) {
                 const btn = document.getElementById('undoBtn');
                 if(btn) btn.style.display='none';
+                
+                const fab = document.getElementById('undoFab');
+                if(fab) fab.classList.remove('visible');
             }
+            
+            // Сповіщення, щоб юзер бачив, що дія точно скасувалася
+            this.showToast("↩ Дію скасовано", "var(--theme)");
         }
     },
     
     pushHistory() {
         this.state.push(this.data);
+        
+        // Показуємо обидві кнопки
         const btn = document.getElementById('undoBtn');
         if(btn) btn.style.display='flex';
+        
+        const fab = document.getElementById('undoFab');
+        if(fab) fab.classList.add('visible');
     },
 
     setProgram(prog) {
