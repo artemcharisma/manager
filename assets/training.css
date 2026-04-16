@@ -465,6 +465,39 @@
             pointer-events: auto; 
         }
 
+        /* --- ПЛАВАЮЧА КНОПКА СКАСУВАННЯ ДІЇ (UNDO) --- */
+        .undo-fab { 
+            position: fixed; 
+            bottom: 150px; /* На тій самій висоті, що й скрол вгору */
+            left: 20px; /* Але зліва, під великий палець лівої руки */
+            width: 45px; height: 45px; 
+            background: rgba(30,30,30,0.9); 
+            border: 1px solid var(--theme); 
+            border-radius: 50%; 
+            color: var(--theme); 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; z-index: 101; 
+            font-size: 1.5rem; 
+            
+            /* Анімація приховування/появи */
+            opacity: 0; 
+            transform: translateY(20px) scale(0.9); 
+            pointer-events: none; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        .undo-fab.visible { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+            pointer-events: auto; 
+        }
+        .undo-fab:active {
+            transform: scale(0.85) !important;
+            background: var(--theme);
+            color: #000;
+        }
+
         /* --- КУРСОР ДЛЯ РЕДАГУВАННЯ (Оновлено) --- */
         /* Коли увімкнено режим редагування, заголовок групи має курсор тексту */
         body.editing .day-group {
