@@ -1534,6 +1534,12 @@ const App = {
             ${listHtml}
         </div>
         `;
+
+        // ФІКС UX: Якщо в пошуку є текст, застосовуємо його знову після перемальовування
+        const searchBox = document.querySelector('.guide-search');
+        if (searchBox && searchBox.value.trim() !== '') {
+            this.filterGuide(searchBox.value);
+        }
     },
     
     addGuideRow(p, m) {
@@ -1541,6 +1547,11 @@ const App = {
         if (!this.data.guidelines[p]) this.data.guidelines[p] = { mass: [], cut: [] };
         this.data.guidelines[p][m].unshift({n:"", p:"", s:"", w:"", i:""});
         this.save(); 
+        
+        // ФІКС UX: Очищаємо пошук, щоб новий порожній рядок не був прихованим
+        const searchBox = document.querySelector('.guide-search');
+        if (searchBox) searchBox.value = '';
+        
         this.renderGuide();
     },
 
@@ -1680,13 +1691,17 @@ const App = {
 
         if (addedCount > 0) {
             this.save();
+            
+            // ФІКС UX: Очищаємо пошук, щоб побачити синхронізовані вправи
+            const searchBox = document.querySelector('.guide-search');
+            if (searchBox) searchBox.value = '';
+            
             this.renderGuide();
             this.showToast(`✅ Синхронізовано: додано ${addedCount} нових вправ з розкладу`, 'var(--success)');
         } else {
             this.showToast(`ℹ️ Усі вправи з розкладу вже є у довіднику`, '#3b82f6');
         }
     },
-
     async copyGuideFromOther(targetP, m) {
         const sourceP = targetP === 'balanced' ? 'arms' : 'balanced';
         const sourceName = this.data.customNames[sourceP] || sourceP;
@@ -1696,9 +1711,13 @@ const App = {
         if (ok) {
             this.pushHistory();
             const sourceList = this.data.guidelines[sourceP][m] || [];
-            // Глибоке копіювання масиву
             this.data.guidelines[targetP][m] = JSON.parse(JSON.stringify(sourceList));
             this.save();
+            
+            // ФІКС UX: Очищаємо пошук після імпорту
+            const searchBox = document.querySelector('.guide-search');
+            if (searchBox) searchBox.value = '';
+            
             this.renderGuide();
             this.showToast("✅ Базу вправ перенесено!", "var(--theme)");
         }
