@@ -397,6 +397,7 @@
         </div>
         
         <div class="day-action-buttons">
+             <button class="btn-mini" onclick="App.openOrderEditor()">↕ ПОРЯДОК</button>
              <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()">✎</button>
              <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
              <button class="btn-mini icon-only del-day" onclick="App.deleteDay()">🗑</button>
@@ -489,6 +490,19 @@
 
 </div>
 
+<div id="orderModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">↕ РЕДАКТОР ПОРЯДКУ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; text-align:center; font-family:var(--font-mono);">
+            Змінюйте порядок прийомів їжі та продуктів.
+        </div>
+        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding-bottom:10px;"></div>
+        <button class="btn-primary" style="margin-top:10px;" onclick="App.closeModal()">ГОТОВО</button>
+    </div>
+</div>
 <div id="foodModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
