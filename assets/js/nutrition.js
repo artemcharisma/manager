@@ -149,6 +149,8 @@ const App = {
                 }
             }
             else if (isVisible('bankEditModal')) { e.preventDefault(); this.saveBankItem(); }
+            // Додай цей рядок перед else if (isVisible('scheduleModal'))
+            else if (isVisible('orderModal')) { e.preventDefault(); this.closeModal(); }
         }
     },
 
@@ -523,7 +525,55 @@ const App = {
         this.closeModal();
         if(window.Haptics) window.Haptics.success();
     },
-    moveMeal(id, dir) {
+    openOrderEditor() {
+        if(document.activeElement) document.activeElement.blur();
+        this.lockScroll();
+        this.toggleFab(false);
+        this.renderOrderEditor();
+        document.getElementById('orderModal').style.display = 'flex';
+    },
+
+    renderOrderEditor() {
+        const day = this.getCurrentDay();
+        const container = document.getElementById('orderContainer');
+        if(!day || !container) return;
+
+        let html = '';
+        if(day.meals.length === 0) {
+            html = `<div style="text-align:center; color:#666; padding:20px;">Немає прийомів їжі</div>`;
+        } else {
+            day.meals.forEach((m, mIdx) => {
+                html += `
+                <div style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
+                        <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">${m.name}</b>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, -1, true)">↑</button>
+                            <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, 1, true)">↓</button>
+                        </div>
+                    </div>`;
+                
+                if (m.foods.length > 0) {
+                    html += `<div style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
+                    m.foods.forEach((f, fIdx) => {
+                        html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
+                            <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">${f.n}</span>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, -1)">↑</button>
+                                <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, 1)">↓</button>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            });
+        }
+        container.innerHTML = html;
+    },
+
+    moveMeal(id, dir, inEditor = false) {
         const day = this.getCurrentDay();
         const idx = day.meals.findIndex(m => m.id === id);
         if (idx < 0) return;
@@ -536,6 +586,25 @@ const App = {
         day.meals[newIdx] = temp;
         
         this.save();
+        if (inEditor) this.renderOrderEditor();
+        this.render(false);
+    },
+
+    moveFood(mId, fIdx, dir) {
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === mId);
+        if (!meal) return;
+        
+        const newIdx = fIdx + dir;
+        if (newIdx < 0 || newIdx >= meal.foods.length) return;
+        
+        this.pushHistory();
+        const temp = meal.foods[fIdx];
+        meal.foods[fIdx] = meal.foods[newIdx];
+        meal.foods[newIdx] = temp;
+        
+        this.save();
+        this.renderOrderEditor();
         this.render(false);
     },
     render(animate = true) {
@@ -617,10 +686,8 @@ const App = {
                         <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                     </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, -1)">↑</div>
-                    <div style="color:#666; cursor:pointer; font-size:1.2rem; padding:5px;" onclick="App.moveMeal(${m.id}, 1)">↓</div>
-                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; margin-left:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
                     <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
                 </div>
             </div>
@@ -914,7 +981,7 @@ const App = {
 
         if(document.activeElement) document.activeElement.blur(); 
         
-        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal'];
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal'];
         modalIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
