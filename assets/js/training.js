@@ -401,8 +401,34 @@ const App = {
         const toast = document.createElement('div');
         toast.className = 'sys-toast';
         toast.innerHTML = msg; 
-        // ФІКС: z-index змінено з 9999 на 20000, щоб віконце було ПОВЕРХ розмитої модалки
-        toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:${color}; color:#fff; padding:12px 20px; border-radius:12px; z-index:20000; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.85rem; width: 85%; max-width: 320px; text-align: center; white-space: normal; line-height: 1.4; animation: fadeInDown 0.2s ease forwards; display: flex; align-items: center; justify-content: center;`;
+        
+        // АБСОЛЮТНИЙ ФІКС ДЛЯ iPHONE:
+        // Замість left:50% використовуємо margin:auto з жорсткими обмеженнями по краях
+        toast.style.cssText = `
+            position: fixed; 
+            bottom: 90px; 
+            left: 20px; 
+            right: 20px; 
+            margin: auto; 
+            width: fit-content; 
+            max-width: calc(100vw - 40px);
+            box-sizing: border-box;
+            background: ${color}; 
+            color: #fff; 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            z-index: 20000; 
+            font-weight: bold; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            font-size: 0.85rem; 
+            text-align: center; 
+            white-space: normal; 
+            word-wrap: break-word;
+            animation: fadeInDown 0.2s ease forwards; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        `;
         document.body.appendChild(toast);
         setTimeout(() => { if(toast) toast.remove(); }, 2500);
     },
