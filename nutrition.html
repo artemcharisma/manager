@@ -492,16 +492,16 @@
 </div>
 
 <div id="orderModal" class="modal-overlay">
-    <div class="modal-card">
-        <div class="mc-header">
+    <div class="modal-card" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="mc-header" style="flex-shrink: 0;">
             <h3 class="mc-title">↕ РЕДАКТОР ПОРЯДКУ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
-        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; text-align:center; font-family:var(--font-mono);">
-            Змінюйте порядок прийомів їжі та продуктів.
+        <div style="font-size:0.75rem; color:#888; margin-bottom:10px; text-align:center; font-family:var(--font-mono); flex-shrink: 0;">
+            Перетягуйте за іконку ≡ для зміни порядку.
         </div>
-        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding-bottom:10px;"></div>
-        <button class="btn-primary" style="margin-top:10px;" onclick="App.closeModal()">ГОТОВО</button>
+        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-bottom:10px; flex: 1;"></div>
+        <button class="btn-primary" style="margin-top:10px; flex-shrink: 0;" onclick="App.closeModal()">ГОТОВО</button>
     </div>
 </div>
 <div id="foodModal" class="modal-overlay">
@@ -590,8 +590,8 @@
         <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
             <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ВІДОБРАЖЕННЯ У ХАБІ (БЖВ)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button id="btnHubTrain" class="btn-ghost" onclick="App.setHubDay('train')" style="font-size:0.8rem; padding:12px;">🔥 ТРЕН</button>
-                <button id="btnHubRest" class="btn-ghost" onclick="App.setHubDay('rest')" style="font-size:0.8rem; padding:12px;">🛋️ ВІДПОЧ</button>
+                <button id="btnHubTrain" class="btn-ghost" onclick="App.setHubDay('train')" style="font-size:0.8rem; padding:12px;">🔥 ТРЕНУВАННЯ</button>
+                <button id="btnHubRest" class="btn-ghost" onclick="App.setHubDay('rest')" style="font-size:0.8rem; padding:12px;">🛋️ ВІДПОЧИНОК</button>
             </div>
         </div>
 
