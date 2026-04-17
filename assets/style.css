@@ -251,12 +251,31 @@ input, textarea, [contenteditable="true"] {
     background: #000 !important;
     border: 1px dashed var(--theme) !important;
 }
-/* Ефект для вкладки дня, яку зажали і тягнуть */
+/* 1. Анімація стиснення під час утримання пальця (займає ~300мс) */
+.day-tab {
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, box-shadow 0.3s !important;
+}
+
+.day-tab:active {
+    transform: scale(0.9) !important; /* Втискаємо елемент */
+}
+
+/* 2. Ефект "Відриву", коли 300мс пройшли і Sortable активувався */
+.sortable-chosen-day {
+    transform: scale(1.05) translateY(-4px) !important; /* Різко вистрибує */
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--theme) !important;
+    background: #000 !important;
+    z-index: 100 !important;
+    cursor: grabbing !important;
+}
+
+/* 3. Оновлений привид (місце, де була вкладка) */
 .sortable-ghost-day {
-    opacity: 0.4;
-    background: rgba(212, 175, 55, 0.15) !important;
+    opacity: 0.3 !important;
+    background: rgba(212, 175, 55, 0.05) !important;
     border: 1px dashed var(--theme) !important;
-    transform: scale(0.95);
+    transform: scale(0.95) !important;
+    box-shadow: none !important;
 }
 
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
