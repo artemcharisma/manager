@@ -615,66 +615,38 @@ const App = {
         let html = '';
         if(day.meals.length === 0) {
             html = `<div style="text-align:center; color:#666; padding:20px;">Немає прийомів їжі</div>`;
-            container.innerHTML = html;
-            return;
-        }
-
-        day.meals.forEach((m) => {
-            html += `
-            <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
-                    <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">${m.name}</b>
-                    <div class="drag-handle-meal" style="cursor:grab; font-size:1.8rem; color:#666; padding:0 10px; line-height:0.8;">≡</div>
-                </div>`;
-            
-            if (m.foods.length > 0) {
-                html += `<div class="food-sort-list" id="food-sort-${m.id}" style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
-                m.foods.forEach((f) => {
-                    html += `
-                    <div class="food-sort-item" style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
-                        <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">${f.n}</span>
-                        <div class="drag-handle-food" style="cursor:grab; font-size:1.5rem; color:#555; padding:0 10px; line-height:0.8;">≡</div>
+        } else {
+            day.meals.forEach((m, mIdx) => {
+                const mealNum = mIdx + 1;
+                html += `
+                <div style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
+                        <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;"><span style="color:#666;">${mealNum}.</span> ${m.name}</b>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, -1, true)">↑</button>
+                            <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, 1, true)">↓</button>
+                        </div>
                     </div>`;
-                });
-                html += `</div>`;
-            }
-            html += `</div>`;
-        });
-        
-        container.innerHTML = html;
-
-        Sortable.create(container, {
-            handle: '.drag-handle-meal',
-            animation: 250,
-            ghostClass: 'sortable-ghost',
-            delay: 150, 
-            delayOnTouchOnly: true,
-            onEnd: (evt) => {
-                if (evt.oldIndex !== evt.newIndex) {
-                    this.reorderMeals(evt.oldIndex, evt.newIndex);
-                    if(window.Haptics) window.Haptics.light();
+                
+                if (m.foods.length > 0) {
+                    html += `<div style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
+                    m.foods.forEach((f, fIdx) => {
+                        const foodNum = fIdx + 1;
+                        html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
+                            <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;"><span style="color:#555; font-family:var(--font-mono);">${mealNum}.${foodNum}</span> ${f.n}</span>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, -1)">↑</button>
+                                <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, 1)">↓</button>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
                 }
-            }
-        });
-
-        day.meals.forEach(m => {
-            if (m.foods.length > 1) {
-                const foodContainer = document.getElementById(`food-sort-${m.id}`);
-                Sortable.create(foodContainer, {
-                    handle: '.drag-handle-food',
-                    animation: 250,
-                    ghostClass: 'sortable-ghost',
-                    delay: 150,
-                    delayOnTouchOnly: true,
-                    onEnd: (evt) => {
-                        if (evt.oldIndex !== evt.newIndex) {
-                            this.reorderFoods(m.id, evt.oldIndex, evt.newIndex);
-                            if(window.Haptics) window.Haptics.light();
-                        }
-                    }
-                });
-            }
-        });
+                html += `</div>`;
+            });
+        }
+        container.innerHTML = html;
     },
 
     reorderMeals(oldIdx, newIdx) {
