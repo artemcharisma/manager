@@ -614,27 +614,26 @@ const App = {
 
         let html = '';
         if(day.meals.length === 0) {
-            html = `<div style="text-align:center; color:#666; padding:20px;">Немає прийомів їжі</div>`;
+            html = `<div style="text-align:center; color:#666; padding:20px;">Порожньо</div>`;
             container.innerHTML = html;
             return;
         }
 
-        // Рендеримо HTML (прибрали зайвий margin-bottom)
         day.meals.forEach((m) => {
             html += `
-            <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
-                    <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">${m.name}</b>
-                    <div class="drag-handle-meal" style="cursor:grab; font-size:1.8rem; color:#666; padding:0 10px; line-height:0.8;">≡</div>
+            <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b style="color:var(--theme); font-size:0.85rem; text-transform:uppercase;">${m.name}</b>
+                    <div class="drag-handle-meal" style="cursor:grab; font-size:1.5rem; color:#555; padding:5px 10px;">≡</div>
                 </div>`;
             
             if (m.foods.length > 0) {
-                html += `<div class="food-sort-list" id="food-sort-${m.id}" style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
+                html += `<div class="food-sort-list" id="food-sort-${m.id}" style="display:flex; flex-direction:column; gap:4px; margin-top:8px; padding-left:10px; border-left:1px solid #333;">`;
                 m.foods.forEach((f) => {
                     html += `
-                    <div class="food-sort-item" style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
-                        <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">${f.n}</span>
-                        <div class="drag-handle-food" style="cursor:grab; font-size:1.5rem; color:#555; padding:0 10px; line-height:0.8;">≡</div>
+                    <div class="food-sort-item" style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:8px 10px; border-radius:6px; border:1px solid #222;">
+                        <span style="color:#aaa; font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${f.n}</span>
+                        <div class="drag-handle-food" style="cursor:grab; font-size:1.2rem; color:#444; padding:0 5px;">≡</div>
                     </div>`;
                 });
                 html += `</div>`;
@@ -644,13 +643,17 @@ const App = {
         
         container.innerHTML = html;
 
-        // Ініціалізуємо Drag & Drop для Прийомів їжі
-        Sortable.create(container, {
-            handle: '.drag-handle-meal',
-            animation: 250,
+        // Ініціалізація Drag & Drop
+        const sortOptions = {
+            animation: 200,
             ghostClass: 'sortable-ghost',
-            delay: 150, // Мікро-затримка перед перетягуванням (щоб не плутати зі скролом)
-            delayOnTouchOnly: true, // Працює тільки на сенсорних екранах
+            delay: 100, 
+            delayOnTouchOnly: true
+        };
+
+        Sortable.create(container, {
+            ...sortOptions,
+            handle: '.drag-handle-meal',
             onEnd: (evt) => {
                 if (evt.oldIndex !== evt.newIndex) {
                     this.reorderMeals(evt.oldIndex, evt.newIndex);
@@ -659,16 +662,12 @@ const App = {
             }
         });
 
-        // Ініціалізуємо Drag & Drop для Продуктів
         day.meals.forEach(m => {
-            if (m.foods.length > 1) {
-                const foodContainer = document.getElementById(`food-sort-${m.id}`);
-                Sortable.create(foodContainer, {
+            const foodBox = document.getElementById(`food-sort-${m.id}`);
+            if (foodBox && m.foods.length > 1) {
+                Sortable.create(foodBox, {
+                    ...sortOptions,
                     handle: '.drag-handle-food',
-                    animation: 250,
-                    ghostClass: 'sortable-ghost',
-                    delay: 150,
-                    delayOnTouchOnly: true,
                     onEnd: (evt) => {
                         if (evt.oldIndex !== evt.newIndex) {
                             this.reorderFoods(m.id, evt.oldIndex, evt.newIndex);
