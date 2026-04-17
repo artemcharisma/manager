@@ -569,35 +569,40 @@
 </div>
 
 <div id="dayEditModal" class="modal-overlay">
-    <div class="modal-card">
-        <div class="mc-header">
+    <div class="modal-card" style="max-height: 85vh; display: flex; flex-direction: column; padding-bottom: 25px;">
+        
+        <div class="mc-header" style="flex-shrink: 0;">
             <h3 class="mc-title">НАЛАШТУВАННЯ ЕТАПУ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="margin-bottom: 15px; margin-top: 10px;">
-            <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
-            <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
-        </div>
-        
-        <div>
-            <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ПІДПИС (ДЕТАЛІ АБО ТАЙМІНГ)</label>
-            <input id="inpDaySub" class="inp-main" placeholder="Наприклад: Тиждень 3 (Треня)" autocomplete="off">
-        </div>
-        
-        <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
-
-        <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
-            <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ВІДОБРАЖЕННЯ У ХАБІ (БЖВ)</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button id="btnHubTrain" class="btn-ghost" onclick="App.setHubDay('train')" style="font-size:0.8rem; padding:12px;">🔥 ТРЕНУВАННЯ</button>
-                <button id="btnHubRest" class="btn-ghost" onclick="App.setHubDay('rest')" style="font-size:0.8rem; padding:12px;">🛋️ ВІДПОЧИНОК</button>
+        <div style="flex: 1; overflow-y: auto; min-height: 0; padding-right: 5px; -webkit-overflow-scrolling: touch;">
+            
+            <div style="margin-bottom: 15px; margin-top: 10px;">
+                <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
+                <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
             </div>
-        </div>
+            
+            <div>
+                <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ПІДПИС (ДЕТАЛІ АБО ТАЙМІНГ)</label>
+                <input id="inpDaySub" class="inp-main" placeholder="Наприклад: Тиждень 3 (Треня)" autocomplete="off">
+            </div>
+            
+            <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
 
-        <div style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 20px;">
-            <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ПОРЯДОК У СПИСКУ</label>
-            <div id="daySortContainer" style="display:flex; flex-direction:column; gap:8px; max-height: 40vh; overflow-y: auto; padding-bottom:10px;"></div>
+            <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
+                <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ВІДОБРАЖЕННЯ У ХАБІ (БЖВ)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button id="btnHubTrain" class="btn-ghost" onclick="App.setHubDay('train')" style="font-size:0.8rem; padding:12px;">🔥 ТРЕНУВАННЯ</button>
+                    <button id="btnHubRest" class="btn-ghost" onclick="App.setHubDay('rest')" style="font-size:0.8rem; padding:12px;">🛋️ ВІДПОЧИНОК</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 20px;">
+                <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ПОРЯДОК У СПИСКУ</label>
+                <div id="daySortContainer" style="display:flex; flex-direction:column; gap:8px; padding-bottom:10px;"></div>
+            </div>
+            
         </div>
     </div>
 </div>
