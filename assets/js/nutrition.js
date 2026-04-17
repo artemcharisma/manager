@@ -685,7 +685,7 @@ const App = {
                 });
             }
         });
-    }
+    },
     reorderMeals(oldIdx, newIdx) {
         const day = this.getCurrentDay();
         if (!day) return;
