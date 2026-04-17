@@ -352,7 +352,7 @@ const App = {
     },
 
     promptRenameDay() {
-        if(document.activeElement) document.activeElement.blur(); // Жорстко ховаємо клавіатуру
+        if(document.activeElement) document.activeElement.blur(); 
         
         const day = this.getCurrentDay();
         if(!day) return;
@@ -374,9 +374,12 @@ const App = {
         
         document.getElementById('inpDayTitle').value = title;
         document.getElementById('inpDaySub').value = sub;
+        
+        // ДОДАНО: Рендеримо список сортування перед відкриттям вікна
+        this.renderDaySorter();
+        
         document.getElementById('dayEditModal').style.display = 'flex';
         
-        // Плавний автофокус на поле вводу
         setTimeout(() => document.getElementById('inpDayTitle').focus(), 150);
     },
     saveDayName() {
@@ -641,6 +644,40 @@ const App = {
         this.render(false);
     },
 
+    renderDaySorter() {
+        const container = document.getElementById('daySortContainer');
+        if(!container) return;
+        
+        let html = '';
+        this.data.days.forEach(d => {
+            let title = d.name;
+            if (title.includes('|')) title = title.replace('|', ' - ');
+            
+            // Виділяємо поточний день золотої рамкою
+            const isCurrent = d.id === this.state.currentDayId;
+            const borderStr = isCurrent ? 'border: 1px solid var(--theme);' : 'border: 1px solid #333;';
+            
+            html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:12px 15px; border-radius:10px; ${borderStr}">
+                <span style="color:#fff; font-weight:600; font-size:0.9rem; pointer-events:none;">${title}</span>
+                <div class="drag-handle-day" style="cursor:grab; font-size:1.5rem; color:#666; line-height:0.8; padding:0 10px;">≡</div>
+            </div>`;
+        });
+        container.innerHTML = html;
+
+        // Вмикаємо надійний вертикальний Drag & Drop
+        Sortable.create(container, {
+            handle: '.drag-handle-day',
+            animation: 250,
+            ghostClass: 'sortable-ghost',
+            onEnd: (evt) => {
+                if (evt.oldIndex !== evt.newIndex) {
+                    this.reorderDays(evt.oldIndex, evt.newIndex);
+                    if(window.Haptics) window.Haptics.light();
+                }
+            }
+        });
+    },
     reorderDays(oldIdx, newIdx) {
         // Запобіжник: якщо перетягнули на ту ж позицію або замість кнопки "+"
         if (oldIdx === newIdx || newIdx >= this.data.days.length || oldIdx >= this.data.days.length) return;
