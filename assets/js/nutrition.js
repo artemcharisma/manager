@@ -71,16 +71,22 @@ const App = {
         this.attachDragScroll('#dayBar'); // <--- Цей рядок у тебе вже є
         
         // --- ДОДАЄМО DRAG & DROP ДЛЯ ДНІВ ---
+        // --- ДОДАЄМО DRAG & DROP ДЛЯ ДНІВ ---
         const dayBarContainer = document.getElementById('dayBar');
         if (dayBarContainer) {
             Sortable.create(dayBarContainer, {
                 animation: 200,
                 direction: 'horizontal',
-                draggable: '.day-tab', // Тягаємо тільки дні (ігноруємо кнопку "+")
-                delay: 250, // Затримка 250мс (довге натискання), щоб не ламати звичайний скрол
-                delayOnTouchOnly: true, // Робимо затримку тільки для телефонів
+                draggable: '.day-tab', 
+                delay: 300, // 300мс для довгого натискання
+                delayOnTouchOnly: false, // Тепер затримка працює скрізь (і на ПК, і на iOS)
+                fallbackTolerance: 5, // ФІКС: якщо зрушити на 5px до закінчення затримки — спрацює скрол!
                 ghostClass: 'sortable-ghost-day',
+                onStart: function () {
+                    window.isSortingDay = true; // Кажемо скролу зупинитись
+                },
                 onEnd: (evt) => {
+                    window.isSortingDay = false; // Дозволяємо скролу працювати знову
                     if (evt.oldIndex !== evt.newIndex) {
                         this.reorderDays(evt.oldIndex, evt.newIndex);
                         if(window.Haptics) window.Haptics.light();
@@ -123,7 +129,8 @@ const App = {
                 slider.style.cursor = 'pointer';
             });
             slider.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
+                // КРИТИЧНИЙ ФІКС: Блокуємо скрол, якщо йде сортування вкладки
+                if (!isDown || window.isSortingDay) return; 
                 e.preventDefault();
                 const x = e.pageX - slider.offsetLeft;
                 const walk = (x - startX) * 1.5; 
