@@ -68,8 +68,27 @@ const App = {
         document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
         this.setupSpacebarNavigation();
         
-        this.attachDragScroll('#dayBar'); // <--- ПІДКЛЮЧАЄМО СКРОЛ ТУТ
-    },
+        this.attachDragScroll('#dayBar'); // <--- Цей рядок у тебе вже є
+        
+        // --- ДОДАЄМО DRAG & DROP ДЛЯ ДНІВ ---
+        const dayBarContainer = document.getElementById('dayBar');
+        if (dayBarContainer) {
+            Sortable.create(dayBarContainer, {
+                animation: 200,
+                direction: 'horizontal',
+                draggable: '.day-tab', // Тягаємо тільки дні (ігноруємо кнопку "+")
+                delay: 250, // Затримка 250мс (довге натискання), щоб не ламати звичайний скрол
+                delayOnTouchOnly: true, // Робимо затримку тільки для телефонів
+                ghostClass: 'sortable-ghost-day',
+                onEnd: (evt) => {
+                    if (evt.oldIndex !== evt.newIndex) {
+                        this.reorderDays(evt.oldIndex, evt.newIndex);
+                        if(window.Haptics) window.Haptics.light();
+                    }
+                }
+            });
+        }
+    }, // <-- Це кінець функції init()
 
     // --- ПЛАВНИЙ ПК-СКРОЛ ТА СВАЙП ---
     attachDragScroll(selector) {
@@ -615,6 +634,18 @@ const App = {
         this.render(false);
     },
 
+    reorderDays(oldIdx, newIdx) {
+        // Запобіжник: якщо перетягнули на ту ж позицію або замість кнопки "+"
+        if (oldIdx === newIdx || newIdx >= this.data.days.length || oldIdx >= this.data.days.length) return;
+        
+        this.pushHistory();
+        // Вирізаємо день зі старої позиції і вставляємо на нову
+        const movedDay = this.data.days.splice(oldIdx, 1)[0];
+        this.data.days.splice(newIdx, 0, movedDay);
+        
+        this.save();
+        this.renderDaysBar();
+    },
     reorderFoods(mId, oldIdx, newIdx) {
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mId);
