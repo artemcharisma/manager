@@ -543,10 +543,13 @@ const App = {
             html = `<div style="text-align:center; color:#666; padding:20px;">Немає прийомів їжі</div>`;
         } else {
             day.meals.forEach((m, mIdx) => {
+                const mealNum = mIdx + 1; // Динамічний номер прийому
                 html += `
                 <div style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
-                        <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">${m.name}</b>
+                        <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase; display:flex; gap:6px;">
+                            <span style="color:#666;">${mealNum}.</span> <span>${m.name}</span>
+                        </b>
                         <div style="display:flex; gap:6px;">
                             <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, -1, true)">↑</button>
                             <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, 1, true)">↓</button>
@@ -556,9 +559,12 @@ const App = {
                 if (m.foods.length > 0) {
                     html += `<div style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
                     m.foods.forEach((f, fIdx) => {
+                        const foodNum = fIdx + 1; // Динамічний номер продукту
                         html += `
                         <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
-                            <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">${f.n}</span>
+                            <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px; display:flex; gap:6px;">
+                                <span style="color:#555; font-family:var(--font-mono);">${mealNum}.${foodNum}</span> <span>${f.n}</span>
+                            </span>
                             <div style="display:flex; gap:6px;">
                                 <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, -1)">↑</button>
                                 <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, 1)">↓</button>
