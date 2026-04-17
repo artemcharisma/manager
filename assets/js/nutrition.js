@@ -541,76 +541,90 @@ const App = {
         let html = '';
         if(day.meals.length === 0) {
             html = `<div style="text-align:center; color:#666; padding:20px;">Немає прийомів їжі</div>`;
-        } else {
-            day.meals.forEach((m, mIdx) => {
-                const mealNum = mIdx + 1; // Динамічний номер прийому
-                html += `
-                <div style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
-                        <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase; display:flex; gap:6px;">
-                            <span style="color:#666;">${mealNum}.</span> <span>${m.name}</span>
-                        </b>
-                        <div style="display:flex; gap:6px;">
-                            <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, -1, true)">↑</button>
-                            <button class="btn-mini icon-only" style="width:32px;height:32px;" onclick="App.moveMeal(${m.id}, 1, true)">↓</button>
-                        </div>
-                    </div>`;
-                
-                if (m.foods.length > 0) {
-                    html += `<div style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
-                    m.foods.forEach((f, fIdx) => {
-                        const foodNum = fIdx + 1; // Динамічний номер продукту
-                        html += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
-                            <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px; display:flex; gap:6px;">
-                                <span style="color:#555; font-family:var(--font-mono);">${mealNum}.${foodNum}</span> <span>${f.n}</span>
-                            </span>
-                            <div style="display:flex; gap:6px;">
-                                <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, -1)">↑</button>
-                                <button class="btn-mini icon-only" style="width:28px;height:28px;font-size:0.9rem;" onclick="App.moveFood(${m.id}, ${fIdx}, 1)">↓</button>
-                            </div>
-                        </div>`;
-                    });
-                    html += `</div>`;
-                }
-                html += `</div>`;
-            });
+            container.innerHTML = html;
+            return;
         }
+
+        // Рендеримо HTML з іконками-ручками (≡) замість кнопок
+        day.meals.forEach((m) => {
+            html += `
+            <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
+                    <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">${m.name}</b>
+                    <div class="drag-handle-meal" style="cursor:grab; font-size:1.8rem; color:#666; padding:0 10px; line-height:0.8;">≡</div>
+                </div>`;
+            
+            if (m.foods.length > 0) {
+                html += `<div class="food-sort-list" id="food-sort-${m.id}" style="display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid #333;">`;
+                m.foods.forEach((f) => {
+                    html += `
+                    <div class="food-sort-item" style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;">
+                        <span style="color:#ccc; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">${f.n}</span>
+                        <div class="drag-handle-food" style="cursor:grab; font-size:1.5rem; color:#555; padding:0 10px; line-height:0.8;">≡</div>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+            html += `</div>`;
+        });
+        
         container.innerHTML = html;
+
+        // Ініціалізуємо Drag & Drop для Прийомів їжі
+        Sortable.create(container, {
+            handle: '.drag-handle-meal', // Тягнути можна тільки за іконку ≡
+            animation: 250, // Плавна анімація
+            ghostClass: 'sortable-ghost', // Клас для елемента, який тягнеться
+            onEnd: (evt) => {
+                if (evt.oldIndex !== evt.newIndex) {
+                    this.reorderMeals(evt.oldIndex, evt.newIndex);
+                    if(window.Haptics) window.Haptics.light(); // Віддача при успішному переміщенні
+                }
+            }
+        });
+
+        // Ініціалізуємо Drag & Drop для Продуктів всередині кожного прийому
+        day.meals.forEach(m => {
+            if (m.foods.length > 1) { // Немає сенсу сортувати, якщо продукт один
+                const foodContainer = document.getElementById(`food-sort-${m.id}`);
+                Sortable.create(foodContainer, {
+                    handle: '.drag-handle-food',
+                    animation: 250,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: (evt) => {
+                        if (evt.oldIndex !== evt.newIndex) {
+                            this.reorderFoods(m.id, evt.oldIndex, evt.newIndex);
+                            if(window.Haptics) window.Haptics.light();
+                        }
+                    }
+                });
+            }
+        });
     },
 
-    moveMeal(id, dir, inEditor = false) {
+    reorderMeals(oldIdx, newIdx) {
         const day = this.getCurrentDay();
-        const idx = day.meals.findIndex(m => m.id === id);
-        if (idx < 0) return;
-        const newIdx = idx + dir;
-        if (newIdx < 0 || newIdx >= day.meals.length) return;
+        if (!day) return;
         
         this.pushHistory();
-        const temp = day.meals[idx];
-        day.meals[idx] = day.meals[newIdx];
-        day.meals[newIdx] = temp;
+        // Вирізаємо елемент зі старої позиції і вставляємо на нову
+        const movedMeal = day.meals.splice(oldIdx, 1)[0];
+        day.meals.splice(newIdx, 0, movedMeal);
         
         this.save();
-        if (inEditor) this.renderOrderEditor();
         this.render(false);
     },
 
-    moveFood(mId, fIdx, dir) {
+    reorderFoods(mId, oldIdx, newIdx) {
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mId);
         if (!meal) return;
         
-        const newIdx = fIdx + dir;
-        if (newIdx < 0 || newIdx >= meal.foods.length) return;
-        
         this.pushHistory();
-        const temp = meal.foods[fIdx];
-        meal.foods[fIdx] = meal.foods[newIdx];
-        meal.foods[newIdx] = temp;
+        const movedFood = meal.foods.splice(oldIdx, 1)[0];
+        meal.foods.splice(newIdx, 0, movedFood);
         
         this.save();
-        this.renderOrderEditor();
         this.render(false);
     },
     render(animate = true) {
