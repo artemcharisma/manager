@@ -391,14 +391,32 @@
                 if (nu && nu.days && nu.days.length > 0) {
                     const bank = nu.bank || {}; 
                     let htmlContent = '';
-                    const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
-                    let trainDay = findDay(['трен', 'train', 'робоч', 'важк']) || nu.days[0];
-                    let restDay = findDay(['відпоч', 'рест', 'rest', 'off', 'вихідн']) || (nu.days.length > 1 ? nu.days[1] : null);
+                    
+                    let trainDay = null;
+                    let restDay = null;
 
-                    if (restDay && trainDay.id === restDay.id && nu.days.length > 1) {
-                        restDay = nu.days.find(d => d.id !== trainDay.id);
+                    // 1. Спочатку шукаємо дні, які ти закріпив вручну
+                    if (nu.hub) {
+                        trainDay = nu.days.find(d => d.id === nu.hub.train);
+                        restDay = nu.days.find(d => d.id === nu.hub.rest);
                     }
 
+                    // 2. Якщо вручну не закріплено - шукаємо за ключовими словами (стара логіка для страховки)
+                    if (!trainDay && (!nu.hub || !nu.hub.train)) {
+                        const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
+                        trainDay = findDay(['трен', 'train', 'робоч', 'важк']) || nu.days[0];
+                    }
+                    if (!restDay && (!nu.hub || !nu.hub.rest)) {
+                        const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
+                        restDay = findDay(['відпоч', 'рест', 'rest', 'off', 'вихідн']) || (nu.days.length > 1 ? nu.days[1] : null);
+                        
+                        // Захист від дублювання, якщо програма знайшла один і той самий день
+                        if (restDay && trainDay && trainDay.id === restDay.id && nu.days.length > 1) {
+                            restDay = nu.days.find(d => d.id !== trainDay.id);
+                        }
+                    }
+
+                    // Рендеримо дані
                     if (trainDay) {
                         const d1 = getDayMacros(trainDay, bank);
                         if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
@@ -415,7 +433,7 @@
                 } else if (el) {
                     el.innerHTML = `<span class="data-lbl">НЕМАЄ ДАНИХ</span>`;
                 }
-            } catch(e){}
+            } catch(e){ console.error(e); }
         }
 
         // ДОДАНО: 'protocol_global_vitals' для збереження історії тиску/ваги
