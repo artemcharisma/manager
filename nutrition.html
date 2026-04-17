@@ -155,7 +155,7 @@
         /* --- ШАПКА ДНЯ ТА КНОПКИ ДІЙ --- */
         .day-control-panel { display: flex; justify-content: space-between; padding: 0 5px 15px 5px; align-items: flex-start; gap: 15px; }
         .day-title-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; flex: 1; min-width: 0; }
-        .day-title-display { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.1; width: 100%; }
+        .day-title-.day-title-display { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; white-space: normal; word-break: break-word; margin: 0; line-height: 1.1; width: 100%; }
         .day-subtitle-display {
             font-size: 0.75rem; color: var(--theme); font-family: var(--font-mono); font-weight: 800;
             letter-spacing: 1px; text-transform: uppercase; background: rgba(212, 175, 55, 0.1);
@@ -397,10 +397,10 @@
         </div>
         
         <div class="day-action-buttons">
-             <button class="btn-mini" onclick="App.openOrderEditor()">↕ ПОРЯДОК</button>
-             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()">✎</button>
-             <button class="btn-mini" onclick="App.duplicateDay()">❐ Копія</button>
-             <button class="btn-mini icon-only del-day" onclick="App.deleteDay()">🗑</button>
+             <button class="btn-mini icon-only" style="font-size:1.1rem;" onclick="App.openOrderEditor()" title="Порядок">↕</button>
+             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()" title="Редагувати">✎</button>
+             <button class="btn-mini icon-only" onclick="App.duplicateDay()" title="Дублювати">❐</button>
+             <button class="btn-mini icon-only del-day" onclick="App.deleteDay()" title="Видалити">🗑</button>
         </div>
     </div>
 
