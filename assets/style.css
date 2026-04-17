@@ -245,6 +245,12 @@ input, textarea, [contenteditable="true"] {
     user-select: text !important;
     cursor: text !important;
 }
+/* Ефект для елемента, який зараз перетягують */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #000 !important;
+    border: 1px dashed var(--theme) !important;
+}
 
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
 
