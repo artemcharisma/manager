@@ -375,8 +375,8 @@ const App = {
         document.getElementById('inpDayTitle').value = title;
         document.getElementById('inpDaySub').value = sub;
         
-        // ДОДАНО: Рендеримо список сортування перед відкриттям вікна
         this.renderDaySorter();
+        this.updateHubButtonsUI(); // Оновлюємо колір кнопок Хабу при відкритті
         
         document.getElementById('dayEditModal').style.display = 'flex';
         
@@ -399,6 +399,51 @@ const App = {
         this.closeModal();
     },
 
+    setHubDay(type) {
+        this.pushHistory();
+        const dayId = this.state.currentDayId;
+        
+        if (!this.data.hub) this.data.hub = { train: null, rest: null };
+        
+        if (type === 'train') {
+            if (this.data.hub.train === dayId) this.data.hub.train = null;
+            else { 
+                this.data.hub.train = dayId; 
+                if (this.data.hub.rest === dayId) this.data.hub.rest = null; 
+            }
+        } else {
+            if (this.data.hub.rest === dayId) this.data.hub.rest = null;
+            else { 
+                this.data.hub.rest = dayId; 
+                if (this.data.hub.train === dayId) this.data.hub.train = null; 
+            }
+        }
+        
+        this.save();
+        this.updateHubButtonsUI();
+        if(window.Haptics) window.Haptics.light();
+    },
+
+    updateHubButtonsUI() {
+        const btnT = document.getElementById('btnHubTrain');
+        const btnR = document.getElementById('btnHubRest');
+        if (!btnT || !btnR) return;
+        
+        const dayId = this.state.currentDayId;
+        const hub = this.data.hub || { train: null, rest: null };
+        
+        if (hub.train === dayId) {
+            btnT.style.borderColor = 'var(--theme)'; btnT.style.color = 'var(--theme)'; btnT.style.background = 'rgba(212, 175, 55, 0.15)';
+        } else {
+            btnT.style.borderColor = '#444'; btnT.style.color = '#aaa'; btnT.style.background = 'transparent';
+        }
+        
+        if (hub.rest === dayId) {
+            btnR.style.borderColor = 'var(--theme)'; btnR.style.color = 'var(--theme)'; btnR.style.background = 'rgba(212, 175, 55, 0.15)';
+        } else {
+            btnR.style.borderColor = '#444'; btnR.style.color = '#aaa'; btnR.style.background = 'transparent';
+        }
+    },
     moveDay(dir) {
         // Знаходимо індекс поточного дня у масиві
         const idx = this.data.days.findIndex(d => d.id === this.state.currentDayId);
