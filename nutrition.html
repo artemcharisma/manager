@@ -492,22 +492,17 @@
 </div>
 
 <div id="orderModal" class="modal-overlay">
-    <div class="modal-card" style="max-height: 85%; display: flex; flex-direction: column; padding-bottom: 25px;">
-        
-        <div class="mc-header" style="flex-shrink: 0;">
-            <h3 class="mc-title">↕ ПОРЯДОК</h3>
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">↕ РЕДАКТОР ПОРЯДКУ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
-        
-        <div style="font-size:0.75rem; color:#888; margin-bottom:10px; text-align:center; font-family:var(--font-mono); flex-shrink: 0;">
-            Затисніть ≡ для переміщення
+        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; text-align:center; font-family:var(--font-mono);">
+            Змінюйте порядок прийомів їжі та продуктів.
         </div>
-        
-        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; flex-shrink: 1; overflow-y: auto; padding-bottom: 5px; min-height: 0; -webkit-overflow-scrolling: touch;"></div>
-        
-        <button class="btn-primary" style="margin-top:10px; flex-shrink: 0;" onclick="App.closeModal()">ГОТОВО</button>
+        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; max-height:45vh; overflow-y:auto; padding-bottom:10px;"></div>
+        <button class="btn-primary" style="margin-top:10px;" onclick="App.closeModal()">ГОТОВО</button>
     </div>
-</div>
 </div>
 <div id="foodModal" class="modal-overlay">
     <div class="modal-card">
