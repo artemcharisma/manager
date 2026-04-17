@@ -71,22 +71,22 @@ const App = {
         this.attachDragScroll('#dayBar'); // <--- Цей рядок у тебе вже є
         
         // --- ДОДАЄМО DRAG & DROP ДЛЯ ДНІВ ---
-        // --- ДОДАЄМО DRAG & DROP ДЛЯ ДНІВ ---
         const dayBarContainer = document.getElementById('dayBar');
         if (dayBarContainer) {
             Sortable.create(dayBarContainer, {
                 animation: 200,
                 direction: 'horizontal',
                 draggable: '.day-tab', 
-                delay: 300, // 300мс для довгого натискання
-                delayOnTouchOnly: false, // Тепер затримка працює скрізь (і на ПК, і на iOS)
-                fallbackTolerance: 5, // ФІКС: якщо зрушити на 5px до закінчення затримки — спрацює скрол!
+                delay: 300, 
+                delayOnTouchOnly: false, 
+                fallbackTolerance: 5,
+                chosenClass: 'sortable-chosen-day', // <--- ДОДАНО ЦЕЙ РЯДОК
                 ghostClass: 'sortable-ghost-day',
                 onStart: function () {
-                    window.isSortingDay = true; // Кажемо скролу зупинитись
+                    window.isSortingDay = true; 
                 },
                 onEnd: (evt) => {
-                    window.isSortingDay = false; // Дозволяємо скролу працювати знову
+                    window.isSortingDay = false; 
                     if (evt.oldIndex !== evt.newIndex) {
                         this.reorderDays(evt.oldIndex, evt.newIndex);
                         if(window.Haptics) window.Haptics.light();
