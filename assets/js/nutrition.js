@@ -619,10 +619,10 @@ const App = {
             return;
         }
 
-        // Рендеримо HTML з іконками-ручками (≡) замість кнопок
+        // Рендеримо HTML (прибрали зайвий margin-bottom)
         day.meals.forEach((m) => {
             html += `
-            <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px; margin-bottom:10px;">
+            <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
                     <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">${m.name}</b>
                     <div class="drag-handle-meal" style="cursor:grab; font-size:1.8rem; color:#666; padding:0 10px; line-height:0.8;">≡</div>
@@ -646,25 +646,29 @@ const App = {
 
         // Ініціалізуємо Drag & Drop для Прийомів їжі
         Sortable.create(container, {
-            handle: '.drag-handle-meal', // Тягнути можна тільки за іконку ≡
-            animation: 250, // Плавна анімація
-            ghostClass: 'sortable-ghost', // Клас для елемента, який тягнеться
+            handle: '.drag-handle-meal',
+            animation: 250,
+            ghostClass: 'sortable-ghost',
+            delay: 150, // Мікро-затримка перед перетягуванням (щоб не плутати зі скролом)
+            delayOnTouchOnly: true, // Працює тільки на сенсорних екранах
             onEnd: (evt) => {
                 if (evt.oldIndex !== evt.newIndex) {
                     this.reorderMeals(evt.oldIndex, evt.newIndex);
-                    if(window.Haptics) window.Haptics.light(); // Віддача при успішному переміщенні
+                    if(window.Haptics) window.Haptics.light();
                 }
             }
         });
 
-        // Ініціалізуємо Drag & Drop для Продуктів всередині кожного прийому
+        // Ініціалізуємо Drag & Drop для Продуктів
         day.meals.forEach(m => {
-            if (m.foods.length > 1) { // Немає сенсу сортувати, якщо продукт один
+            if (m.foods.length > 1) {
                 const foodContainer = document.getElementById(`food-sort-${m.id}`);
                 Sortable.create(foodContainer, {
                     handle: '.drag-handle-food',
                     animation: 250,
                     ghostClass: 'sortable-ghost',
+                    delay: 150,
+                    delayOnTouchOnly: true,
                     onEnd: (evt) => {
                         if (evt.oldIndex !== evt.newIndex) {
                             this.reorderFoods(m.id, evt.oldIndex, evt.newIndex);
