@@ -1173,16 +1173,16 @@ const App = {
                 const pillId = `${this.state.week}-${i}-${idx}`;
                 
                 const isDone = m.done ? 'opacity: 0.35; filter: grayscale(1); transform: scale(0.98); border-color: transparent;' : '';
-                const checkIcon = m.done ? `<div style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>` : '';
-                
-                const textPointer = this.state.editing ? 'auto' : 'none';
-                const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
-                const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
-                
-                const isMenuOpen = this.state.openMenu === pillId;
+const checkIcon = m.done ? `<div class="done-check-icon" style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>` : '';
 
-                return `
-                <div class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
+const textPointer = this.state.editing ? 'auto' : 'none';
+const innerStop = this.state.editing ? 'onclick="event.stopPropagation()"' : '';
+const clickAction = this.state.editing ? '' : `onclick="App.togglePillDone(${this.state.week}, ${i}, ${idx})"`;
+
+const isMenuOpen = this.state.openMenu === pillId;
+
+return `
+<div id="pill-node-${this.state.week}-${i}-${idx}" class="pill ${m.color}" style="position:relative; display:flex; align-items:center; width:100%; ${isDone} cursor:pointer; transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); z-index:${isMenuOpen ? '9999' : '1'};" ${clickAction}>
                     ${checkIcon}
                     <div style="flex:1; pointer-events:${textPointer}; display:flex; flex-direction:column; justify-content:center; padding-right:10px;">
                         <div contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'name',this.innerText)" ${innerStop} style="font-weight:600; line-height:1.2;">${m.name}</div>
@@ -2189,12 +2189,36 @@ const App = {
 
 
     togglePillDone(w, d, i) {
-        if (this.state.editing) return; 
-        this.pushHistory();
+        if (this.state.editing) return;
+        
+        // Видалено this.pushHistory(), щоб не забивати LocalStorage змінами чекбоксів
+        
         const pill = this.data.schedule[w][d][i];
-        pill.done = !pill.done; 
-        this.save();
-        this.renderView();
+        pill.done = !pill.done;
+        this.save(); // Асинхронне збереження стану
+
+        // Точкова мутація DOM замість this.renderView()
+        const pillNode = document.getElementById(`pill-node-${w}-${d}-${i}`);
+        if (pillNode) {
+            if (pill.done) {
+                pillNode.style.opacity = '0.35';
+                pillNode.style.filter = 'grayscale(1)';
+                pillNode.style.transform = 'scale(0.98)';
+                pillNode.style.borderColor = 'transparent';
+                
+                if (!pillNode.querySelector('.done-check-icon')) {
+                    pillNode.insertAdjacentHTML('afterbegin', `<div class="done-check-icon" style="position:absolute; right:-8px; top:-8px; background:var(--green); color:#000; border-radius:50%; width:22px; height:22px; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,0.8);">✓</div>`);
+                }
+            } else {
+                pillNode.style.opacity = '';
+                pillNode.style.filter = '';
+                pillNode.style.transform = '';
+                pillNode.style.borderColor = '';
+                const icon = pillNode.querySelector('.done-check-icon');
+                if (icon) icon.remove();
+            }
+        }
+
         if (pill.done && window.Haptics) window.Haptics.success();
         else if (window.Haptics) window.Haptics.light();
     },
