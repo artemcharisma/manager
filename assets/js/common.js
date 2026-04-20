@@ -154,14 +154,6 @@ const Modal = {
         });
     },
 
-    handleOK() {
-        if (this._handleKeyDown) document.removeEventListener('keydown', this._handleKeyDown);
-        const type = this.inputWrap.style.display === 'block' ? 'prompt' : (this.btnCancel.style.display === 'flex' ? 'confirm' : 'alert');
-        this.close();
-        if (type === 'prompt') modalResolve(this.input.value);
-        else modalResolve(true);
-    },
-
     handleCancel() {
         if (this._handleKeyDown) {
             document.removeEventListener('keydown', this._handleKeyDown);
