@@ -1027,6 +1027,29 @@ const App = {
         }
     },
 
+    stopTimer() {
+        if(this.timerState.interval) clearInterval(this.timerState.interval);
+        
+        const oldKey = this.timerState.currentExKey; // Зберігаємо ключ кнопки
+        
+        this.timerState.interval = null;
+        this.timerState.endTime = null; 
+        this.timerState.currentExKey = null; 
+        
+        this.timerState.el.style.background = 'rgba(20, 20, 22, 0.95)';
+        this.timerState.el.style.color = 'var(--theme, #d4af37)';
+        this.timerState.el.style.boxShadow = '0 5px 25px rgba(0,0,0,0.8)';
+        
+        this.timerState.el.style.display = 'none';
+        this.timerState.left = this.timerState.default;
+        
+        // ФІКС: Скидаємо тільки конкретну кнопку замість this.render()
+        if (oldKey) {
+            const parts = oldKey.split('-');
+            this.updateExTimerButton(parts[0], parts[1], parts[2], false);
+        }
+    },
+
     startTimer(seconds, exKey = null) {
         this.stopTimer();
         this.timerState.left = seconds;
@@ -1053,13 +1076,23 @@ const App = {
 
             if (this.timerState.left <= 0) {
                 clearInterval(this.timerState.interval);
+                
+                const oldKey = this.timerState.currentExKey; // Запам'ятовуємо ключ
+                
                 this.timerState.interval = null;
                 this.timerState.endTime = null;
+                this.timerState.currentExKey = null;
                 
                 this.timerState.el.style.background = 'var(--success)';
                 this.timerState.el.style.color = '#fff';
                 this.timerState.el.style.boxShadow = '0 0 25px var(--success)';
                 this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
+                
+                // ФІКС: Повертаємо кнопку вправи у звичайний стан після завершення часу
+                if (oldKey) {
+                    const parts = oldKey.split('-');
+                    this.updateExTimerButton(parts[0], parts[1], parts[2], false);
+                }
                 
                 if ("Notification" in window && Notification.permission === "granted") {
                     new Notification("Час відпочинку вийшов!", { body: "Пора робити наступний підхід", icon: "icon.png", vibrate: [200, 100, 200] });
@@ -1071,21 +1104,6 @@ const App = {
                 setTimeout(() => { if(!this.timerState.interval) this.timerState.el.style.display = 'none'; }, 5000);
             }
         }, 250); 
-    },
-
-    stopTimer() {
-        if(this.timerState.interval) clearInterval(this.timerState.interval);
-        this.timerState.interval = null;
-        this.timerState.endTime = null; 
-        this.timerState.currentExKey = null; 
-        
-        this.timerState.el.style.background = 'rgba(20, 20, 22, 0.95)';
-        this.timerState.el.style.color = 'var(--theme, #d4af37)';
-        this.timerState.el.style.boxShadow = '0 5px 25px rgba(0,0,0,0.8)';
-        
-        this.timerState.el.style.display = 'none';
-        this.timerState.left = this.timerState.default;
-        this.render(); 
     },
 
     updateTimerUI() {
@@ -1119,7 +1137,23 @@ const App = {
             }
         }
     },
-        
+
+    updateExTimerButton(w, d, e, isRunning) {
+        const btn = document.getElementById(`timer-btn-${w}-${d}-${e}`);
+        if (!btn) return;
+        const exTime = this.data.weeks[w].days[d].exercises[e].t || (this.timerState ? this.timerState.default : 90);
+        if (isRunning) {
+            btn.className = "ex-timer-btn active-timer";
+            btn.style.cssText = "touch-action: manipulation; user-select: none; background: var(--success); color: #fff; border-color: var(--success);";
+            btn.innerHTML = "⏳ Іде відпочинок";
+            btn.onclick = () => App.stopTimer();
+        } else {
+            btn.className = "ex-timer-btn";
+            btn.style.cssText = "touch-action: manipulation; user-select: none;";
+            btn.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:4px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${exTime}s`;
+            btn.onclick = () => App.handleTimerClick(w, d, e, exTime);
+        }
+    },
     _timerTaps: {},
     handleTimerClick(w, d, e, time) {
         const key = `${w}-${d}-${e}`;
@@ -1131,7 +1165,8 @@ const App = {
             this._timerTaps[key] = setTimeout(() => {
                 this._timerTaps[key] = null;
                 this.startTimer(time, key); 
-                this.render(); 
+                // ФІКС: Точкове оновлення інтерфейсу без перемальовування всього екрану
+                this.updateExTimerButton(w, d, e, true); 
             }, 250);
         }
     },
