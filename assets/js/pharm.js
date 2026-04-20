@@ -1338,32 +1338,22 @@ return `
                     if(!pill.name || !pill.dose) return;
                     
                     const name = pill.name.trim().toUpperCase(); 
-                    const doseStr = pill.dose.trim().toLowerCase();
+                    const parsed = this.parseDose(pill.dose);
                     
-                    const match = doseStr.match(/(\d+([.,]\d+)?)/);
-                    if (match) {
-                        const val = parseFloat(match[0].replace(',', '.'));
-                        if(isNaN(val)) return;
+                    if (parsed) {
+                        const detKey = `${name}_${parsed.unit}`;
+                        if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: parsed.unit };
+                        details[detKey].val += parsed.val;
 
-                        let unit = 'mg';
-                        if(doseStr.includes('iu') || doseStr.includes('од')) unit = 'IU';
-                        else if(doseStr.includes('mcg') || doseStr.includes('мкг')) unit = 'mcg';
-                        else if(doseStr.includes('ml') || doseStr.includes('мл')) unit = 'ml';
-                        else if(doseStr.includes('tab') || doseStr.includes('таб')) unit = 'tab';
-
-                        const detKey = `${name}_${unit}`;
-                        if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: unit };
-                        details[detKey].val += val;
-
-                        if (unit === 'mg') {
+                        if (parsed.unit === 'mg') {
                             const nLow = name.toLowerCase();
-                            // ФІКС: Звідси видалено enan, cyp, prop. Тільки чиста база!
+                            // ФІКС: Тільки чиста база
                             const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('omna');
                             
                             if(isTest) {
-                                weekTest += val;
+                                weekTest += parsed.val;
                             } else {
-                                weekOther += val;
+                                weekOther += parsed.val;
                             }
                         }
                     }
@@ -1804,7 +1794,31 @@ return `
         this.unlockScroll();
         // ВАЖЛИВО: Видалено зняття privacy-locked, щоб не ламати безпеку!
     },
-    
+    _doseCache: {},
+    parseDose(doseStr) {
+        if (!doseStr) return null;
+        const normalized = doseStr.trim().toLowerCase();
+        
+        // Віддаємо з кешу, якщо вже рахували
+        if (this._doseCache[normalized]) return this._doseCache[normalized];
+
+        const match = normalized.match(/(\d+([.,]\d+)?)/);
+        if (!match) return null;
+
+        const val = parseFloat(match[0].replace(',', '.'));
+        if (isNaN(val)) return null;
+
+        let unit = "mg"; 
+        if(normalized.includes("iu") || normalized.includes("од")) unit = "IU"; 
+        else if(normalized.includes("mcg") || normalized.includes("мкг")) unit = "mcg";
+        else if(normalized.includes("ml") || normalized.includes("мл")) unit = "ml";
+        else if(normalized.includes("tab") || normalized.includes("таб")) unit = "tab";
+
+        const result = { val, unit };
+        // Записуємо в кеш
+        this._doseCache[normalized] = result;
+        return result;
+    },
     calc(week) {
         const stats = {};
         if(!this.data.schedule[week]) return stats;
@@ -1812,30 +1826,16 @@ return `
         this.data.schedule[week].forEach(d => d.forEach(p => {
             if(!p.name || !p.dose) return;
             
-            const match = p.dose.match(/(\d+([.,]\d+)?)/);
-            if (match) {
-                const valStr = match[0].replace(',', '.');
-                const val = parseFloat(valStr);
+            const parsed = this.parseDose(p.dose);
+            if (parsed) { 
+                const name = p.name.trim().toUpperCase(); 
+                const key = `${name}_${parsed.unit}`; 
 
-                if(!isNaN(val)) { 
-                    const name = p.name.trim().toUpperCase(); 
-                    const dLow = p.dose.trim().toLowerCase();
-                    
-                    // Відрізаємо mg від ml 
-                    let u = "mg"; 
-                    if(dLow.includes("iu") || dLow.includes("од")) u = "IU"; 
-                    else if(dLow.includes("mcg") || dLow.includes("мкг")) u = "mcg";
-                    else if(dLow.includes("ml") || dLow.includes("мл")) u = "ml";
-                    else if(dLow.includes("tab") || dLow.includes("таб")) u = "tab";
-
-                    const key = `${name}_${u}`; 
-
-                    if(!stats[key]) {
-                        let colorName = (p.color || 'c-yellow').replace('c-', '');
-                        stats[key] = { rawName: name, v: 0, u: u, c: colorName }; 
-                    }
-                    stats[key].v += val; 
+                if(!stats[key]) {
+                    let colorName = (p.color || 'c-yellow').replace('c-', '');
+                    stats[key] = { rawName: name, v: 0, u: parsed.unit, c: colorName }; 
                 }
+                stats[key].v += parsed.val; 
             }
         }));
         return stats;
