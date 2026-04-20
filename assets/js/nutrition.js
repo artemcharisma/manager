@@ -875,6 +875,10 @@ const App = {
     renderDaysBar() {
         const bar = document.getElementById('dayBar');
         if(!bar) return;
+        
+        // ФІКС: Запам'ятовуємо поточну позицію скролу
+        const currentScroll = bar.scrollLeft;
+        
         bar.innerHTML = '';
         
         this.data.days.forEach(d => {
@@ -908,6 +912,9 @@ const App = {
         addBtn.style.cursor = 'pointer';
         addBtn.onclick = () => App.addDay();
         bar.appendChild(addBtn);
+
+        // ФІКС: Відновлюємо позицію скролу після оновлення DOM
+        bar.scrollLeft = currentScroll;
     },
     updateStats() {
         const day = this.getCurrentDay();
@@ -1036,7 +1043,11 @@ const App = {
         const list = document.getElementById('sugg-list');
         list.innerHTML = '';
         if(q.length < 1) { list.style.display='none'; return; }
-        const matches = Object.keys(this.data.bank).filter(k => k.toLowerCase().includes(q.toLowerCase()));
+        
+        // ОПТИМІЗАЦІЯ: Кешуємо запит один раз, щоб не робити це в циклі
+        const query = q.toLowerCase(); 
+        const matches = Object.keys(this.data.bank).filter(k => k.toLowerCase().includes(query));
+        
         if(matches.length) {
             list.style.display = 'block';
             matches.slice(0, 5).forEach(n => {
@@ -1276,9 +1287,12 @@ const App = {
 
     renderBank(filter = "") {
         const l = document.getElementById('bankList');
+        const query = filter.toLowerCase(); // Кешуємо пошуковий запит
+        
         l.innerHTML = Object.entries(this.data.bank)
-            .filter(([n]) => n.toLowerCase().includes(filter.toLowerCase()))
-            .sort()
+            .filter(([n]) => n.toLowerCase().includes(query))
+            // ОПТИМІЗАЦІЯ: Правильне лексикографічне сортування замість дефолтного
+            .sort((a, b) => a[0].localeCompare(b[0])) 
             .map(([n,v]) => `
             <div class="bank-row" onclick="App.openBankEdit('${n.replace(/'/g, "\\'")}')">
                 <div class="bank-info">
