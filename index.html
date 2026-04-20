@@ -503,52 +503,51 @@
         }
 
         async function SystemReset() {
+            // ФІКС: Прямі синхронні кнопки в HTML модалки для обходу блокування iOS
             const promptText = `
                 <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                    <div style="text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; gap: 8px;"><span style="color: var(--gold); font-weight: 700; white-space: nowrap;">[ 1 ]</span> <span>- ІМПОРТ з файлу (.json)</span></div>
-                        <div style="display: flex; gap: 8px;"><span style="color: var(--red); font-weight: 700; white-space: nowrap;">[ 2 ]</span> <span>- ВИДАЛИТИ ВСІ ДАНІ</span></div>
-                    </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="document.getElementById('sys-restore-file').click(); Modal.handleCancel();" style="background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: var(--gold); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">📥 ІМПОРТ З ФАЙЛУ (.json)</button>
+                    <button onclick="Modal.handleOK()" style="background: rgba(239,68,68,0.1); border: 1px solid var(--red); color: var(--red); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">🗑 ВИДАЛИТИ ВСІ ДАНІ</button>
                 </div>
             `;
-            const choice = await Modal.prompt(promptText, "СИСТЕМНИЙ ЗАПИТ", "Введіть 1 або 2");
             
-            if (choice === '1') {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.json';
-                fileInput.onchange = e => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = async (event) => {
-                        try {
-                            const imported = JSON.parse(event.target.result);
-                            if (!imported.data) throw new Error("Невірний формат. Очікується файл бекапу Protocol OS.");
-                            
-                            // Записуємо імпортовані дані назад у пам'ять
-                            for (const k of APP_KEYS) {
-                                if (imported.data[k]) {
-                                    await Utils.save(k, imported.data[k]);
-                                }
-                            }
-                            await Modal.alert("Систему успішно відновлено з файлу!", "ВІДНОВЛЕНО", "green");
-                            location.reload();
-                        } catch (err) {
-                            await Modal.alert("Помилка імпорту: " + err.message, "ПОМИЛКА", "red");
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                fileInput.click();
-            } else if (choice === '2') {
+            // Використовуємо confirm, кнопка "ОК" тригерить видалення, кнопка "Імпорт" перехоплює на себе клік по інпуту
+            const confirmedWipe = await Modal.confirm(promptText, "СИСТЕМНИЙ ЗАПИТ", "red");
+            
+            if (confirmedWipe) {
                 if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО без фізичного файлу бекапу.</span><br><br>Ви точно впевнені?", "⚠ WIPE ALL ⚠", "red")) {
                     FullWipe();
                 }
             }
         }
 
+        async function HandleRestore(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (!imported.data) throw new Error("Невірний формат. Очікується файл бекапу Protocol OS.");
+                    
+                    // Записуємо імпортовані дані назад у пам'ять
+                    for (const k of APP_KEYS) {
+                        if (imported.data[k]) {
+                            Utils.save(k, imported.data[k]); 
+                        }
+                    }
+                    await Modal.alert("Систему успішно відновлено з файлу!", "ВІДНОВЛЕНО", "green");
+                    location.reload();
+                } catch (err) {
+                    await Modal.alert("Помилка імпорту: " + err.message, "ПОМИЛКА", "red");
+                }
+            };
+            reader.readAsText(file);
+            inputElement.value = ''; // Скидаємо інпут для можливості повторного вибору
+        }
+
+        // ФІКС: Повертаємо випадково видалену функцію очищення
         async function FullWipe() { 
             localStorage.clear(); 
             try { indexedDB.deleteDatabase('ProtocolOS_DB'); } catch(e) {}
@@ -562,5 +561,6 @@
             populateSmartCards(); 
         };
     </script>
+    <input type="file" id="sys-restore-file" accept=".json" style="display:none" onchange="HandleRestore(this)">
 </body>
 </html>
