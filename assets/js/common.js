@@ -98,6 +98,11 @@ const Modal = {
     show({ title, text, type = 'alert', theme = 'gold', placeholder = '' }) {
         if(!this.overlay) this.init(); 
         
+        // КРИТИЧНИЙ ФІКС: Знищуємо попередній Promise і знімаємо лісенери, якщо вікно викликається поверх іншого
+        if (modalResolve) {
+            this.handleCancel(); 
+        }
+        
         this.header.innerText = title;
         this.text.innerHTML = text;
         this.input.value = ''; 
@@ -158,9 +163,30 @@ const Modal = {
     },
 
     handleCancel() {
-        if (this._handleKeyDown) document.removeEventListener('keydown', this._handleKeyDown);
+        if (this._handleKeyDown) {
+            document.removeEventListener('keydown', this._handleKeyDown);
+            this._handleKeyDown = null;
+        }
         this.close();
-        modalResolve(null); 
+        if (modalResolve) {
+            modalResolve(null); 
+            modalResolve = null; // Звільняємо пам'ять
+        }
+    },
+
+    handleOK() {
+        if (this._handleKeyDown) {
+            document.removeEventListener('keydown', this._handleKeyDown);
+            this._handleKeyDown = null;
+        }
+        const type = this.inputWrap.style.display === 'block' ? 'prompt' : (this.btnCancel.style.display === 'flex' ? 'confirm' : 'alert');
+        this.close();
+        
+        if (modalResolve) {
+            if (type === 'prompt') modalResolve(this.input.value);
+            else modalResolve(true);
+            modalResolve = null; // Звільняємо пам'ять
+        }
     },
 
     close() {
