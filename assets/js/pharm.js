@@ -739,15 +739,11 @@ const App = {
         };
 
         document.addEventListener('click', (e) => {
-            if(this.state.openMenu && !e.target.closest('[id^="menu-"]')) {
-                const oldId = this.state.openMenu;
-                this.state.openMenu = null;
-                const oldEl = document.getElementById(`menu-${oldId}`);
-                if(oldEl) {
-                    const name = oldEl.getAttribute('data-name') || '';
-                    const [w, d, i] = oldId.split('-');
-                    oldEl.innerHTML = this.getMenuUI(w, d, i, name, false);
-                    if(oldEl.closest('.pill')) oldEl.closest('.pill').style.zIndex = '1';
+            if (this.state.openMenu) {
+                const menuEl = document.getElementById('global-kebab-menu');
+                // Якщо клік не по меню і не по самій кнопці шестерні - закриваємо
+                if (menuEl && !menuEl.contains(e.target) && !e.target.closest('[id^="btn-kebab-"]')) {
+                    this.closeGlobalMenu();
                 }
             }
         });
@@ -1193,8 +1189,8 @@ return `
                         <span contenteditable="${this.state.editing}" onblur="App.updatePill(${this.state.week},${i},${idx},'dose',this.innerText)" style="pointer-events:${textPointer}; text-align:right; font-weight:800; font-family:'JetBrains Mono', monospace;" ${innerStop}>${m.dose}</span>
                         
                         ${this.state.editing ? `
-                            <div id="menu-${pillId}" data-name="${m.name.replace(/"/g, '&quot;')}" style="position:relative; pointer-events:auto;">
-                                ${this.getMenuUI(this.state.week, i, idx, m.name, isMenuOpen)}
+                            <div style="position:relative; pointer-events:auto;">
+                                ${this.getMenuUI(this.state.week, i, idx, m.name, false)}
                             </div>
                         ` : ''}
                     </div>
@@ -2000,64 +1996,94 @@ return `
     },
     getMenuUI(w, d, i, name, isOpen) {
         const safeName = name.replace(/'/g, "\\'"); 
-        
         const gearIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
-        const btnColor = isOpen ? 'var(--primary)' : '#888';
-        const btnBg = isOpen ? 'rgba(212,175,55,0.15)' : 'transparent';
+        // Кнопка тепер завжди однакова, без вкладеного меню
+        return `<div id="btn-kebab-${w}-${d}-${i}" onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="box-sizing: border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:#888; background:transparent; border-radius:50%; overflow:hidden; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(App.state.openMenu !== '${w}-${d}-${i}'){this.style.color='#888'}">${gearIcon}</div>`;
+    },
+
+    toggleMenu(w, d, i, name) {
+        const id = `${w}-${d}-${i}`;
+
+        // Якщо клік по тій же кнопці - закриваємо
+        if (this.state.openMenu === id) {
+            this.closeGlobalMenu();
+            return;
+        }
+
+        this.closeGlobalMenu();
+        this.state.openMenu = id;
+
+        const btn = document.getElementById(`btn-kebab-${id}`);
+        if (btn) {
+            btn.style.color = 'var(--primary)';
+            btn.style.background = 'rgba(212,175,55,0.15)';
+        }
+
+        // Створюємо глобальний контейнер, якщо його ще немає
+        let menuEl = document.getElementById('global-kebab-menu');
+        if (!menuEl) {
+            menuEl = document.createElement('div');
+            menuEl.id = 'global-kebab-menu';
+            menuEl.className = 'kebab-menu-dropdown';
+            menuEl.style.position = 'fixed';
+            menuEl.style.zIndex = '999999';
+            document.body.appendChild(menuEl);
+        }
+
+        const safeName = name.replace(/'/g, "\\'");
         
-        // ФІКС: Ідеальне коло (50%), не стискається (flex-shrink:0)
-        const btn = `<div onclick="event.stopPropagation(); App.toggleMenu(${w},${d},${i}, '${safeName}')" style="box-sizing: border-box; flex-shrink:0; display:flex; align-items:center; justify-content:center; width:30px; height:30px; cursor:pointer; color:${btnColor}; background:${btnBg}; border-radius:50%; overflow:hidden; transition:0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="if(!${isOpen}){this.style.color='#888'}">${gearIcon}</div>`;
-
-        if (!isOpen) return btn;
-
-        const dropdown = `
-            <div class="kebab-menu-dropdown">
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.copyPill(${w},${d},${i})">
-                    <span style="width:20px; text-align:center; font-size:1.1rem;">📋</span> <span>Копіювати</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.duplicatePillToPhase(${w},${d},${i})">
-                    <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--blue);">📑</span> <span>На усю фазу</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFromWeek('${safeName}', ${w})">
-                    <span style="width:20px; text-align:center; font-size:1.1rem; color:#f59e0b;">🗓️</span> <span>Видалити з тижня</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
-                    <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">🌍</span> <span>Видалити до кінця фази</span>
-                </div>
-                <div class="kebab-menu-item" onclick="event.stopPropagation(); App.delPillItem(${w},${d},${i})">
-                    <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
-                </div>
+        // Генеруємо опції
+        menuEl.innerHTML = `
+            <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.copyPill(${w},${d},${i})">
+                <span style="width:20px; text-align:center; font-size:1.1rem;">📋</span> <span>Копіювати</span>
+            </div>
+            <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.duplicatePillToPhase(${w},${d},${i})">
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--blue);">📑</span> <span>На усю фазу</span>
+            </div>
+            <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.deletePillFromWeek('${safeName}', ${w})">
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:#f59e0b;">🗓️</span> <span>Видалити з тижня</span>
+            </div>
+            <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">🌍</span> <span>Видалити до кінця фази</span>
+            </div>
+            <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.delPillItem(${w},${d},${i})">
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
             </div>
         `;
-        return btn + dropdown;
-    },
-   toggleMenu(w, d, i, name) {
-        const id = `${w}-${d}-${i}`;
-        const lastId = this.state.openMenu;
 
-        if (lastId && lastId !== id) {
-            const oldEl = document.getElementById(`menu-${lastId}`);
-            if (oldEl) {
-                const oldName = oldEl.getAttribute('data-name') || 'Item';
-                const parts = lastId.split('-');
-                if(parts.length === 3) {
-                    oldEl.innerHTML = this.getMenuUI(parts[0], parts[1], parts[2], oldName, false);
-                    // Опускаємо попередню пігулку назад
-                    if (oldEl.closest('.pill')) oldEl.closest('.pill').style.zIndex = '1';
-                }
+        // Динамічне позиціонування відносно екрану
+        if (btn) {
+            const rect = btn.getBoundingClientRect();
+            menuEl.style.display = 'flex';
+            
+            let top = rect.bottom + 5;
+            let right = window.innerWidth - rect.right;
+            
+            // Запобіжник: якщо меню не влазить знизу екрану — малюємо його над кнопкою
+            if (top + menuEl.offsetHeight > window.innerHeight) {
+                top = rect.top - menuEl.offsetHeight - 5;
             }
-        }
 
-        this.state.openMenu = (this.state.openMenu === id) ? null : id;
-        const isOpen = (this.state.openMenu === id);
-
-        const el = document.getElementById(`menu-${id}`);
-        if (el) {
-            el.innerHTML = this.getMenuUI(w, d, i, name, isOpen);
-            // Витягуємо активну пігулку поверх усіх інших, щоб уникнути блимання
-            if (el.closest('.pill')) el.closest('.pill').style.zIndex = isOpen ? '50' : '1';
+            menuEl.style.top = `${top}px`;
+            menuEl.style.right = `${right}px`;
+            menuEl.style.bottom = 'auto';
+            menuEl.style.left = 'auto';
         }
+    },
+
+    closeGlobalMenu() {
+        if (!this.state.openMenu) return;
+        
+        const oldBtn = document.getElementById(`btn-kebab-${this.state.openMenu}`);
+        if (oldBtn) {
+            oldBtn.style.color = '#888';
+            oldBtn.style.background = 'transparent';
+        }
+        
+        this.state.openMenu = null;
+        const menuEl = document.getElementById('global-kebab-menu');
+        if (menuEl) menuEl.style.display = 'none';
     },
     async deletePillFromWeek(name, w) {
         if(!(await Modal.confirm(`⚠️ ВИДАЛИТИ "${name}" з УСЬОГО тижня ${w}?`, "ОЧИЩЕННЯ ТИЖНЯ", "red"))) return;
