@@ -27,6 +27,16 @@ const App = {
     },
     state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
     history: [],
+    _sortables: [], // Кеш для об'єктів Sortable
+    _daySorter: null,
+    
+    // Функція для жорсткого знищення старих обробників
+    clearSortables() {
+        if (this._sortables && this._sortables.length > 0) {
+            this._sortables.forEach(s => { if(s && typeof s.destroy === 'function') s.destroy(); });
+        }
+        this._sortables = [];
+    },
 
     async init() {
         // КРИТИЧНИЙ ФІКС: Тепер ми чекаємо реальні дані, а не Promise
@@ -612,6 +622,9 @@ const App = {
         const container = document.getElementById('orderContainer');
         if(!day || !container) return;
 
+        // ФІКС: Жорстко знищуємо всі попередні екземпляри Sortable перед перемальовуванням
+        this.clearSortables();
+
         let html = '';
         if(day.meals.length === 0) {
             html = `<div style="text-align:center; color:#666; padding:20px;">Немає прийомів їжі</div>`;
@@ -620,7 +633,7 @@ const App = {
         }
 
         day.meals.forEach((m, mIdx) => {
-            const mealNum = mIdx + 1; // Залишаємо зручну нумерацію
+            const mealNum = mIdx + 1; 
             html += `
             <div class="meal-sort-item" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; padding:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${m.foods.length > 0 ? '10px' : '0'};">
@@ -649,27 +662,28 @@ const App = {
         
         container.innerHTML = html;
 
-        // Ініціалізація перетягування для ПРИЙОМІВ ЇЖІ
-        Sortable.create(container, {
+        // Зберігаємо екземпляр сортування прийомів їжі
+        const mealSortable = Sortable.create(container, {
             handle: '.drag-handle-meal',
             animation: 250,
             ghostClass: 'sortable-ghost',
-            delay: 150, // Затримка, щоб не конфліктувало зі звичайним скролом
+            delay: 150, 
             delayOnTouchOnly: true,
             onEnd: (evt) => {
                 if (evt.oldIndex !== evt.newIndex) {
                     this.reorderMeals(evt.oldIndex, evt.newIndex);
                     if(window.Haptics) window.Haptics.light();
-                    this.renderOrderEditor(); // Оновлюємо, щоб перерахувались цифри
+                    this.renderOrderEditor(); 
                 }
             }
         });
+        this._sortables.push(mealSortable);
 
-        // Ініціалізація перетягування для ПРОДУКТІВ
+        // Зберігаємо екземпляри сортування продуктів
         day.meals.forEach(m => {
             if (m.foods.length > 1) {
                 const foodContainer = document.getElementById(`food-sort-${m.id}`);
-                Sortable.create(foodContainer, {
+                const foodSortable = Sortable.create(foodContainer, {
                     handle: '.drag-handle-food',
                     animation: 250,
                     ghostClass: 'sortable-ghost',
@@ -679,10 +693,11 @@ const App = {
                         if (evt.oldIndex !== evt.newIndex) {
                             this.reorderFoods(m.id, evt.oldIndex, evt.newIndex);
                             if(window.Haptics) window.Haptics.light();
-                            this.renderOrderEditor(); // Оновлюємо, щоб перерахувались цифри
+                            this.renderOrderEditor(); 
                         }
                     }
                 });
+                this._sortables.push(foodSortable);
             }
         });
     },
