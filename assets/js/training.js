@@ -1510,7 +1510,7 @@ const App = {
             listHtml = list.map((r, i) => `
             <div style="background:rgba(255,255,255,0.02); border:1px solid #333; border-radius:12px; padding:12px; position:relative;">
                 
-                ${isEd ? `<div style="position:absolute; top:12px; right:12px; color:var(--danger); cursor:pointer; font-weight:bold; font-size:1.2rem; background:#000; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #333;" onclick="App.delGuideRow('${p}', '${m}',${i})">✕</div>` : ''}
+                ${isEd ? `<div style="position:absolute; top:12px; right:12px; z-index:10; color:var(--danger); cursor:pointer; font-weight:bold; font-size:1.2rem; background:#000; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #333;" onclick="event.stopPropagation(); App.delGuideRow('${p}', '${m}',${i})">✕</div>` : ''}
 
                 <div style="margin-bottom:10px; padding-right:${isEd ? '40px' : '0'}; position:relative;">
                     ${isEd ? `
@@ -1741,25 +1741,56 @@ const App = {
             this.showToast(`ℹ️ Усі вправи з розкладу вже є у довіднику`, '#3b82f6');
         }
     },
-    async copyGuideFromOther(targetP, m) {
-        const sourceP = targetP === 'balanced' ? 'arms' : 'balanced';
-        const sourceName = this.data.customNames[sourceP] || sourceP;
+    async copyGuideFromOther(targetP, targetM) {
+        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
         
-        const ok = await Modal.confirm(`Скопіювати всі описи вправ з програми "<b>${sourceName}</b>" у поточну?<br><br><small style="color:#888">Це замінить поточні дані у цьому довіднику.</small>`, "ПЕРЕНЕСЕННЯ БАЗИ");
-        
-        if (ok) {
-            this.pushHistory();
-            const sourceList = this.data.guidelines[sourceP][m] || [];
-            this.data.guidelines[targetP][m] = JSON.parse(JSON.stringify(sourceList));
-            this.save();
-            
-            // ФІКС UX: Очищаємо пошук після імпорту
-            const searchBox = document.querySelector('.guide-search');
-            if (searchBox) searchBox.value = '';
-            
-            this.renderGuide();
-            this.showToast("✅ Базу вправ перенесено!", "var(--theme)");
+        const options = [];
+        let idx = 1;
+
+        // Генеруємо список усіх доступних довідників (крім поточного)
+        Object.keys(this.data.guidelines).forEach(progKey => {
+            Object.keys(this.data.guidelines[progKey]).forEach(modeKey => {
+                if (progKey === targetP && modeKey === targetM) return; // Пропускаємо поточний, щоб не скопіювати сам в себе
+                
+                const progName = this.data.customNames[progKey] || (progKey === 'balanced' ? "ЗБАЛАНСОВАНА" : "РУКИ");
+                const modeName = modeKey.toUpperCase();
+                
+                options.push({ p: progKey, m: modeKey });
+                menuHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;">
+                    <div style="flex:0 0 30px; color:var(--theme); font-weight:bold; text-align:right; margin-right:10px; font-family:'JetBrains Mono', monospace;">${idx}.</div>
+                    <div style="flex:1;">${progName} <span style="font-size:0.7rem; color:#666;">(${modeName})</span></div>
+                </div>`;
+                idx++;
+            });
+        });
+        menuHtml += `</div>`;
+
+        if (options.length === 0) {
+            this.showToast("Немає інших довідників для копіювання", "var(--danger)");
+            return;
         }
+
+        const val = await Modal.prompt(`Оберіть цифру бази, яку хочете імпортувати сюди:<br><br><small style="color:#ef4444;">УВАГА: Це повністю замінить поточні дані у цій вкладці!</small><br><br>${menuHtml}`, "ІМПОРТ БАЗИ", "1");
+        
+        if (!val) return;
+
+        const selectedIdx = parseInt(val) - 1;
+        if (isNaN(selectedIdx) || selectedIdx < 0 || selectedIdx >= options.length) return;
+
+        const source = options[selectedIdx];
+        
+        this.pushHistory();
+        const sourceList = this.data.guidelines[source.p][source.m] || [];
+        // Робимо глибоку копію, щоб уникнути посилань на один і той же масив
+        this.data.guidelines[targetP][targetM] = JSON.parse(JSON.stringify(sourceList));
+        this.save();
+        
+        // Очищаємо пошук після імпорту
+        const searchBox = document.querySelector('.guide-search');
+        if (searchBox) searchBox.value = '';
+        
+        this.renderGuide();
+        this.showToast(`✅ Базу "${source.p.toUpperCase()} ${source.m.toUpperCase()}" успішно імпортовано!`, "var(--success)");
     },
     renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
