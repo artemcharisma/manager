@@ -1199,14 +1199,18 @@ return `
                 
             let headerBtns = '';
             if (this.state.editing) {
+                // Кнопка вставки окремого препарату
                 if (this.pillBuffer) {
                     headerBtns += `<div style="flex-shrink:0; font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pastePill(${this.state.week}, ${i})" title="ВСТАВИТИ ПРЕПАРАТ">📥</div>`;
                 }
-                headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">${this.dayBuffer ? '📋' : '📋'}</div>`;
+                // НОВА КНОПКА: Вставка цілого дня (якщо день скопійовано)
+                if (this.dayBuffer) {
+                    headerBtns += `<div style="flex-shrink:0; font-size:1.1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.3); border-radius:12px; margin-right:4px; transition:0.2s;" onclick="event.stopPropagation(); App.pasteDay(${this.state.week}, ${i})" title="ВСТАВИТИ ДЕНЬ">📝</div>`;
+                }
+                // Кнопка копіювання дня (завжди тільки копіює)
+                headerBtns += `<div style="flex-shrink:0; font-size:1rem; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,0.05); border-radius:12px; border: 1px solid rgba(255,255,255,0.1); transition:0.2s;" onclick="event.stopPropagation(); App.copyDay(${this.state.week}, ${i})" title="Копіювати день">📋</div>`;
             }
 
-            // ФІКС КАРТКИ ДНЯ: border-top-left-radius: 16px; border-top-right-radius: 16px; - Заокруглюємо сам ФОНОВИЙ КВАДРАТ
-            // ФІКС ДАТИ: border-radius: 4px; padding: 2px 6px; - Прямокутник як у харчуванні
             grid += `<div class="day-card" style="${isToday ? 'border-color:var(--primary); box-shadow:0 0 15px rgba(212,175,55,0.15)' : ''}">
                 <div class="day-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; border-bottom:1px solid rgba(255,255,255,0.05); background:linear-gradient(to right, rgba(255,255,255,0.02), transparent); border-top-left-radius: 16px; border-top-right-radius: 16px;">
                     <div style="display:flex; align-items:center; gap:10px;">
@@ -1907,19 +1911,25 @@ return `
         GlobalVitals.save(dateStr, k, v);
     },
     
-        async copyDay(w, d) {
-        if(!this.dayBuffer) { 
-            this.dayBuffer = JSON.parse(JSON.stringify(this.data.schedule[w][d])); 
+        copyDay(w, d) {
+        this.dayBuffer = JSON.parse(JSON.stringify(this.data.schedule[w][d])); 
+        this.renderView(); // Оновлюємо UI, щоб з'явилися кнопки вставки 📝
+        
+        const toast = document.createElement('div');
+        toast.innerText = "🗓 День скопійовано! Натисніть 📝 біля потрібного дня";
+        toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; border:1px solid #d4af37; font-family:sans-serif; font-size:0.9rem;";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    },
+
+    async pasteDay(w, d) {
+        if (!this.dayBuffer) return;
+        if(await Modal.confirm("Вставити скопійований день сюди?<br><br><small style='color:#ef4444;'>Увага: це перезапише поточні препарати в цьому дні!</small>", "ВСТАВКА ДНЯ", "gold")) { 
+            this.pushHistory(); 
+            this.data.schedule[w][d] = JSON.parse(JSON.stringify(this.dayBuffer)); 
+            this.save(); 
             this.renderView(); 
-        } else { 
-            if(await Modal.confirm("Вставити скопійований день?", "ВСТАВКА", "gold")) { 
-                this.pushHistory(); 
-                this.data.schedule[w][d] = JSON.parse(JSON.stringify(this.dayBuffer)); 
-                this.dayBuffer = null; 
-                this.save(); 
-                this.renderView(); 
-            } 
-        }
+        } 
     },
 
     copyPill(w, d, i) {
