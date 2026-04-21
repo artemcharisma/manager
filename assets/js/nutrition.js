@@ -54,6 +54,13 @@ const App = {
             } else {
                 this.data.days.forEach(d => {
                     if (!d.targets) d.targets = { ...this.data.targets };
+                    
+                    // НОВЕ: Примусово згортаємо всі прийоми їжі, які вже були в базі
+                    if (d.meals) {
+                        d.meals.forEach(m => {
+                            if (typeof m.isCollapsed === 'undefined') m.isCollapsed = true;
+                        });
+                    }
                 });
             }
             this.data.bank = {...DefaultBank, ...this.data.bank};
@@ -318,9 +325,9 @@ const App = {
             id: id, name: name, 
             targets: newTargets, // Тепер день має власні цілі
             meals: [
-                {id: id+1, name:"Сніданок", foods:[]},
-                {id: id+2, name:"Обід", foods:[]},
-                {id: id+3, name:"Вечеря", foods:[]}
+                {id: id+1, name:"Сніданок", foods:[], isCollapsed: true},
+                {id: id+2, name:"Обід", foods:[], isCollapsed: true},
+                {id: id+3, name:"Вечеря", foods:[], isCollapsed: true}
             ]
         };
         this.data.days.push(newDay);
@@ -677,10 +684,18 @@ const App = {
     },
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
+        
+        // КРИТИЧНИЙ ФІКС: Жорстко ховаємо модалку налаштувань, щоб вона не перекривала редактор
+        const dayModal = document.getElementById('dayEditModal');
+        if (dayModal) dayModal.style.display = 'none';
+
         this.lockScroll();
         this.toggleFab(false);
         this.renderOrderEditor();
-        document.getElementById('orderModal').style.display = 'flex';
+        
+        const orderModal = document.getElementById('orderModal');
+        orderModal.style.display = 'flex';
+        orderModal.style.zIndex = '10000'; // Виносимо на самий верх
     },
 
     renderOrderEditor() {
@@ -921,7 +936,7 @@ const App = {
                 
                 <div style="flex:1; min-width:0;"> 
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <div class="mh-collapse-icon" style="transform: ${m.isCollapsed ? 'rotate(-90deg)' : 'rotate(0)'}; color:#666; font-size:0.75rem; transition:0.2s; width:12px; text-align:center;">▼</div>
+                        <div class="mh-collapse-icon" style="transform: ${m.isCollapsed !== false ? 'rotate(-90deg)' : 'rotate(0)'}; color:#666; font-size:0.75rem; transition:0.2s; width:12px; text-align:center;">▼</div>
                         <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</h4>
                         <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="padding:4px; font-size:1.1rem; color:#888;">✎</div>
                     </div>
@@ -940,7 +955,7 @@ const App = {
                 
             </div>
             
-            <div style="display: ${m.isCollapsed ? 'none' : 'block'}; border-top:1px solid rgba(255,255,255,0.03);">
+            <div style="display: ${m.isCollapsed !== false ? 'none' : 'block'}; border-top:1px solid rgba(255,255,255,0.03);">
                 <div>${foodsHtml}</div>
                 <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
             </div>
@@ -1365,7 +1380,6 @@ const App = {
 
     // Згортання/розгортання списку продуктів
     toggleMealCollapse(mid, e) {
-        // Запобіжник: ігноруємо клік, якщо користувач натиснув на інпут часу, кнопку редагування або видалення
         if (e && (e.target.tagName === 'INPUT' || e.target.closest('.edit-meal-btn') || e.target.closest('.mh-del') || e.target.closest('[onclick*="copyMeal"]'))) {
             return;
         }
@@ -1373,15 +1387,17 @@ const App = {
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mid);
         if (meal) {
-            meal.isCollapsed = !meal.isCollapsed;
-            this.render(false); // Рендеримо без анімації стрибків
+            // Якщо було розгорнуто (false) -> згортаємо (true), інакше -> розгортаємо (false)
+            meal.isCollapsed = meal.isCollapsed === false ? true : false;
+            this.render(false);
             if(window.Haptics) window.Haptics.light();
         }
     },
     addMealBlock() {
         this.pushHistory();
         const id = Utils.id();
-        this.getCurrentDay().meals.push({id, name:"Прийом їжі", foods:[]});
+        // Новий блок створюємо розгорнутим (isCollapsed: false)
+        this.getCurrentDay().meals.push({id, name:"Прийом їжі", foods:[], isCollapsed: false});
         this.save(); this.render();
     },
     
