@@ -653,72 +653,67 @@
 <div class="modal-overlay" id="targetsModal">
     <div class="modal-card">
         <div class="mc-header">
-            <h3 class="mc-title">🎯 МАКРОСИ</h3>
+            <h3 class="mc-title">🎯 МАКРО-АНАЛІТИКА</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
-        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:15px;">Індивідуальний розрахунок на 1кг ваги</p>
         
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
-            <button class="preset-btn preset-mass" onclick="App.applyPreset('mass')"><span>ПРОФІЦИТ</span><small>Загрузка</small></button>
-            <button class="preset-btn preset-base" onclick="App.applyPreset('base')"><span>ПІДТРИМКА</span><small>База</small></button>
-            <button class="preset-btn preset-cut" onclick="App.applyPreset('cut')"><span>ДЕФІЦИТ</span><small>Сушка</small></button>
-            <button class="preset-btn preset-zero" onclick="App.applyPreset('zero')"><span>ЯМА</span><small>Безвуглеводка</small></button>
-        </div>
-
-        <div class="stats-grid" style="margin-bottom:20px;">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input type="number" id="tgP" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input type="number" id="tgF" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input type="number" id="tgC" inputmode="numeric" oninput="App.calcTargetKcal()"></div>
-            <div class="stat-box"><label>ККАЛ</label><input type="number" id="tgK" inputmode="numeric"></div>
-        </div>
-        
-        <button class="btn-primary" onclick="App.saveTargets()">ЗБЕРЕГТИ ЦІЛЬ</button>
-        <button class="btn-danger" style="color:#888; border-color:#444;" onclick="App.applyTargetsToAll()">ЗАСТОСУВАТИ ДО ВСІХ ДНІВ</button>
-    </div>
-</div>
-
-<div class="modal-overlay" id="waterModal">
-    <div class="modal-card">
-        <div class="mc-header">
-            <h3 class="mc-title" style="display:flex; align-items:center; gap:6px;"><span style="font-size:1.2rem; line-height:1;">💧</span> БАЛАНС</h3>
-            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
-        </div>
-        <p style="text-align:center; color:#888; font-size:0.75rem; margin-bottom:20px; text-transform:uppercase; letter-spacing:1px;">Гідратація та електроліти</p>
-        
-        <div style="display:flex; justify-content:center; align-items:baseline; gap:10px; margin-bottom:15px;">
-            <input type="number" id="inpWaterL" inputmode="numeric" placeholder="0" class="inp-main" style="width:80px; text-align:center; font-size:1.8rem; font-weight:800; padding:10px;">
-            <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">L</span>
-            <input type="number" id="inpWaterMl" inputmode="numeric" placeholder="00" class="inp-main" style="width:80px; text-align:center; font-size:1.8rem; font-weight:800; padding:10px;">
-            <span style="font-size:1.2rem; color:var(--text-dim); font-weight:bold;">ml</span>
-        </div>
-        
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
-            <button class="btn-ghost" onclick="App.adjustWater(0.25)">+250 ml</button>
-            <button class="btn-ghost" onclick="App.adjustWater(0.50)">+500 ml</button>
-            <button class="btn-ghost" onclick="App.adjustWater(1.00)">+1 L</button>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:30px;">
-            <button class="btn-ghost dim" onclick="App.adjustWater(-0.25)">-250 ml</button>
-            <button class="btn-ghost dim" onclick="App.adjustWater(-0.50)">-500 ml</button>
-            <button class="btn-ghost dim" onclick="App.adjustWater(-1.00)">-1 L</button>
-        </div>
-
-        <h4 style="color:#fff; font-size:0.85rem; margin-bottom:15px; text-align:center; border-bottom:1px dashed #333; padding-bottom:5px; letter-spacing:1px;">⚖️ МІНЕРАЛИ</h4>
-        
-        <div style="display:flex; gap:15px; justify-content:center; margin-bottom:25px;">
-            <div style="flex:1; position:relative;">
-                <label style="color:#888; font-size:0.7rem; font-weight:bold; display:block; margin-bottom:5px; text-align:center;">НАТРІЙ (Na)</label>
-                <input type="number" id="inpSodium" inputmode="numeric" placeholder="0" class="inp-main" style="text-align:center; font-size:1.2rem; padding-right:30px;">
-                <span style="position:absolute; right:10px; bottom:16px; color:#555; font-size:0.8rem; font-weight:bold; pointer-events:none;">mg</span>
+        <div style="background:#0a0a0a; border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:4px;">БАЗОВА ВАГА</div>
+                <div style="font-size:1.4rem; font-weight:900; color:#fff; font-family:var(--font-mono); line-height:1;" id="modalCurrentWeight">-- kg</div>
             </div>
-            <div style="flex:1; position:relative;">
-                <label style="color:#888; font-size:0.7rem; font-weight:bold; display:block; margin-bottom:5px; text-align:center;">КАЛІЙ (K)</label>
-                <input type="number" id="inpPotassium" inputmode="numeric" placeholder="0" class="inp-main" style="text-align:center; font-size:1.2rem; padding-right:30px;">
-                <span style="position:absolute; right:10px; bottom:16px; color:#555; font-size:0.8rem; font-weight:bold; pointer-events:none;">mg</span>
+            <button class="btn-ghost" onclick="App.promptWeight()" style="width:auto; padding:8px 15px; font-size:0.75rem; border-color:rgba(212, 175, 55, 0.4); color:var(--theme);">ОНОВИТИ ВАГУ</button>
+        </div>
+
+        <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-bottom:8px;">ПРОТОКОЛИ (АВТОРОЗРАХУНОК)</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:25px;">
+            <button class="preset-btn preset-mass" onclick="App.applyPreset('mass')"><span>МАСОНАБІР</span><small>Гіпертрофія</small></button>
+            <button class="preset-btn preset-base" onclick="App.applyPreset('base')"><span>ПІДТРИМКА</span><small>Круїз / Міст</small></button>
+            <button class="preset-btn preset-cut" onclick="App.applyPreset('cut')"><span>СУШКА</span><small>Дефіцит</small></button>
+            <button class="preset-btn preset-zero" onclick="App.applyPreset('zero')"><span>БЕЗВУГЛЕВОДКА</span><small>Кето / Яма</small></button>
+        </div>
+
+        <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-bottom:8px;">ДЕТАЛЬНИЙ СПЛІТ</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+            
+            <div style="display:flex; align-items:center; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:10px 15px;">
+                <div style="width:45px; color:var(--p-color); font-weight:900; font-size:0.9rem;">БІЛ</div>
+                <input type="number" id="tgP" inputmode="decimal" style="flex:1; background:transparent; border:none; color:#fff; font-size:1.4rem; font-weight:800; text-align:right; font-family:var(--font-mono); outline:none; padding:0;" oninput="App.calcTargetKcal()">
+                <div style="width:20px; text-align:right; color:#666; font-size:0.8rem; font-family:var(--font-mono);">g</div>
+                <div style="width:1px; height:24px; background:#333; margin:0 12px;"></div>
+                <div id="lblModalMultP" style="width:55px; color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right;">-- x</div>
+                <div id="lblModalPctP" style="width:50px; color:var(--p-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right;">--%</div>
+            </div>
+
+            <div style="display:flex; align-items:center; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:10px 15px;">
+                <div style="width:45px; color:var(--f-color); font-weight:900; font-size:0.9rem;">ЖИР</div>
+                <input type="number" id="tgF" inputmode="decimal" style="flex:1; background:transparent; border:none; color:#fff; font-size:1.4rem; font-weight:800; text-align:right; font-family:var(--font-mono); outline:none; padding:0;" oninput="App.calcTargetKcal()">
+                <div style="width:20px; text-align:right; color:#666; font-size:0.8rem; font-family:var(--font-mono);">g</div>
+                <div style="width:1px; height:24px; background:#333; margin:0 12px;"></div>
+                <div id="lblModalMultF" style="width:55px; color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right;">-- x</div>
+                <div id="lblModalPctF" style="width:50px; color:var(--f-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right;">--%</div>
+            </div>
+
+            <div style="display:flex; align-items:center; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:10px 15px;">
+                <div style="width:45px; color:var(--c-color); font-weight:900; font-size:0.9rem;">ВУГ</div>
+                <input type="number" id="tgC" inputmode="decimal" style="flex:1; background:transparent; border:none; color:#fff; font-size:1.4rem; font-weight:800; text-align:right; font-family:var(--font-mono); outline:none; padding:0;" oninput="App.calcTargetKcal()">
+                <div style="width:20px; text-align:right; color:#666; font-size:0.8rem; font-family:var(--font-mono);">g</div>
+                <div style="width:1px; height:24px; background:#333; margin:0 12px;"></div>
+                <div id="lblModalMultC" style="width:55px; color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right;">-- x</div>
+                <div id="lblModalPctC" style="width:50px; color:var(--c-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right;">--%</div>
             </div>
         </div>
 
-        <button class="btn-primary" onclick="App.saveWater()">ЗБЕРЕГТИ БАЛАНС</button>
+        <div style="background:rgba(212, 175, 55, 0.05); border:1px solid rgba(212, 175, 55, 0.2); border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <div style="color:var(--theme); font-weight:800; font-size:0.8rem; letter-spacing:1px;">ЦІЛЬОВИЙ КАЛОРАЖ</div>
+            <div style="display:flex; align-items:baseline; gap:6px;">
+                <input type="number" id="tgK" inputmode="decimal" style="width:100px; background:transparent; border:none; color:#fff; font-size:1.8rem; font-weight:900; text-align:right; font-family:var(--font-mono); outline:none; padding:0;" oninput="App.calcTargetKcal(true)">
+                <span style="color:var(--theme); font-family:var(--font-mono); font-size:0.9rem; font-weight:700;">kcal</span>
+            </div>
+        </div>
+        
+        <button class="btn-primary" onclick="App.saveTargets()">ЗБЕРЕГТИ ЛОКАЛЬНО</button>
+        <button class="btn-danger" style="color:#888; border-color:#444; margin-top:10px;" onclick="App.applyTargetsToAll()">🔄 ПЕРЕЗАПИСАТИ ВСІ ДНІ</button>
     </div>
 </div>
 
