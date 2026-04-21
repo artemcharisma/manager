@@ -633,7 +633,6 @@ const App = {
 
     editWater() {
         if(document.activeElement) document.activeElement.blur();
-        // this.closeModal() ВИДАЛЕНО, щоб не ламати стейт екрану
         
         this.lockScroll();
         this.toggleFab(false);
@@ -685,7 +684,7 @@ const App = {
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
         
-        // ФІКС: Жорстко ховаємо модалку налаштувань, щоб вона не перекривала редактор
+        // Жорстко ховаємо вікно налаштувань, не чіпаючи скрол
         const dayModal = document.getElementById('dayEditModal');
         if (dayModal) dayModal.style.display = 'none';
 
@@ -1504,7 +1503,6 @@ const App = {
 
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
-        // ВИДАЛЕНО this.closeModal();
         
         this.lockScroll(); 
         this.toggleFab(false); 
@@ -1529,9 +1527,8 @@ const App = {
 
         if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
 
-        document.getElementById('targetsModal').style.display = 'flex';
+        document.getElementById('targetsModal').style.display='flex';
     },
-
     async applyPreset(type) {
         let weight = null;
         
