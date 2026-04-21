@@ -633,7 +633,7 @@ const App = {
 
     editWater() {
         if(document.activeElement) document.activeElement.blur();
-        this.closeModal(); // ФІКС: Знищуємо всі попередні вікна
+        // ВИДАЛЕНО this.closeModal(); щоб не ламати стейт
         
         this.lockScroll();
         this.toggleFab(false);
@@ -684,7 +684,10 @@ const App = {
     },
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
-        this.closeModal(); // ФІКС: Знищуємо всі попередні вікна
+        
+        // КРИТИЧНИЙ ФІКС: Замість повного закриття, ми просто ховаємо попереднє вікно
+        const dayModal = document.getElementById('dayEditModal');
+        if (dayModal) dayModal.style.display = 'none';
 
         this.lockScroll();
         this.toggleFab(false);
@@ -1501,7 +1504,7 @@ const App = {
 
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
-        this.closeModal(); // ФІКС: Знищуємо всі попередні вікна
+        // ВИДАЛЕНО this.closeModal();
         
         this.lockScroll(); 
         this.toggleFab(false); 
@@ -1514,19 +1517,19 @@ const App = {
         document.getElementById('tgC').value = t.c;
         document.getElementById('tgK').value = t.k;
 
-        // Встановлюємо актуальну вагу для про-модалки
         let weight = null;
         if (typeof GlobalVitals !== 'undefined' && GlobalVitals.getLatestWeight()) {
             weight = GlobalVitals.getLatestWeight();
         } else if (this.data.userWeight) {
             weight = this.data.userWeight;
         }
+        
         const wDisplay = document.getElementById('modalCurrentWeight');
         if (wDisplay) wDisplay.innerText = weight ? `${weight.toFixed(1)} kg` : "-- kg";
 
         if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
 
-        document.getElementById('targetsModal').style.display='flex';
+        document.getElementById('targetsModal').style.display = 'flex';
     },
 
     async applyPreset(type) {
