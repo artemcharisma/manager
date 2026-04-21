@@ -927,37 +927,37 @@ const App = {
 
         mealsHtml += `
         <div class="meal-block ${animClass}" style="${delayStr}">
-            <div class="meal-header" style="cursor:pointer; display:flex; flex-direction:column; gap:10px; padding:15px; position:relative; align-items: stretch;" onclick="App.toggleMealCollapse(${m.id}, event)">
+            <div class="meal-header" style="cursor:pointer; display:flex; flex-direction:column; gap:12px; padding:16px; position:relative;" onclick="App.toggleMealCollapse(${m.id}, event)">
                 
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
                     
-                    <div style="display:flex; align-items:center; gap:8px; flex:1; padding-right:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; padding-right:10px;">
                         <div class="mh-collapse-icon" style="transform: ${m.isCollapsed ? 'rotate(-90deg)' : 'rotate(0)'}; color:#666; font-size:0.8rem; transition:0.2s;">▼</div>
-                        <h4 class="mh-title" style="margin:0; font-weight:800; font-size:1rem; color:#fff; text-transform:uppercase; line-height:1;">${m.name}</h4>
-                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="color:#666; font-size:1.2rem; padding:0 5px;">✎</div>
+                        <h4 class="mh-title" style="margin:0; font-weight:800; font-size:1rem; color:#fff; text-transform:uppercase; line-height:1.2; word-break: break-word;">${m.name}</h4>
                     </div>
 
-                    <div style="flex-shrink:0;">
-                        <input type="time" class="meal-time-input" value="${m.time || ''}" onchange="App.saveMealTime(${m.id}, this.value)" title="Таймінг прийому" style="width:75px; height:28px; padding:0; margin:0; line-height:28px; font-size:0.85rem; box-sizing:border-box;">
+                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="color:#666; font-size:1.1rem;">✎</div>
+                        <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
+                        <div class="mh-del" onclick="App.deleteMealBlock(${m.id})" style="font-size:1.1rem; color:var(--danger); opacity:0.6;">✕</div>
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding-left:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding-left:22px;">
                     
-                    <div class="mh-meta" style="display:flex; align-items:baseline; gap:10px;">
-                        <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:800; font-size:0.95rem; color:var(--theme);">${mCal} kcal</div>
-                        <span style="font-size:0.7rem; color:#888; font-weight:600;">Б${mP} / Ж${mF} / В${mC}</span>
+                    <div style="flex-shrink:0; margin-right: 15px;">
+                        <input type="time" class="meal-time-input" value="${m.time || ''}" onchange="App.saveMealTime(${m.id}, this.value)" title="Таймінг прийому">
                     </div>
                     
-                    <div style="display:flex; gap:18px; align-items:center;">
-                        <div style="color:var(--theme); cursor:pointer; font-size:1.2rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
-                        <div class="mh-del" onclick="App.deleteMealBlock(${m.id})" style="font-size:1.2rem; padding-right:5px;">✕</div>
+                    <div class="mh-meta" style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex:1;">
+                        <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:800; font-size:0.95rem; color:var(--theme); line-height:1;">${mCal} kcal</div>
+                        <span style="font-size:0.65rem; color:#888; font-weight:600; letter-spacing:0.5px;">Б${mP} / Ж${mF} / В${mC}</span>
                     </div>
                 </div>
                 
             </div>
             
-            <div style="display: ${m.isCollapsed ? 'none' : 'block'};">
+            <div style="display: ${m.isCollapsed ? 'none' : 'block'}; border-top: 1px solid rgba(255,255,255,0.03);">
                 <div>${foodsHtml}</div>
                 <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
             </div>
