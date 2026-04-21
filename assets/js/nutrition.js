@@ -366,6 +366,7 @@ const App = {
             targets: day.targets, 
             name: day.name 
         });
+        this.closeModal();
         
         const toast = document.createElement('div');
         toast.innerText = "📅 День скопійовано в буфер";
@@ -392,6 +393,7 @@ const App = {
         
         this.save();
         this.render();
+        this.closeModal();
         if (window.Haptics) window.Haptics.success();
     },
 
@@ -609,7 +611,9 @@ const App = {
         this.pushHistory();
         this.data.days = this.data.days.filter(d => d.id !== this.state.currentDayId);
         this.state.currentDayId = this.data.days[0].id;
-        this.save(); this.render();
+        this.save(); 
+        this.render();
+        this.closeModal(); // <--- ДОДАНО
     },
 
     getWaterFromInputs() {
