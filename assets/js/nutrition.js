@@ -1339,7 +1339,32 @@ const App = {
         this.render();
         if (window.Haptics) window.Haptics.success();
     },
-    
+    // Збереження часу (записується прямо при зміні інпуту)
+    saveMealTime(mid, timeStr) {
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === mid);
+        if (meal) {
+            this.pushHistory();
+            meal.time = timeStr;
+            this.save();
+        }
+    },
+
+    // Згортання/розгортання списку продуктів
+    toggleMealCollapse(mid, e) {
+        // Запобіжник: ігноруємо клік, якщо користувач натиснув на інпут часу, кнопку редагування або видалення
+        if (e && (e.target.tagName === 'INPUT' || e.target.closest('.edit-meal-btn') || e.target.closest('.mh-del') || e.target.closest('[onclick*="copyMeal"]'))) {
+            return;
+        }
+        
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === mid);
+        if (meal) {
+            meal.isCollapsed = !meal.isCollapsed;
+            this.render(false); // Рендеримо без анімації стрибків
+            if(window.Haptics) window.Haptics.light();
+        }
+    },
     addMealBlock() {
         this.pushHistory();
         const id = Utils.id();
