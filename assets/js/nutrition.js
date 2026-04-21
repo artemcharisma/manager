@@ -634,10 +634,14 @@ const App = {
     editWater() {
         if(document.activeElement) document.activeElement.blur();
         
+        // Жорстко очищаємо екран від будь-яких інших вікон
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        
         this.lockScroll();
         this.toggleFab(false);
         
         const day = this.getCurrentDay();
+        if (!day) return;
         const w = day.water || 0;
         
         const l = Math.floor(w);
@@ -648,7 +652,9 @@ const App = {
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
         
-        document.getElementById('waterModal').style.display = 'flex';
+        const modal = document.getElementById('waterModal');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10000'; // Виносимо на самий передній план
     },
     
     adjustWater(amount) {
@@ -684,14 +690,16 @@ const App = {
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
         
-        // Жорстко ховаємо вікно налаштувань, не чіпаючи скрол
-        const dayModal = document.getElementById('dayEditModal');
-        if (dayModal) dayModal.style.display = 'none';
+        // Жорстко очищаємо екран перед відкриттям
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
 
         this.lockScroll();
         this.toggleFab(false);
         this.renderOrderEditor();
-        document.getElementById('orderModal').style.display = 'flex';
+        
+        const modal = document.getElementById('orderModal');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10000';
     },
 
     renderOrderEditor() {
@@ -1504,6 +1512,9 @@ const App = {
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
         
+        // Жорстко очищаємо екран
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        
         this.lockScroll(); 
         this.toggleFab(false); 
         
@@ -1527,7 +1538,9 @@ const App = {
 
         if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
 
-        document.getElementById('targetsModal').style.display='flex';
+        const modal = document.getElementById('targetsModal');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10000';
     },
     async applyPreset(type) {
         let weight = null;
