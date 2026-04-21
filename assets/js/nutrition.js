@@ -633,7 +633,7 @@ const App = {
 
     editWater() {
         if(document.activeElement) document.activeElement.blur();
-        // ВИДАЛЕНО this.closeModal(); щоб не ламати стейт
+        // this.closeModal() ВИДАЛЕНО, щоб не ламати стейт екрану
         
         this.lockScroll();
         this.toggleFab(false);
@@ -685,7 +685,7 @@ const App = {
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
         
-        // КРИТИЧНИЙ ФІКС: Замість повного закриття, ми просто ховаємо попереднє вікно
+        // ФІКС: Жорстко ховаємо модалку налаштувань, щоб вона не перекривала редактор
         const dayModal = document.getElementById('dayEditModal');
         if (dayModal) dayModal.style.display = 'none';
 
