@@ -362,6 +362,29 @@ const App = {
         this.render();
     },
 
+    navigateDay(dir) {
+        // Знаходимо індекс поточного дня
+        const idx = this.data.days.findIndex(d => d.id === this.state.currentDayId);
+        if (idx < 0) return;
+        
+        const newIdx = idx + dir;
+        
+        // Перевіряємо, чи існує такий день
+        if (newIdx >= 0 && newIdx < this.data.days.length) {
+            this.switchDay(this.data.days[newIdx].id);
+            if (window.Haptics) window.Haptics.light();
+            
+            // Центруємо активну вкладку у верхній панелі
+            setTimeout(() => {
+                const bar = document.getElementById('dayBar');
+                const activeTab = bar.children[newIdx];
+                if (activeTab && bar) {
+                    const scrollPos = activeTab.offsetLeft - (bar.offsetWidth / 2) + (activeTab.offsetWidth / 2);
+                    bar.scrollTo({ left: scrollPos, behavior: 'smooth' });
+                }
+            }, 50);
+        }
+    },
     promptRenameDay() {
         if(document.activeElement) document.activeElement.blur(); 
         
@@ -1044,6 +1067,16 @@ const App = {
                 const fillPct = Math.min(100, (currentVal / (targetVal || 1)) * 100);
                 barEl.style.width = fillPct + '%';
                 textEl.innerText = Math.round(currentVal);
+                
+                // ПРО-ФІКС: Зміна кольору при перевищенні цілі
+                if (currentVal > targetVal && targetVal > 0) {
+                    barEl.style.backgroundColor = 'var(--danger)';
+                    barEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.6)';
+                } else {
+                    // Повертаємо дефолтні кольори, якщо ми в межах цілі
+                    barEl.style.backgroundColor = `var(--${id}-color)`;
+                    barEl.style.boxShadow = 'none';
+                }
             }
         };
 
