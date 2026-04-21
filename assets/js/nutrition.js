@@ -29,6 +29,7 @@ const App = {
     history: [],
     _sortables: [], // Кеш для об'єктів Sortable
     _daySorter: null,
+    _dayModalSorter: null,
     
     // Функція для жорсткого знищення старих обробників
     clearSortables() {
@@ -735,14 +736,25 @@ const App = {
         });
         container.innerHTML = html;
 
-        // Вмикаємо надійний вертикальний Drag & Drop
-        Sortable.create(container, {
+        // 1. ЖОРСТКЕ ОЧИЩЕННЯ ПОПЕРЕДНЬОГО ІНСТАНСУ SORTABLE
+        if (this._daySorter) {
+            this._daySorter.destroy();
+            this._daySorter = null;
+        }
+
+        // 2. СТВОРЕННЯ НОВОГО ТА ЗБЕРЕЖЕННЯ ПОСИЛАННЯ В СТЕЙТ
+        this._daySorter = Sortable.create(container, {
             handle: '.drag-handle-day',
             animation: 250,
             ghostClass: 'sortable-ghost',
             onEnd: (evt) => {
                 if (evt.oldIndex !== evt.newIndex) {
                     this.reorderDays(evt.oldIndex, evt.newIndex);
+                    
+                    // 3. ПРИМУСОВЕ ПЕРЕМАЛЬОВУВАННЯ ВІЗУАЛУ МОДАЛКИ
+                    // Щоб золота рамка поточного дня та сам список відображались коректно
+                    this.renderDaySorter(); 
+                    
                     if(window.Haptics) window.Haptics.light();
                 }
             }
