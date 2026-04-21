@@ -415,11 +415,7 @@
         </div>
         
         <div class="day-action-buttons">
-             <button class="btn-mini icon-only" style="font-size:1.1rem;" onclick="App.openOrderEditor()" title="Порядок">↕</button>
-             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()" title="Редагувати">✎</button>
-             <button class="btn-mini icon-only" onclick="App.copyDayData()" title="Копіювати вміст">📋</button>
-             <button class="btn-mini icon-only" onclick="App.pasteDayData()" title="Вставити вміст" style="color: var(--theme);">📥</button>
-             <button class="btn-mini icon-only del-day" onclick="App.deleteDay()" title="Видалити">🗑</button>
+             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()" title="Налаштування етапу" style="width: 44px; height: 44px; font-size: 1.4rem; border-radius: 12px;">⚙️</button>
         </div>
     </div>
 
@@ -607,6 +603,19 @@
             </div>
             
             <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
+            <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
+                <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">КЕРУВАННЯ ЕТАПОМ</label>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <button class="btn-ghost" onclick="App.copyDayData()" style="color:var(--theme); border-color:rgba(212, 175, 55, 0.3);">📋 КОПІЯ</button>
+                    <button class="btn-ghost" onclick="App.pasteDayData()" style="color:var(--theme); border-color:rgba(212, 175, 55, 0.3);">📥 ВСТАВКА</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button class="btn-ghost" onclick="App.openOrderEditor()" style="color:#aaa;">↕ ПОРЯДОК ЇЖІ</button>
+                    <button class="btn-ghost" onclick="App.deleteDay()" style="color:var(--danger); border-color:rgba(239, 68, 68, 0.3);">🗑 ВИДАЛИТИ</button>
+                </div>
+            </div>
 
             <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
                 <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">ВІДОБРАЖЕННЯ У ХАБІ (БЖВ)</label>
