@@ -557,11 +557,7 @@ const App = {
             let options = `<option value="">-- Вільно --</option>`;
             this.data.days.forEach(d => {
                 const isSelected = String(d.id) === String(selectedId) ? 'selected' : '';
-                let t = d.name;
-                if (d.name.includes('|')) {
-                    const parts = d.name.split('|');
-                    t = `${parts[0].trim()} [${parts[1].trim()}]`;
-                }
+                let t = d.name.includes('|') ? d.name.replace('|', ' (') + ')' : d.name;
                 options += `<option value="${d.id}" ${isSelected}>${t}</option>`;
             });
 
@@ -786,26 +782,16 @@ const App = {
         
         let html = '';
         this.data.days.forEach(d => {
-            let titleText = d.name;
-            let subText = "";
-            if (d.name.includes('|')) {
-                const parts = d.name.split('|');
-                titleText = parts[0].trim();
-                subText = parts[1] ? parts[1].trim() : "";
-            }
+            let title = d.name;
+            if (title.includes('|')) title = title.replace('|', ' - ');
             
+            // Виділяємо поточний день золотої рамкою
             const isCurrent = d.id === this.state.currentDayId;
             const borderStr = isCurrent ? 'border: 1px solid var(--theme);' : 'border: 1px solid #333;';
             
-            // Якщо є підпис, робимо з нього акуратний бейдж
-            const subBadge = subText ? `<span style="background:rgba(212, 175, 55, 0.1); color:var(--theme); font-size:0.65rem; padding:3px 6px; border-radius:6px; margin-left:8px; vertical-align:middle;">${subText}</span>` : '';
-            
             html += `
             <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:12px 15px; border-radius:10px; ${borderStr}">
-                <div style="display:flex; align-items:center;">
-                    <span style="color:#fff; font-weight:600; font-size:0.9rem; pointer-events:none;">${titleText}</span>
-                    ${subBadge}
-                </div>
+                <span style="color:#fff; font-weight:600; font-size:0.9rem; pointer-events:none;">${title}</span>
                 <div class="drag-handle-day" style="cursor:grab; font-size:1.5rem; color:#666; line-height:0.8; padding:0 10px;">≡</div>
             </div>`;
         });
@@ -927,32 +913,29 @@ const App = {
 
         mealsHtml += `
         <div class="meal-block ${animClass}" style="${delayStr}">
-            <div class="meal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; gap: 10px; cursor: default;">
+            <div class="meal-header" onclick="App.toggleMealCollapse(${m.id}, event)" style="cursor:pointer;">
+                <div class="mh-collapse-icon" style="transform: ${m.isCollapsed ? 'rotate(-90deg)' : 'rotate(0)'}; margin-right:12px; color:#666; font-size:0.8rem; transition:0.2s;">▼</div>
                 
-                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; cursor: pointer; padding-right: 10px;" onclick="App.toggleMealCollapse(${m.id}, event)">
-                    
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="transform: ${m.isCollapsed ? 'rotate(-90deg)' : 'rotate(0)'}; color: #666; font-size: 0.75rem; transition: transform 0.2s ease; width: 12px; text-align: center; flex-shrink: 0;">▼</div>
+                <div style="flex:1;">
+                    <div class="mh-title-wrapper" style="display:flex; align-items:center; gap:8px;">
+                        <input type="time" class="meal-time-input" value="${m.time || ''}" onchange="App.saveMealTime(${m.id}, this.value)" title="Таймінг прийому">
                         
-                        <input type="time" class="meal-time-input" value="${m.time || ''}" onchange="App.saveMealTime(${m.id}, this.value)" onclick="if(event) event.stopPropagation()" title="Таймінг">
-                        
-                        <h4 style="margin: 0; font-weight: 800; font-size: 0.95rem; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.name}</h4>
+                        <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase;">${m.name}</h4>
+                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="padding:5px;">✎</div>
                     </div>
-
-                    <div style="display: flex; align-items: baseline; gap: 12px; padding-left: 20px;">
-                        <span style="font-family: var(--font-mono); font-weight: 800; font-size: 0.9rem; color: var(--theme);">${mCal} kcal</span>
-                        <span style="font-size: 0.65rem; color: #888; font-weight: 600; letter-spacing: 0.5px;">Б${mP} / Ж${mF} / В${mC}</span>
+                    <div class="mh-meta" style="display:flex; align-items:center; gap:12px; margin-top:4px;">
+                        <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.9rem; color:var(--theme);">${mCal} ккал</div>
+                        <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                     </div>
                 </div>
-
-                <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
-                    <div onclick="App.promptRenameMeal(${m.id})" style="color: #888; font-size: 1.2rem; cursor: pointer;">✎</div>
-                    <div onclick="App.copyMeal(${m.id})" style="color: var(--theme); font-size: 1.2rem; opacity: 0.8; cursor: pointer;">📋</div>
-                    <div onclick="App.deleteMealBlock(${m.id})" style="color: var(--danger); font-size: 1.2rem; opacity: 0.6; cursor: pointer;">✕</div>
+                
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; padding:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
+                    <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
                 </div>
             </div>
             
-            <div style="display: ${m.isCollapsed ? 'none' : 'block'}; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div style="display: ${m.isCollapsed ? 'none' : 'block'};">
                 <div>${foodsHtml}</div>
                 <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
             </div>
