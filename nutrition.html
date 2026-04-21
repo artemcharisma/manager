@@ -162,6 +162,25 @@
             padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.2);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
         }
+        /* --- ГРУПА КНОПОК (SEGMENTED CONTROL) --- */
+        .day-action-group {
+            display: flex;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .day-action-group .btn-mini {
+            border: none;
+            border-radius: 0;
+            border-right: 1px solid #333;
+            background: transparent;
+            margin: 0;
+            width: 40px;
+            height: 36px;
+        }
+        .day-action-group .btn-mini:last-child { border-right: none; }
+        .day-action-group .btn-mini:active { background: #222; }
 
         .day-action-buttons { display: flex; gap: 8px; flex-shrink: 0; align-items: center; margin-top: 4px; }
 
@@ -415,13 +434,14 @@
         </div>
         
         <div class="day-action-buttons">
-             <button class="btn-mini icon-only" style="font-size:1.1rem;" onclick="App.openOrderEditor()" title="Порядок">↕</button>
-             <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()" title="Редагувати">✎</button>
-             <button class="btn-mini icon-only" onclick="App.copyDayData()" title="Копіювати вміст">📋</button>
-             <button class="btn-mini icon-only" onclick="App.pasteDayData()" title="Вставити вміст" style="color: var(--theme);">📥</button>
-             <button class="btn-mini icon-only del-day" onclick="App.deleteDay()" title="Видалити">🗑</button>
+             <div class="day-action-group">
+                 <button class="btn-mini icon-only" onclick="App.openOrderEditor()" title="Порядок">↕</button>
+                 <button class="btn-mini icon-only edit-day" onclick="App.promptRenameDay()" title="Редагувати">✎</button>
+                 <button class="btn-mini icon-only" onclick="App.copyDayData()" title="Копіювати вміст">📋</button>
+                 <button class="btn-mini icon-only" onclick="App.pasteDayData()" title="Вставити вміст" style="color: var(--theme);">📥</button>
+                 <button class="btn-mini icon-only del-day" onclick="App.deleteDay()" title="Видалити">🗑</button>
+             </div>
         </div>
-    </div>
 
 
     <div class="hud">
