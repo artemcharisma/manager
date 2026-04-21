@@ -1519,6 +1519,20 @@ const App = {
         document.getElementById('tgC').value = t.c;
         document.getElementById('tgK').value = t.k;
 
+        // Встановлюємо актуальну вагу
+        let weight = null;
+        if (typeof GlobalVitals !== 'undefined' && GlobalVitals.getLatestWeight()) {
+            weight = GlobalVitals.getLatestWeight();
+        } else if (this.data.userWeight) {
+            weight = this.data.userWeight;
+        }
+        
+        const wDisplay = document.getElementById('modalCurrentWeight');
+        if (wDisplay) wDisplay.innerText = weight ? `${weight.toFixed(1)} kg` : "-- kg";
+
+        // Викликаємо перерахунок відсотків та коефіцієнтів для стартового відображення
+        this.calcTargetKcal(false);
+
         document.getElementById('targetsModal').style.display='flex';
     },
 
@@ -1609,11 +1623,59 @@ const App = {
         this.updateStats();
         if(window.Haptics) window.Haptics.success();
     },
-    calcTargetKcal() {
-        const p = parseFloat(document.getElementById('tgP').value)||0;
-        const f = parseFloat(document.getElementById('tgF').value)||0;
-        const c = parseFloat(document.getElementById('tgC').value)||0;
-        document.getElementById('tgK').value = Math.round(p*4 + f*9 + c*4);
+    calcTargetKcal(isKcalManualInput = false) {
+        const p = parseFloat(document.getElementById('tgP').value) || 0;
+        const f = parseFloat(document.getElementById('tgF').value) || 0;
+        const c = parseFloat(document.getElementById('tgC').value) || 0;
+        const kEl = document.getElementById('tgK');
+        
+        // 1. Рахуємо калорії, ТІЛЬКИ якщо ми не вводимо їх вручну
+        let k;
+        if (!isKcalManualInput) {
+            k = Math.round(p * 4 + f * 9 + c * 4);
+            kEl.value = k;
+        } else {
+            k = parseFloat(kEl.value) || 0;
+        }
+
+        // 2. Рахуємо % спліт макросів
+        const actualMacroKcal = (p * 4) + (f * 9) + (c * 4);
+        let pPct = 0, fPct = 0, cPct = 0;
+        
+        // Обчислюємо відсоток від реальної суми макросів, або від введених ККАЛ, якщо вони більші
+        const baseKcalForPct = Math.max(actualMacroKcal, k);
+
+        if (baseKcalForPct > 0) {
+            pPct = Math.round(((p * 4) / baseKcalForPct) * 100);
+            fPct = Math.round(((f * 9) / baseKcalForPct) * 100);
+            cPct = Math.round(((c * 4) / baseKcalForPct) * 100);
+            
+            // Компенсація похибки округлення
+            if ((pPct + fPct + cPct) !== 100 && actualMacroKcal > 0) {
+                pPct += 100 - (pPct + fPct + cPct); 
+            }
+        }
+
+        // 3. Рахуємо коефіцієнти (грами на 1 кг ваги)
+        let weight = null;
+        if (typeof GlobalVitals !== 'undefined' && GlobalVitals.getLatestWeight()) {
+            weight = GlobalVitals.getLatestWeight();
+        } else if (this.data.userWeight) {
+            weight = this.data.userWeight;
+        }
+
+        const calcMult = (grams) => weight && weight > 0 ? (grams / weight).toFixed(1) : "--";
+
+        // 4. Оновлюємо UI в реальному часі
+        const updateLabel = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        
+        updateLabel('lblModalPctP', `${pPct}%`);
+        updateLabel('lblModalPctF', `${fPct}%`);
+        updateLabel('lblModalPctC', `${cPct}%`);
+        
+        updateLabel('lblModalMultP', `${calcMult(p)} x`);
+        updateLabel('lblModalMultF', `${calcMult(f)} x`);
+        updateLabel('lblModalMultC', `${calcMult(c)} x`);
     },
     
     saveTargets() {
