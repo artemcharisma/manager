@@ -633,19 +633,19 @@ const App = {
 
     editWater() {
         if(document.activeElement) document.activeElement.blur();
+        this.closeModal(); // ФІКС: Знищуємо всі попередні вікна
+        
         this.lockScroll();
         this.toggleFab(false);
         
         const day = this.getCurrentDay();
         const w = day.water || 0;
         
-        // Правильно розбиваємо збережене значення на L та ml
         const l = Math.floor(w);
         const ml = Math.round((w - l) * 1000);
         
         document.getElementById('inpWaterL').value = l === 0 ? '' : l;
         document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
-        
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
         
@@ -684,18 +684,12 @@ const App = {
     },
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
-        
-        // КРИТИЧНИЙ ФІКС: Жорстко ховаємо модалку налаштувань, щоб вона не перекривала редактор
-        const dayModal = document.getElementById('dayEditModal');
-        if (dayModal) dayModal.style.display = 'none';
+        this.closeModal(); // ФІКС: Знищуємо всі попередні вікна
 
         this.lockScroll();
         this.toggleFab(false);
         this.renderOrderEditor();
-        
-        const orderModal = document.getElementById('orderModal');
-        orderModal.style.display = 'flex';
-        orderModal.style.zIndex = '10000'; // Виносимо на самий верх
+        document.getElementById('orderModal').style.display = 'flex';
     },
 
     renderOrderEditor() {
@@ -1378,7 +1372,6 @@ const App = {
         }
     },
 
-    // Згортання/розгортання списку продуктів
     toggleMealCollapse(mid, e) {
         if (e && (e.target.tagName === 'INPUT' || e.target.closest('.edit-meal-btn') || e.target.closest('.mh-del') || e.target.closest('[onclick*="copyMeal"]'))) {
             return;
@@ -1387,8 +1380,8 @@ const App = {
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mid);
         if (meal) {
-            // Якщо було розгорнуто (false) -> згортаємо (true), інакше -> розгортаємо (false)
-            meal.isCollapsed = meal.isCollapsed === false ? true : false;
+            // ФІКС: Якщо стан невідомий (стара база), вважаємо, що зараз згорнуто, отже розгортаємо.
+            meal.isCollapsed = (meal.isCollapsed === undefined || meal.isCollapsed === true) ? false : true;
             this.render(false);
             if(window.Haptics) window.Haptics.light();
         }
@@ -1508,6 +1501,8 @@ const App = {
 
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
+        this.closeModal(); // ФІКС: Знищуємо всі попередні вікна
+        
         this.lockScroll(); 
         this.toggleFab(false); 
         
@@ -1519,19 +1514,17 @@ const App = {
         document.getElementById('tgC').value = t.c;
         document.getElementById('tgK').value = t.k;
 
-        // Встановлюємо актуальну вагу
+        // Встановлюємо актуальну вагу для про-модалки
         let weight = null;
         if (typeof GlobalVitals !== 'undefined' && GlobalVitals.getLatestWeight()) {
             weight = GlobalVitals.getLatestWeight();
         } else if (this.data.userWeight) {
             weight = this.data.userWeight;
         }
-        
         const wDisplay = document.getElementById('modalCurrentWeight');
         if (wDisplay) wDisplay.innerText = weight ? `${weight.toFixed(1)} kg` : "-- kg";
 
-        // Викликаємо перерахунок відсотків та коефіцієнтів для стартового відображення
-        this.calcTargetKcal(false);
+        if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
 
         document.getElementById('targetsModal').style.display='flex';
     },
