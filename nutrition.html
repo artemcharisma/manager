@@ -246,25 +246,19 @@
             background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
             display: flex; justify-content: space-between; align-items: center;
         }
-        /* --- ВІДЖЕТ ТАЙМІНГУ --- */
+       /* --- ВІДЖЕТ ТАЙМІНГУ --- */
         .meal-time-input {
-            background: rgba(212, 175, 55, 0.1); 
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(212, 175, 55, 0.05); 
+            border: 1px solid rgba(212, 175, 55, 0.2);
             color: var(--theme); 
             font-family: var(--font-mono); 
             font-weight: 800;
-            font-size: 0.8rem; 
+            font-size: 0.85rem; 
             border-radius: 6px; 
             outline: none;
             -webkit-appearance: none; 
             text-align: center;
-            /* Жорсткі розміри, щоб не стрибало */
-            width: 70px;
-            height: 26px;
-            padding: 0;
-            margin: 0;
-            line-height: 26px;
-            box-sizing: border-box;
+            padding: 4px 8px;
         }
         .meal-time-input::-webkit-calendar-picker-indicator { display: none; }
         .meal-time-input::-webkit-date-and-time-value { text-align: center; margin:0; padding:0; height:24px; line-height:24px;}
