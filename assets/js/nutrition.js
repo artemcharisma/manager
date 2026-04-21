@@ -557,7 +557,11 @@ const App = {
             let options = `<option value="">-- Вільно --</option>`;
             this.data.days.forEach(d => {
                 const isSelected = String(d.id) === String(selectedId) ? 'selected' : '';
-                let t = d.name.includes('|') ? d.name.replace('|', ' (') + ')' : d.name;
+                let t = d.name;
+                if (d.name.includes('|')) {
+                    const parts = d.name.split('|');
+                    t = `${parts[0].trim()} [${parts[1].trim()}]`;
+                }
                 options += `<option value="${d.id}" ${isSelected}>${t}</option>`;
             });
 
@@ -782,16 +786,26 @@ const App = {
         
         let html = '';
         this.data.days.forEach(d => {
-            let title = d.name;
-            if (title.includes('|')) title = title.replace('|', ' - ');
+            let titleText = d.name;
+            let subText = "";
+            if (d.name.includes('|')) {
+                const parts = d.name.split('|');
+                titleText = parts[0].trim();
+                subText = parts[1] ? parts[1].trim() : "";
+            }
             
-            // Виділяємо поточний день золотої рамкою
             const isCurrent = d.id === this.state.currentDayId;
             const borderStr = isCurrent ? 'border: 1px solid var(--theme);' : 'border: 1px solid #333;';
             
+            // Якщо є підпис, робимо з нього акуратний бейдж
+            const subBadge = subText ? `<span style="background:rgba(212, 175, 55, 0.1); color:var(--theme); font-size:0.65rem; padding:3px 6px; border-radius:6px; margin-left:8px; vertical-align:middle;">${subText}</span>` : '';
+            
             html += `
             <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:12px 15px; border-radius:10px; ${borderStr}">
-                <span style="color:#fff; font-weight:600; font-size:0.9rem; pointer-events:none;">${title}</span>
+                <div style="display:flex; align-items:center;">
+                    <span style="color:#fff; font-weight:600; font-size:0.9rem; pointer-events:none;">${titleText}</span>
+                    ${subBadge}
+                </div>
                 <div class="drag-handle-day" style="cursor:grab; font-size:1.5rem; color:#666; line-height:0.8; padding:0 10px;">≡</div>
             </div>`;
         });
