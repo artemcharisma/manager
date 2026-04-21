@@ -254,15 +254,20 @@
             font-family: var(--font-mono); 
             font-weight: 800;
             font-size: 0.8rem; 
-            padding: 4px 6px; 
             border-radius: 6px; 
             outline: none;
             -webkit-appearance: none; 
             text-align: center;
+            /* Жорсткі розміри, щоб не стрибало */
+            width: 70px;
+            height: 26px;
+            padding: 0;
+            margin: 0;
+            line-height: 26px;
+            box-sizing: border-box;
         }
-        /* Приховуємо дефолтну іконку годинника на мобільних для чистоти UI */
         .meal-time-input::-webkit-calendar-picker-indicator { display: none; }
-        .meal-time-input::-webkit-date-and-time-value { text-align: center; }
+        .meal-time-input::-webkit-date-and-time-value { text-align: center; margin:0; padding:0; height:24px; line-height:24px;}
         .mh-del { color: var(--danger); opacity: 0.3; font-size: 16px; padding: 5px; transition: 0.2s; }
         .mh-del:hover { opacity: 1; }
         .food-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s; }
