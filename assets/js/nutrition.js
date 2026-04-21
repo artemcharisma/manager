@@ -913,24 +913,32 @@ const App = {
 
         mealsHtml += `
         <div class="meal-block ${animClass}" style="${delayStr}">
-            <div class="meal-header">
+            <div class="meal-header" onclick="App.toggleMealCollapse(${m.id}, event)" style="cursor:pointer;">
+                <div class="mh-collapse-icon" style="transform: ${m.isCollapsed ? 'rotate(-90deg)' : 'rotate(0)'}; margin-right:12px; color:#666; font-size:0.8rem; transition:0.2s;">▼</div>
+                
                 <div style="flex:1;">
                     <div class="mh-title-wrapper" style="display:flex; align-items:center; gap:8px;">
+                        <input type="time" class="meal-time-input" value="${m.time || ''}" onchange="App.saveMealTime(${m.id}, this.value)" title="Таймінг прийому">
+                        
                         <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase;">${m.name}</h4>
-                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})">✎</div>
+                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="padding:5px;">✎</div>
                     </div>
-                    <div class="mh-meta" style="display:flex; align-items:center; gap:12px; margin-top:2px;">
+                    <div class="mh-meta" style="display:flex; align-items:center; gap:12px; margin-top:4px;">
                         <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.9rem; color:var(--theme);">${mCal} ккал</div>
                         <span style="font-size:0.65rem; color:#666">Б${mP} Ж${mF} В${mC}</span>
                     </div>
                 </div>
+                
                 <div style="display:flex; gap:12px; align-items:center;">
-                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
+                    <div style="color:var(--theme); cursor:pointer; font-size:1.1rem; opacity:0.8; padding:5px;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
                     <div class="mh-del" onclick="App.deleteMealBlock(${m.id})">✕</div>
                 </div>
             </div>
-            <div>${foodsHtml}</div>
-            <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
+            
+            <div style="display: ${m.isCollapsed ? 'none' : 'block'};">
+                <div>${foodsHtml}</div>
+                <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
+            </div>
         </div>`;
         });
 
