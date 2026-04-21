@@ -25,7 +25,7 @@ const App = {
         days: [],
         schedule: {}
     },
-    state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null },
+    state: { mid: null, fidx: null, editName: null, currentDayId: null, tempFood: null, mealBuffer: null, dayBuffer: null },
     history: [],
     _sortables: [], // Кеш для об'єктів Sortable
     _daySorter: null,
@@ -355,6 +355,44 @@ const App = {
             const bar = document.getElementById('dayBar');
             if(bar) bar.scrollTo({ left: bar.scrollWidth, behavior: 'smooth' });
         }, 50);
+    },
+    copyDayData() {
+        const day = this.getCurrentDay();
+        if (!day) return;
+        
+        // Зберігаємо клоновані дані в буфер
+        this.state.dayBuffer = Utils.deepClone({ 
+            meals: day.meals, 
+            targets: day.targets, 
+            name: day.name 
+        });
+        
+        const toast = document.createElement('div');
+        toast.innerText = "📅 День скопійовано в буфер";
+        toast.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#222; color:var(--theme); padding:10px 20px; border-radius:20px; z-index:9999; border:1px solid var(--theme); font-family:sans-serif; font-size:0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    },
+
+    async pasteDayData() {
+        if (!this.state.dayBuffer) return;
+        if (!(await Modal.confirm(`⚠️ Перезаписати цей день даними з "${this.state.dayBuffer.name}"?<br><br><span style="color:var(--text-muted); font-size:0.85rem;">Усі поточні прийоми їжі будуть видалені.</span>`, "ВСТАВКА ДНЯ", "gold"))) return;
+        
+        this.pushHistory();
+        const day = this.getCurrentDay();
+        
+        // Клонуємо прийоми їжі та генеруємо нові унікальні ID, щоб уникнути конфліктів у DOM
+        const clonedMeals = Utils.deepClone(this.state.dayBuffer.meals);
+        clonedMeals.forEach(m => {
+            m.id = Utils.id() + Math.floor(Math.random() * 1000);
+        });
+        
+        day.meals = clonedMeals;
+        day.targets = Utils.deepClone(this.state.dayBuffer.targets);
+        
+        this.save();
+        this.render();
+        if (window.Haptics) window.Haptics.success();
     },
 
     switchDay(id) {
