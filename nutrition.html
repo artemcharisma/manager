@@ -510,6 +510,46 @@
     <button class="btn-main-add" onclick="App.addMealBlock()">+ ДОДАТИ ПРИЙОМ ЇЖІ</button>
 
 </div>
+<div id="waterModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">💧 ВОДА ТА ЕЛЕКТРОЛІТИ</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div style="background:#0a0a0a; border:1px solid #222; border-radius:12px; padding:15px; text-align:center;">
+                <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-bottom:8px;">ЛІТРИ</label>
+                <input type="number" id="inpWaterL" inputmode="decimal" placeholder="0" style="background:transparent; border:none; color:#fff; font-size:2rem; font-weight:900; text-align:center; font-family:var(--font-mono); outline:none; width:100%; padding:0;">
+            </div>
+            <div style="background:#0a0a0a; border:1px solid #222; border-radius:12px; padding:15px; text-align:center;">
+                <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-bottom:8px;">МІЛІЛІТРИ</label>
+                <input type="number" id="inpWaterMl" inputmode="decimal" placeholder="0" style="background:transparent; border:none; color:#fff; font-size:2rem; font-weight:900; text-align:center; font-family:var(--font-mono); outline:none; width:100%; padding:0;">
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;">
+            <button class="btn-ghost" onclick="App.adjustWater(0.25)">+250</button>
+            <button class="btn-ghost" onclick="App.adjustWater(0.5)">+500</button>
+            <button class="btn-ghost" onclick="App.adjustWater(1.0)">+1L</button>
+            <button class="btn-ghost dim" onclick="App.adjustWater(-0.25)">-250</button>
+        </div>
+
+        <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-bottom:8px; margin-top:10px;">ЕЛЕКТРОЛІТИ (МГ)</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <div class="stat-box" style="padding:12px;">
+                <label>НАТРІЙ (Na)</label>
+                <input type="number" id="inpSodium" inputmode="decimal" placeholder="0">
+            </div>
+            <div class="stat-box" style="padding:12px;">
+                <label>КАЛІЙ (K)</label>
+                <input type="number" id="inpPotassium" inputmode="decimal" placeholder="0">
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="App.saveWater()">ЗБЕРЕГТИ</button>
+    </div>
+</div>
 
 <div id="orderModal" class="modal-overlay">
     <div class="modal-card">
