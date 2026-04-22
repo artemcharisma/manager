@@ -705,7 +705,6 @@ const App = {
         const container = document.getElementById('orderContainer');
         if(!day || !container) return;
 
-        // ФІКС: Жорстко знищуємо всі попередні екземпляри Sortable перед перемальовуванням
         this.clearSortables();
 
         let html = '';
@@ -723,7 +722,13 @@ const App = {
                     <b style="color:var(--theme); font-size:0.95rem; text-transform:uppercase;">
                         <span style="color:#666;">${mealNum}.</span> ${m.name}
                     </b>
-                    <div class="drag-handle-meal" style="cursor:grab; font-size:1.8rem; color:#666; padding:0 10px; line-height:0.8;">≡</div>
+                    
+                    <div style="display:flex; gap:16px; align-items:center;">
+                        <div onclick="App.copyMeal(${m.id})" style="color:var(--theme); cursor:pointer; font-size:1.1rem;" title="Копіювати">📋</div>
+                        <div onclick="App.deleteMealBlock(${m.id})" style="color:var(--danger); cursor:pointer; font-size:1.1rem; opacity:0.8;" title="Видалити">✕</div>
+                        <div style="width:1px; height:16px; background:#444;"></div>
+                        <div class="drag-handle-meal" style="cursor:grab; font-size:1.8rem; color:#888; line-height:0.8;">≡</div>
+                    </div>
                 </div>`;
             
             if (m.foods.length > 0) {
@@ -742,6 +747,11 @@ const App = {
             }
             html += `</div>`;
         });
+        
+        // Якщо є щось у буфері, показуємо кнопку "Вставити" прямо в редакторі
+        if (this.state.mealBuffer) {
+            html += `<button class="btn-main-add" style="margin-top:5px; border-color:var(--theme); color:var(--theme); background:rgba(212, 175, 55, 0.05);" onclick="App.pasteMeal()">📥 ВСТАВИТИ: ${this.state.mealBuffer.name.toUpperCase()}</button>`;
+        }
         
         container.innerHTML = html;
 
@@ -940,7 +950,6 @@ const App = {
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div class="mh-collapse-icon" style="transform: ${m.isCollapsed !== false ? 'rotate(-90deg)' : 'rotate(0)'}; color:#666; font-size:0.75rem; transition:0.2s; width:12px; text-align:center;">▼</div>
                         <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</h4>
-                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="padding:4px; font-size:1.1rem; color:#888;">✎</div>
                     </div>
                     
                     <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
@@ -950,9 +959,8 @@ const App = {
                     </div>
                 </div>
                 
-                <div style="display:flex; gap:14px; align-items:center; padding-left:10px; flex-shrink:0;">
-                    <div style="color:var(--theme); cursor:pointer; font-size:1.2rem; opacity:0.8;" onclick="App.copyMeal(${m.id})" title="Копіювати">📋</div>
-                    <div class="mh-del" onclick="App.deleteMealBlock(${m.id})" style="font-size:1.2rem; padding:4px;">✕</div>
+                <div style="display:flex; align-items:center; padding-left:10px; flex-shrink:0;">
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="padding:10px; font-size:1.3rem; color:#666;">✎</div>
                 </div>
                 
             </div>
@@ -1327,6 +1335,8 @@ const App = {
         if (meal) {
             this.state.mealBuffer = JSON.parse(JSON.stringify(meal));
             this.render(); 
+            // ФІКС: Оновлюємо модалку редактора, щоб з'явилась кнопка "Вставити"
+            if (document.getElementById('orderModal').style.display === 'flex') this.renderOrderEditor();
             
             const toast = document.createElement('div');
             toast.innerText = "🍽 Скопійовано! Тепер можна вставити.";
@@ -1367,6 +1377,8 @@ const App = {
 
         this.save();
         this.render();
+        // ФІКС: Оновлюємо модалку редактора, щоб показати новий вставлений прийом їжі
+        if (document.getElementById('orderModal').style.display === 'flex') this.renderOrderEditor();
         if (window.Haptics) window.Haptics.success();
     },
     // Збереження часу (записується прямо при зміні інпуту)
@@ -1431,7 +1443,10 @@ const App = {
         this.pushHistory();
         const day = this.getCurrentDay();
         day.meals = day.meals.filter(m=>m.id!==id);
-        this.save(); this.render();
+        this.save(); 
+        this.render();
+        // ФІКС: Оновлюємо модалку редактора, якщо вона відкрита
+        if (document.getElementById('orderModal').style.display === 'flex') this.renderOrderEditor();
     },
     
     async promptRenameMeal(id) {
