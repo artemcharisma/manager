@@ -965,7 +965,7 @@ const App = {
                 </div>
                 
                 <div style="display:flex; align-items:center; padding-left:10px; flex-shrink:0;">
-                    <div class="edit-meal-btn" onclick="event.preventDefault(); event.stopPropagation(); setTimeout(() => App.promptRenameMeal(${m.id}), 10);" style="padding:10px; font-size:1.3rem; color:#666;">✎</div>
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:4px; font-size:1.1rem; color:#888;">✎</div>
                 </div>
                 
             </div>
@@ -1470,19 +1470,15 @@ const App = {
         if (document.getElementById('orderModal').style.display === 'flex') this.renderOrderEditor();
     },
     
-    async promptRenameMeal(id) {
+    async promptRenameMeal(id, e) {
+        if(e) { e.preventDefault(); e.stopPropagation(); } // <--- БЛОКУЄМО ПРОБИТТЯ КЛІКУ
+        
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === id);
         if(!meal) return;
         
-        // Ставимо глобальний щит від подвійних/фантомних кліків
-        document.body.style.pointerEvents = 'none';
-        
         const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
-        
-        // Знімаємо щит через 350мс (коли фантомний клік гарантовано згорить)
-        setTimeout(() => { document.body.style.pointerEvents = ''; }, 350);
-
+        // Додана перевірка, щоб не зберігати, якщо ім'я не змінилось
         if (newName && newName.trim() !== "" && newName.trim() !== meal.name) {
             this.pushHistory();
             meal.name = newName.trim();
