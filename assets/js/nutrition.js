@@ -1262,8 +1262,8 @@ const App = {
     openModal(title, f, del) {
         if(document.activeElement) document.activeElement.blur(); 
         this.lockScroll(); 
-        
         this.toggleFab(false); 
+        
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('inpName').value = f.n||'';
         document.getElementById('inpWeight').value = f.w||'';
@@ -1272,6 +1272,21 @@ const App = {
         document.getElementById('inpC').value = f.c||0;
         document.getElementById('inpK').value = f.k||0;
         document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
+        
+        // --- ГЕНЕРАЦІЯ QUICK ADD ---
+        const qbContainer = document.getElementById('quickBankContainer');
+        if (qbContainer && !del) { // Показуємо тільки при створенні нового (не при редагуванні)
+            // Беремо перші 8 продуктів з твоєї бази (найпопулярніші)
+            const topFoods = Object.keys(this.data.bank).slice(0, 8);
+            qbContainer.innerHTML = `<div class="quick-bank-grid">
+                ${topFoods.map(n => `<div class="qb-chip" onclick="App.selectSuggestion('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('')}
+            </div>`;
+            qbContainer.style.display = 'block';
+        } else if (qbContainer) {
+            qbContainer.style.display = 'none';
+        }
+        // ---------------------------
+
         document.getElementById('foodModal').style.display = 'flex';
         document.getElementById('sugg-list').style.display = 'none';
     },
