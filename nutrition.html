@@ -284,6 +284,31 @@
             animation: slideUp 0.25s ease-out;
         }
         #waterModal, #orderModal { align-items: center !important; }
+        /* --- QUICK ADD BANK --- */
+        .quick-bank-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .qb-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #aaa;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: 0.2s;
+        }
+        .qb-chip:active { background: rgba(212, 175, 55, 0.2); border-color: var(--theme); color: var(--theme); }
         
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
@@ -575,6 +600,8 @@
             <input id="inpName" class="inp-main" placeholder="Пошук або назва..." autocomplete="off" oninput="App.searchFood(this.value)">
             <div id="sugg-list"></div>
         </div>
+
+        <div id="quickBankContainer"></div>
 
         <input type="number" id="inpWeight" class="inp-main" placeholder="Вага (г) або шт" inputmode="decimal" oninput="App.recalcModal()">
 
