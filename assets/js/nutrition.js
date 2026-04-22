@@ -942,6 +942,18 @@ const App = {
         const animClass = animate ? 'animate-pop' : '';
         const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
+        const animClass = animate ? 'animate-pop' : '';
+        const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
+
+        // Розрахунок % для візуального мікро-бара
+        const mTotalMacro = (mP*4) + (mF*9) + (mC*4);
+        let pP = 0, pF = 0, pC = 0;
+        if (mTotalMacro > 0) {
+            pP = (mP*4 / mTotalMacro) * 100;
+            pF = (mF*9 / mTotalMacro) * 100;
+            pC = (mC*4 / mTotalMacro) * 100;
+        }
+
         mealsHtml += `
         <div class="meal-block ${animClass}" style="${delayStr}">
             <div class="meal-header" onclick="App.toggleMealCollapse(${m.id}, event)" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
@@ -953,19 +965,22 @@ const App = {
                     </div>
                     
                     <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
-                        
-                        <div style="display:flex; background:rgba(212, 175, 55, 0.05); border:1px solid rgba(212, 175, 55, 0.3); border-radius:6px; overflow:hidden;">
-                            <input type="text" inputmode="numeric" class="meal-time-input" style="border:none; border-radius:0; background:transparent; padding:4px 6px;" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
-                            ${(m.time && m.time.length === 5) ? `<div onclick="App.syncMealTimeToAll('${m.name}', '${m.time}', event)" style="padding:0 8px; display:flex; align-items:center; color:var(--theme); cursor:pointer; font-size:0.8rem; border-left:1px solid rgba(212, 175, 55, 0.3);" title="Синхронізувати час на всі дні">🔄</div>` : ''}
-                        </div>
-
+                        <input type="text" inputmode="numeric" class="meal-time-input" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
                         <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--theme);">${mCal} ккал</div>
                         <span style="font-size:0.65rem; color:#666; font-weight:600;">Б${mP} Ж${mF} В${mC}</span>
+                        
+                        <div style="width:50px; display:flex; height:3px; background:#222; border-radius:2px; overflow:hidden; margin-top:2px;">
+                            <div style="width:${pP}%; background:var(--p-color);"></div>
+                            <div style="width:${pF}%; background:var(--f-color);"></div>
+                            <div style="width:${pC}%; background:var(--c-color);"></div>
+                        </div>
                     </div>
                 </div>
                 
-                <div style="display:flex; align-items:center; padding-left:10px; flex-shrink:0;">
-                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:4px; font-size:1.1rem; color:#888;">✎</div>
+                <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
+                    <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:6px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
+                    
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:6px; font-size:1.1rem; color:#888;">✎</div>
                 </div>
                 
             </div>
@@ -1204,6 +1219,30 @@ const App = {
         document.getElementById('inpK').value = Math.round((ref.k || 0) * ratio);
     },
 
+    reverseCalc(type) {
+        if (!this.state.tempFood) return;
+        const ref = this.state.tempFood;
+        const inputEl = document.getElementById(type === 'p' ? 'inpP' : type === 'f' ? 'inpF' : type === 'c' ? 'inpC' : 'inpK');
+        const val = parseFloat(inputEl.value);
+        
+        if(isNaN(val)) return;
+
+        let targetRefVal = ref[type]; 
+        if (!targetRefVal || targetRefVal <= 0) return; // Захист від ділення на нуль
+
+        // Вираховуємо потрібну вагу для досягнення введеного макроса
+        let newWeight = ref.unit ? (val / targetRefVal) : ((val * 100) / targetRefVal);
+        newWeight = Math.round(newWeight * 10) / 10; 
+
+        document.getElementById('inpWeight').value = newWeight;
+        
+        // Оновлюємо інші поля, НЕ чіпаючи те, в якому зараз стоїть курсор
+        const ratio = ref.unit ? newWeight : newWeight / 100;
+        if (type !== 'p') document.getElementById('inpP').value = Math.round((ref.p || 0) * ratio);
+        if (type !== 'f') document.getElementById('inpF').value = Math.round((ref.f || 0) * ratio);
+        if (type !== 'c') document.getElementById('inpC').value = Math.round((ref.c || 0) * ratio);
+        if (type !== 'k') document.getElementById('inpK').value = Math.round((ref.k || 0) * ratio);
+    },
     selectSuggestion(name) {
         const f = this.data.bank[name];
         
