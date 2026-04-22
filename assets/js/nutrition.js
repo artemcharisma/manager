@@ -953,7 +953,12 @@ const App = {
                     </div>
                     
                     <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
-                        <input type="text" inputmode="numeric" class="meal-time-input" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
+                        
+                        <div style="display:flex; background:rgba(212, 175, 55, 0.05); border:1px solid rgba(212, 175, 55, 0.3); border-radius:6px; overflow:hidden;">
+                            <input type="text" inputmode="numeric" class="meal-time-input" style="border:none; border-radius:0; background:transparent; padding:4px 6px;" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
+                            ${(m.time && m.time.length === 5) ? `<div onclick="App.syncMealTimeToAll('${m.name}', '${m.time}', event)" style="padding:0 8px; display:flex; align-items:center; color:var(--theme); cursor:pointer; font-size:0.8rem; border-left:1px solid rgba(212, 175, 55, 0.3);" title="Синхронізувати час на всі дні">🔄</div>` : ''}
+                        </div>
+
                         <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--theme);">${mCal} ккал</div>
                         <span style="font-size:0.65rem; color:#666; font-weight:600;">Б${mP} Ж${mF} В${mC}</span>
                     </div>
@@ -1393,28 +1398,26 @@ const App = {
     },
 
     // Смарт-маска для 24-годинного формату
-    formatTimeInput(el, mid) {
-        let v = el.value.replace(/\D/g, ''); // Залишаємо тільки цифри
-        if (v.length > 4) v = v.substring(0, 4);
-
-        if (v.length >= 2) {
-            let h = parseInt(v.substring(0, 2));
-            if (h > 23) v = '23' + v.substring(2);
-        }
-        if (v.length >= 4) {
-            let m = parseInt(v.substring(2, 4));
-            if (m > 59) v = v.substring(0, 2) + '59';
-        }
-
-        if (v.length > 2) {
-            v = v.substring(0, 2) + ':' + v.substring(2);
-        }
-        el.value = v;
-
-        // Зберігаємо тільки коли введено 4 цифри або повністю стерто
-        if (v.length === 5 || v.length === 0) {
-            this.saveMealTime(mid, v);
-        }
+    async syncMealTimeToAll(mealName, timeStr, e) {
+        if(e) e.stopPropagation();
+        if (!timeStr || timeStr.length < 5) return; 
+        
+        if (!(await Modal.confirm(`Застосувати час <b style="color:var(--theme)">${timeStr}</b> для всіх прийомів з назвою <b style="color:var(--theme)">"${mealName}"</b> у всіх днях?`, "СИНХРОНІЗАЦІЯ", "gold"))) return;
+        
+        this.pushHistory();
+        let count = 0;
+        this.data.days.forEach(d => {
+            d.meals.forEach(m => {
+                if (m.name.trim().toLowerCase() === mealName.trim().toLowerCase()) {
+                    m.time = timeStr;
+                    count++;
+                }
+            });
+        });
+        
+        this.save();
+        this.render(false);
+        if (window.Haptics) window.Haptics.success();
     },
     toggleMealCollapse(mid, e) {
         if (e && (e.target.tagName === 'INPUT' || e.target.closest('.edit-meal-btn') || e.target.closest('.mh-del') || e.target.closest('[onclick*="copyMeal"]'))) {
@@ -1433,8 +1436,11 @@ const App = {
     addMealBlock() {
         this.pushHistory();
         const id = Utils.id();
-        // Новий блок створюємо розгорнутим (isCollapsed: false)
-        this.getCurrentDay().meals.push({id, name:"Прийом їжі", foods:[], isCollapsed: false});
+        const day = this.getCurrentDay();
+        // Розумна автонумерація (Прийом їжі 1, 2, 3...)
+        const nextNum = day.meals.length + 1; 
+        
+        day.meals.push({id, name:`Прийом їжі ${nextNum}`, foods:[], isCollapsed: false});
         this.save(); this.render();
     },
     
