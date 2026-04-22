@@ -927,15 +927,18 @@ const App = {
                 mCal += k; mP += p; mF += fat; mC += c;
 
                 return `
-                <div class="food-row" onclick="App.editFood(${m.id}, ${i})">
-                    <div class="fr-info">
-                        <h4>${f.n}</h4>
-                        <p>Б${p} Ж${fat} В${c}</p>
+                <div class="food-row" style="padding-right:10px;">
+                    <div style="display:flex; justify-content:space-between; flex:1; cursor:pointer;" onclick="App.editFood(${m.id}, ${i})">
+                        <div class="fr-info">
+                            <h4>${f.n}</h4>
+                            <p>Б${p} Ж${fat} В${c}</p>
+                        </div>
+                        <div class="fr-vals" style="padding-right:15px;">
+                            <div class="fr-w">${f.w}${ref.unit?'':'г'}</div>
+                            <div class="fr-k">${k}</div>
+                        </div>
                     </div>
-                    <div class="fr-vals">
-                        <div class="fr-w">${f.w}${ref.unit?'':'г'}</div>
-                        <div class="fr-k">${k}</div>
-                    </div>
+                    <div onclick="App.openSwapModal(${m.id}, ${i}, event)" style="color:var(--theme); font-size:1.3rem; padding:4px 0 4px 15px; border-left:1px solid rgba(255,255,255,0.05); cursor:pointer;" title="Смарт-заміна">🔄</div>
                 </div>`;
             }).join('');
 
