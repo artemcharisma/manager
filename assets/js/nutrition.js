@@ -632,29 +632,16 @@ const App = {
     },
 
     editWater() {
-        if(document.activeElement) document.activeElement.blur();
-        
-        // Жорстко очищаємо екран від будь-яких інших вікон
-        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
-        
-        this.lockScroll();
-        this.toggleFab(false);
-        
+        this.switchModal('waterModal');
         const day = this.getCurrentDay();
         if (!day) return;
         const w = day.water || 0;
-        
         const l = Math.floor(w);
         const ml = Math.round((w - l) * 1000);
-        
         document.getElementById('inpWaterL').value = l === 0 ? '' : l;
         document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
-        
-        const modal = document.getElementById('waterModal');
-        modal.style.display = 'flex';
-        modal.style.zIndex = '10000'; // Виносимо на самий передній план
     },
     
     adjustWater(amount) {
@@ -688,16 +675,8 @@ const App = {
         if(window.Haptics) window.Haptics.success();
     },
     openOrderEditor() {
-        if(document.activeElement) document.activeElement.blur();
-        
-        // ФІКС: Жорстко ховаємо модалку налаштувань (вона зникне, а редактор з'явиться)
-        const dayModal = document.getElementById('dayEditModal');
-        if (dayModal) dayModal.style.display = 'none';
-
-        this.lockScroll();
-        this.toggleFab(false);
+        this.switchModal('orderModal');
         this.renderOrderEditor();
-        document.getElementById('orderModal').style.display = 'flex';
     },
 
     renderOrderEditor() {
@@ -940,7 +919,6 @@ const App = {
             }).join('');
 
             // ЗАЛИШАЄМО ТІЛЬКИ ОДИН РАЗ
-            const animClass = animate ? 'animate-pop' : '';
             const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
             // Розрахунок % для візуального мікро-бара
@@ -1447,7 +1425,25 @@ const App = {
         document.getElementById('foodModal').style.display = 'flex';
         document.getElementById('sugg-list').style.display = 'none';
     },
-    
+    // Смарт-перемикач вікон: ховає старе вікно без скидання загального скролу сторінки
+    switchModal(modalId) {
+        if (document.activeElement) document.activeElement.blur();
+        
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal', 'swapModal'];
+        modalIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && id !== modalId) el.style.display = 'none';
+        });
+
+        this.lockScroll();
+        this.toggleFab(false);
+
+        const targetModal = document.getElementById(modalId);
+        if (targetModal) {
+            targetModal.style.display = 'flex';
+            targetModal.style.zIndex = '10000'; // Виносимо на фронт
+        }
+    },
     closeModal() { 
         // ФІКС 2: Блокуємо iOS-фіксер довше, щоб клавіатура точно встигла сховатись
         window.blockKeyboardScrollFix = true;
@@ -1736,11 +1732,7 @@ const App = {
     },
 
     openTargets() {
-        if(document.activeElement) document.activeElement.blur();
-        
-        this.lockScroll(); 
-        this.toggleFab(false); 
-        
+        this.switchModal('targetsModal');
         const day = this.getCurrentDay();
         const t = day.targets || this.data.targets;
         
@@ -1760,8 +1752,6 @@ const App = {
         if (wDisplay) wDisplay.innerText = weight ? `${weight.toFixed(1)} kg` : "-- kg";
 
         if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
-
-        document.getElementById('targetsModal').style.display = 'flex';
     },
     async applyPreset(type) {
         let weight = null;
