@@ -623,7 +623,7 @@
 </div>
 
 <div id="bankModal" class="modal-overlay">
-    <div class="modal-card">
+    <div class="modal-card" style="height:85vh; max-height:85vh">
         <div class="mc-header">
             <h3 class="mc-title">БАЗА ПРОДУКТІВ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
@@ -667,7 +667,8 @@
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="flex: 1; padding-right: 5px;">
+        <div style="flex: 1; overflow-y: auto; min-height: 0; padding-right: 5px; -webkit-overflow-scrolling: touch;">
+            
             <div style="margin-bottom: 15px; margin-top: 10px;">
                 <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
                 <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
@@ -819,6 +820,44 @@
 
 <div id="undoFloat" onclick="App.undo()">↩</div>
 
+<style>
+/* Стилі для плаваючої кнопки Undo */
+#undoFloat { 
+    position: fixed; 
+    bottom: 160px; 
+    right: 20px; 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    background: rgba(28,28,30,0.9); 
+    border: 2px solid var(--theme); 
+    color: var(--theme); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.5rem; 
+    font-weight: 800; 
+    z-index: 900; 
+    opacity: 0; 
+    pointer-events: none; 
+    transform: translateY(20px) scale(0.5); 
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    cursor: pointer; 
+    backdrop-filter: blur(5px); 
+}
+#undoFloat.visible { 
+    opacity: 1; 
+    pointer-events: auto; 
+    transform: translateY(0) scale(1); 
+}
+body.modal-active #undoFloat { 
+    opacity: 0 !important; 
+    visibility: hidden !important; 
+    pointer-events: none !important; 
+    transform: translateY(-10px) scale(0.95) !important; 
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; 
+}
+</style>
 <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)" style="display: none;">
 </body>
 </html>
