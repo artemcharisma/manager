@@ -227,20 +227,20 @@
             background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
             display: flex; justify-content: space-between; align-items: center;
         }
-        /* --- ВІДЖЕТ ТАЙМІНГУ --- */
+        /* --- ВІДЖЕТ ТАЙМІНГУ (TEXT) --- */
         .meal-time-input {
-            background: rgba(212, 175, 55, 0.05); 
+            background: rgba(212, 175, 55, 0.1); 
             border: 1px solid rgba(212, 175, 55, 0.3);
             color: var(--theme); 
             font-family: var(--font-mono); 
             font-weight: 800;
-            font-size: 0.75rem; 
-            padding: 2px 6px; 
+            font-size: 0.85rem; 
+            padding: 4px; 
             border-radius: 6px; 
             outline: none;
             -webkit-appearance: none; 
             text-align: center;
-            line-height: normal;
+            width: 60px; /* Фіксована ширина для 00:00 */
         }
         .meal-time-input::-webkit-calendar-picker-indicator { display: none; }
         .meal-time-input::-webkit-date-and-time-value { text-align: center; }
@@ -649,7 +649,7 @@
             </div>
             
             <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
-            <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
+           <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
                 <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">КЕРУВАННЯ ЕТАПОМ</label>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
@@ -721,14 +721,13 @@
 
         <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-bottom:8px;">ДЕТАЛЬНИЙ СПЛІТ</label>
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-            
             <div style="display:grid; grid-template-columns: 40px 1fr 15px 1px 45px 45px; align-items:center; gap:8px; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:10px 15px;">
                 <div style="color:var(--p-color); font-weight:900; font-size:0.9rem;">БІЛ</div>
                 <input type="number" id="tgP" inputmode="decimal" style="background:transparent; border:none; color:#fff; font-size:1.4rem; font-weight:800; text-align:right; font-family:var(--font-mono); outline:none; padding:0; width:100%; min-width:0;" oninput="App.calcTargetKcal()">
                 <div style="color:#666; font-size:0.8rem; font-family:var(--font-mono); text-align:right;">g</div>
                 <div style="height:24px; background:#333;"></div>
-                <div id="lblModalMultP" style="color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right; white-space:nowrap;">-- x</div>
-                <div id="lblModalPctP" style="color:var(--p-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right; white-space:nowrap;">--%</div>
+                <div id="lblModalMultP" style="color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right;">-- x</div>
+                <div id="lblModalPctP" style="color:var(--p-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right;">--%</div>
             </div>
 
             <div style="display:grid; grid-template-columns: 40px 1fr 15px 1px 45px 45px; align-items:center; gap:8px; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:10px 15px;">
@@ -736,8 +735,8 @@
                 <input type="number" id="tgF" inputmode="decimal" style="background:transparent; border:none; color:#fff; font-size:1.4rem; font-weight:800; text-align:right; font-family:var(--font-mono); outline:none; padding:0; width:100%; min-width:0;" oninput="App.calcTargetKcal()">
                 <div style="color:#666; font-size:0.8rem; font-family:var(--font-mono); text-align:right;">g</div>
                 <div style="height:24px; background:#333;"></div>
-                <div id="lblModalMultF" style="color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right; white-space:nowrap;">-- x</div>
-                <div id="lblModalPctF" style="color:var(--f-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right; white-space:nowrap;">--%</div>
+                <div id="lblModalMultF" style="color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right;">-- x</div>
+                <div id="lblModalPctF" style="color:var(--f-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right;">--%</div>
             </div>
 
             <div style="display:grid; grid-template-columns: 40px 1fr 15px 1px 45px 45px; align-items:center; gap:8px; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:10px 15px;">
@@ -745,8 +744,8 @@
                 <input type="number" id="tgC" inputmode="decimal" style="background:transparent; border:none; color:#fff; font-size:1.4rem; font-weight:800; text-align:right; font-family:var(--font-mono); outline:none; padding:0; width:100%; min-width:0;" oninput="App.calcTargetKcal()">
                 <div style="color:#666; font-size:0.8rem; font-family:var(--font-mono); text-align:right;">g</div>
                 <div style="height:24px; background:#333;"></div>
-                <div id="lblModalMultC" style="color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right; white-space:nowrap;">-- x</div>
-                <div id="lblModalPctC" style="color:var(--c-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right; white-space:nowrap;">--%</div>
+                <div id="lblModalMultC" style="color:#aaa; font-size:0.75rem; font-family:var(--font-mono); font-weight:700; text-align:right;">-- x</div>
+                <div id="lblModalPctC" style="color:var(--c-color); font-size:0.85rem; font-family:var(--font-mono); font-weight:800; text-align:right;">--%</div>
             </div>
         </div>
 
