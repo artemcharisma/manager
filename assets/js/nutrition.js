@@ -690,16 +690,14 @@ const App = {
     openOrderEditor() {
         if(document.activeElement) document.activeElement.blur();
         
-        // Жорстко очищаємо екран перед відкриттям
-        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        // ФІКС: Жорстко ховаємо модалку налаштувань (вона зникне, а редактор з'явиться)
+        const dayModal = document.getElementById('dayEditModal');
+        if (dayModal) dayModal.style.display = 'none';
 
         this.lockScroll();
         this.toggleFab(false);
         this.renderOrderEditor();
-        
-        const modal = document.getElementById('orderModal');
-        modal.style.display = 'flex';
-        modal.style.zIndex = '10000';
+        document.getElementById('orderModal').style.display = 'flex';
     },
 
     renderOrderEditor() {
@@ -946,7 +944,7 @@ const App = {
                     </div>
                     
                     <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
-                        <input type="time" class="meal-time-input" value="${m.time || ''}" onchange="App.saveMealTime(${m.id}, this.value)" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
+                        <input type="text" inputmode="numeric" class="meal-time-input" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
                         <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--theme);">${mCal} ккал</div>
                         <span style="font-size:0.65rem; color:#666; font-weight:600;">Б${mP} Ж${mF} В${mC}</span>
                     </div>
@@ -1382,6 +1380,30 @@ const App = {
         }
     },
 
+    // Смарт-маска для 24-годинного формату
+    formatTimeInput(el, mid) {
+        let v = el.value.replace(/\D/g, ''); // Залишаємо тільки цифри
+        if (v.length > 4) v = v.substring(0, 4);
+
+        if (v.length >= 2) {
+            let h = parseInt(v.substring(0, 2));
+            if (h > 23) v = '23' + v.substring(2);
+        }
+        if (v.length >= 4) {
+            let m = parseInt(v.substring(2, 4));
+            if (m > 59) v = v.substring(0, 2) + '59';
+        }
+
+        if (v.length > 2) {
+            v = v.substring(0, 2) + ':' + v.substring(2);
+        }
+        el.value = v;
+
+        // Зберігаємо тільки коли введено 4 цифри або повністю стерто
+        if (v.length === 5 || v.length === 0) {
+            this.saveMealTime(mid, v);
+        }
+    },
     toggleMealCollapse(mid, e) {
         if (e && (e.target.tagName === 'INPUT' || e.target.closest('.edit-meal-btn') || e.target.closest('.mh-del') || e.target.closest('[onclick*="copyMeal"]'))) {
             return;
@@ -1512,9 +1534,6 @@ const App = {
     openTargets() {
         if(document.activeElement) document.activeElement.blur();
         
-        // Жорстко очищаємо екран
-        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
-        
         this.lockScroll(); 
         this.toggleFab(false); 
         
@@ -1538,9 +1557,7 @@ const App = {
 
         if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
 
-        const modal = document.getElementById('targetsModal');
-        modal.style.display = 'flex';
-        modal.style.zIndex = '10000';
+        document.getElementById('targetsModal').style.display = 'flex';
     },
     async applyPreset(type) {
         let weight = null;
@@ -1669,9 +1686,9 @@ const App = {
         updateLabel('lblModalPctP', `${pPct}%`);
         updateLabel('lblModalPctF', `${fPct}%`);
         updateLabel('lblModalPctC', `${cPct}%`);
-        updateLabel('lblModalMultP', `${calcMult(p)} x`);
-        updateLabel('lblModalMultF', `${calcMult(f)} x`);
-        updateLabel('lblModalMultC', `${calcMult(c)} x`);
+        updateLabel('lblModalMultP', `${calcMult(p)}`);
+        updateLabel('lblModalMultF', `${calcMult(f)}`);
+        updateLabel('lblModalMultC', `${calcMult(c)}`);
     },
     
     saveTargets() {
