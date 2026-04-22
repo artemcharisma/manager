@@ -965,7 +965,7 @@ const App = {
                 </div>
                 
                 <div style="display:flex; align-items:center; padding-left:10px; flex-shrink:0;">
-                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id})" style="padding:10px; font-size:1.3rem; color:#666;">✎</div>
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:4px; font-size:1.1rem; color:#888;">✎</div>
                 </div>
                 
             </div>
@@ -1455,17 +1455,29 @@ const App = {
         if (document.getElementById('orderModal').style.display === 'flex') this.renderOrderEditor();
     },
     
-    async promptRenameMeal(id) {
+    async promptRenameMeal(id, e) {
+        if(e) { e.preventDefault(); e.stopPropagation(); }
+        
+        // Запобіжник від Ghost Clicks
+        if(window.isPromptingMeal) return;
+        window.isPromptingMeal = true;
+
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === id);
-        if(!meal) return;
+        
+        if(!meal) { window.isPromptingMeal = false; return; }
+        
         const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
+        
         if (newName && newName.trim() !== "") {
             this.pushHistory();
             meal.name = newName.trim();
             this.save();
             this.render(false);
         }
+        
+        // Знімаємо блок через 400мс (коли фантомний клік гарантовано згорить)
+        setTimeout(() => { window.isPromptingMeal = false; }, 400);
     },
 
     renderBank(filter = "") {
