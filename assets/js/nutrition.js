@@ -1471,20 +1471,62 @@ const App = {
     },
     
     async promptRenameMeal(id, e) {
-        if(e) { e.preventDefault(); e.stopPropagation(); } // <--- БЛОКУЄМО ПРОБИТТЯ КЛІКУ
+        if(e) { e.preventDefault(); e.stopPropagation(); } // Блокуємо пробиття
         
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === id);
         if(!meal) return;
         
+        // Щит від Ghost Clicks (фантомних кліків iOS)
+        const ghostShield = document.createElement('div');
+        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;';
+        document.body.appendChild(ghostShield);
+
         const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
-        // Додана перевірка, щоб не зберігати, якщо ім'я не змінилось
+        
+        setTimeout(() => ghostShield.remove(), 400); // Знімаємо щит
+
         if (newName && newName.trim() !== "" && newName.trim() !== meal.name) {
             this.pushHistory();
             meal.name = newName.trim();
             this.save();
             this.render(false);
         }
+    },
+
+    // НОВА ПРО-ФУНКЦІЯ: Масштабування прийому їжі
+    async scaleMeal(mid, e) {
+        if(e) { e.preventDefault(); e.stopPropagation(); }
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === mid);
+        if(!meal || meal.foods.length === 0) return;
+
+        const ghostShield = document.createElement('div');
+        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;';
+        document.body.appendChild(ghostShield);
+
+        const coefStr = await Modal.prompt(`Масштабувати порції: ${meal.name}\nВведіть коефіцієнт (наприклад 1.5 для +50%, або 0.8 для -20%):`, "МАСШТАБ", "1.0");
+        
+        setTimeout(() => ghostShield.remove(), 400);
+
+        if(!coefStr) return;
+        const coef = parseFloat(coefStr.replace(',', '.'));
+        if(isNaN(coef) || coef <= 0 || coef === 1) return;
+
+        this.pushHistory();
+        meal.foods.forEach(f => {
+            f.w = Math.round(f.w * coef * 10) / 10; // Округлюємо до 1 десятої
+            
+            // Якщо макроси збережені локально в об'єкті продукту, масштабуємо і їх
+            if(f.p !== undefined) f.p = Math.round(f.p * coef);
+            if(f.f !== undefined) f.f = Math.round(f.f * coef);
+            if(f.c !== undefined) f.c = Math.round(f.c * coef);
+            if(f.k !== undefined) f.k = Math.round(f.k * coef);
+        });
+
+        this.save();
+        this.render(false);
+        if(window.Haptics) window.Haptics.success();
     },
 
     renderBank(filter = "") {
