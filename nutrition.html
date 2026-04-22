@@ -788,6 +788,25 @@
         <button class="btn-danger" style="color:#888; border-color:#444; margin-top:5px;" onclick="App.applyTargetsToAll()">🔄 ПЕРЕЗАПИСАТИ ВСІ ДНІ</button>
     </div>
 </div>
+<div id="swapModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="mc-header">
+            <h3 class="mc-title">🔄 СМАРТ-ЗАМІНА</h3>
+            <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
+        </div>
+        <div style="font-size:0.75rem; color:#888; margin-bottom:15px; text-align:center;">
+            Еквівалентна заміна зі збереженням <b id="swapTargetText" style="color:var(--theme)">...</b>.
+        </div>
+        
+        <div style="position:relative">
+            <input id="inpSwapName" class="inp-main" placeholder="Знайти продукт на заміну..." autocomplete="off" oninput="App.searchSwap(this.value)">
+            <div id="swap-sugg-list" style="background:#1a1a1a; border:1px solid #333; border-radius:12px; margin-top:5px; max-height:200px; overflow-y:auto; display:none; position:absolute; width:100%; z-index:50; box-shadow:0 10px 30px rgba(0,0,0,0.8);"></div>
+        </div>
+        
+        <label style="font-size:0.65rem; color:#666; font-weight:800; font-family:var(--font-mono); letter-spacing:1px; display:block; margin-top:20px; margin-bottom:5px;">ШВИДКА ЗАМІНА</label>
+        <div id="swapBankContainer"></div>
+    </div>
+</div>
 <script src="assets/js/utils.js"></script>  
 <script src="assets/js/nutrition.js"></script> 
 <script src="assets/js/common.js"></script>
