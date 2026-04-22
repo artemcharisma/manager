@@ -585,11 +585,10 @@
         <div style="font-size:0.75rem; color:#888; margin-bottom:15px; text-align:center; font-family:var(--font-mono);">
             Керуйте структурою: сортуйте (≡), копіюйте (📋) або видаляйте (✕).
         </div>
-        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-bottom:10px;"></div>
+        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; max-height:45vh; overflow-y:auto; padding-bottom:10px;"></div>
         <button class="btn-primary" style="margin-top:10px;" onclick="App.closeModal()">ГОТОВО</button>
     </div>
 </div>
-
 <div id="foodModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -614,11 +613,7 @@
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
-        
-        <div id="editFoodActions" style="display:none; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
-            <button class="btn-danger" style="margin-top:0; color:var(--theme); border-color:rgba(212, 175, 55, 0.4);" onclick="App.openSwapModal(event)">🔄 ЗАМІНИТИ</button>
-            <button class="btn-danger" style="margin-top:0;" onclick="App.deleteFood()">🗑 ВИДАЛИТИ</button>
-        </div>
+        <button class="btn-danger" id="btnDeleteFood" style="display:none" onclick="App.deleteFood()">ВИДАЛИТИ ПРОДУКТ</button>
     </div>
 </div>
 
@@ -661,7 +656,8 @@
 </div>
 
 <div id="dayEditModal" class="modal-overlay">
-    <div class="modal-card">
+    <div class="modal-card" style="max-height: 85vh; display: flex; flex-direction: column; padding-bottom: 25px;">
+        
         <div class="mc-header" style="flex-shrink: 0;">
             <h3 class="mc-title">НАЛАШТУВАННЯ ЕТАПУ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
@@ -680,7 +676,7 @@
             </div>
             
             <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
-            <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
+           <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
                 <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">КЕРУВАННЯ ЕТАПОМ</label>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
@@ -710,7 +706,6 @@
         </div>
     </div>
 </div>
-
 <div id="scheduleModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -722,7 +717,7 @@
             Прив'яжіть створені етапи до днів тижня. Додаток автоматично завантажить потрібний раціон.
         </div>
         
-        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-bottom:10px;"></div>
+        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-bottom:10px;"></div>
         
         <button class="btn-primary" style="margin-top:20px;" onclick="App.saveSchedule()">ЗБЕРЕГТИ РОЗКЛАД</button>
     </div>
@@ -793,7 +788,6 @@
         <button class="btn-danger" style="color:#888; border-color:#444; margin-top:5px;" onclick="App.applyTargetsToAll()">🔄 ПЕРЕЗАПИСАТИ ВСІ ДНІ</button>
     </div>
 </div>
-
 <div id="swapModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -813,7 +807,6 @@
         <div id="swapBankContainer"></div>
     </div>
 </div>
-
 <script src="assets/js/utils.js"></script>  
 <script src="assets/js/nutrition.js"></script> 
 <script src="assets/js/common.js"></script>
