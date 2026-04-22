@@ -980,10 +980,9 @@ const App = {
                         </div>
                     </div>
                     
-                    <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
-                        <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:8px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
-                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:8px; font-size:1.2rem; color:#888;">✎</div>
-                    </div>
+                    <div style="display:flex; align-items:center; padding-left:10px; flex-shrink:0;">
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:12px; font-size:1.3rem; color:#888;">✎</div>
+                </div>
                     
                 </div>
                 
@@ -1512,23 +1511,20 @@ const App = {
     },
     
     async promptRenameMeal(id, e) {
-        if(e) { e.preventDefault(); e.stopPropagation(); } // Зупиняємо подію самого натискання
-
+        if(e) { e.preventDefault(); e.stopPropagation(); } 
+        
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === id);
         if(!meal) return;
         
-        // 1. Створюємо невидимий щит, який перекриває ВЕСЬ екран
-        const ghostShield = document.createElement('div');
-        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;';
-        document.body.appendChild(ghostShield);
-
-        // 2. Викликаємо модалку вводу
         const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
         
-        // 3. Найважливіше: знімаємо щит із затримкою 400мс ПІСЛЯ закриття модалки,
-        // щоб він "з'їв" усі фантомні кліки від iOS/Android.
-        setTimeout(() => ghostShield.remove(), 400);
+        // ФІКС: Ставимо невидимий щит на 350мс ПІСЛЯ закриття вікна, 
+        // щоб повністю поглинути "пробиття" (ghost click) від iOS/Android
+        const shield = document.createElement('div');
+        shield.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;';
+        document.body.appendChild(shield);
+        setTimeout(() => shield.remove(), 350);
 
         if (newName && newName.trim() !== "" && newName.trim() !== meal.name) {
             this.pushHistory();
@@ -1538,8 +1534,6 @@ const App = {
         }
     },
 
-    // НОВА ПРО-ФУНКЦІЯ: Масштабування прийому їжі
-    // НОВА ПРО-ФУНКЦІЯ: Масштабування цілого прийому їжі
     async scaleMeal(mid, e) {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         const day = this.getCurrentDay();
