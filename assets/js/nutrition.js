@@ -1534,41 +1534,6 @@ const App = {
         }
     },
 
-    async scaleMeal(mid, e) {
-        if(e) { e.preventDefault(); e.stopPropagation(); }
-        const day = this.getCurrentDay();
-        const meal = day.meals.find(m => m.id === mid);
-        if(!meal || meal.foods.length === 0) return;
-
-        // Той самий щит від Ghost Clicks
-        const ghostShield = document.createElement('div');
-        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;';
-        document.body.appendChild(ghostShield);
-
-        const coefStr = await Modal.prompt(`Масштабувати порції: ${meal.name.toUpperCase()}\nВведіть коефіцієнт (наприклад 1.5 для +50%, або 0.8 для -20%):`, "МАСШТАБ (⚖️)", "1.0");
-        
-        setTimeout(() => ghostShield.remove(), 400);
-
-        if(!coefStr) return;
-        const coef = parseFloat(coefStr.replace(',', '.'));
-        if(isNaN(coef) || coef <= 0 || coef === 1) return;
-
-        this.pushHistory();
-        meal.foods.forEach(f => {
-            f.w = Math.round(f.w * coef * 10) / 10; // Округлюємо до 1 десятої
-            
-            // Якщо макроси жорстко закешовані у продукті, множимо і їх
-            if(f.p !== undefined) f.p = Math.round(f.p * coef);
-            if(f.f !== undefined) f.f = Math.round(f.f * coef);
-            if(f.c !== undefined) f.c = Math.round(f.c * coef);
-            if(f.k !== undefined) f.k = Math.round(f.k * coef);
-        });
-
-        this.save();
-        this.render(false);
-        if(window.Haptics) window.Haptics.success();
-    },
-
     renderBank(filter = "") {
         const l = document.getElementById('bankList');
         const query = filter.toLowerCase(); // Кешуємо пошуковий запит
