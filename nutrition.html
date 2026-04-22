@@ -585,10 +585,11 @@
         <div style="font-size:0.75rem; color:#888; margin-bottom:15px; text-align:center; font-family:var(--font-mono);">
             Керуйте структурою: сортуйте (≡), копіюйте (📋) або видаляйте (✕).
         </div>
-        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; max-height:45vh; overflow-y:auto; padding-bottom:10px;"></div>
+        <div id="orderContainer" style="display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-bottom:10px;"></div>
         <button class="btn-primary" style="margin-top:10px;" onclick="App.closeModal()">ГОТОВО</button>
     </div>
 </div>
+
 <div id="foodModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -618,10 +619,11 @@
             <button class="btn-danger" style="margin-top:0; color:var(--theme); border-color:rgba(212, 175, 55, 0.4);" onclick="App.openSwapModal(event)">🔄 ЗАМІНИТИ</button>
             <button class="btn-danger" style="margin-top:0;" onclick="App.deleteFood()">🗑 ВИДАЛИТИ</button>
         </div>
+    </div>
 </div>
 
 <div id="bankModal" class="modal-overlay">
-    <div class="modal-card" style="height:85vh; max-height:85vh">
+    <div class="modal-card">
         <div class="mc-header">
             <h3 class="mc-title">БАЗА ПРОДУКТІВ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
@@ -659,15 +661,13 @@
 </div>
 
 <div id="dayEditModal" class="modal-overlay">
-    <div class="modal-card" style="max-height: 85vh; display: flex; flex-direction: column; padding-bottom: 25px;">
-        
+    <div class="modal-card">
         <div class="mc-header" style="flex-shrink: 0;">
             <h3 class="mc-title">НАЛАШТУВАННЯ ЕТАПУ</h3>
             <span onclick="App.closeModal()" style="font-size:1.5rem;cursor:pointer;color:#666">✕</span>
         </div>
         
-        <div style="flex: 1; overflow-y: auto; min-height: 0; padding-right: 5px; -webkit-overflow-scrolling: touch;">
-            
+        <div style="flex: 1; padding-right: 5px;">
             <div style="margin-bottom: 15px; margin-top: 10px;">
                 <label style="font-size:0.75rem; color:#888; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:8px; display:block;">ГОЛОВНА НАЗВА</label>
                 <input id="inpDayTitle" class="inp-main" placeholder="Наприклад: Сушка" autocomplete="off">
@@ -679,7 +679,7 @@
             </div>
             
             <button class="btn-primary" style="margin-top:25px;" onclick="App.saveDayName()">ЗБЕРЕГТИ ЕТАП</button>
-           <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
+            <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
                 <label style="font-size:0.7rem; color:#666; font-weight:700; font-family:var(--font-mono); letter-spacing:1px; margin-bottom:10px; display:block; text-align:center;">КЕРУВАННЯ ЕТАПОМ</label>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
@@ -709,6 +709,7 @@
         </div>
     </div>
 </div>
+
 <div id="scheduleModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -720,7 +721,7 @@
             Прив'яжіть створені етапи до днів тижня. Додаток автоматично завантажить потрібний раціон.
         </div>
         
-        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-bottom:10px;"></div>
+        <div id="scheduleContainer" style="display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-bottom:10px;"></div>
         
         <button class="btn-primary" style="margin-top:20px;" onclick="App.saveSchedule()">ЗБЕРЕГТИ РОЗКЛАД</button>
     </div>
@@ -791,6 +792,7 @@
         <button class="btn-danger" style="color:#888; border-color:#444; margin-top:5px;" onclick="App.applyTargetsToAll()">🔄 ПЕРЕЗАПИСАТИ ВСІ ДНІ</button>
     </div>
 </div>
+
 <div id="swapModal" class="modal-overlay">
     <div class="modal-card">
         <div class="mc-header">
@@ -810,50 +812,13 @@
         <div id="swapBankContainer"></div>
     </div>
 </div>
+
 <script src="assets/js/utils.js"></script>  
 <script src="assets/js/nutrition.js"></script> 
 <script src="assets/js/common.js"></script>
 
 <div id="undoFloat" onclick="App.undo()">↩</div>
 
-<style>
-/* Стилі для плаваючої кнопки Undo */
-#undoFloat { 
-    position: fixed; 
-    bottom: 160px; 
-    right: 20px; 
-    width: 50px; 
-    height: 50px; 
-    border-radius: 50%; 
-    background: rgba(28,28,30,0.9); 
-    border: 2px solid var(--theme); 
-    color: var(--theme); 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-size: 1.5rem; 
-    font-weight: 800; 
-    z-index: 900; 
-    opacity: 0; 
-    pointer-events: none; 
-    transform: translateY(20px) scale(0.5); 
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    cursor: pointer; 
-    backdrop-filter: blur(5px); 
-}
-#undoFloat.visible { 
-    opacity: 1; 
-    pointer-events: auto; 
-    transform: translateY(0) scale(1); 
-}
-body.modal-active #undoFloat { 
-    opacity: 0 !important; 
-    visibility: hidden !important; 
-    pointer-events: none !important; 
-    transform: translateY(-10px) scale(0.95) !important; 
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; 
-}
-</style>
 <input type="file" id="fileInput" accept=".json" onchange="App.importData(this)" style="display: none;">
 </body>
 </html>
