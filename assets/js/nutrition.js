@@ -1456,28 +1456,20 @@ const App = {
     },
     
     async promptRenameMeal(id, e) {
-        if(e) { e.preventDefault(); e.stopPropagation(); }
+        if(e) { e.preventDefault(); e.stopPropagation(); } // <--- БЛОКУЄМО ПРОБИТТЯ КЛІКУ
         
-        // Запобіжник від Ghost Clicks
-        if(window.isPromptingMeal) return;
-        window.isPromptingMeal = true;
-
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === id);
-        
-        if(!meal) { window.isPromptingMeal = false; return; }
+        if(!meal) return;
         
         const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
-        
-        if (newName && newName.trim() !== "") {
+        // Додана перевірка, щоб не зберігати, якщо ім'я не змінилось
+        if (newName && newName.trim() !== "" && newName.trim() !== meal.name) {
             this.pushHistory();
             meal.name = newName.trim();
             this.save();
             this.render(false);
         }
-        
-        // Знімаємо блок через 400мс (коли фантомний клік гарантовано згорить)
-        setTimeout(() => { window.isPromptingMeal = false; }, 400);
     },
 
     renderBank(filter = "") {
