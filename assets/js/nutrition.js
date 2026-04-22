@@ -959,10 +959,10 @@ const App = {
             <div class="meal-header" onclick="App.toggleMealCollapse(${m.id}, event)" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                 
                 <div style="flex:1; min-width:0;"> 
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div class="mh-collapse-icon" style="transform: ${m.isCollapsed !== false ? 'rotate(-90deg)' : 'rotate(0)'}; color:#666; font-size:0.75rem; transition:0.2s; width:12px; text-align:center;">▼</div>
-                        <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</h4>
-                    </div>
+                    <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
+                    <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:8px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:8px; font-size:1.2rem; color:#888;">✎</div>
+                </div>
                     
                     <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
                         <input type="text" inputmode="numeric" class="meal-time-input" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
@@ -980,7 +980,7 @@ const App = {
                 <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
                     <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:6px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
                     
-                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:6px; font-size:1.1rem; color:#888;">✎</div>
+                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:10px; font-size:1.3rem; color:#888;">✎</div>
                 </div>
                 
             </div>
@@ -1234,9 +1234,10 @@ const App = {
         let newWeight = ref.unit ? (val / targetRefVal) : ((val * 100) / targetRefVal);
         newWeight = Math.round(newWeight * 10) / 10; 
 
+        // 1. Оновлюємо вагу
         document.getElementById('inpWeight').value = newWeight;
         
-        // Оновлюємо інші поля, НЕ чіпаючи те, в якому зараз стоїть курсор
+        // 2. Оновлюємо інші поля, АЛЕ НЕ ТЕ, в якому зараз курсор (type)
         const ratio = ref.unit ? newWeight : newWeight / 100;
         if (type !== 'p') document.getElementById('inpP').value = Math.round((ref.p || 0) * ratio);
         if (type !== 'f') document.getElementById('inpF').value = Math.round((ref.f || 0) * ratio);
@@ -1510,20 +1511,23 @@ const App = {
     },
     
     async promptRenameMeal(id, e) {
-        if(e) { e.preventDefault(); e.stopPropagation(); } // Блокуємо пробиття
-        
+        if(e) { e.preventDefault(); e.stopPropagation(); } // Зупиняємо подію самого натискання
+
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === id);
         if(!meal) return;
         
-        // Щит від Ghost Clicks (фантомних кліків iOS)
+        // 1. Створюємо невидимий щит, який перекриває ВЕСЬ екран
         const ghostShield = document.createElement('div');
-        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;';
+        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;';
         document.body.appendChild(ghostShield);
 
+        // 2. Викликаємо модалку вводу
         const newName = await Modal.prompt(`Введіть нову назву для: ${meal.name.toUpperCase()}`, "РЕДАКТУВАННЯ ПРИЙОМУ", meal.name);
         
-        setTimeout(() => ghostShield.remove(), 400); // Знімаємо щит
+        // 3. Найважливіше: знімаємо щит із затримкою 400мс ПІСЛЯ закриття модалки,
+        // щоб він "з'їв" усі фантомні кліки від iOS/Android.
+        setTimeout(() => ghostShield.remove(), 400);
 
         if (newName && newName.trim() !== "" && newName.trim() !== meal.name) {
             this.pushHistory();
@@ -1534,17 +1538,19 @@ const App = {
     },
 
     // НОВА ПРО-ФУНКЦІЯ: Масштабування прийому їжі
+    // НОВА ПРО-ФУНКЦІЯ: Масштабування цілого прийому їжі
     async scaleMeal(mid, e) {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mid);
         if(!meal || meal.foods.length === 0) return;
 
+        // Той самий щит від Ghost Clicks
         const ghostShield = document.createElement('div');
-        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;';
+        ghostShield.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;';
         document.body.appendChild(ghostShield);
 
-        const coefStr = await Modal.prompt(`Масштабувати порції: ${meal.name}\nВведіть коефіцієнт (наприклад 1.5 для +50%, або 0.8 для -20%):`, "МАСШТАБ", "1.0");
+        const coefStr = await Modal.prompt(`Масштабувати порції: ${meal.name.toUpperCase()}\nВведіть коефіцієнт (наприклад 1.5 для +50%, або 0.8 для -20%):`, "МАСШТАБ (⚖️)", "1.0");
         
         setTimeout(() => ghostShield.remove(), 400);
 
@@ -1556,7 +1562,7 @@ const App = {
         meal.foods.forEach(f => {
             f.w = Math.round(f.w * coef * 10) / 10; // Округлюємо до 1 десятої
             
-            // Якщо макроси збережені локально в об'єкті продукту, масштабуємо і їх
+            // Якщо макроси жорстко закешовані у продукті, множимо і їх
             if(f.p !== undefined) f.p = Math.round(f.p * coef);
             if(f.f !== undefined) f.f = Math.round(f.f * coef);
             if(f.c !== undefined) f.c = Math.round(f.c * coef);
