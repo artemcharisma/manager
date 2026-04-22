@@ -939,57 +939,59 @@ const App = {
                 </div>`;
             }).join('');
 
-        const animClass = animate ? 'animate-pop' : '';
-        const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
+            // ЗАЛИШАЄМО ТІЛЬКИ ОДИН РАЗ
+            const animClass = animate ? 'animate-pop' : '';
+            const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
-        const animClass = animate ? 'animate-pop' : '';
-        const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
+            // Розрахунок % для візуального мікро-бара
+            const mTotalMacro = (mP*4) + (mF*9) + (mC*4);
+            let pP = 0, pF = 0, pC = 0;
+            if (mTotalMacro > 0) {
+                pP = (mP*4 / mTotalMacro) * 100;
+                pF = (mF*9 / mTotalMacro) * 100;
+                pC = (mC*4 / mTotalMacro) * 100;
+            }
 
-        // Розрахунок % для візуального мікро-бара
-        const mTotalMacro = (mP*4) + (mF*9) + (mC*4);
-        let pP = 0, pF = 0, pC = 0;
-        if (mTotalMacro > 0) {
-            pP = (mP*4 / mTotalMacro) * 100;
-            pF = (mF*9 / mTotalMacro) * 100;
-            pC = (mC*4 / mTotalMacro) * 100;
-        }
-
-        mealsHtml += `
-        <div class="meal-block ${animClass}" style="${delayStr}">
-            <div class="meal-header" onclick="App.toggleMealCollapse(${m.id}, event)" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                
-                <div style="flex:1; min-width:0;"> 
-                    <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
-                    <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:8px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
-                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:8px; font-size:1.2rem; color:#888;">✎</div>
-                </div>
+            mealsHtml += `
+            <div class="meal-block ${animClass}" style="${delayStr}">
+                <div class="meal-header" onclick="App.toggleMealCollapse(${m.id}, event)" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                     
-                    <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
-                        <input type="text" inputmode="numeric" class="meal-time-input" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
-                        <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--theme);">${mCal} ккал</div>
-                        <span style="font-size:0.65rem; color:#666; font-weight:600;">Б${mP} Ж${mF} В${mC}</span>
+                    <div style="flex:1; min-width:0;"> 
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="mh-collapse-icon" style="transform: ${m.isCollapsed !== false ? 'rotate(-90deg)' : 'rotate(0)'}; color:#666; font-size:0.75rem; transition:0.2s; width:12px; text-align:center;">▼</div>
+                            <h4 class="mh-title" style="margin:0; font-weight:800; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</h4>
+                        </div>
                         
-                        <div style="width:50px; display:flex; height:3px; background:#222; border-radius:2px; overflow:hidden; margin-top:2px;">
-                            <div style="width:${pP}%; background:var(--p-color);"></div>
-                            <div style="width:${pF}%; background:var(--f-color);"></div>
-                            <div style="width:${pC}%; background:var(--c-color);"></div>
+                        <div class="mh-meta" style="display:flex; align-items:center; gap:10px; margin-top:6px; padding-left:20px; flex-wrap:wrap;">
+                            
+                            <div style="display:flex; background:rgba(212, 175, 55, 0.05); border:1px solid rgba(212, 175, 55, 0.3); border-radius:6px; overflow:hidden;">
+                                <input type="text" inputmode="numeric" class="meal-time-input" style="border:none; border-radius:0; background:transparent; padding:4px 6px;" value="${m.time || ''}" placeholder="00:00" oninput="App.formatTimeInput(this, ${m.id})" onclick="if(event) event.stopPropagation()" title="Таймінг прийому">
+                                ${(m.time && m.time.length === 5) ? `<div onclick="App.syncMealTimeToAll('${m.name}', '${m.time}', event)" style="padding:0 8px; display:flex; align-items:center; color:var(--theme); cursor:pointer; font-size:0.8rem; border-left:1px solid rgba(212, 175, 55, 0.3);" title="Синхронізувати">🔄</div>` : ''}
+                            </div>
+
+                            <div class="mh-kcal" style="font-family:var(--font-mono); font-weight:700; font-size:0.85rem; color:var(--theme);">${mCal} ккал</div>
+                            <span style="font-size:0.65rem; color:#666; font-weight:600;">Б${mP} Ж${mF} В${mC}</span>
+                            
+                            <div style="width:50px; display:flex; height:3px; background:#222; border-radius:2px; overflow:hidden; margin-top:2px;">
+                                <div style="width:${pP}%; background:var(--p-color);"></div>
+                                <div style="width:${pF}%; background:var(--f-color);"></div>
+                                <div style="width:${pC}%; background:var(--c-color);"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
-                    <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:6px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
                     
-                    <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:10px; font-size:1.3rem; color:#888;">✎</div>
+                    <div style="display:flex; gap:6px; align-items:center; padding-left:10px; flex-shrink:0;">
+                        <div class="edit-meal-btn" onclick="App.scaleMeal(${m.id}, event)" style="padding:8px; font-size:1.1rem; color:#aaa;" title="Масштабувати порції">⚖️</div>
+                        <div class="edit-meal-btn" onclick="App.promptRenameMeal(${m.id}, event)" style="padding:8px; font-size:1.2rem; color:#888;">✎</div>
+                    </div>
+                    
                 </div>
                 
-            </div>
-            
-            <div style="display: ${m.isCollapsed !== false ? 'none' : 'block'}; border-top:1px solid rgba(255,255,255,0.03);">
-                <div>${foodsHtml}</div>
-                <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
-            </div>
-        </div>`;
+                <div style="display: ${m.isCollapsed !== false ? 'none' : 'block'}; border-top:1px solid rgba(255,255,255,0.03);">
+                    <div>${foodsHtml}</div>
+                    <button class="btn-action" onclick="App.addFood(${m.id})">+ ПРОДУКТ</button>
+                </div>
+            </div>`;
         });
 
         let pasteBtnHtml = '';
@@ -1002,7 +1004,6 @@ const App = {
         list.innerHTML = mealsHtml + pasteBtnHtml;
         this.updateStats();
     },
-
     renderDaysBar() {
         const bar = document.getElementById('dayBar');
         if(!bar) return;
