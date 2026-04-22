@@ -632,16 +632,29 @@ const App = {
     },
 
     editWater() {
-        this.switchModal('waterModal');
+        if(document.activeElement) document.activeElement.blur();
+        
+        // Жорстко очищаємо екран від будь-яких інших вікон
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        
+        this.lockScroll();
+        this.toggleFab(false);
+        
         const day = this.getCurrentDay();
         if (!day) return;
         const w = day.water || 0;
+        
         const l = Math.floor(w);
         const ml = Math.round((w - l) * 1000);
+        
         document.getElementById('inpWaterL').value = l === 0 ? '' : l;
         document.getElementById('inpWaterMl').value = ml === 0 ? '' : ml;
         document.getElementById('inpSodium').value = day.na || '';
         document.getElementById('inpPotassium').value = day.k_el || '';
+        
+        const modal = document.getElementById('waterModal');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10000'; // Виносимо на самий передній план
     },
     
     adjustWater(amount) {
@@ -675,8 +688,16 @@ const App = {
         if(window.Haptics) window.Haptics.success();
     },
     openOrderEditor() {
-        this.switchModal('orderModal');
+        if(document.activeElement) document.activeElement.blur();
+        
+        // ФІКС: Жорстко ховаємо модалку налаштувань (вона зникне, а редактор з'явиться)
+        const dayModal = document.getElementById('dayEditModal');
+        if (dayModal) dayModal.style.display = 'none';
+
+        this.lockScroll();
+        this.toggleFab(false);
         this.renderOrderEditor();
+        document.getElementById('orderModal').style.display = 'flex';
     },
 
     renderOrderEditor() {
@@ -905,20 +926,24 @@ const App = {
                 }
                 mCal += k; mP += p; mF += fat; mC += c;
 
-               return `
-                <div class="food-row" onclick="App.editFood(${m.id}, ${i})">
-                    <div class="fr-info">
-                        <h4>${f.n}</h4>
-                        <p>Б${p} Ж${fat} В${c}</p>
+                return `
+                <div class="food-row" style="padding-right:10px;">
+                    <div style="display:flex; justify-content:space-between; flex:1; cursor:pointer;" onclick="App.editFood(${m.id}, ${i})">
+                        <div class="fr-info">
+                            <h4>${f.n}</h4>
+                            <p>Б${p} Ж${fat} В${c}</p>
+                        </div>
+                        <div class="fr-vals" style="padding-right:15px;">
+                            <div class="fr-w">${f.w}${ref.unit?'':'г'}</div>
+                            <div class="fr-k">${k}</div>
+                        </div>
                     </div>
-                    <div class="fr-vals">
-                        <div class="fr-w">${f.w}${ref.unit?'':'г'}</div>
-                        <div class="fr-k">${k}</div>
-                    </div>
+                    <div onclick="App.openSwapModal(${m.id}, ${i}, event)" style="color:var(--theme); font-size:1.3rem; padding:4px 0 4px 15px; border-left:1px solid rgba(255,255,255,0.05); cursor:pointer;" title="Смарт-заміна">🔄</div>
                 </div>`;
             }).join('');
 
             // ЗАЛИШАЄМО ТІЛЬКИ ОДИН РАЗ
+            const animClass = animate ? 'animate-pop' : '';
             const delayStr = animate ? `animation-delay: ${index * 0.05}s;` : '';
 
             // Розрахунок % для візуального мікро-бара
@@ -1223,17 +1248,10 @@ const App = {
         if (type !== 'k') document.getElementById('inpK').value = Math.round((ref.k || 0) * ratio);
     },
     // === СМАРТ-ЗАМІНА (SMART SWAP) ===
-    // === СМАРТ-ЗАМІНА (SMART SWAP) ===
-    openSwapModal(e) {
+    openSwapModal(mid, fidx, e) {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         if(document.activeElement) document.activeElement.blur();
         
-        // Беремо дані з поточного стейту, оскільки ми вже в модалці редагування
-        const mid = this.state.mid;
-        const fidx = this.state.fidx;
-        
-        if (mid === null || fidx === null || fidx === -1) return;
-
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mid);
         const f = meal.foods[fidx];
@@ -1255,11 +1273,12 @@ const App = {
         else if (maxVal === currentF) { targetMacro = 'f'; targetName = 'ЖИРІВ'; targetColor = 'var(--f-color)'; }
 
         // Записуємо в стейт
+        this.state.swapMid = mid;
+        this.state.swapFidx = fidx;
         this.state.swapTargetMacro = targetMacro;
         this.state.swapTargetVal = maxVal;
         this.state.swapOriginalName = f.n;
 
-        // ... Далі код залишається БЕЗ ЗМІН (document.getElementById('swapTargetText').innerHTML = ...)
         document.getElementById('swapTargetText').innerHTML = `<span style="color:${targetColor}">${Math.round(maxVal)}г ${targetName}</span>`;
         document.getElementById('inpSwapName').value = '';
         document.getElementById('swap-sugg-list').style.display = 'none';
@@ -1271,8 +1290,15 @@ const App = {
             ${topFoods.map(n => `<div class="qb-chip" onclick="App.executeSwap('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('')}
         </div>`;
 
-        // Замість ручного закриття просто використовуємо наш надійний світчер
-        this.switchModal('swapModal');
+        // Відкриваємо вікно
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal'];
+        modalIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        
+        this.lockScroll();
+        this.toggleFab(false);
+        const swapModal = document.getElementById('swapModal');
+        swapModal.style.display = 'flex';
+        swapModal.style.zIndex = '10000';
         setTimeout(() => document.getElementById('inpSwapName').focus(), 150);
     },
 
@@ -1406,7 +1432,7 @@ const App = {
         document.getElementById('inpF').value = f.f||0;
         document.getElementById('inpC').value = f.c||0;
         document.getElementById('inpK').value = f.k||0;
-        document.getElementById('editFoodActions').style.display = del ? 'grid' : 'none';
+        document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
         
         // --- ГЕНЕРАЦІЯ QUICK ADD ---
         const qbContainer = document.getElementById('quickBankContainer');
@@ -1425,25 +1451,7 @@ const App = {
         document.getElementById('foodModal').style.display = 'flex';
         document.getElementById('sugg-list').style.display = 'none';
     },
-    // Смарт-перемикач вікон: ховає старе вікно без скидання загального скролу сторінки
-    switchModal(modalId) {
-        if (document.activeElement) document.activeElement.blur();
-        
-        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal', 'swapModal'];
-        modalIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el && id !== modalId) el.style.display = 'none';
-        });
-
-        this.lockScroll();
-        this.toggleFab(false);
-
-        const targetModal = document.getElementById(modalId);
-        if (targetModal) {
-            targetModal.style.display = 'flex';
-            targetModal.style.zIndex = '10000'; // Виносимо на фронт
-        }
-    },
+    
     closeModal() { 
         // ФІКС 2: Блокуємо iOS-фіксер довше, щоб клавіатура точно встигла сховатись
         window.blockKeyboardScrollFix = true;
@@ -1732,7 +1740,11 @@ const App = {
     },
 
     openTargets() {
-        this.switchModal('targetsModal');
+        if(document.activeElement) document.activeElement.blur();
+        
+        this.lockScroll(); 
+        this.toggleFab(false); 
+        
         const day = this.getCurrentDay();
         const t = day.targets || this.data.targets;
         
@@ -1752,6 +1764,8 @@ const App = {
         if (wDisplay) wDisplay.innerText = weight ? `${weight.toFixed(1)} kg` : "-- kg";
 
         if (typeof this.calcTargetKcal === 'function') this.calcTargetKcal(false);
+
+        document.getElementById('targetsModal').style.display = 'flex';
     },
     async applyPreset(type) {
         let weight = null;
