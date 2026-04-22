@@ -606,10 +606,10 @@
         <input type="number" id="inpWeight" class="inp-main" placeholder="Вага (г) або шт" inputmode="decimal" oninput="App.recalcModal()">
 
         <div class="stats-grid">
-            <div class="stat-box"><label class="color-p">БІЛ</label><input id="inpP" type="number" inputmode="decimal"></div>
-            <div class="stat-box"><label class="color-f">ЖИР</label><input id="inpF" type="number" inputmode="decimal"></div>
-            <div class="stat-box"><label class="color-c">ВУГ</label><input id="inpC" type="number" inputmode="decimal"></div>
-            <div class="stat-box"><label>ККАЛ</label><input id="inpK" type="number" inputmode="decimal"></div>
+            <div class="stat-box"><label class="color-p">БІЛКИ</label><input id="inpP" type="number" inputmode="decimal" oninput="App.reverseCalc('p')"></div>
+            <div class="stat-box"><label class="color-f">ЖИРИ</label><input id="inpF" type="number" inputmode="decimal" oninput="App.reverseCalc('f')"></div>
+            <div class="stat-box"><label class="color-c">ВУГЛЕВОДИ</label><input id="inpC" type="number" inputmode="decimal" oninput="App.reverseCalc('c')"></div>
+            <div class="stat-box"><label>ККАЛ</label><input id="inpK" type="number" inputmode="decimal" oninput="App.reverseCalc('k')"></div>
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
