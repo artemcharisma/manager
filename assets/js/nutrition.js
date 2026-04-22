@@ -926,19 +926,16 @@ const App = {
                 }
                 mCal += k; mP += p; mF += fat; mC += c;
 
-                return `
-                <div class="food-row" style="padding-right:10px;">
-                    <div style="display:flex; justify-content:space-between; flex:1; cursor:pointer;" onclick="App.editFood(${m.id}, ${i})">
-                        <div class="fr-info">
-                            <h4>${f.n}</h4>
-                            <p>Б${p} Ж${fat} В${c}</p>
-                        </div>
-                        <div class="fr-vals" style="padding-right:15px;">
-                            <div class="fr-w">${f.w}${ref.unit?'':'г'}</div>
-                            <div class="fr-k">${k}</div>
-                        </div>
+               return `
+                <div class="food-row" onclick="App.editFood(${m.id}, ${i})">
+                    <div class="fr-info">
+                        <h4>${f.n}</h4>
+                        <p>Б${p} Ж${fat} В${c}</p>
                     </div>
-                    <div onclick="App.openSwapModal(${m.id}, ${i}, event)" style="color:var(--theme); font-size:1.3rem; padding:4px 0 4px 15px; border-left:1px solid rgba(255,255,255,0.05); cursor:pointer;" title="Смарт-заміна">🔄</div>
+                    <div class="fr-vals">
+                        <div class="fr-w">${f.w}${ref.unit?'':'г'}</div>
+                        <div class="fr-k">${k}</div>
+                    </div>
                 </div>`;
             }).join('');
 
@@ -1248,10 +1245,17 @@ const App = {
         if (type !== 'k') document.getElementById('inpK').value = Math.round((ref.k || 0) * ratio);
     },
     // === СМАРТ-ЗАМІНА (SMART SWAP) ===
-    openSwapModal(mid, fidx, e) {
+    // === СМАРТ-ЗАМІНА (SMART SWAP) ===
+    openSwapModal(e) {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         if(document.activeElement) document.activeElement.blur();
         
+        // Беремо дані з поточного стейту, оскільки ми вже в модалці редагування
+        const mid = this.state.mid;
+        const fidx = this.state.fidx;
+        
+        if (mid === null || fidx === null || fidx === -1) return;
+
         const day = this.getCurrentDay();
         const meal = day.meals.find(m => m.id === mid);
         const f = meal.foods[fidx];
@@ -1273,12 +1277,11 @@ const App = {
         else if (maxVal === currentF) { targetMacro = 'f'; targetName = 'ЖИРІВ'; targetColor = 'var(--f-color)'; }
 
         // Записуємо в стейт
-        this.state.swapMid = mid;
-        this.state.swapFidx = fidx;
         this.state.swapTargetMacro = targetMacro;
         this.state.swapTargetVal = maxVal;
         this.state.swapOriginalName = f.n;
 
+        // ... Далі код залишається БЕЗ ЗМІН (document.getElementById('swapTargetText').innerHTML = ...)
         document.getElementById('swapTargetText').innerHTML = `<span style="color:${targetColor}">${Math.round(maxVal)}г ${targetName}</span>`;
         document.getElementById('inpSwapName').value = '';
         document.getElementById('swap-sugg-list').style.display = 'none';
@@ -1290,15 +1293,8 @@ const App = {
             ${topFoods.map(n => `<div class="qb-chip" onclick="App.executeSwap('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('')}
         </div>`;
 
-        // Відкриваємо вікно
-        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal'];
-        modalIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-        
-        this.lockScroll();
-        this.toggleFab(false);
-        const swapModal = document.getElementById('swapModal');
-        swapModal.style.display = 'flex';
-        swapModal.style.zIndex = '10000';
+        // Замість ручного закриття просто використовуємо наш надійний світчер
+        this.switchModal('swapModal');
         setTimeout(() => document.getElementById('inpSwapName').focus(), 150);
     },
 
@@ -1432,7 +1428,7 @@ const App = {
         document.getElementById('inpF').value = f.f||0;
         document.getElementById('inpC').value = f.c||0;
         document.getElementById('inpK').value = f.k||0;
-        document.getElementById('btnDeleteFood').style.display = del ? 'block':'none';
+        document.getElementById('editFoodActions').style.display = del ? 'grid' : 'none';
         
         // --- ГЕНЕРАЦІЯ QUICK ADD ---
         const qbContainer = document.getElementById('quickBankContainer');
