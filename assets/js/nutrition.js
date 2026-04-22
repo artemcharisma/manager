@@ -1247,6 +1247,124 @@ const App = {
         if (type !== 'c') document.getElementById('inpC').value = Math.round((ref.c || 0) * ratio);
         if (type !== 'k') document.getElementById('inpK').value = Math.round((ref.k || 0) * ratio);
     },
+    // === СМАРТ-ЗАМІНА (SMART SWAP) ===
+    openSwapModal(mid, fidx, e) {
+        if(e) { e.preventDefault(); e.stopPropagation(); }
+        if(document.activeElement) document.activeElement.blur();
+        
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === mid);
+        const f = meal.foods[fidx];
+        const ref = this.data.bank[f.n];
+        if(!ref) return;
+
+        const ratio = ref.unit ? f.w : f.w / 100;
+        const currentP = ref.p * ratio;
+        const currentF = ref.f * ratio;
+        const currentC = ref.c * ratio;
+
+        // Авто-детекція домінуючого макроса
+        const maxVal = Math.max(currentP, currentF, currentC);
+        let targetMacro = 'p';
+        let targetName = 'БІЛКІВ';
+        let targetColor = 'var(--p-color)';
+        
+        if (maxVal === currentC) { targetMacro = 'c'; targetName = 'ВУГЛЕВОДІВ'; targetColor = 'var(--c-color)'; }
+        else if (maxVal === currentF) { targetMacro = 'f'; targetName = 'ЖИРІВ'; targetColor = 'var(--f-color)'; }
+
+        // Записуємо в стейт
+        this.state.swapMid = mid;
+        this.state.swapFidx = fidx;
+        this.state.swapTargetMacro = targetMacro;
+        this.state.swapTargetVal = maxVal;
+        this.state.swapOriginalName = f.n;
+
+        document.getElementById('swapTargetText').innerHTML = `<span style="color:${targetColor}">${Math.round(maxVal)}г ${targetName}</span>`;
+        document.getElementById('inpSwapName').value = '';
+        document.getElementById('swap-sugg-list').style.display = 'none';
+
+        // Генеруємо швидкі кнопки з бази (виключаючи поточний продукт)
+        const qbContainer = document.getElementById('swapBankContainer');
+        const topFoods = Object.keys(this.data.bank).filter(n => n !== f.n).slice(0, 12);
+        qbContainer.innerHTML = `<div class="quick-bank-grid">
+            ${topFoods.map(n => `<div class="qb-chip" onclick="App.executeSwap('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('')}
+        </div>`;
+
+        // Відкриваємо вікно
+        const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal'];
+        modalIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        
+        this.lockScroll();
+        this.toggleFab(false);
+        const swapModal = document.getElementById('swapModal');
+        swapModal.style.display = 'flex';
+        swapModal.style.zIndex = '10000';
+        setTimeout(() => document.getElementById('inpSwapName').focus(), 150);
+    },
+
+    searchSwap(q) {
+        const list = document.getElementById('swap-sugg-list');
+        list.innerHTML = '';
+        if(q.length < 1) { list.style.display='none'; return; }
+        
+        const query = q.toLowerCase(); 
+        const matches = Object.keys(this.data.bank).filter(k => k.toLowerCase().includes(query) && k !== this.state.swapOriginalName);
+        
+        if(matches.length) {
+            list.style.display = 'block';
+            matches.slice(0, 6).forEach(n => {
+                const b = this.data.bank[n];
+                const el = document.createElement('div');
+                el.className = 'sugg-item';
+                el.innerHTML = `${n} <span>${b.k} ккал</span>`;
+                el.onclick = () => App.executeSwap(n);
+                list.appendChild(el);
+            });
+        } else { list.style.display='none'; }
+    },
+
+    executeSwap(newName) {
+        const ref = this.data.bank[newName];
+        const targetMacro = this.state.swapTargetMacro;
+        const targetVal = this.state.swapTargetVal;
+
+        if (!ref || !ref[targetMacro] || ref[targetMacro] <= 0) {
+            if(window.Modal) Modal.alert("У цьому продукті замало необхідного макронутрієнта для еквівалентної заміни!", "ПОМИЛКА", "red");
+            return;
+        }
+
+        // КІБЕРНЕТИКА: Вираховуємо ідеальну вагу нового продукту
+        let newWeight = ref.unit ? (targetVal / ref[targetMacro]) : ((targetVal * 100) / ref[targetMacro]);
+        newWeight = Math.round(newWeight * 10) / 10;
+
+        const day = this.getCurrentDay();
+        const meal = day.meals.find(m => m.id === this.state.swapMid);
+        
+        this.pushHistory();
+
+        const ratio = ref.unit ? newWeight : newWeight / 100;
+        const newItem = {
+            n: newName,
+            w: newWeight,
+            p: Math.round((ref.p || 0) * ratio),
+            f: Math.round((ref.f || 0) * ratio),
+            c: Math.round((ref.c || 0) * ratio),
+            k: Math.round((ref.k || 0) * ratio),
+            unit: ref.unit || false
+        };
+
+        // Безжально замінюємо старий продукт на новий
+        meal.foods[this.state.swapFidx] = newItem;
+
+        this.save();
+        this.render(false);
+        
+        document.getElementById('swapModal').style.display = 'none';
+        this.unlockScroll();
+        this.toggleFab(true);
+        if(window.Haptics) window.Haptics.success();
+    },
+    // ================================
     selectSuggestion(name) {
         const f = this.data.bank[name];
         
