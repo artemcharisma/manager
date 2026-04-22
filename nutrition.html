@@ -613,8 +613,11 @@
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
-        <button class="btn-danger" id="btnDeleteFood" style="display:none" onclick="App.deleteFood()">ВИДАЛИТИ ПРОДУКТ</button>
-    </div>
+        
+        <div id="editFoodActions" style="display:none; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+            <button class="btn-danger" style="margin-top:0; color:var(--theme); border-color:rgba(212, 175, 55, 0.4);" onclick="App.openSwapModal(event)">🔄 ЗАМІНИТИ</button>
+            <button class="btn-danger" style="margin-top:0;" onclick="App.deleteFood()">🗑 ВИДАЛИТИ</button>
+        </div>
 </div>
 
 <div id="bankModal" class="modal-overlay">
