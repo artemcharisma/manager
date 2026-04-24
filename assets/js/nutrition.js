@@ -641,6 +641,17 @@ unlockScroll() {
         this.closeModal(); // <--- ДОДАНО
     },
 
+    async clearDayMeals() {
+        if(!(await Modal.confirm("Очистити всі прийоми їжі? Структура та цілі збережуться.", "ОЧИЩЕННЯ", "red"))) return;
+        this.pushHistory();
+        const day = this.getCurrentDay();
+        day.meals.forEach(m => m.foods = []); // Обнуляємо масиви продуктів
+        
+        this.save(); 
+        this.render();
+        this.closeModal();
+        if(window.Haptics) window.Haptics.success();
+    },
     getWaterFromInputs() {
         const lVal = document.getElementById('inpWaterL').value.replace(',', '.');
         const mlVal = document.getElementById('inpWaterMl').value.replace(',', '.');
