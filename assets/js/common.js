@@ -229,7 +229,7 @@ document.addEventListener('touchstart', (e) => {
         
         // КРИТИЧНИЙ ФІКС: Якщо тап всередині модального вікна — ігноруємо.
         // Клавіатура НЕ БУДЕ ховатись, якщо ти промазав повз інпут.
-        if (e.target.closest('.modal-content') || e.target.closest('.privacy-modal-content')) return;
+        if (e.target.closest('.modal-content') || e.target.closest('.modal-card') || e.target.closest('.privacy-modal-content')) return;
 
         // Знімаємо фокус тільки якщо клік був по глобальному фону додатку
         if (e.target !== active && !active.contains(e.target)) {
