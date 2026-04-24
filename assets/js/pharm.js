@@ -220,7 +220,8 @@ const App = {
     stateManager: new StateManager('gold_protocol', DefaultData),
     
     state: { view: 'protocol', phaseId: 1, week: 1, editing: false, tempPill: null, openMenu: null, lockedScrollY: 0, photoModalTicking: false },
-    
+
+    _pharmSortables: [],
     chartInstance: null,
     measChartInstance: null,
     
@@ -234,6 +235,13 @@ const App = {
 
     dayBuffer: null,
     pillBuffer: null,
+
+    clearPharmSortables() {
+        if (this._pharmSortables && this._pharmSortables.length > 0) {
+            this._pharmSortables.forEach(s => { if(s && typeof s.destroy === 'function') s.destroy(); });
+        }
+        this._pharmSortables = [];
+    },
 
     async safeSave() {
         if(document.body.classList.contains('privacy-mode')) {
@@ -1311,6 +1319,7 @@ return `
                                 }
                             }
                         });
+                        this._pharmSortables.push(s); //
                     }
                 }
             }
@@ -1357,6 +1366,7 @@ return `
         const weekKeys = Object.keys(this.data.schedule).map(Number);
         const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
         let minWeight = 200, maxWeight = 0;
+        let lastKnownWeight = null;
     
         for(let w=1; w<=maxW; w++) {
             labels.push(`W${w}`);
@@ -1403,11 +1413,13 @@ return `
                     const val = parseFloat(v.w.toString().replace(',','.'));
                     weightSum += val; 
                     weightCount++; 
+                    lastKnownWeight = val; // Оновлюємо останню відому вагу
                     if(val < minWeight) minWeight = val;
                     if(val > maxWeight) maxWeight = val;
                 }
             }
-            dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : null);
+            // Якщо вагу вводили цього тижня - беремо середню, інакше тягнемо попередню
+            dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : lastKnownWeight);
 
             const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0));
             const meas = GlobalVitals.get(mondayDateStr);
