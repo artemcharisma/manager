@@ -1949,7 +1949,7 @@ const App = {
                             trendHtml = `<span style="color:#666; font-size:0.6rem; font-family:'JetBrains Mono';">▶ 0</span>`;
                         }
                     }
-                    breakdownHtml += `<span style="color:var(--theme); margin-top:6px; font-weight:900; border-top:1px dashed #333; padding-top:4px; display:flex; justify-content:space-between; align-items:center;"><span>⚖️ ${Math.round(obj.tonnage)} кг</span>${trendHtml}</span>`;
+                    breakdownHtml += `<span style="color:var(--theme); margin-top:6px; font-weight:900; border-top:1px dashed #333; padding-top:6px; display:flex; flex-direction:column; align-items:flex-start; gap:2px;"><span style="font-size:0.7rem;">⚖️ ${Math.round(obj.tonnage)} кг</span>${trendHtml}</span>`;
                 }
             } else {
                 breakdownHtml = '<span style="color:#444">Відпочинок</span>';
