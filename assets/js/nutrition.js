@@ -1270,12 +1270,31 @@ unlockScroll() {
         document.getElementById('inpSwapName').value = '';
         document.getElementById('swap-sugg-list').style.display = 'none';
 
-        // Генеруємо швидкі кнопки з бази (виключаючи поточний продукт)
+        // Генеруємо швидкі кнопки з превентивним розрахунком ваги
         const qbContainer = document.getElementById('swapBankContainer');
-        const topFoods = Object.keys(this.data.bank).filter(n => n !== f.n).slice(0, 12);
-        qbContainer.innerHTML = `<div class="quick-bank-grid">
-            ${topFoods.map(n => `<div class="qb-chip" onclick="App.executeSwap('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('')}
-        </div>`;
+        let qbHtml = '<div class="quick-bank-grid">';
+        let addedCount = 0;
+        
+        for (const n of Object.keys(this.data.bank)) {
+            if (n === f.n) continue;
+            if (addedCount >= 12) break;
+            
+            const ref = this.data.bank[n];
+            // Жорстко відсікаємо продукти, які неможливо використати для еквівалентної заміни (наприклад, олія замість білка)
+            if (!ref || !ref[targetMacro] || ref[targetMacro] <= 0) continue; 
+            
+            let newWeight = ref.unit ? (maxVal / ref[targetMacro]) : ((maxVal * 100) / ref[targetMacro]);
+            newWeight = Math.round(newWeight * 10) / 10;
+            const unitStr = ref.unit ? 'шт' : 'г';
+            
+            qbHtml += `<div class="qb-chip" onclick="App.executeSwap('${n.replace(/'/g, "\\'")}')" style="display:flex; flex-direction:column; justify-content:center; gap:4px; white-space:normal; line-height:1.1; padding:8px 4px;">
+                <span style="display:block; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${n}</span>
+                <span style="color:var(--theme); font-size:0.75rem; font-weight:800;">~${newWeight}${unitStr}</span>
+            </div>`;
+            addedCount++;
+        }
+        qbHtml += '</div>';
+        qbContainer.innerHTML = qbHtml;
 
         // Відкриваємо вікно
         const modalIds = ['foodModal', 'bankModal', 'bankEditModal', 'targetsModal', 'waterModal', 'dayEditModal', 'scheduleModal', 'orderModal'];
@@ -1308,16 +1327,31 @@ unlockScroll() {
         const matches = Object.keys(this.data.bank).filter(k => k.toLowerCase().includes(query) && k !== this.state.swapOriginalName);
         
         if(matches.length) {
-            list.style.display = 'block';
-            matches.slice(0, 6).forEach(n => {
-                const b = this.data.bank[n];
-                const el = document.createElement('div');
-                el.className = 'sugg-item';
-                el.innerHTML = `${n} <span>${b.k} ккал</span>`;
-                el.onclick = () => App.executeSwap(n);
-                list.appendChild(el);
-            });
-        } else { list.style.display='none'; }
+    list.style.display = 'block';
+    const targetMacro = this.state.swapTargetMacro;
+    const targetVal = this.state.swapTargetVal;
+
+    matches.slice(0, 6).forEach(n => {
+        const b = this.data.bank[n];
+        const el = document.createElement('div');
+        el.className = 'sugg-item';
+        
+        if (!b || !b[targetMacro] || b[targetMacro] <= 0) {
+            // Маркуємо продукти, які фізично не перекриють потрібний нутрієнт
+            el.innerHTML = `<span style="color:#ccc; font-size:0.9rem;">${n}</span> <span style="color:var(--danger); font-family:var(--font-mono); font-size:0.75rem; font-weight:700;">Неможливо</span>`;
+            el.style.opacity = '0.5';
+            el.onclick = () => { if(window.Modal) Modal.alert("У цьому продукті замало необхідного макронутрієнта для еквівалентної заміни!", "ПОМИЛКА", "red"); };
+        } else {
+            let newWeight = b.unit ? (targetVal / b[targetMacro]) : ((targetVal * 100) / b[targetMacro]);
+            newWeight = Math.round(newWeight * 10) / 10;
+            const unitStr = b.unit ? 'шт' : 'г';
+            
+            el.innerHTML = `<span style="color:#eee; font-size:0.9rem;">${n}</span> <span style="color:var(--theme); font-size:0.9rem; font-weight:800; font-family:var(--font-mono);">~${newWeight}${unitStr}</span>`;
+            el.onclick = () => App.executeSwap(n);
+        }
+        list.appendChild(el);
+    });
+} else { list.style.display='none'; }
     },
 
     executeSwap(newName) {
