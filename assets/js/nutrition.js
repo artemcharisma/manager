@@ -180,9 +180,9 @@ const App = {
             const active = document.activeElement;
             
             // 1. МАРШРУТИЗАЦІЯ ПОЛІВ ВВОДУ (Смарт-навігація)
-            if (active && active.hasAttribute('enterkeyhint') && active.getAttribute('enterkeyhint') === 'next') {
-                e.preventDefault(); // Блокуємо стандартну поведінку
-                
+        // Якщо це next - стрибаємо далі. Якщо done - пропускаємо цей блок і йдемо до збереження вікна нижче
+        if (active && active.hasAttribute('enterkeyhint') && active.getAttribute('enterkeyhint') === 'next') {
+            e.preventDefault(); // Блокуємо стандартну поведінку
                 // Ланцюжки переходу
                 const groups = [
                     ['inpWeight', 'inpP', 'inpF', 'inpC', 'inpK'],
@@ -645,7 +645,11 @@ unlockScroll() {
         if(!(await Modal.confirm("Очистити всі прийоми їжі? Структура та цілі збережуться.", "ОЧИЩЕННЯ", "red"))) return;
         this.pushHistory();
         const day = this.getCurrentDay();
-        day.meals.forEach(m => m.foods = []); // Обнуляємо масиви продуктів
+        // Обнуляємо продукти та скидаємо таймінги
+        day.meals.forEach(m => {
+            m.foods = [];
+            m.time = ""; 
+        });
         
         this.save(); 
         this.render();
@@ -1965,7 +1969,16 @@ unlockScroll() {
             weight = this.data.userWeight;
         }
 
-        const calcMult = (grams) => weight && weight > 0 ? (grams / weight).toFixed(1) : "--";
+        // Додаємо мікро-округлення, щоб 2.48 відображалось як 2.5
+const calcMult = (grams) => {
+    if (weight && weight > 0) {
+        let res = grams / weight;
+        // Округлюємо до найближчої десятої, якщо різниця мінімальна
+        res = Math.round(res * 10) / 10;
+        return res.toFixed(1);
+    }
+    return "--";
+};
 
         const updateLabel = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
         updateLabel('lblModalPctP', `${pPct}%`);
