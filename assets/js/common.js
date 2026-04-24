@@ -305,3 +305,28 @@ document.addEventListener('visibilitychange', () => {
         }
     }
 });
+// ДОДАНО: Глобальний запобіжник від втрати даних
+// Спрацьовує, якщо користувач згорнув браузер або вимкнув екран телефону
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        const active = document.activeElement;
+        // Знімаємо фокус, щоб примусово відпрацював onblur у полях вводу (наприклад, у training.js)
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
+            active.blur(); 
+        }
+        // Примусове збереження поточного стейту
+        if (typeof App !== 'undefined' && typeof App.save === 'function') {
+            App.save();
+        }
+    }
+});
+
+// ==========================================
+// НОВЕ: АВТОВИДІЛЕННЯ ТЕКСТУ В ІНПУТАХ (FOCUS SELECT)
+// ==========================================
+document.addEventListener('focusin', (e) => {
+    if (e.target && e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.inputMode === 'decimal')) {
+        // Мікрозатримка гарантує, що iOS Safari встигне поставити курсор перед тим, як ми виділимо текст
+        setTimeout(() => e.target.select(), 50); 
+    }
+});
