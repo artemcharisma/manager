@@ -235,28 +235,16 @@ const App = {
     },
 
     lockScroll() {
-        if (document.body.classList.contains('modal-active')) return; 
-        this.state.lockedScrollY = window.scrollY; 
-        document.body.classList.add('modal-active'); // Тепер фіксер бачить модалку!
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${this.state.lockedScrollY}px`;
-        document.body.style.width = '100%';
-    },
+    if (document.body.classList.contains('modal-active')) return; 
+    document.body.classList.add('modal-active');
+    document.body.style.overflow = 'hidden'; // Достатньо просто приховати overflow
+},
 
-    unlockScroll() {
-        if (!document.body.classList.contains('modal-active')) return;
-        const scrollY = this.state.lockedScrollY || 0;
-        
-        document.body.classList.remove('modal-active');
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        
-        // ФІКС 1: Змушуємо браузер перерахувати макет перед скролом!
-        void document.body.offsetHeight; 
-        
-        window.scrollTo({ left: 0, top: scrollY, behavior: 'instant' });
-    },
+unlockScroll() {
+    if (!document.body.classList.contains('modal-active')) return;
+    document.body.classList.remove('modal-active');
+    document.body.style.overflow = '';
+},
     
     // ДОДАНО: Таймер для відкладеного збереження
     saveTimer: null,
