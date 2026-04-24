@@ -290,21 +290,7 @@ const IOSKeyboardFixer = {
 };
 IOSKeyboardFixer.init();
 
-// ДОДАНО: Глобальний запобіжник від втрати даних
-// Спрацьовує, якщо користувач згорнув браузер або вимкнув екран телефону
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        const active = document.activeElement;
-        // Знімаємо фокус, щоб примусово відпрацював onblur у полях вводу (наприклад, у training.js)
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.hasAttribute('contenteditable'))) {
-            active.blur(); 
-        }
-        // Примусове збереження поточного стейту
-        if (typeof App !== 'undefined' && typeof App.save === 'function') {
-            App.save();
-        }
-    }
-});
+
 // ДОДАНО: Глобальний запобіжник від втрати даних
 // Спрацьовує, якщо користувач згорнув браузер або вимкнув екран телефону
 document.addEventListener('visibilitychange', () => {
