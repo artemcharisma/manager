@@ -73,7 +73,7 @@ const GlobalVitals = {
     importAll(dataObj) {
         if (!dataObj || typeof dataObj !== 'object') return;
         localStorage.setItem('protocol_global_vitals', JSON.stringify(dataObj));
-    }
+    },
     // НОВИЙ МЕТОД: Розрахунок середньотижневої дельти
     getWeightTrend() {
         const all = this.getAll();
