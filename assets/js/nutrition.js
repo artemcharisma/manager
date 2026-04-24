@@ -1232,7 +1232,7 @@ unlockScroll() {
         const val = document.getElementById('inpWeight').value;
         if(val === '') return; 
         
-        const w = parseFloat(val) || 0;
+        const w = parseFloat(val.replace(',', '.')) || 0;
         const ref = this.state.tempFood;
 
         const ratio = ref.unit ? w : w / 100;
@@ -1247,7 +1247,7 @@ unlockScroll() {
         if (!this.state.tempFood) return;
         const ref = this.state.tempFood;
         const inputEl = document.getElementById(type === 'p' ? 'inpP' : type === 'f' ? 'inpF' : type === 'c' ? 'inpC' : 'inpK');
-        const val = parseFloat(inputEl.value);
+        const val = parseFloat(inputEl.value.replace(',', '.'));
         
         if(isNaN(val)) return;
 
