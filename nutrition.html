@@ -613,7 +613,11 @@
         </div>
         
         <button class="btn-primary" onclick="App.saveFood()">ЗБЕРЕГТИ</button>
-        <button class="btn-danger" id="btnDeleteFood" style="display:none" onclick="App.deleteFood()">ВИДАЛИТИ ПРОДУКТ</button>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;" id="foodEditActions" style="display:none">
+    <button class="btn-ghost" style="color:var(--theme); border-color:rgba(212, 175, 55, 0.4); padding:14px; font-size:0.8rem; font-family:var(--font-mono); font-weight:700; border-radius:12px;" onclick="App.triggerSwapFromEdit()">🔄 ЗАМІНИТИ</button>
+    <button class="btn-danger" id="btnDeleteFood" style="margin-top:0;" onclick="App.deleteFood()">✕ ВИДАЛИТИ</button>
+</div>
     </div>
 </div>
 
