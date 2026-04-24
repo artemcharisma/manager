@@ -177,6 +177,33 @@ const App = {
     // НОВА ФУНКЦІЯ: Обробка Enter для ВСІХ модалок
     handleGlobalKeydown(e) {
         if (e.key === 'Enter') {
+            const active = document.activeElement;
+            
+            // 1. МАРШРУТИЗАЦІЯ ПОЛІВ ВВОДУ (Смарт-навігація)
+            if (active && active.hasAttribute('enterkeyhint') && active.getAttribute('enterkeyhint') === 'next') {
+                e.preventDefault(); // Блокуємо стандартну поведінку
+                
+                // Ланцюжки переходу
+                const groups = [
+                    ['inpWeight', 'inpP', 'inpF', 'inpC', 'inpK'],
+                    ['bankInpP', 'bankInpF', 'bankInpC', 'bankInpK'],
+                    ['tgP', 'tgF', 'tgC', 'tgK']
+                ];
+                
+                for (let group of groups) {
+                    const idx = group.indexOf(active.id);
+                    if (idx !== -1 && idx < group.length - 1) {
+                        const nextEl = document.getElementById(group[idx + 1]);
+                        if (nextEl) { 
+                            nextEl.focus(); 
+                            nextEl.select(); // Одразу виділяємо текст у новому полі для швидкої заміни
+                            return; // Зупиняємо функцію, щоб не спрацювало збереження модалки
+                        }
+                    }
+                }
+            }
+
+            // 2. ГЛОБАЛЬНЕ ЗБЕРЕЖЕННЯ (Якщо ми не в процесі перемикання полів)
             const isVisible = (id) => {
                 const el = document.getElementById(id);
                 return el && window.getComputedStyle(el).display !== 'none';
@@ -187,13 +214,12 @@ const App = {
             else if (isVisible('waterModal')) { e.preventDefault(); this.saveWater(); }
             else if (isVisible('targetsModal')) { e.preventDefault(); this.saveTargets(); }
             else if (isVisible('foodModal')) { 
-                // Не зберігаємо на Enter, якщо ми просто вводимо назву для пошуку продукту
-                if(document.activeElement && document.activeElement.id !== 'inpName') {
+                // Не зберігаємо, якщо активне поле пошуку (інакше просто виб'є з пошуку)
+                if(active && active.id !== 'inpName') {
                     e.preventDefault(); this.saveFood(); 
                 }
             }
             else if (isVisible('bankEditModal')) { e.preventDefault(); this.saveBankItem(); }
-            // Додай цей рядок перед else if (isVisible('scheduleModal'))
             else if (isVisible('orderModal')) { e.preventDefault(); this.closeModal(); }
         }
     },
@@ -1154,18 +1180,22 @@ unlockScroll() {
                 barEl.style.width = fillPct + '%';
                 textEl.innerText = Math.round(currentVal);
                 
-                // ПРО-ФІКС: Зміна кольору при перевищенні цілі
-                if (currentVal > targetVal && targetVal > 0) {
-                    barEl.style.backgroundColor = 'var(--danger)';
-                    barEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.6)';
-                } else {
-                    // Повертаємо дефолтні кольори, якщо ми в межах цілі
-                    barEl.style.backgroundColor = `var(--${id}-color)`;
-                    barEl.style.boxShadow = 'none';
+                // ПРО-ЛОГІКА: "Зелений коридор" (±5% від цілі)
+                const margin = targetVal * 0.05;
+                if (targetVal > 0) {
+                    if (currentVal > targetVal + margin) {
+                        barEl.style.backgroundColor = 'var(--danger)'; // Жорсткий перебір
+                        barEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.6)';
+                    } else if (currentVal >= targetVal - margin && currentVal <= targetVal + margin) {
+                        barEl.style.backgroundColor = 'var(--success)'; // Ідеальне потрапляння
+                        barEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.6)';
+                    } else {
+                        barEl.style.backgroundColor = `var(--${id}-color)`; // Недобір (Дефолт)
+                        barEl.style.boxShadow = 'none';
+                    }
                 }
             }
         };
-
         updateBar('p', t.p, tg.p);
         updateBar('f', t.f, tg.f);
         updateBar('c', t.c, tg.c);
