@@ -52,8 +52,6 @@ body {
     overflow-x: hidden; 
     -webkit-font-smoothing: antialiased; 
     -moz-osx-font-smoothing: grayscale;
-    overscroll-behavior-y: none;
-    overscroll-behavior-x: none;
 }
 
 /* Скролбар */
@@ -284,3 +282,10 @@ input, textarea, [contenteditable="true"] {
 
 /* Фікс однакового розміру кнопок у модалці */
 #protocol-modal-footer.dual-btn { grid-template-columns: 1fr 1fr !important; }
+/* Блокування еластичного скролу ТІЛЬКИ для iOS Safari (Фікс скролу мишкою на ПК) */
+@supports (-webkit-touch-callout: none) {
+    body {
+        overscroll-behavior-y: none;
+        overscroll-behavior-x: none;
+    }
+}
