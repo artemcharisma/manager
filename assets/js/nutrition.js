@@ -2038,8 +2038,12 @@ const calcMult = (grams) => {
         if(window.Haptics) window.Haptics.success();
     },
     exportData() {
+        const exportData = { 
+            ...this.data, 
+            _global_vitals_backup: typeof GlobalVitals !== 'undefined' ? GlobalVitals.exportAll() : {} 
+        };
         const a = document.createElement('a');
-        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
         a.download = "protocol_nutrition.json"; a.click();
     },
     
@@ -2059,6 +2063,13 @@ const calcMult = (grams) => {
                 }
                 
                 this.pushHistory();
+                
+                // ВІДНОВЛЕННЯ GLOBAL VITALS
+                if (parsed._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
+                    GlobalVitals.importAll(parsed._global_vitals_backup);
+                    delete parsed._global_vitals_backup; 
+                }
+
                 this.data = parsed;
                 this.save();
                 
