@@ -263,6 +263,11 @@
         
         .ex-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; padding-right: 35px; }
         .ex-name-row { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+          /* Щоб довгі назви вправ закінчувалися "..." і не ламали сітку */
+          .ex-name { 
+              word-break: break-word; 
+              overflow-wrap: break-word; 
+          }
         .ex-name-input { background: transparent; border: none; color: #fff; font-weight: 700; width: 100%; font-size: 0.95rem; }
         .ex-name { font-weight: 700; font-size: 0.95rem; color: #e4e4e7; line-height: 1.4; display: block; }
         .ex-badge { font-size: 0.6rem; color: var(--text-muted); background: #000; padding: 2px 6px; border-radius: 4px; border: 1px solid #222; width: fit-content; }
