@@ -1331,6 +1331,7 @@ return `
                 }
             }
         });
+      },
 
 
     renderAnalytics(c) {
