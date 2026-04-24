@@ -419,6 +419,10 @@ unlockScroll() {
     },
 
     switchDay(id) {
+        this.history = []; // Очищуємо важкий буфер при переході на інший день
+        const undoFloat = document.getElementById('undoFloat');
+        if (undoFloat) undoFloat.classList.remove('visible');
+        
         this.state.currentDayId = id;
         this.render();
     },
