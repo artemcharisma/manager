@@ -1868,7 +1868,8 @@ const App = {
         if (!currentWeek) return; 
 
         const stats = {}; 
-        Groups.forEach(g => stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0 });
+        // ДОДАНО: поле tonnage
+        Groups.forEach(g => stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0, tonnage: 0 });
         
         currentWeek.days.forEach(d => {
             d.exercises.forEach(ex => {
@@ -1881,6 +1882,13 @@ const App = {
                             else if (s.t === 'BO') stats[g].bo++;
                             else if (s.t === 'DS') stats[g].ds++;
                             else stats[g].norm++;
+                            
+                            // ДОДАНО: РОЗРАХУНОК ТОННАЖУ (Вага * Повтори)
+                            let w = parseFloat(s.w) || 0;
+                            let r = parseFloat(s.r) || 0;
+                            if (w > 0 && r > 0) {
+                                stats[g].tonnage += (w * r);
+                            }
                         }
                     });
                 }
@@ -1904,6 +1912,11 @@ const App = {
                 if (obj.bo > 0) breakdownHtml += `<span style="color:#3b82f6; margin-top:2px;">💧 BO: ${obj.bo}</span>`;
                 if (obj.norm > 0) breakdownHtml += `<span style="color:#aaa; margin-top:2px;">⚪ Base: ${obj.norm}</span>`;
                 if (obj.ds > 0) breakdownHtml += `<span style="color:#8b5cf6; margin-top:2px;">🟣 DS: ${obj.ds}</span>`;
+                
+                // ДОДАНО: ВИВІД ТОННАЖУ (з роздільником)
+                if (obj.tonnage > 0) {
+                    breakdownHtml += `<span style="color:var(--theme); margin-top:6px; font-weight:900; border-top:1px dashed #333; padding-top:4px;">⚖️ ${Math.round(obj.tonnage)} кг</span>`;
+                }
             } else {
                 breakdownHtml = '<span style="color:#444">Відпочинок</span>';
             }
