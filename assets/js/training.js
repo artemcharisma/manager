@@ -1574,9 +1574,9 @@ const App = {
                 </div>
                 
                 <div>
-                    <div style="font-size:0.65rem; color:#666; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:0.65rem; color:#666; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
                         <span>ОПИС (INFO)</span>
-                        ${isEd ? `<span style="color:var(--theme); font-weight:bold; cursor:pointer; padding:4px 10px; background:rgba(212,175,55,0.1); border-radius:6px; border:1px solid var(--theme);" onclick="App.generateProPlan('${p}', '${m}', ${i})">⚡ ШАБЛОН</span>` : ''}
+                        ${isEd ? `<span style="color:var(--theme); font-weight:900; cursor:pointer; padding:4px 12px; background:rgba(212,175,55,0.1); border-radius:6px; border:1px solid var(--theme); font-size:0.65rem; letter-spacing:1px; white-space:nowrap; flex-shrink:0;" onclick="App.generateProPlan('${p}', '${m}', ${i})">⚡ ШАБЛОН</span>` : ''}
                     </div>
                     ${isEd ? `<textarea class="modal-input" style="padding:8px; min-height:60px; font-size:16px; margin:0; width:100%;" placeholder="Техніка, RIR..." onblur="App.updateGuide('${p}', '${m}',${i},'i',this.value)">${r.i}</textarea>` : `<div class="row-note" style="white-space:pre-wrap; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; color:#ddd;">${r.i || '-'}</div>`}
                 </div>
