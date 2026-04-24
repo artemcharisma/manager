@@ -1219,7 +1219,9 @@ return `
                     </div>
                     <div style="display:flex; align-items:center; margin-left:auto;">${headerBtns}</div>
                 </div>
-                ${content}
+                <div class="day-pills-container" id="day-pills-${this.state.week}-${i}">
+                    ${content}
+                </div>
                 <div class="btn-add-pill edit-ui" onclick="App.openAddPillModal(${this.state.week},${i})">+</div>
                 
                 <div class="vitals-row">
@@ -1284,8 +1286,33 @@ return `
             const newWeekBar = document.querySelector('.week-bar');
             if (newWeekBar) {
                 newWeekBar.scrollLeft = weekScrollPos;
-                // ПІДКЛЮЧАЄМО СКРОЛ ДЛЯ ТИЖНІВ ПІСЛЯ ЇХ РЕНДЕРУ
                 this.attachDragScroll('.week-bar'); 
+            }
+
+            // Ініціалізація Drag & Drop для препаратів ТІЛЬКИ в режимі редагування
+            if (this.state.editing && typeof Sortable !== 'undefined') {
+                for(let i=0; i<7; i++) {
+                    const container = document.getElementById(`day-pills-${this.state.week}-${i}`);
+                    if (container && container.children.length > 1) {
+                        Sortable.create(container, {
+                            animation: 200,
+                            delay: 150, // Затримка для мобільних пристроїв, щоб не конфліктувало зі скролом
+                            delayOnTouchOnly: true,
+                            ghostClass: 'sortable-ghost',
+                            onEnd: (evt) => {
+                                if (evt.oldIndex !== evt.newIndex) {
+                                    this.pushHistory();
+                                    // Вирізаємо препарат і вставляємо на нове місце
+                                    const movedPill = this.data.schedule[this.state.week][i].splice(evt.oldIndex, 1)[0];
+                                    this.data.schedule[this.state.week][i].splice(evt.newIndex, 0, movedPill);
+                                    
+                                    this.save();
+                                    if(window.Haptics) window.Haptics.light();
+                                }
+                            }
+                        });
+                    }
+                }
             }
         });
     },
@@ -2262,13 +2289,27 @@ return `
     togglePillDone(w, d, i) {
         if (this.state.editing) return;
         
-        // Видалено this.pushHistory(), щоб не забивати LocalStorage змінами чекбоксів
-        
         const pill = this.data.schedule[w][d][i];
         pill.done = !pill.done;
+        
+        // === АВТО-СПИСАННЯ З АПТЕЧКИ ===
+        const pillNameLower = pill.name.trim().toLowerCase();
+        this.data.pharmacy.forEach(cat => {
+            cat.items.forEach(item => {
+                if (item.n.trim().toLowerCase() === pillNameLower) {
+                    let stock = parseInt(item.stock);
+                    if (!isNaN(stock)) {
+                        // Якщо відмітили як випите - мінус 1. Якщо зняли відмітку (випадково) - повертаємо 1 назад
+                        item.stock = pill.done ? Math.max(0, stock - 1).toString() : (stock + 1).toString();
+                    }
+                }
+            });
+        });
+        // =================================
+
         this.save(); // Асинхронне збереження стану
 
-        // Точкова мутація DOM замість this.renderView()
+        // Точкова мутація DOM замість повного this.renderView()
         const pillNode = document.getElementById(`pill-node-${w}-${d}-${i}`);
         if (pillNode) {
             if (pill.done) {
