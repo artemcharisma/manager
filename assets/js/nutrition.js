@@ -1195,17 +1195,17 @@ unlockScroll() {
                 barEl.style.width = fillPct + '%';
                 textEl.innerText = Math.round(currentVal);
                 
-                // ПРО-ЛОГІКА: "Зелений коридор" (±5% від цілі)
                 const margin = targetVal * 0.05;
                 if (targetVal > 0) {
                     if (currentVal > targetVal + margin) {
-                        barEl.style.backgroundColor = 'var(--danger)'; // Жорсткий перебір
-                        barEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.6)';
+                        barEl.style.backgroundColor = 'var(--danger)'; 
+                        barEl.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.8)';
                     } else if (currentVal >= targetVal - margin && currentVal <= targetVal + margin) {
-                        barEl.style.backgroundColor = 'var(--success)'; // Ідеальне потрапляння
-                        barEl.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.6)';
+                        // Зберігаємо унікальний колір (синій/жовтий/зелений), але додаємо маркер успіху (світіння)
+                        barEl.style.backgroundColor = `var(--${id}-color)`; 
+                        barEl.style.boxShadow = '0 0 15px var(--success)';
                     } else {
-                        barEl.style.backgroundColor = `var(--${id}-color)`; // Недобір (Дефолт)
+                        barEl.style.backgroundColor = `var(--${id}-color)`; 
                         barEl.style.boxShadow = 'none';
                     }
                 }
