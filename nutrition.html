@@ -53,22 +53,34 @@
             box-sizing: border-box; outline: none;
         }
 
-        /* 1. СТРІЛКА (За замовчуванням усюди) */
-        body, html, .meal-header, .modal-overlay, .app-container { 
+        /* --- РОЗУМНЕ КЕРУВАННЯ КУРСОРАМИ --- */
+        
+        /* 1. За замовчуванням усюди звичайна стрілка */
+        body, html, .modal-overlay, .app-container { 
             cursor: default; 
         }
 
-        /* 2. ТЕКСТ (Тільки в полях вводу та заголовках, які редагуються) */
+        /* 2. Текст — тільки там, де можна вводити дані */
         input, textarea, [contenteditable] { 
             cursor: text !important;
         }
 
-        /* 3. ПАЛЕЦЬ (Тільки на реальних кнопках і клікабельних рядках) */
+        /* 3. МАГІЯ: Будь-який елемент, що має подію onclick (крім інпутів), отримує "палець" */
+        [onclick]:not(input):not(textarea):not([contenteditable]),
         button, select, a, input[type="checkbox"], [class*="btn"],  
-        .day-tab, .mh-del, .target-badge, .water-badge, .food-row,       
-        .bank-row, .sugg-item, .sys-card, .sys-close, .mc-header span  
+        .day-tab, .target-badge, .water-badge, .food-row,       
+        .bank-row, .sugg-item, .sys-card, .sys-close, .mc-header span,
+        .qb-chip, .metric-card, .brand-icon, .meal-header
         {
             cursor: pointer !important;
+        }
+
+        /* 4. Курсори для елементів сортування (Drag & Drop) */
+        .drag-handle-meal, .drag-handle-food, .drag-handle-day {
+            cursor: grab !important;
+        }
+        .drag-handle-meal:active, .drag-handle-food:active, .drag-handle-day:active {
+            cursor: grabbing !important;
         }
         
         /* Забороняємо палець на підписах інпутів БЖВ */
