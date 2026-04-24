@@ -330,7 +330,15 @@
         /* ========================================= */
         /* --- 4. PRO STATS DASHBOARD (RINGS UI) --- */
         /* ========================================= */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+
+     /* Фікс для дуже вузьких екранів (менше 350px, напр. iPhone SE) */
+     @media (max-width: 360px) {
+         .stats-grid { grid-template-columns: 1fr; }
+         .stat-ring-wrapper { width: 55px; height: 55px; }
+         .stat-ring-inner { width: 45px; height: 45px; }
+         .stat-val-pro { font-size: 1rem; }
+     }
         
         .stat-box-pro {
             background: linear-gradient(145deg, #16161a 0%, #0a0a0c 100%);
