@@ -39,6 +39,7 @@ const Utils = {
     }
 };
 
+
 const GlobalVitals = {
     key: 'protocol_global_vitals',
     formatDate(dateObj) {
@@ -62,6 +63,17 @@ const GlobalVitals = {
         for (let d of dates) { if (all[d].w) return parseFloat(all[d].w); }
         return null;
     },
+    // Додайте ці методи в існуючий об'єкт GlobalVitals
+    exportAll() {
+        try {
+            return JSON.parse(localStorage.getItem('protocol_global_vitals') || '{}');
+        } catch(e) { return {}; }
+    },
+    
+    importAll(dataObj) {
+        if (!dataObj || typeof dataObj !== 'object') return;
+        localStorage.setItem('protocol_global_vitals', JSON.stringify(dataObj));
+    }
     // НОВИЙ МЕТОД: Розрахунок середньотижневої дельти
     getWeightTrend() {
         const all = this.getAll();
