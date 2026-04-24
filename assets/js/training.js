@@ -1929,14 +1929,40 @@ const App = {
     },
     
     exportData() {
-        this.state.export(this.data, "training_protocol.json");
+        const exportData = { 
+            ...this.data, 
+            _global_vitals_backup: typeof GlobalVitals !== 'undefined' ? GlobalVitals.exportAll() : {} 
+        };
+        
+        // Використовуємо кастомну логіку для скачування, замість this.state.export, щоб додати GlobalVitals
+        const a = document.createElement('a');
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+        a.download = "training_protocol.json"; 
+        document.body.appendChild(a); // Потрібно для iOS
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 150);
     },
     
     importData(inp) {
         const r = new FileReader();
         r.onload = e => { 
-            this.pushHistory(); this.data = JSON.parse(e.target.result); 
-            this.save(); location.reload(); 
+            try {
+                const parsed = JSON.parse(e.target.result);
+                this.pushHistory(); 
+                
+                // ВІДНОВЛЕННЯ GLOBAL VITALS
+                if (parsed._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
+                    GlobalVitals.importAll(parsed._global_vitals_backup);
+                    delete parsed._global_vitals_backup; 
+                }
+                
+                this.data = parsed; 
+                this.save(); 
+                location.reload(); 
+            } catch (err) {
+                console.error(err);
+                if (typeof Modal !== 'undefined') Modal.alert("Помилка файлу!", "ПОМИЛКА", "red");
+            }
         };
         r.readAsText(inp.files[0]);
     },
