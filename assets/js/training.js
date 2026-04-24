@@ -1867,10 +1867,18 @@ const App = {
         const currentWeek = this.data.weeks[this.currentStatsIdx];
         if (!currentWeek) return; 
 
+        // 1. Знаходимо попередній тиждень для порівняння тоннажу
+        const prevWeek = this.data.weeks.find(w => w.prog === currentWeek.prog && w.num === currentWeek.num - 1);
+
         const stats = {}; 
-        // ДОДАНО: поле tonnage
-        Groups.forEach(g => stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0, tonnage: 0 });
+        const prevStats = {}; // Буфер для попереднього тижня
+
+        Groups.forEach(g => {
+            stats[g] = { total: 0, ts: 0, bo: 0, ds: 0, norm: 0, tonnage: 0 };
+            prevStats[g] = { tonnage: 0 };
+        });
         
+        // 2. Рахуємо статистику ПОТОЧНОГО тижня
         currentWeek.days.forEach(d => {
             d.exercises.forEach(ex => {
                 const g = ex.g || ResolveGroup(ex.n);
@@ -1883,17 +1891,32 @@ const App = {
                             else if (s.t === 'DS') stats[g].ds++;
                             else stats[g].norm++;
                             
-                            // ДОДАНО: РОЗРАХУНОК ТОННАЖУ (Вага * Повтори)
                             let w = parseFloat(s.w) || 0;
                             let r = parseFloat(s.r) || 0;
-                            if (w > 0 && r > 0) {
-                                stats[g].tonnage += (w * r);
-                            }
+                            if (w > 0 && r > 0) stats[g].tonnage += (w * r);
                         }
                     });
                 }
             });
         });
+
+        // 3. Рахуємо тоннаж ПОПЕРЕДНЬОГО тижня (тільки якщо він є)
+        if (prevWeek) {
+            prevWeek.days.forEach(d => {
+                d.exercises.forEach(ex => {
+                    const g = ex.g || ResolveGroup(ex.n);
+                    if (prevStats[g]) {
+                        ex.sets.forEach(s => {
+                            if (s.t !== 'WU') {
+                                let w = parseFloat(s.w) || 0;
+                                let r = parseFloat(s.r) || 0;
+                                if (w > 0 && r > 0) prevStats[g].tonnage += (w * r);
+                            }
+                        });
+                    }
+                });
+            });
+        }
 
         let html = '';
         for(const [k, obj] of Object.entries(stats)) {
@@ -1913,9 +1936,20 @@ const App = {
                 if (obj.norm > 0) breakdownHtml += `<span style="color:#aaa; margin-top:2px;">⚪ Base: ${obj.norm}</span>`;
                 if (obj.ds > 0) breakdownHtml += `<span style="color:#8b5cf6; margin-top:2px;">🟣 DS: ${obj.ds}</span>`;
                 
-                // ДОДАНО: ВИВІД ТОННАЖУ (з роздільником)
+                // 4. ВІДОБРАЖЕННЯ ТОННАЖУ + ДЕЛЬТА З ПОПЕРЕДНІМ ТИЖНЕМ
                 if (obj.tonnage > 0) {
-                    breakdownHtml += `<span style="color:var(--theme); margin-top:6px; font-weight:900; border-top:1px dashed #333; padding-top:4px;">⚖️ ${Math.round(obj.tonnage)} кг</span>`;
+                    let trendHtml = '';
+                    if (prevWeek && prevStats[k].tonnage > 0) {
+                        const diff = Math.round(obj.tonnage - prevStats[k].tonnage);
+                        if (diff > 0) {
+                            trendHtml = `<span style="color:var(--success); font-size:0.6rem; font-family:'JetBrains Mono';">▲ +${diff}</span>`;
+                        } else if (diff < 0) {
+                            trendHtml = `<span style="color:var(--danger); font-size:0.6rem; font-family:'JetBrains Mono';">▼ ${diff}</span>`;
+                        } else {
+                            trendHtml = `<span style="color:#666; font-size:0.6rem; font-family:'JetBrains Mono';">▶ 0</span>`;
+                        }
+                    }
+                    breakdownHtml += `<span style="color:var(--theme); margin-top:6px; font-weight:900; border-top:1px dashed #333; padding-top:4px; display:flex; justify-content:space-between; align-items:center;"><span>⚖️ ${Math.round(obj.tonnage)} кг</span>${trendHtml}</span>`;
                 }
             } else {
                 breakdownHtml = '<span style="color:#444">Відпочинок</span>';
