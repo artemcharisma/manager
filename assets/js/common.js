@@ -197,16 +197,17 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН)
-document.addEventListener('click', (e) => {
-    // Якщо клік був саме по темному фону (.modal або .modal-overlay)
+// ЗАКРИТТЯ БУДЬ-ЯКОЇ МОДАЛКИ ПО КЛІКУ НА ПУСТЕ МІСЦЕ (ФОН) - ФІКС GHOST CLICK
+const closeOverlayHandler = (e) => {
+    // Якщо клік/тап був саме по темному фону (.modal або .modal-overlay)
     if (e.target.classList.contains('modal') || e.target.classList.contains('modal-overlay') || e.target.id === 'customPhotoModal') {
+        e.preventDefault(); // Жорстко блокує фантомний клік наскрізь
+        e.stopPropagation();
         
-        // Викликаємо універсальний метод закриття з pharm.js
+        // Викликаємо універсальний метод закриття
         if (typeof App !== 'undefined' && typeof App.closeModal === 'function') {
             App.closeModal();
         } else {
-            // Фолбек для інших сторінок (food, training)
             e.target.style.display = 'none'; 
             e.target.classList.remove('active');
             if (typeof App !== 'undefined' && typeof App.unlockScroll === 'function') {
@@ -216,9 +217,15 @@ document.addEventListener('click', (e) => {
         }
     }
     if (e.target.id === 'protocol-modal-overlay') {
+        e.preventDefault();
+        e.stopPropagation();
         if (typeof Modal !== 'undefined') Modal.handleCancel();
     }
-});
+};
+
+// Перехоплюємо дотик до того, як він перетвориться на наскрізний клік
+document.addEventListener('touchstart', closeOverlayHandler, { passive: false });
+document.addEventListener('mousedown', closeOverlayHandler);
 // 1. Розумне зняття фокусу (ФІКС ДЛЯ ЗБЕРЕЖЕННЯ КЛАВІАТУРИ В МОДАЛКАХ)
 document.addEventListener('touchstart', (e) => {
     const active = document.activeElement;
