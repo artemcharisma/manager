@@ -2274,7 +2274,12 @@ return `
             if(await Modal.confirm("Дані збережено. Скачати JSON бекап?", "ЗАВАНТАЖЕННЯ", "gold")) {
                 try {
                     const filename = `gold_protocol_w${this.state.week}_${new Date().toISOString().split('T')[0]}.json`;
-                    const dataStr = JSON.stringify(this.data, null, 2);
+                    // ДОДАЄМО: упаковуємо GlobalVitals прямо в бекап
+                    const exportData = { 
+                        ...this.data, 
+                        _global_vitals_backup: typeof GlobalVitals !== 'undefined' ? GlobalVitals.exportAll() : {} 
+                    };
+                    const dataStr = JSON.stringify(exportData, null, 2);
                     const blob = new Blob([dataStr], { type: "application/json" });
                     const url = window.URL.createObjectURL(blob);
                     
@@ -2421,9 +2426,16 @@ return `
                 const json = JSON.parse(e.target.result); 
                 if(!json.phases) throw new Error("Invalid"); 
                 this.pushHistory(); 
+                
+                // ВІДНОВЛЕННЯ: Якщо в бекапі є глобальні вітали - відновлюємо їх
+                if (json._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
+                    GlobalVitals.importAll(json._global_vitals_backup);
+                    delete json._global_vitals_backup; // Видаляємо з основного стейту, щоб не смітити
+                }
+
                 this.data=json; 
                 this.save(); 
-                location.reload(); 
+                location.reload();
             } catch(err) { 
                 await Modal.alert("Невірний або пошкоджений файл!", "ПОМИЛКА ІМПОРТУ", "red"); 
             } 
