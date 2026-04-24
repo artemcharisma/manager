@@ -311,8 +311,12 @@ document.addEventListener('visibilitychange', () => {
 // НОВЕ: АВТОВИДІЛЕННЯ ТЕКСТУ В ІНПУТАХ (FOCUS SELECT)
 // ==========================================
 document.addEventListener('focusin', (e) => {
-    if (e.target && e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.inputMode === 'decimal')) {
-        // Мікрозатримка гарантує, що iOS Safari встигне поставити курсор перед тим, як ми виділимо текст
-        setTimeout(() => e.target.select(), 50); 
+    if (e.target && e.target.tagName === 'INPUT') {
+        // Ігноруємо текстові поля пошуку або назв (щоб не виділяло при редагуванні назви вправи)
+        if (e.target.type !== 'text' || e.target.classList.contains('set-input') || e.target.classList.contains('vital-input')) {
+            setTimeout(() => {
+                try { e.target.select(); } catch(err) {} 
+            }, 50); 
+        }
     }
 });
