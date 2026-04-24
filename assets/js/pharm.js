@@ -1803,23 +1803,36 @@ return `
         if (!doseStr) return null;
         const normalized = doseStr.trim().toLowerCase();
         
-        // Віддаємо з кешу, якщо вже рахували
         if (this._doseCache[normalized]) return this._doseCache[normalized];
 
-        const match = normalized.match(/(\d+([.,]\d+)?)/);
-        if (!match) return null;
+        let val = 0;
+        let unit = "mg"; 
+        
+        // 1. Шукаємо пріоритетно 'mg' або 'мг'
+        const mgMatch = normalized.match(/(\d+([.,]\d+)?)\s*(mg|мг)/);
+        if (mgMatch) {
+            val = parseFloat(mgMatch[1].replace(',', '.'));
+            unit = "mg";
+        } 
+        // 2. Якщо немає мг, шукаємо IU
+        else if (normalized.includes("iu") || normalized.includes("од")) {
+            const iuMatch = normalized.match(/(\d+([.,]\d+)?)/);
+            if (iuMatch) val = parseFloat(iuMatch[1].replace(',', '.'));
+            unit = "IU";
+        }
+        // 3. Якщо нічого немає, беремо просто першу цифру
+        else {
+            const match = normalized.match(/(\d+([.,]\d+)?)/);
+            if (!match) return null;
+            val = parseFloat(match[1].replace(',', '.'));
+            if(normalized.includes("mcg") || normalized.includes("мкг")) unit = "mcg";
+            else if(normalized.includes("ml") || normalized.includes("мл")) unit = "ml";
+            else if(normalized.includes("tab") || normalized.includes("таб")) unit = "tab";
+        }
 
-        const val = parseFloat(match[0].replace(',', '.'));
         if (isNaN(val)) return null;
 
-        let unit = "mg"; 
-        if(normalized.includes("iu") || normalized.includes("од")) unit = "IU"; 
-        else if(normalized.includes("mcg") || normalized.includes("мкг")) unit = "mcg";
-        else if(normalized.includes("ml") || normalized.includes("мл")) unit = "ml";
-        else if(normalized.includes("tab") || normalized.includes("таб")) unit = "tab";
-
         const result = { val, unit };
-        // Записуємо в кеш
         this._doseCache[normalized] = result;
         return result;
     },
@@ -1899,11 +1912,14 @@ return `
     },
     
     saveVital(w, d, k, v) { 
+        if (typeof GlobalVitals === 'undefined') {
+            console.error("GlobalVitals не знайдено!");
+            return;
+        }
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, d));
         if (k === 'w' && v) v = v.replace(',', '.'); 
         GlobalVitals.save(dateStr, k, v); 
     },
-
     saveMeas(w, k, v) {
         // Заміри тіла прив'язуємо до понеділка поточного тижня
         const dateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0)); 
@@ -1996,13 +2012,32 @@ return `
         const sourcePill = this.data.schedule[w][d][pillIdx];
         const phase = this.data.phases.find(p => p.weeks.includes(w));
         if(!phase) return;
+        
+        let addedCount = 0;
         phase.weeks.forEach(weekNum => {
             if (weekNum > w) {
-                this.data.schedule[weekNum][d].push({ ...sourcePill });
+                // Перевіряємо, чи немає вже такого ж препарату у цьому ж дні майбутнього тижня
+                const isDuplicate = this.data.schedule[weekNum][d].some(p => 
+                    p.name.trim().toLowerCase() === sourcePill.name.trim().toLowerCase()
+                );
+                
+                if (!isDuplicate) {
+                    this.data.schedule[weekNum][d].push({ ...sourcePill });
+                    addedCount++;
+                }
             }
         });
+        
         this.save();
         this.renderView(); 
+        
+        if (addedCount > 0) {
+            const toast = document.createElement('div');
+            toast.innerText = `✅ Скопійовано на ${addedCount} тижнів`;
+            toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:#000; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
     },
     getMenuUI(w, d, i, name, isOpen) {
         const safeName = name.replace(/'/g, "\\'"); 
@@ -2492,19 +2527,38 @@ return `
 
     async uploadPhoto(inp) { 
         this.pushHistory(); 
-        for(let f of inp.files) {
-            try {
-                const compressedBase64 = await compressImage(f); 
+        
+        // Змінюємо текст кнопки, щоб показати процес (UI зворотній зв'язок)
+        const btn = document.querySelector('.btn-upload');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Обробка...';
+        btn.style.pointerEvents = 'none';
+
+        try {
+            for(let f of inp.files) {
+                // Компресія зменшена до 1200px (для мобілок ідеально, економить 60% пам'яті)
+                const compressedBase64 = await compressImage(f, 1200, 0.8); 
                 if(PhotoDB.db) {
-                    const tx = PhotoDB.db.transaction(["photos"], "readwrite");
-                    tx.objectStore("photos").add({ week: this.state.week, data: compressedBase64 });
+                    await new Promise((resolve, reject) => {
+                        const tx = PhotoDB.db.transaction(["photos"], "readwrite");
+                        const store = tx.objectStore("photos");
+                        const req = store.add({ week: this.state.week, data: compressedBase64 });
+                        req.onsuccess = () => resolve();
+                        req.onerror = () => reject();
+                    });
                 }
-            } catch(e) {
-                console.error("Compression failed", e);
             }
+        } catch(e) {
+            console.error("Помилка завантаження фото", e);
+            if(window.Modal) Modal.alert("Помилка при збереженні фото.", "УВАГА", "red");
+        } finally {
+            // Відновлюємо UI
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = 'auto';
+            inp.value = ''; // ОЧИЩЕННЯ ІНПУТУ: дозволяє завантажити те саме фото двічі (інакше onchange не спрацює)
+            await this.refreshPhotos(); 
+            this.renderView(); 
         }
-        await this.refreshPhotos(); 
-        this.renderView(); 
     },
 
 
