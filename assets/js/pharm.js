@@ -1288,7 +1288,7 @@ return `
                 <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
             </div>`;
 
-        // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
+       // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
         window.requestAnimationFrame(() => {
             c.innerHTML = finalHtml;
             const newWeekBar = document.querySelector('.week-bar');
@@ -1297,12 +1297,19 @@ return `
                 this.attachDragScroll('.week-bar'); 
             }
 
-            // Ініціалізація Drag & Drop для препаратів ТІЛЬКИ в режимі редагування
+            // 1. ОЧИЩАЄМО КЕШ СОРТУВАННЯ (запобіжник від витоку пам'яті)
+            if (typeof this.clearPharmSortables === 'function') {
+                this.clearPharmSortables();
+            }
+
+            // 2. Ініціалізація Drag & Drop для препаратів ТІЛЬКИ в режимі редагування
             if (this.state.editing && typeof Sortable !== 'undefined') {
                 for(let i=0; i<7; i++) {
                     const container = document.getElementById(`day-pills-${this.state.week}-${i}`);
                     if (container && container.children.length > 1) {
-                        Sortable.create(container, {
+                        
+                        // КРИТИЧНИЙ ФІКС: додано "const s =" 
+                        const s = Sortable.create(container, {
                             animation: 200,
                             delay: 150, // Затримка для мобільних пристроїв, щоб не конфліктувало зі скролом
                             delayOnTouchOnly: true,
@@ -1319,12 +1326,11 @@ return `
                                 }
                             }
                         });
-                        this._pharmSortables.push(s); //
+                        this._pharmSortables.push(s); // Тепер помилки не буде
                     }
                 }
             }
         });
-    },
 
 
     renderAnalytics(c) {
