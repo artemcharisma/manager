@@ -348,7 +348,11 @@
 
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .stat-box { background: #050505; padding: 10px 5px; border-radius: 10px; text-align: center; border: 1px solid #222; transition: 0.2s; }
-        .stat-box:focus-within { border-color: #555; }
+        .stat-box:focus-within { 
+            border-color: var(--theme); 
+            background: rgba(212, 175, 55, 0.05);
+            box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.1);
+        }
         .stat-box label { display: block; font-size: 0.65rem; color: #666; font-weight: 700; margin-bottom: 4px; font-family: var(--font-mono); letter-spacing: 1px;}
         .stat-box input { 
             width: 100%; background: transparent; border: none; color: #fff; text-align: center; 
@@ -701,9 +705,10 @@
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button class="btn-ghost" onclick="App.openOrderEditor()" style="color:#aaa;">🛠 РЕДАКТОР ЇЖІ</button>
-                    <button class="btn-ghost" onclick="App.deleteDay()" style="color:var(--danger); border-color:rgba(239, 68, 68, 0.3);">🗑 ВИДАЛИТИ</button>
+                <button class="btn-ghost" onclick="App.openOrderEditor()" style="color:#aaa;">🛠 РЕДАКТОР ЇЖІ</button>
+                <button class="btn-ghost" onclick="App.clearDayMeals()" style="color:var(--theme); border-color:rgba(212, 175, 55, 0.3);">🧹 ОЧИСТИТИ</button>
                 </div>
+                <button class="btn-ghost" onclick="App.deleteDay()" style="color:var(--danger); border-color:rgba(239, 68, 68, 0.3); width:100%; margin-top:8px;">🗑 ВИДАЛИТИ ЕТАП</button>
             </div>
 
             <div style="margin-top: 25px; border-top: 1px dashed #333; padding-top: 20px;">
