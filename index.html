@@ -457,14 +457,16 @@
 
             let hasData = false;
 
-            // Підключаємося до бази перед зчитуванням
             if (typeof Utils.initDB === 'function') await Utils.initDB();
 
             for (const k of APP_KEYS) {
-                // КРИТИЧНИЙ ФІКС: Використовуємо loadAsync, щоб дістати дані і з IndexedDB, і з LocalStorage
-                const d = (typeof Utils.loadAsync === 'function') 
-                    ? await Utils.loadAsync(k, null) 
-                    : Utils.load(k, null);
+                let d;
+                // КРИТИЧНИЙ ФІКС: Вітали НІКОЛИ не читаємо через Async, щоб запобігти їх міграції з LocalStorage
+                if (k === 'protocol_global_vitals') {
+                    d = Utils.load(k, null);
+                } else {
+                    d = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync(k, null) : Utils.load(k, null);
+                }
                 
                 if(d) { 
                     fullBackup.data[k] = d;
@@ -506,17 +508,26 @@
             reader.onload = async (event) => {
                 try {
                     const imported = JSON.parse(event.target.result);
-                    if (!imported.data) throw new Error("Невірний формат бекапу.");
                     
                     if (typeof Utils.initDB === 'function') await Utils.initDB();
+
+                    // Підтримка дуже старих бекапів
+                    if (imported._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
+                        GlobalVitals.importAll(imported._global_vitals_backup);
+                    }
+
+                    const dataObj = imported.data ? imported.data : imported;
                     
                     for (const k of APP_KEYS) {
-                        if (imported.data[k]) {
-                            // КРИТИЧНИЙ ФІКС: Пишемо асинхронно у правильне сховище
-                            if (typeof Utils.saveAsync === 'function') {
-                                await Utils.saveAsync(k, imported.data[k]);
+                        if (dataObj[k]) {
+                            // Вітали завжди кладемо назад у швидкий LocalStorage
+                            if (k === 'protocol_global_vitals') {
+                                Utils.save(k, dataObj[k]);
+                            } 
+                            else if (typeof Utils.saveAsync === 'function') {
+                                await Utils.saveAsync(k, dataObj[k]);
                             } else {
-                                Utils.save(k, imported.data[k]); 
+                                Utils.save(k, dataObj[k]); 
                             }
                         }
                     }
@@ -538,9 +549,7 @@
                     <button onclick="Modal.handleOK()" style="background: rgba(239,68,68,0.1); border: 1px solid var(--red); color: var(--red); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">🗑 ВИДАЛИТИ ВСІ ДАНІ</button>
                 </div>
             `;
-            
             const confirmedWipe = await Modal.confirm(promptText, "СИСТЕМНИЙ ЗАПИТ", "red");
-            
             if (confirmedWipe) {
                 if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Це неможливо скасувати.</span><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red")) {
                     FullWipe();
@@ -550,14 +559,36 @@
 
         async function FullWipe() { 
             localStorage.clear(); 
-            // Видаляємо всі бази даних (і нову загальну, і стару для фото)
             try { indexedDB.deleteDatabase('ProtocolCoreDB'); } catch(e) {} 
             try { indexedDB.deleteDatabase('GoldProtocolDB'); } catch(e) {}
             location.reload(); 
         }
-        window.onload = () => {
+
+        window.onload = async () => {
             updateClock();
             updateBackupLabel();
+            
+            // --- СИСТЕМА ЕКСТРЕНОГО ВІДНОВЛЕННЯ (EMERGENCY RECOVERY) ---
+            try {
+                if (typeof Utils.initDB === 'function') {
+                    await Utils.initDB();
+                    if (CoreDB.db) {
+                        const lostVitals = await CoreDB.get('protocol_global_vitals');
+                        // Якщо вітали застрягли у фоновій базі IndexedDB
+                        if (lostVitals && Object.keys(lostVitals).length > 0) {
+                            const currentVitals = localStorage.getItem('protocol_global_vitals');
+                            // Повертаємо їх на своє законне місце
+                            if (!currentVitals || currentVitals === '{}') {
+                                localStorage.setItem('protocol_global_vitals', JSON.stringify(lostVitals));
+                                // Очищаємо копію з фону
+                                await CoreDB.set('protocol_global_vitals', null); 
+                            }
+                        }
+                    }
+                }
+            } catch(e) { console.error("Recovery error", e); }
+            // -----------------------------------------------------------
+
             populateSmartCards(); 
         };
     </script>
