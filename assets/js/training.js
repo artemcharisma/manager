@@ -197,7 +197,11 @@ const App = {
         brandBlock.ondblclick = async () => {
             if(await Modal.confirm("⚠ HARD RESET?<br><br>Це незворотно видалить усі дані тренувань.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('training_protocol');
-                try { indexedDB.deleteDatabase('ProtocolOS_DB'); } catch(e) {}
+                if (typeof Utils.initDB === 'function') {
+                    await Utils.initDB();
+                    // Точково чистимо тільки дані тренувань, щоб не знести Фарму
+                    if (CoreDB.db) await CoreDB.set('training_protocol', null); 
+                }
                 location.reload();
             }
         };
@@ -2016,19 +2020,25 @@ const App = {
     
     importData(inp) {
         const r = new FileReader();
-        r.onload = e => { 
+        // Додано async, щоб чекати запису перед релоадом сторінки
+        r.onload = async e => { 
             try {
                 const parsed = JSON.parse(e.target.result);
                 this.pushHistory(); 
                 
-                // ВІДНОВЛЕННЯ GLOBAL VITALS
                 if (parsed._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
                     GlobalVitals.importAll(parsed._global_vitals_backup);
                     delete parsed._global_vitals_backup; 
                 }
                 
                 this.data = parsed; 
-                this.save(); 
+                this.buildIndex();
+                // Чекаємо фактичного запису
+                if (typeof Utils.saveAsync === 'function') {
+                    await Utils.saveAsync(this.state.key, this.data);
+                } else {
+                    this.state.save(this.data);
+                }
                 location.reload(); 
             } catch (err) {
                 console.error(err);
