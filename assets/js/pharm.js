@@ -737,15 +737,18 @@ const App = {
         
         brandBlock.ondblclick = async () => {
             if (document.body.classList.contains('privacy-mode')) return;
-            if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані.", "КРИТИЧНО", "red")) {
+            if(await Modal.confirm("⚠ HARD RESET? Це знищить усі дані фармакології.", "КРИТИЧНО", "red")) {
                 localStorage.removeItem('gold_protocol');
                 localStorage.removeItem('pharm_manual_lock');
                 localStorage.removeItem('protocol_global_vitals'); 
                 try { indexedDB.deleteDatabase("GoldProtocolDB"); } catch(e) {}
+                if (typeof Utils.initDB === 'function') {
+                    await Utils.initDB();
+                    if (CoreDB.db) await CoreDB.set('gold_protocol', null);
+                }
                 location.reload();
             }
         };
-
         document.addEventListener('click', (e) => {
             if (this.state.openMenu) {
                 const menuEl = document.getElementById('global-kebab-menu');
@@ -2509,14 +2512,18 @@ return `
                 if(!json.phases) throw new Error("Invalid"); 
                 this.pushHistory(); 
                 
-                // ВІДНОВЛЕННЯ: Якщо в бекапі є глобальні вітали - відновлюємо їх
                 if (json._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
                     GlobalVitals.importAll(json._global_vitals_backup);
-                    delete json._global_vitals_backup; // Видаляємо з основного стейту, щоб не смітити
+                    delete json._global_vitals_backup; 
                 }
 
                 this.data=json; 
-                this.save(); 
+                // Асинхронний запис перед релоадом
+                if (typeof Utils.saveAsync === 'function') {
+                    await Utils.saveAsync(this.stateManager.key, this.data);
+                } else {
+                    this.save();
+                }
                 location.reload();
             } catch(err) { 
                 await Modal.alert("Невірний або пошкоджений файл!", "ПОМИЛКА ІМПОРТУ", "red"); 
