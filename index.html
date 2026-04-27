@@ -461,16 +461,19 @@
             if (typeof Utils.initDB === 'function') await Utils.initDB();
 
             for (const k of APP_KEYS) {
-                // КРИТИЧНИЙ ФІКС: Використовуємо loadAsync, щоб дістати дані і з IndexedDB, і з LocalStorage
-                const d = (typeof Utils.loadAsync === 'function') 
-                    ? await Utils.loadAsync(k, null) 
-                    : Utils.load(k, null);
-                
-                if(d) { 
-                    fullBackup.data[k] = d;
-                    hasData = true;
-                }
-            }
+                        if (imported.data[k]) {
+                            // КРИТИЧНИЙ ФІКС: Вітали завжди повертаємо в швидкий LocalStorage
+                            if (k === 'protocol_global_vitals') {
+                                Utils.save(k, imported.data[k]);
+                            } 
+                            // Все інше (важкі масиви) - в IndexedDB
+                            else if (typeof Utils.saveAsync === 'function') {
+                                await Utils.saveAsync(k, imported.data[k]);
+                            } else {
+                                Utils.save(k, imported.data[k]); 
+                            }
+                        }
+                    }
 
             if(!hasData) {
                 await Modal.alert("Система порожня. Немає даних для експорту.", "ПОМИЛКА", "gold");
