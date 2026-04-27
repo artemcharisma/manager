@@ -1337,13 +1337,16 @@ return `
     renderAnalytics(c) {
         c.innerHTML = `
             <div style="animation: fadeEffect 0.6s ease-out; padding-bottom: 30px;">
+                <h3 style="color:#fff; font-size:1rem; margin: 10px 0; text-align:center; letter-spacing:1px; font-weight:800;">🩸 PHARMACOKINETICS (Active Blood Level)</h3>
                 <div class="chart-container" style="position:relative; height:350px; margin: 10px 0;">
                     <canvas id="mainChart" style="touch-action: pan-y;"></canvas>
                 </div>
                 <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin-top:15px; font-family:'JetBrains Mono'; font-size:0.75rem; color:#888;">
                     <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 0, this)"><div style="width:12px; height:12px; background:#ffffff; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">ВАГА</span></div>
-                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 1, this)"><div style="width:12px; height:12px; background:#8b5cf6; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">STACK</span></div>
-                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 2, this)"><div style="width:12px; height:12px; background:#ffd700; border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">TEST BASE</span></div>
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 1, this)"><div style="width:12px; height:12px; background:rgba(255, 59, 48, 0.8); border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">BLOOD TEST</span></div>
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 2, this)"><div style="width:12px; height:12px; background:rgba(10, 132, 255, 0.8); border-radius:50%;"></div><span style="color:#aaa; font-weight:500;">BLOOD STACK</span></div>
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 3, this)"><div style="width:12px; height:12px; background:#ffd700; border-radius:2px;"></div><span style="color:#aaa; font-weight:500;">TEST (Weekly)</span></div>
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; transition:0.2s" onclick="App.toggleDataset('main', 4, this)"><div style="width:12px; height:12px; background:#a78bfa; border-radius:2px;"></div><span style="color:#aaa; font-weight:500;">STACK (Weekly)</span></div>
                 </div>
 
                 <h3 style="color:#fff; font-size:1rem; margin: 40px 0 10px 0; text-align:center; letter-spacing:1px; font-weight:800;">📏 ДИНАМІКА ЗАМІРІВ (см)</h3>
@@ -1363,18 +1366,56 @@ return `
             </div>`;
         
         const labels = []; 
-        const dataTest = [];    
-        const dataStack = []; 
+        const dataTestWeekly = [];    
+        const dataStackWeekly = []; 
         const dataWeight = [];
         const weekDetails = []; 
 
         const dataChest = [], dataWaist = [], dataArm = [], dataLeg = [], dataCalf = [];
-    
+        
+        // Масиви для симуляції крові (по 1 точці на тиждень, зазвичай беремо пік або середнє)
+        const bloodTestLevel = [];
+        const bloodStackLevel = [];
+
         const weekKeys = Object.keys(this.data.schedule).map(Number);
         const maxW = weekKeys.length > 0 ? Math.max(...weekKeys) : 1;
         let minWeight = 200, maxWeight = 0;
         let lastKnownWeight = null;
-    
+        
+        // === СЛОВНИК НАПІВВИВЕДЕННЯ (Half-life в днях) ===
+        const esterHL = {
+            'propionate': 2.5,
+            'p': 2.5,
+            'acetate': 1.5,
+            'a': 1.5,
+            'enanthate': 5,
+            'e': 5,
+            'cypionate': 6,
+            'c': 6,
+            'decanoate': 15,
+            'undecanoate': 20,
+            // Fallback для таблеток та коротких
+            'anavar': 0.5, 'winstrol': 0.5, 'dianabol': 0.2, 'hgh': 0.2
+        };
+
+        // Функція для визначення HL з назви
+        const getHalfLife = (name) => {
+            const n = name.toLowerCase();
+            for (let ester in esterHL) {
+                if (n.includes(ester) || n.endsWith(` ${ester}`)) return esterHL[ester];
+            }
+            return 1; // Якщо не знайдено - вважаємо дуже коротким (1 день)
+        };
+
+        // Змінні стану крові
+        let currentBloodTest = 0;
+        let currentBloodStack = 0;
+        
+        // ВАЖЛИВО: Симуляція йде по днях, щоб накопичення було точним
+        let simDays = maxW * 7;
+        let dailyTest = new Array(simDays).fill(0);
+        let dailyStack = new Array(simDays).fill(0);
+
         for(let w=1; w<=maxW; w++) {
             labels.push(`W${w}`);
             let weekTest = 0;
@@ -1382,35 +1423,68 @@ return `
             let details = {}; 
     
             if(this.data.schedule[w]) {
-                this.data.schedule[w].forEach(day => day.forEach(pill => {
-                    if(!pill.name || !pill.dose) return;
+                for(let d=0; d<7; d++) {
+                    const globalDayIdx = ((w-1)*7) + d;
+                    const pills = this.data.schedule[w][d] || [];
                     
-                    const name = pill.name.trim().toUpperCase(); 
-                    const parsed = this.parseDose(pill.dose);
-                    
-                    if (parsed) {
-                        const detKey = `${name}_${parsed.unit}`;
-                        if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: parsed.unit };
-                        details[detKey].val += parsed.val;
+                    // Відпрацьовуємо кожен день
+                    let testInjectedToday = 0;
+                    let stackInjectedToday = 0;
 
-                        if (parsed.unit === 'mg') {
-                            const nLow = name.toLowerCase();
-                            // ФІКС: Тільки чиста база
-                            const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('omna');
-                            
-                            if(isTest) {
-                                weekTest += parsed.val;
-                            } else {
-                                weekOther += parsed.val;
+                    pills.forEach(pill => {
+                        if(!pill.name || !pill.dose) return;
+                        const name = pill.name.trim().toUpperCase(); 
+                        const parsed = this.parseDose(pill.dose);
+                        
+                        if (parsed) {
+                            const detKey = `${name}_${parsed.unit}`;
+                            if(!details[detKey]) details[detKey] = { name: name, val: 0, unit: parsed.unit };
+                            details[detKey].val += parsed.val;
+
+                            if (parsed.unit === 'mg') {
+                                const nLow = name.toLowerCase();
+                                const isTest = nLow.includes('test') || nLow.includes('sust') || nLow.includes('omna');
+                                
+                                // Розрахунок скільки залишиться завтра від сьогоднішнього уколу
+                                // Формула: e^(-ln(2)/HL)
+                                const hl = getHalfLife(name);
+                                const decayFactor = Math.pow(0.5, 1 / hl);
+
+                                if(isTest) {
+                                    weekTest += parsed.val;
+                                    // Додаємо в кров і розмазуємо розпад на майбутні дні
+                                    let activeAmount = parsed.val;
+                                    for(let i = 0; i < 30; i++) { // Симулюємо розпад на 30 днів вперед
+                                        if (globalDayIdx + i < simDays) {
+                                            dailyTest[globalDayIdx + i] += activeAmount;
+                                        }
+                                        activeAmount *= decayFactor;
+                                    }
+                                } else {
+                                    weekOther += parsed.val;
+                                    let activeAmount = parsed.val;
+                                    for(let i = 0; i < 30; i++) {
+                                        if (globalDayIdx + i < simDays) {
+                                            dailyStack[globalDayIdx + i] += activeAmount;
+                                        }
+                                        activeAmount *= decayFactor;
+                                    }
+                                }
                             }
                         }
-                    }
-                }));
+                    });
+                }
             }
             
+            // Для графіка беремо пікове значення крові за цей тиждень (або середнє)
+            // Беремо значення на кінець тижня (Неділя)
+            const endOfWeekIdx = ((w-1)*7) + 6;
+            bloodTestLevel.push(dailyTest[endOfWeekIdx] || 0);
+            bloodStackLevel.push(dailyStack[endOfWeekIdx] || 0);
+
             weekDetails.push(Object.values(details).map(d => `${d.name}: ${parseFloat(d.val.toFixed(1))} ${d.unit}`));
-            dataTest.push(weekTest);
-            dataStack.push(weekOther);
+            dataTestWeekly.push(weekTest);
+            dataStackWeekly.push(weekOther);
     
             let weightSum = 0; let weightCount = 0;
             for(let d=0; d<7; d++) {
@@ -1420,12 +1494,11 @@ return `
                     const val = parseFloat(v.w.toString().replace(',','.'));
                     weightSum += val; 
                     weightCount++; 
-                    lastKnownWeight = val; // Оновлюємо останню відому вагу
+                    lastKnownWeight = val;
                     if(val < minWeight) minWeight = val;
                     if(val > maxWeight) maxWeight = val;
                 }
             }
-            // Якщо вагу вводили цього тижня - беремо середню, інакше тягнемо попередню
             dataWeight.push(weightCount > 0 ? (weightSum/weightCount) : lastKnownWeight);
 
             const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(w, 0));
@@ -1452,11 +1525,11 @@ return `
         
         const gradTest = ctx.createLinearGradient(0, 400, 0, 0);
         gradTest.addColorStop(0, 'rgba(212, 175, 55, 0.2)'); 
-        gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.8)');
+        gradTest.addColorStop(1, 'rgba(255, 215, 0, 0.4)');
         
         const gradStack = ctx.createLinearGradient(0, 400, 0, 0);
         gradStack.addColorStop(0, 'rgba(139, 92, 246, 0.2)'); 
-        gradStack.addColorStop(1, 'rgba(167, 139, 250, 0.8)');
+        gradStack.addColorStop(1, 'rgba(167, 139, 250, 0.4)');
     
         Chart.defaults.font.family = "'JetBrains Mono', monospace";
         Chart.defaults.color = "#888";
@@ -1467,8 +1540,14 @@ return `
                 labels: labels,
                 datasets: [
                     { label: 'ВАГА (kg)', data: dataWeight, type: 'line', borderColor: '#ffffff', backgroundColor: '#ffffff', borderWidth: 3, yAxisID: 'y1', pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#ffffff', pointBorderWidth: 0, tension: 0.4, order: 0, spanGaps: true },
-                    { label: 'STACK (mg)', data: dataStack, backgroundColor: gradStack, hoverBackgroundColor: '#a78bfa', yAxisID: 'y', stack: 'total', order: 1, borderRadius: 4, borderSkipped: false },
-                    { label: 'TEST BASE (mg)', data: dataTest, backgroundColor: gradTest, hoverBackgroundColor: '#ffd700', yAxisID: 'y', stack: 'total', order: 2, borderRadius: 4, borderSkipped: false }
+                    
+                    // Нові лінії Крові
+                    { label: 'TEST BLOOD LEVEL', data: bloodTestLevel, type: 'line', borderColor: 'rgba(255, 59, 48, 1)', backgroundColor: 'rgba(255, 59, 48, 0.1)', borderWidth: 2, yAxisID: 'y', pointRadius: 0, tension: 0.4, order: 1, fill: true },
+                    { label: 'STACK BLOOD LEVEL', data: bloodStackLevel, type: 'line', borderColor: 'rgba(10, 132, 255, 1)', backgroundColor: 'rgba(10, 132, 255, 0.1)', borderWidth: 2, yAxisID: 'y', pointRadius: 0, tension: 0.4, order: 2, fill: true },
+                    
+                    // Старі бари як фон
+                    { label: 'STACK (Weekly mg)', data: dataStackWeekly, backgroundColor: gradStack, hoverBackgroundColor: '#a78bfa', yAxisID: 'y', stack: 'total', order: 3, borderRadius: 4, borderSkipped: false },
+                    { label: 'TEST (Weekly mg)', data: dataTestWeekly, backgroundColor: gradTest, hoverBackgroundColor: '#ffd700', yAxisID: 'y', stack: 'total', order: 4, borderRadius: 4, borderSkipped: false }
                 ]
             },
             options: {
@@ -1478,7 +1557,7 @@ return `
                 layout: { padding: { top: 10, left: 5, right: 5, bottom: 5 } },
                 scales: {
                     x: { stacked: true, grid: { display: false }, ticks: { color: '#666', font: {size: 11} }, offset: true }, 
-                    y: { stacked: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, display: false },
+                    y: { stacked: false, position: 'left', grid: { color: 'rgba(255,255,255,0.05)', borderDash: [4, 4] }, display: false },
                     y1: { display: true, position: 'right', grid: { display: false }, border: { display: false }, ticks: { color: '#fff', font: {size: 10, weight:'bold'} }, min: y1Min, max: y1Max }
                 },
                 plugins: { 
@@ -1497,11 +1576,7 @@ return `
                         callbacks: {
                             afterBody: (items) => {
                                 const idx = items[0].dataIndex;
-                                return (weekDetails[idx] && weekDetails[idx].length > 0) ? '\n📦 СКЛАД:\n' + weekDetails[idx].join('\n') : '';
-                            },
-                            footer: (items) => {
-                                let total = 0; items.forEach(i => { if(i.dataset.yAxisID==='y') total += i.raw; });
-                                return total > 0 ? `\n💉 TOTAL: ${total} mg` : '';
+                                return (weekDetails[idx] && weekDetails[idx].length > 0) ? '\n📦 ВВЕДЕНО ЗА ТИЖДЕНЬ:\n' + weekDetails[idx].join('\n') : '';
                             }
                         }
                     }
