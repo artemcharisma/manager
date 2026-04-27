@@ -508,23 +508,26 @@
             reader.onload = async (event) => {
                 try {
                     const imported = JSON.parse(event.target.result);
-                    
                     if (typeof Utils.initDB === 'function') await Utils.initDB();
 
-                    // Підтримка дуже старих бекапів
-                    if (imported._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
-                        GlobalVitals.importAll(imported._global_vitals_backup);
+                    // АГРЕСИВНИЙ ПОШУК ВІТАЛІВ (Шукаємо всюди, де вони могли бути у старих бекапах)
+                    let foundVitals = null;
+                    if (imported._global_vitals_backup) foundVitals = imported._global_vitals_backup;
+                    else if (imported.data && imported.data._global_vitals_backup) foundVitals = imported.data._global_vitals_backup;
+                    else if (imported.data && imported.data.protocol_global_vitals) foundVitals = imported.data.protocol_global_vitals;
+                    else if (imported.protocol_global_vitals) foundVitals = imported.protocol_global_vitals;
+
+                    // Якщо знайшли - відновлюємо
+                    if (foundVitals && typeof GlobalVitals !== 'undefined') {
+                        GlobalVitals.importAll(foundVitals);
                     }
 
                     const dataObj = imported.data ? imported.data : imported;
                     
                     for (const k of APP_KEYS) {
+                        if (k === 'protocol_global_vitals') continue; // Вже відновили вище
                         if (dataObj[k]) {
-                            // Вітали завжди кладемо назад у швидкий LocalStorage
-                            if (k === 'protocol_global_vitals') {
-                                Utils.save(k, dataObj[k]);
-                            } 
-                            else if (typeof Utils.saveAsync === 'function') {
+                            if (typeof Utils.saveAsync === 'function') {
                                 await Utils.saveAsync(k, dataObj[k]);
                             } else {
                                 Utils.save(k, dataObj[k]); 
@@ -540,7 +543,6 @@
             reader.readAsText(file);
             inputElement.value = ''; 
         }
-
         async function SystemReset() {
             const promptText = `
                 <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
