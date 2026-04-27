@@ -325,13 +325,9 @@
         }
 
         async function populateSmartCards() {
-            // ДОДАНО: Спочатку підключаємося до нової бази IndexedDB
-            if (typeof Utils.initDB === 'function') await Utils.initDB();
-
             // 1. Фармакологія
             try {
-                // ВИПРАВЛЕНО: Використовуємо loadAsync замість load
-                const ph = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync('gold_protocol', null) : Utils.load('gold_protocol', null);
+                const ph = await Utils.load('gold_protocol', null);
                 const el = document.getElementById('data-pharm');
                 if (ph && ph.schedule && ph.startDate) {
                     const startDate = new Date(ph.startDate); const now = new Date();
@@ -352,7 +348,7 @@
                 }
             } catch(e){ console.error(e); }
 
-            // 2. Життєві показники (залишається як було, бо GlobalVitals працює з LocalStorage)
+            // 2. Життєві показники
             try {
                 const vitalsData = await GlobalVitals.getAll();
                 if (vitalsData && Object.keys(vitalsData).length > 0) {
@@ -376,8 +372,7 @@
 
             // 3. Тренування
             try {
-                // ВИПРАВЛЕНО: Використовуємо loadAsync замість load
-                const tr = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync('training_protocol', null) : Utils.load('training_protocol', null);
+                const tr = await Utils.load('training_protocol', null);
                 const el = document.getElementById('data-train');
                 if (tr && tr.weeks && tr.weeks.length > 0) {
                     const lastWeek = tr.weeks[tr.weeks.length - 1]; 
@@ -391,8 +386,7 @@
 
             // 4. Харчування
             try {
-                // ВИПРАВЛЕНО: Використовуємо loadAsync замість load
-                const nu = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync('protocol_sys_plus_days', null) : Utils.load('protocol_sys_plus_days', null);
+                const nu = await Utils.load('protocol_sys_plus_days', null);
                 const el = document.getElementById('data-nutri');
                 if (nu && nu.days && nu.days.length > 0) {
                     const bank = nu.bank || {}; 
@@ -401,11 +395,13 @@
                     let trainDay = null;
                     let restDay = null;
 
+                    // 1. Спочатку шукаємо дні, які ти закріпив вручну
                     if (nu.hub) {
                         trainDay = nu.days.find(d => d.id === nu.hub.train);
                         restDay = nu.days.find(d => d.id === nu.hub.rest);
                     }
 
+                    // 2. Якщо вручну не закріплено - шукаємо за ключовими словами (стара логіка для страховки)
                     if (!trainDay && (!nu.hub || !nu.hub.train)) {
                         const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
                         trainDay = findDay(['трен', 'train', 'робоч', 'важк']) || nu.days[0];
@@ -414,11 +410,13 @@
                         const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
                         restDay = findDay(['відпоч', 'рест', 'rest', 'off', 'вихідн']) || (nu.days.length > 1 ? nu.days[1] : null);
                         
+                        // Захист від дублювання, якщо програма знайшла один і той самий день
                         if (restDay && trainDay && trainDay.id === restDay.id && nu.days.length > 1) {
                             restDay = nu.days.find(d => d.id !== trainDay.id);
                         }
                     }
 
+                    // Рендеримо дані
                     if (trainDay) {
                         const d1 = getDayMacros(trainDay, bank);
                         if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
@@ -438,13 +436,13 @@
             } catch(e){ console.error(e); }
         }
 
-        // Список ключів для повного бекапу системи
+        // ДОДАНО: 'protocol_global_vitals' для збереження історії тиску/ваги
         const APP_KEYS = ['gold_protocol', 'training_protocol', 'protocol_sys_plus_days', 'protocol_global_vitals'];
 
         async function CreateRestorePoint() {
             const msg = `Створити ФІЗИЧНУ резервну копію (Export)?<br><br>
                          <span style="display:block; border-left: 2px solid var(--gold); padding-left: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; color: var(--text-dim);">
-                            Усі дані (тренування, фарма, харчування, вітали) будуть зібрані в один файл.
+                            Усі ваші дані (тренування, фарма, харчування, вітали) будуть зібрані в один файл та завантажені на пристрій.
                          </span>`;
             const confirmed = await Modal.confirm(msg, "ЕКСПОРТ БАЗИ ДАНИХ", "gold");
             if(!confirmed) return; 
@@ -457,17 +455,9 @@
 
             let hasData = false;
 
-            if (typeof Utils.initDB === 'function') await Utils.initDB();
-
+            // Збираємо всі дані з усіх модулів
             for (const k of APP_KEYS) {
-                let d;
-                // КРИТИЧНИЙ ФІКС: Вітали НІКОЛИ не читаємо через Async, щоб запобігти їх міграції з LocalStorage
-                if (k === 'protocol_global_vitals') {
-                    d = Utils.load(k, null);
-                } else {
-                    d = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync(k, null) : Utils.load(k, null);
-                }
-                
+                const d = await Utils.load(k, null);
                 if(d) { 
                     fullBackup.data[k] = d;
                     hasData = true;
@@ -475,18 +465,21 @@
             }
 
             if(!hasData) {
-                await Modal.alert("Система порожня. Немає даних для експорту.", "ПОМИЛКА", "gold");
+                await Modal.alert("Система пуста. Немає даних для експорту.", "ПОМИЛКА", "gold");
                 return;
             }
 
+            // Генеруємо ім'я файлу
             const dateStr = new Date().toLocaleDateString('uk-UA').replace(/\./g, '_');
-            const filename = `PROTOCOL_OS_FULL_BACKUP_${dateStr}.json`;
+            const filename = `PROTOCOL_OS_BACKUP_${dateStr}.json`;
 
+            // Фізичне завантаження на пристрій
             const blob = new Blob([JSON.stringify(fullBackup, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
-            a.href = url; a.download = filename; 
+            a.href = url; 
+            a.download = filename; 
             document.body.appendChild(a);
             a.click();
             
@@ -495,10 +488,38 @@
                 URL.revokeObjectURL(url);
             }, 150);
 
+            // Оновлюємо мітку в Хабі
             localStorage.setItem('backup_timestamp', new Date().toLocaleString('uk-UA'));
             updateBackupLabel();
             
-            await Modal.alert("Бекап створено успішно!", "ГОТОВО", "green");
+            await Modal.alert("Файл успішно завантажено. Зберігайте його в надійному місці (iCloud/Google Drive/PC).", "BACKUP СТВОРЕНО", "green");
+        }
+
+        function updateBackupLabel() {
+            const ts = localStorage.getItem('backup_timestamp');
+            const el = document.getElementById('last-backup');
+            if(ts) { el.innerText = "LAST EXPORT: " + ts; el.style.color = "var(--green)"; } 
+            else { el.innerText = "NO BACKUPS YET"; el.style.color = "var(--text-dark)"; }
+        }
+
+        async function SystemReset() {
+            // ФІКС: Прямі синхронні кнопки в HTML модалки для обходу блокування iOS
+            const promptText = `
+                <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="document.getElementById('sys-restore-file').click(); Modal.handleCancel();" style="background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: var(--gold); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">📥 ІМПОРТ З ФАЙЛУ (.json)</button>
+                    <button onclick="Modal.handleOK()" style="background: rgba(239,68,68,0.1); border: 1px solid var(--red); color: var(--red); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">🗑 ВИДАЛИТИ ВСІ ДАНІ</button>
+                </div>
+            `;
+            
+            // Використовуємо confirm, кнопка "ОК" тригерить видалення, кнопка "Імпорт" перехоплює на себе клік по інпуту
+            const confirmedWipe = await Modal.confirm(promptText, "СИСТЕМНИЙ ЗАПИТ", "red");
+            
+            if (confirmedWipe) {
+                if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Відновити дані буде НЕМОЖЛИВО без фізичного файлу бекапу.</span><br><br>Ви точно впевнені?", "⚠ WIPE ALL ⚠", "red")) {
+                    FullWipe();
+                }
+            }
         }
 
         async function HandleRestore(inputElement) {
@@ -508,89 +529,35 @@
             reader.onload = async (event) => {
                 try {
                     const imported = JSON.parse(event.target.result);
-                    if (typeof Utils.initDB === 'function') await Utils.initDB();
-
-                    // АГРЕСИВНИЙ ПОШУК ВІТАЛІВ (Шукаємо всюди, де вони могли бути у старих бекапах)
-                    let foundVitals = null;
-                    if (imported._global_vitals_backup) foundVitals = imported._global_vitals_backup;
-                    else if (imported.data && imported.data._global_vitals_backup) foundVitals = imported.data._global_vitals_backup;
-                    else if (imported.data && imported.data.protocol_global_vitals) foundVitals = imported.data.protocol_global_vitals;
-                    else if (imported.protocol_global_vitals) foundVitals = imported.protocol_global_vitals;
-
-                    // Якщо знайшли - відновлюємо
-                    if (foundVitals && typeof GlobalVitals !== 'undefined') {
-                        GlobalVitals.importAll(foundVitals);
-                    }
-
-                    const dataObj = imported.data ? imported.data : imported;
+                    if (!imported.data) throw new Error("Невірний формат. Очікується файл бекапу Protocol OS.");
                     
+                    // Записуємо імпортовані дані назад у пам'ять
                     for (const k of APP_KEYS) {
-                        if (k === 'protocol_global_vitals') continue; // Вже відновили вище
-                        if (dataObj[k]) {
-                            if (typeof Utils.saveAsync === 'function') {
-                                await Utils.saveAsync(k, dataObj[k]);
-                            } else {
-                                Utils.save(k, dataObj[k]); 
-                            }
+                        if (imported.data[k]) {
+                            Utils.save(k, imported.data[k]); 
                         }
                     }
-                    await Modal.alert("Дані успішно відновлені!", "ВІДНОВЛЕНО", "green");
+                    await Modal.alert("Систему успішно відновлено з файлу!", "ВІДНОВЛЕНО", "green");
                     location.reload();
                 } catch (err) {
-                    await Modal.alert("Помилка файлу: " + err.message, "ПОМИЛКА", "red");
+                    await Modal.alert("Помилка імпорту: " + err.message, "ПОМИЛКА", "red");
                 }
             };
             reader.readAsText(file);
-            inputElement.value = ''; 
-        }
-        async function SystemReset() {
-            const promptText = `
-                <div style="margin-bottom: 18px; font-weight: 500; font-size: 1.05rem;">Оберіть дію:</div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button onclick="document.getElementById('sys-restore-file').click(); Modal.handleCancel();" style="background: rgba(212,175,55,0.1); border: 1px solid var(--gold); color: var(--gold); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">📥 ІМПОРТ З ФАЙЛУ (.json)</button>
-                    <button onclick="Modal.handleOK()" style="background: rgba(239,68,68,0.1); border: 1px solid var(--red); color: var(--red); padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase;">🗑 ВИДАЛИТИ ВСІ ДАНІ</button>
-                </div>
-            `;
-            const confirmedWipe = await Modal.confirm(promptText, "СИСТЕМНИЙ ЗАПИТ", "red");
-            if (confirmedWipe) {
-                if (await Modal.confirm("ОСТАТОЧНЕ ВИДАЛЕННЯ.<br><br><span style='color:var(--red); font-weight:bold'>Це неможливо скасувати.</span><br>Ви впевнені?", "⚠ WIPE ALL ⚠", "red")) {
-                    FullWipe();
-                }
-            }
+            inputElement.value = ''; // Скидаємо інпут для можливості повторного вибору
         }
 
+        // ФІКС: Повертаємо випадково видалену функцію очищення
         async function FullWipe() { 
             localStorage.clear(); 
-            try { indexedDB.deleteDatabase('ProtocolCoreDB'); } catch(e) {} 
+            try { indexedDB.deleteDatabase('ProtocolOS_DB'); } catch(e) {}
             try { indexedDB.deleteDatabase('GoldProtocolDB'); } catch(e) {}
             location.reload(); 
         }
 
-        window.onload = async () => {
+        window.onload = () => {
             updateClock();
             updateBackupLabel();
-            
-            // --- СИСТЕМА ЕКСТРЕНОГО ВІДНОВЛЕННЯ (EMERGENCY RECOVERY) ---
-            try {
-                if (typeof Utils.initDB === 'function') {
-                    await Utils.initDB();
-                    if (CoreDB.db) {
-                        const lostVitals = await CoreDB.get('protocol_global_vitals');
-                        // Якщо вітали застрягли у фоновій базі IndexedDB
-                        if (lostVitals && Object.keys(lostVitals).length > 0) {
-                            const currentVitals = localStorage.getItem('protocol_global_vitals');
-                            // Повертаємо їх на своє законне місце
-                            if (!currentVitals || currentVitals === '{}') {
-                                localStorage.setItem('protocol_global_vitals', JSON.stringify(lostVitals));
-                                // Очищаємо копію з фону
-                                await CoreDB.set('protocol_global_vitals', null); 
-                            }
-                        }
-                    }
-                }
-            } catch(e) { console.error("Recovery error", e); }
-            // -----------------------------------------------------------
-
             populateSmartCards(); 
         };
     </script>
