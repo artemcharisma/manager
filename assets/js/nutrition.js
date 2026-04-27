@@ -40,8 +40,13 @@ const App = {
     },
 
     async init() {
-        // КРИТИЧНИЙ ФІКС: Тепер ми чекаємо реальні дані, а не Promise
-        const loadedData = await Utils.load(DB_KEY, null);
+        // Піднімаємо базу IndexedDB перед читанням
+        if (typeof Utils.initDB === 'function') await Utils.initDB();
+
+        // КРИТИЧНИЙ ФІКС: Використовуємо асинхронне читання з нової бази
+        const loadedData = (typeof Utils.loadAsync === 'function') 
+            ? await Utils.loadAsync(DB_KEY, null) 
+            : Utils.load(DB_KEY, null);
 
         if(loadedData) {
             this.data = loadedData;
@@ -170,6 +175,12 @@ const App = {
         brandBlock.ondblclick = async () => {
             if(await Modal.confirm("⚠ HARD RESET?<br><br><span style='color:var(--text-dim)'>Видалити абсолютно всі дані харчування?</span>", "КРИТИЧНО", "red")) {
                 localStorage.removeItem(DB_KEY);
+                if (typeof Utils.initDB === 'function') {
+                    await Utils.initDB();
+                    if (typeof CoreDB !== 'undefined' && CoreDB.db) {
+                        await CoreDB.set(DB_KEY, null);
+                    }
+                }
                 location.reload();
             }
         };
@@ -272,24 +283,28 @@ unlockScroll() {
     document.body.style.overflow = '';
 },
     
-    // ДОДАНО: Таймер для відкладеного збереження
     saveTimer: null,
     
     save() {
-        // UI (прогрес-бари, калорії) оновлюємо миттєво
         this.updateStats();
         
-        // Важкий I/O запис на диск телефону відкладаємо
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => {
-            Utils.save(DB_KEY, this.data);
+            if (typeof Utils.saveAsync === 'function') {
+                Utils.saveAsync(DB_KEY, this.data);
+            } else {
+                Utils.save(DB_KEY, this.data);
+            }
             this.saveTimer = null;
-        }, 800); // Чекаємо 800мс після останнього кліку/вводу
+        }, 800);
     },
 
-    // ДОДАНО: Екстрений запис
     forceSave() {
-        Utils.save(DB_KEY, this.data);
+        if (typeof Utils.saveAsync === 'function') {
+            Utils.saveAsync(DB_KEY, this.data);
+        } else {
+            Utils.save(DB_KEY, this.data);
+        }
     },
     
     pushHistory() {
@@ -2057,34 +2072,35 @@ const calcMult = (grams) => {
             try {
                 const parsed = JSON.parse(e.target.result);
                 
-                // Базова валідація: перевіряємо, чи це дійсно наш бекап
                 if (!parsed || typeof parsed !== 'object' || !parsed.days || !parsed.bank) {
                     throw new Error("Некоректна структура даних");
                 }
                 
                 this.pushHistory();
                 
-                // ВІДНОВЛЕННЯ GLOBAL VITALS
                 if (parsed._global_vitals_backup && typeof GlobalVitals !== 'undefined') {
                     GlobalVitals.importAll(parsed._global_vitals_backup);
                     delete parsed._global_vitals_backup; 
                 }
 
                 this.data = parsed;
-                this.save();
                 
-                // Успішне завантаження
+                // Асинхронний запис перед релоадом
+                if (typeof Utils.saveAsync === 'function') {
+                    await Utils.saveAsync(DB_KEY, this.data);
+                } else {
+                    this.save();
+                }
+                
                 location.reload();
             } catch (err) {
                 console.error("Помилка імпорту:", err);
-                // Якщо є система модальних вікон - використовуємо її, інакше стандартний alert
                 if (typeof Modal !== 'undefined') {
                     await Modal.alert("Помилка читання файлу. Переконайтесь, що це валідний бекап системи.", "ПОМИЛКА ІМПОРТУ", "red");
                 } else {
                     alert("Помилка читання файлу. Некоректний формат JSON.");
                 }
             } finally {
-                // Обов'язково скидаємо input, щоб подія onchange спрацювала при наступному виборі цього ж файлу
                 inp.value = '';
             }
         };
