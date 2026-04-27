@@ -76,47 +76,59 @@ const App = {
     historyIndex: {}, 
 
     buildIndex() {
-        this.historyIndex = {};
-        if (!this.data || !this.data.weeks) return;
-        
-        const sortedWeeks = [...this.data.weeks].sort((a, b) => a.num - b.num);
+        // Виносимо важкий цикл у фоновий процес, щоб не фрізити UI під час введення ваги
+        const runIndexer = () => {
+            const newIndex = {};
+            if (!this.data || !this.data.weeks) return;
+            
+            const sortedWeeks = [...this.data.weeks].sort((a, b) => a.num - b.num);
 
-        sortedWeeks.forEach(week => {
-            week.days.forEach((day, dIdx) => {
-                day.exercises.forEach(ex => {
-                    if (!ex.n) return;
-                    const name = ex.n.trim().toLowerCase();
-                    if (!this.historyIndex[name]) this.historyIndex[name] = [];
+            sortedWeeks.forEach(week => {
+                week.days.forEach((day, dIdx) => {
+                    day.exercises.forEach(ex => {
+                        if (!ex.n) return;
+                        const name = ex.n.trim().toLowerCase();
+                        if (!newIndex[name]) newIndex[name] = [];
 
-                    let sessionMax1RM = 0;
-                    let hasValidSets = false;
+                        let sessionMax1RM = 0;
+                        let hasValidSets = false;
 
-                    if (ex.sets) {
-                        ex.sets.forEach(s => {
-                            if (s.w || s.r) hasValidSets = true;
-                            
-                            if (s.t === 'WU') return;
-                            const w = parseFloat(s.w) || 0;
-                            const r = parseFloat(s.r) || 0;
-                            if (w > 0 && r > 0) {
-                                const rm = w * (1 + r / 30);
-                                if (rm > sessionMax1RM) sessionMax1RM = rm;
-                            }
+                        if (ex.sets) {
+                            ex.sets.forEach(s => {
+                                if (s.w || s.r) hasValidSets = true;
+                                
+                                if (s.t === 'WU') return;
+                                const w = parseFloat(s.w) || 0;
+                                const r = parseFloat(s.r) || 0;
+                                if (w > 0 && r > 0) {
+                                    const rm = w * (1 + r / 30);
+                                    if (rm > sessionMax1RM) sessionMax1RM = rm;
+                                }
+                            });
+                        }
+                        newIndex[name].push({
+                            wNum: week.num,
+                            prog: week.prog,
+                            dIdx: dIdx,
+                            sets: ex.sets,
+                            maxRM: sessionMax1RM,
+                            hasData: hasValidSets
                         });
-                    }
-                    this.historyIndex[name].push({
-                        wNum: week.num,
-                        prog: week.prog,
-                        dIdx: dIdx,
-                        sets: ex.sets,
-                        maxRM: sessionMax1RM,
-                        hasData: hasValidSets
                     });
                 });
             });
-        });
-    },
+            
+            // Атомарна підміна: миттєво оновлюємо глобальний індекс
+            this.historyIndex = newIndex;
+        };
 
+        // Виконуємо, коли у браузера є вільний час (не блокує рендер)
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(runIndexer);
+        } else {
+            setTimeout(runIndexer, 0);
+        }
+    },
     async init() {
         this.data = await this.state.init();
 
@@ -1043,7 +1055,6 @@ const App = {
         this.timerState.el.style.display = 'none';
         this.timerState.left = this.timerState.default;
         
-        // ФІКС: Скидаємо тільки конкретну кнопку замість this.render()
         if (oldKey) {
             const parts = oldKey.split('-');
             this.updateExTimerButton(parts[0], parts[1], parts[2], false);
@@ -1053,6 +1064,7 @@ const App = {
     startTimer(seconds, exKey = null) {
         this.stopTimer();
         this.timerState.left = seconds;
+        // Фіксуємо абсолютний час завершення
         this.timerState.endTime = Date.now() + (seconds * 1000);
         this.timerState.currentExKey = exKey; 
         
@@ -1068,47 +1080,60 @@ const App = {
         this.updateTimerUI();
         if (window.Haptics) window.Haptics.light();
 
+        // Інтервал залишається виключно для візуального оновлення UI
         this.timerState.interval = setInterval(() => {
-            const now = Date.now();
-            this.timerState.left = Math.ceil((this.timerState.endTime - now) / 1000);
-            
-            this.updateTimerUI();
-
-            if (this.timerState.left <= 0) {
-                clearInterval(this.timerState.interval);
-                
-                const oldKey = this.timerState.currentExKey; // Запам'ятовуємо ключ
-                
-                this.timerState.interval = null;
-                this.timerState.endTime = null;
-                this.timerState.currentExKey = null;
-                
-                this.timerState.el.style.background = 'var(--success)';
-                this.timerState.el.style.color = '#fff';
-                this.timerState.el.style.boxShadow = '0 0 25px var(--success)';
-                this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
-                
-                // ФІКС: Повертаємо кнопку вправи у звичайний стан після завершення часу
-                if (oldKey) {
-                    const parts = oldKey.split('-');
-                    this.updateExTimerButton(parts[0], parts[1], parts[2], false);
-                }
-                
-                if ("Notification" in window && Notification.permission === "granted") {
-                    new Notification("Час відпочинку вийшов!", { body: "Пора робити наступний підхід", icon: "icon.png", vibrate: [200, 100, 200] });
-                }
-                
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-                if (window.Haptics) window.Haptics.heavy();
-                
-                setTimeout(() => { if(!this.timerState.interval) this.timerState.el.style.display = 'none'; }, 5000);
-            }
+            this.checkTimerStatus();
         }, 250); 
+    },
+
+    // НОВИЙ МЕТОД: Незалежна перевірка стану
+    checkTimerStatus() {
+        if (!this.timerState.endTime) return;
+        
+        const now = Date.now();
+        this.timerState.left = Math.ceil((this.timerState.endTime - now) / 1000);
+        
+        this.updateTimerUI();
+
+        if (this.timerState.left <= 0) {
+            this.finishTimer();
+        }
+    },
+
+    // НОВИЙ МЕТОД: Ізольована логіка завершення
+    finishTimer() {
+        if (this.timerState.interval) clearInterval(this.timerState.interval);
+        
+        const oldKey = this.timerState.currentExKey; 
+        
+        this.timerState.interval = null;
+        this.timerState.endTime = null;
+        this.timerState.currentExKey = null;
+        
+        this.timerState.el.style.background = 'var(--success)';
+        this.timerState.el.style.color = '#fff';
+        this.timerState.el.style.boxShadow = '0 0 25px var(--success)';
+        this.timerState.el.innerHTML = "🔥 ГОТОВИЙ!";
+        
+        if (oldKey) {
+            const parts = oldKey.split('-');
+            this.updateExTimerButton(parts[0], parts[1], parts[2], false);
+        }
+        
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Час відпочинку вийшов!", { body: "Пора робити наступний підхід", icon: "icon.png", vibrate: [200, 100, 200] });
+        }
+        
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+        if (window.Haptics) window.Haptics.heavy();
+        
+        setTimeout(() => { if(!this.timerState.interval) this.timerState.el.style.display = 'none'; }, 5000);
     },
 
     updateTimerUI() {
         if (!this.timerState.el) return;
-        const timeToFormat = this.timerState.interval ? this.timerState.left : this.timerState.default;
+        // Запобігаємо відображенню від'ємних значень, якщо екран довго був заблокований
+        const timeToFormat = Math.max(0, this.timerState.interval ? this.timerState.left : this.timerState.default);
         
         const m = Math.floor(timeToFormat / 60).toString().padStart(2, '0');
         const s = (timeToFormat % 60).toString().padStart(2, '0');
@@ -1117,7 +1142,6 @@ const App = {
             this.timerState.el.innerHTML = `⏳ ${m}:${s}`;
         }
     },
-
     async setTimerForExercise(w, d, e, currentVal) {
         const val = await Modal.prompt(`Введіть час (сек) для цієї вправи:<br><br><span style='color:#888; font-size:0.8rem'>Наприклад: 90 (1.5 хв) або 120 (2 хв)</span>`, "ТАЙМЕР ВПРАВИ", currentVal.toString());
         
@@ -2021,10 +2045,16 @@ const App = {
 };
 
 document.addEventListener('visibilitychange', () => {
+    // 1. Коли вкладка ховається (екран гасне) - примусово зберігаємо дані
     if (document.visibilityState === 'hidden' && App.saveTimer) {
         clearTimeout(App.saveTimer);
         App.saveTimer = null;
         App.forceSave();
+    }
+    
+    // 2. Коли вкладка знову активна (розблокували телефон) - миттєво перевіряємо таймер
+    if (document.visibilityState === 'visible' && App.timerState && App.timerState.endTime) {
+        App.checkTimerStatus();
     }
 });
 
