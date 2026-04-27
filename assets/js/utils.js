@@ -56,48 +56,45 @@ const CoreDB = {
 
 const Utils = {
     // Ініціалізація бази при старті
+    // Ініціалізація бази при старті + ЕКСТРЕНЕ ВІДНОВЛЕННЯ
     async initDB() { 
-        return await CoreDB.init(); 
-    },
-
-    // Синхронне читання (для дрібних даних)
-    load(key, defaultData) {
-        try {
-            const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : defaultData;
-        } catch (e) {
-            console.error(`Error loading ${key}:`, e);
-            return defaultData;
-        }
-    },
-
-    // Синхронний запис
-    save(key, data) {
-        try {
-            localStorage.setItem(key, JSON.stringify(data));
-        } catch (e) {
-            console.error(`Error saving ${key}:`, e);
-            if (e.name === 'QuotaExceededError' || e.code === 22 || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                if (typeof Modal !== 'undefined' && Modal.alert) {
-                    Modal.alert("Пам'ять браузера переповнена (Quota Exceeded). Дані не збережено! Зробіть експорт бекапу та очистіть історію/кеш.", "КРИТИЧНА ПОМИЛКА", "red");
-                } else {
-                    alert("КРИТИЧНА ПОМИЛКА: Пам'ять переповнена. Дані не збережено! Зробіть бекап.");
+        const ready = await CoreDB.init(); 
+        if (ready && CoreDB.db) {
+            try {
+                // РЯТУЄМО ДАНІ: Витягуємо вітали з IndexedDB назад у LocalStorage
+                const lostVitals = await CoreDB.get('protocol_global_vitals');
+                if (lostVitals && Object.keys(lostVitals).length > 0) {
+                    const currentStr = localStorage.getItem('protocol_global_vitals');
+                    let currentCount = 0;
+                    if (currentStr) {
+                        try { currentCount = Object.keys(JSON.parse(currentStr)).length; } catch(e){}
+                    }
+                    // Якщо кеш пустий або там менше днів, ніж у збереженій базі
+                    if (!currentStr || currentCount < Object.keys(lostVitals).length) {
+                        localStorage.setItem('protocol_global_vitals', JSON.stringify(lostVitals));
+                        console.log("🔥 ВІТАЛИ УСПІШНО ВІДНОВЛЕНО З БАЗИ!");
+                    }
                 }
-            }
+            } catch(e) { console.error("Recovery err:", e); }
         }
+        return ready; 
     },
 
     // Асинхронне читання з міграцією
     async loadAsync(key, defaultData) {
+        // ЖОРСТКЕ ПРАВИЛО: Вітали живуть ТІЛЬКИ в LocalStorage
+        if (key === 'protocol_global_vitals') {
+            return this.load(key, defaultData);
+        }
+        
         if (CoreDB.db) {
             let data = await CoreDB.get(key);
             if (!data) {
-                // Міграція зі старого LocalStorage в IndexedDB
                 const localData = this.load(key, null);
                 if (localData) {
-                    console.log(`[CoreDB] Migrating ${key} from LocalStorage to IndexedDB...`);
+                    console.log(`[CoreDB] Migrating ${key}...`);
                     await CoreDB.set(key, localData);
-                    localStorage.removeItem(key); // Звільняємо місце
+                    localStorage.removeItem(key); 
                     return localData;
                 }
                 return defaultData;
@@ -107,8 +104,14 @@ const Utils = {
         return this.load(key, defaultData);
     },
 
-    // Асинхронний запис (Fire & Forget)
+    // Асинхронний запис
     async saveAsync(key, data) {
+        // ЖОРСТКЕ ПРАВИЛО: Вітали пишемо ТІЛЬКИ в LocalStorage
+        if (key === 'protocol_global_vitals') {
+            this.save(key, data);
+            return;
+        }
+        
         if (CoreDB.db) {
             await CoreDB.set(key, data);
         } else {
