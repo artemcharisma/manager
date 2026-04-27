@@ -325,9 +325,13 @@
         }
 
         async function populateSmartCards() {
+            // ДОДАНО: Спочатку підключаємося до нової бази IndexedDB
+            if (typeof Utils.initDB === 'function') await Utils.initDB();
+
             // 1. Фармакологія
             try {
-                const ph = await Utils.load('gold_protocol', null);
+                // ВИПРАВЛЕНО: Використовуємо loadAsync замість load
+                const ph = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync('gold_protocol', null) : Utils.load('gold_protocol', null);
                 const el = document.getElementById('data-pharm');
                 if (ph && ph.schedule && ph.startDate) {
                     const startDate = new Date(ph.startDate); const now = new Date();
@@ -348,7 +352,7 @@
                 }
             } catch(e){ console.error(e); }
 
-            // 2. Життєві показники
+            // 2. Життєві показники (залишається як було, бо GlobalVitals працює з LocalStorage)
             try {
                 const vitalsData = await GlobalVitals.getAll();
                 if (vitalsData && Object.keys(vitalsData).length > 0) {
@@ -372,7 +376,8 @@
 
             // 3. Тренування
             try {
-                const tr = await Utils.load('training_protocol', null);
+                // ВИПРАВЛЕНО: Використовуємо loadAsync замість load
+                const tr = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync('training_protocol', null) : Utils.load('training_protocol', null);
                 const el = document.getElementById('data-train');
                 if (tr && tr.weeks && tr.weeks.length > 0) {
                     const lastWeek = tr.weeks[tr.weeks.length - 1]; 
@@ -386,7 +391,8 @@
 
             // 4. Харчування
             try {
-                const nu = await Utils.load('protocol_sys_plus_days', null);
+                // ВИПРАВЛЕНО: Використовуємо loadAsync замість load
+                const nu = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync('protocol_sys_plus_days', null) : Utils.load('protocol_sys_plus_days', null);
                 const el = document.getElementById('data-nutri');
                 if (nu && nu.days && nu.days.length > 0) {
                     const bank = nu.bank || {}; 
@@ -395,13 +401,11 @@
                     let trainDay = null;
                     let restDay = null;
 
-                    // 1. Спочатку шукаємо дні, які ти закріпив вручну
                     if (nu.hub) {
                         trainDay = nu.days.find(d => d.id === nu.hub.train);
                         restDay = nu.days.find(d => d.id === nu.hub.rest);
                     }
 
-                    // 2. Якщо вручну не закріплено - шукаємо за ключовими словами (стара логіка для страховки)
                     if (!trainDay && (!nu.hub || !nu.hub.train)) {
                         const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
                         trainDay = findDay(['трен', 'train', 'робоч', 'важк']) || nu.days[0];
@@ -410,13 +414,11 @@
                         const findDay = (keywords) => nu.days.find(d => keywords.some(kw => d.name.toLowerCase().includes(kw)));
                         restDay = findDay(['відпоч', 'рест', 'rest', 'off', 'вихідн']) || (nu.days.length > 1 ? nu.days[1] : null);
                         
-                        // Захист від дублювання, якщо програма знайшла один і той самий день
                         if (restDay && trainDay && trainDay.id === restDay.id && nu.days.length > 1) {
                             restDay = nu.days.find(d => d.id !== trainDay.id);
                         }
                     }
 
-                    // Рендеримо дані
                     if (trainDay) {
                         const d1 = getDayMacros(trainDay, bank);
                         if(d1.kcal > 0) htmlContent += `<div class="data-row"><span class="data-lbl" style="color:var(--green)">[T]</span> <span class="data-hl">${d1.kcal}</span> <span class="data-lbl">KCAL</span> <span class="data-lbl" style="margin-left:auto">Б${d1.p} Ж${d1.f} В${d1.c}</span></div>`;
@@ -455,9 +457,12 @@
 
             let hasData = false;
 
-            // Збираємо всі дані з усіх модулів
+            // ДОДАНО: Ініціалізація перед читанням
+            if (typeof Utils.initDB === 'function') await Utils.initDB();
+
+            // ВИПРАВЛЕНО: Читання з нової бази через loadAsync
             for (const k of APP_KEYS) {
-                const d = await Utils.load(k, null);
+                const d = (typeof Utils.loadAsync === 'function') ? await Utils.loadAsync(k, null) : Utils.load(k, null);
                 if(d) { 
                     fullBackup.data[k] = d;
                     hasData = true;
@@ -469,11 +474,9 @@
                 return;
             }
 
-            // Генеруємо ім'я файлу
             const dateStr = new Date().toLocaleDateString('uk-UA').replace(/\./g, '_');
             const filename = `PROTOCOL_OS_BACKUP_${dateStr}.json`;
 
-            // Фізичне завантаження на пристрій
             const blob = new Blob([JSON.stringify(fullBackup, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -488,7 +491,6 @@
                 URL.revokeObjectURL(url);
             }, 150);
 
-            // Оновлюємо мітку в Хабі
             localStorage.setItem('backup_timestamp', new Date().toLocaleString('uk-UA'));
             updateBackupLabel();
             
