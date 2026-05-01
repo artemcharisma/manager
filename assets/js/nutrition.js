@@ -1654,6 +1654,42 @@ unlockScroll() {
         }
     },
 
+    // ДОДАТИ ЦЮ ФУНКЦІЮ: Смарт-маска для вводу часу
+    formatTimeInput(input, mid) {
+        // Залишаємо лише цифри
+        let val = input.value.replace(/\D/g, '');
+
+        // Автокорекція годин (не більше 23)
+        if (val.length >= 2) {
+            let h = parseInt(val.substring(0, 2));
+            if (h > 23) val = '23' + val.substring(2);
+        }
+
+        // Автокорекція хвилин (не більше 59)
+        if (val.length >= 4) {
+            let m = parseInt(val.substring(2, 4));
+            if (m > 59) val = val.substring(0, 2) + '59';
+        }
+
+        // Додаємо двокрапку
+        if (val.length > 2) {
+            val = val.substring(0, 2) + ':' + val.substring(2);
+        }
+
+        // Жорсткий ліміт на 5 символів (HH:MM)
+        if (val.length > 5) val = val.substring(0, 5);
+
+        input.value = val;
+        
+        // Зберігаємо в стейт
+        this.saveMealTime(mid, val);
+
+        // Якщо ввели повний час (5 символів), оновлюємо UI, щоб з'явилася кнопка синхронізації 🔄
+        if (val.length === 5 && !input.nextElementSibling) {
+            this.render(false);
+        }
+    },
+
     // Смарт-маска для 24-годинного формату
     async syncMealTimeToAll(mealName, timeStr, e) {
         if(e) e.stopPropagation();
