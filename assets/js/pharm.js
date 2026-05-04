@@ -1553,27 +1553,31 @@ return `
                 
                 <div class="med-list" style="padding-top:10px;">
                     ${block.checks.map((chk, j) => {
-                        // ФІКС МІГРАЦІЇ: підтримка і старих рядків, і нових об'єктів результатів
                         const chkName = typeof chk === 'string' ? chk : (chk.n || '');
                         const chkVal = typeof chk === 'string' ? '' : (chk.v || '');
+                        const chkRef = typeof chk === 'string' ? '' : (chk.ref || ''); // Референсні значення
                         
                         return `
-                        <div class="check-row" style="border-bottom: 1px solid rgba(255,255,255,0.02); padding: 8px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
-                                <span class="check-icon" style="color:var(--blue); font-size:1.2rem; text-shadow:none; margin:0; flex-shrink:0;">🔬</span>
-                                <span class="check-name" contenteditable="${this.state.editing}" 
-                                      onblur="App.updateAnalysisName(${i}, ${j}, this.innerText)"
-                                      style="font-weight:600; color:#ccc; outline:none; white-space:normal; line-height:1.2; display:block;">
-                                      ${chkName}
-                                </span>
+                        <div class="check-row" style="border-bottom: 1px solid rgba(255,255,255,0.02); padding: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                            <div style="display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0;">
+                                <span class="check-icon" style="color:var(--blue); font-size:1.2rem; text-shadow:none; margin:0; flex-shrink:0; line-height:1;">🔬</span>
+                                <div style="display:flex; flex-direction:column; flex:1;">
+                                    <span class="check-name" contenteditable="${this.state.editing}" 
+                                          onblur="App.updateAnalysisName(${i}, ${j}, this.innerText)"
+                                          style="font-weight:600; color:#ccc; outline:none; white-space:normal; line-height:1.2;">
+                                          ${chkName}
+                                    </span>
+                                    <input type="text" value="${chkRef}" placeholder="Рефи (напр. 8-29 nmol/l)" 
+                                           onblur="App.updateAnalysisRef(${i}, ${j}, this.value)"
+                                           style="background: transparent; border: none; color: #777; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; width: 100%; outline: none; margin-top: 4px; padding: 0;">
+                                </div>
                             </div>
                             
                             <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-                                <input type="text" value="${chkVal}" placeholder="Результат..." 
-                                       onblur="App.updateAnalysisVal(${i}, ${j}, this.value)"
-                                       style="background: #000; border: 1px dashed #444; color: var(--green); font-weight: 800; padding: 6px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; width: 100px; text-align: right; outline: none; transition: 0.2s;"
+                                <input type="text" value="${chkVal}" placeholder="Рез-т..." 
+                                       style="background: #000; border: 1px solid #333; color: var(--green); font-weight: 800; padding: 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; width: 85px; text-align: right; outline: none; transition: 0.2s;"
                                        onfocus="this.style.borderColor='var(--primary)'; this.style.color='#fff';" 
-                                       onblur="this.style.borderColor='#444'; this.style.color='var(--green)'; App.updateAnalysisVal(${i}, ${j}, this.value)">
+                                       onblur="this.style.borderColor='#333'; this.style.color='var(--green)'; App.updateAnalysisVal(${i}, ${j}, this.value)">
                                 ${this.state.editing ? `<span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="App.delAnalysisCheck(${i}, ${j})">✕</span>` : ''}
                             </div>
                         </div>
@@ -1582,13 +1586,22 @@ return `
                 </div>
                 
                 ${this.state.editing ? `<button class="btn-ghost" style="margin-top:10px; border-top:1px dashed #333; border-radius:8px;" onclick="App.addAnalysisCheck(${i})">+ Додати маркер</button>` : ''}
+                
+                <!-- БЛОК ДЛЯ УЗД ТА ВИСНОВКІВ -->
+                <div style="margin-top: 15px; border-top: 1px dashed #333; padding-top: 15px;">
+                    <div style="font-size: 0.7rem; color: #888; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px;">📋 ВИСНОВКИ ЛІКАРЯ / УЗД / ЕКГ</div>
+                    <textarea placeholder="Результати УЗД органів черевної порожнини, Ехо-КГ, ЕКГ, нотатки..."
+                              style="width: 100%; background: #0a0a0a; border: 1px solid #222; color: #ccc; padding: 12px; border-radius: 8px; font-size: 0.85rem; min-height: 60px; resize: vertical; outline: none; box-sizing: border-box; transition: 0.2s;"
+                              onfocus="this.style.borderColor='var(--primary)'"
+                              onblur="this.style.borderColor='#222'; App.updateAnalysisNote(${i}, this.value)">${block.note || ''}</textarea>
+                </div>
             </div>`;
         });
 
         html += `</div>`;
         
         if (this.state.editing) {
-            html += `<button class="btn-new-section" style="margin-top:20px; border-color:var(--primary); color:var(--primary);" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:[{n:'Показник', v:''}]}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
+            html += `<button class="btn-new-section" style="margin-top:20px; border-color:var(--primary); color:var(--primary);" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:[{n:'Показник', v:'', ref:''}], note:''}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
         }
         
         c.innerHTML = html;
@@ -1597,7 +1610,7 @@ return `
         this.pushHistory();
         let chk = this.data.analysis[phaseIdx].checks[checkIdx];
         if (typeof chk === 'string') {
-            this.data.analysis[phaseIdx].checks[checkIdx] = { n: newName, v: "" };
+            this.data.analysis[phaseIdx].checks[checkIdx] = { n: newName, v: "", ref: "" };
         } else {
             chk.n = newName;
         }
@@ -1605,19 +1618,33 @@ return `
     },
 
     updateAnalysisVal(phaseIdx, checkIdx, newVal) {
-        // Ми не пушимо історію на кожне введення результату, щоб не забивати Undo-буфер дрібницями
         let chk = this.data.analysis[phaseIdx].checks[checkIdx];
         if (typeof chk === 'string') {
-            this.data.analysis[phaseIdx].checks[checkIdx] = { n: chk, v: newVal };
+            this.data.analysis[phaseIdx].checks[checkIdx] = { n: chk, v: newVal, ref: "" };
         } else {
             chk.v = newVal;
         }
         this.save();
     },
 
+    updateAnalysisRef(phaseIdx, checkIdx, newRef) {
+        let chk = this.data.analysis[phaseIdx].checks[checkIdx];
+        if (typeof chk === 'string') {
+            this.data.analysis[phaseIdx].checks[checkIdx] = { n: chk, v: "", ref: newRef };
+        } else {
+            chk.ref = newRef;
+        }
+        this.save();
+    },
+
+    updateAnalysisNote(phaseIdx, newNote) {
+        this.data.analysis[phaseIdx].note = newNote;
+        this.save();
+    },
+
     addAnalysisCheck(phaseIdx) {
         this.pushHistory();
-        this.data.analysis[phaseIdx].checks.push({ n: 'Новий показник', v: '' });
+        this.data.analysis[phaseIdx].checks.push({ n: 'Новий показник', v: '', ref: '' });
         this.save();
         this.renderView();
     },
