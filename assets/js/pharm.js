@@ -2234,7 +2234,7 @@ return `
         
         if (meas && (meas.chest || meas.waist || meas.arm || meas.leg || meas.calf)) {
             report += `\n📏 ЗАМІРИ (см):\n`;
-            report += `───────────────────────────────────────\n`;
+            report += `──────────────────────────────────────\n`;
             let mArr = [];
             if(meas.chest) mArr.push(`Груди: ${meas.chest}`);
             if(meas.waist) mArr.push(`Талія: ${meas.waist}`);
