@@ -1557,6 +1557,9 @@ return `
                         const chkVal = typeof chk === 'string' ? '' : (chk.v || '');
                         const chkRef = typeof chk === 'string' ? '' : (chk.ref || ''); // Референсні значення
                         
+                        // ВПЕРЕДЖУЮЧИЙ АНАЛІЗ КОЛЬОРУ
+                        const valColor = App.getAnalysisColor(chkVal, chkRef);
+                        
                         return `
                         <div class="check-row" style="border-bottom: 1px solid rgba(255,255,255,0.02); padding: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                             <div style="display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0;">
@@ -1575,9 +1578,9 @@ return `
                             
                             <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
                                 <input type="text" value="${chkVal}" placeholder="Рез-т..." 
-                                       style="background: #000; border: 1px solid #333; color: var(--green); font-weight: 800; padding: 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; width: 85px; text-align: right; outline: none; transition: 0.2s;"
+                                       style="background: #000; border: 1px solid #333; color: ${valColor}; font-weight: 800; padding: 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; width: 85px; text-align: right; outline: none; transition: 0.2s;"
                                        onfocus="this.style.borderColor='var(--primary)'; this.style.color='#fff';" 
-                                       onblur="this.style.borderColor='#333'; this.style.color='var(--green)'; App.updateAnalysisVal(${i}, ${j}, this.value)">
+                                       onblur="this.style.borderColor='#333'; App.updateAnalysisVal(${i}, ${j}, this.value)">
                                 ${this.state.editing ? `<span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="App.delAnalysisCheck(${i}, ${j})">✕</span>` : ''}
                             </div>
                         </div>
@@ -1625,6 +1628,7 @@ return `
             chk.v = newVal;
         }
         this.save();
+        this.renderView(); // <--- ОНОВЛЮЄМО UI ДЛЯ КОЛЬОРУ
     },
 
     updateAnalysisRef(phaseIdx, checkIdx, newRef) {
@@ -1635,6 +1639,7 @@ return `
             chk.ref = newRef;
         }
         this.save();
+        this.renderView(); // <--- ОНОВЛЮЄМО UI ДЛЯ КОЛЬОРУ
     },
 
     updateAnalysisNote(phaseIdx, newNote) {
@@ -1654,6 +1659,54 @@ return `
         this.data.analysis[phaseIdx].checks.splice(checkIdx, 1);
         this.save();
         this.renderView();
+    },
+    getAnalysisColor(val, ref) {
+        if (!val || val.trim() === '') return '#555'; // Якщо пусто
+        
+        // Чистимо значення від пробілів та міняємо кому на крапку
+        let cleanVal = val.replace(',', '.').replace(/\s+/g, '');
+        let v = parseFloat(cleanVal);
+        
+        // Якщо це не число (а текст, напр. "Виявлено")
+        if (isNaN(v)) {
+            const s = val.toLowerCase();
+            if (s.includes('висок') || s.includes('high') || s.includes('↑') || s.includes('поган') || s.includes('!')) return 'var(--red)';
+            if (s.includes('низьк') || s.includes('low') || s.includes('↓')) return 'var(--yellow)';
+            if (s.includes('норм') || s.includes('ok') || s.includes('good') || s.includes('не вияв')) return 'var(--green)';
+            return '#fff'; // Нейтральний білий, якщо незрозуміло
+        }
+
+        if (!ref || ref.trim() === '') return '#fff'; // Якщо рефи не вказані — білий
+
+        let cleanRef = ref.replace(',', '.').toLowerCase();
+        
+        // 1. Формат діапазону: "10-20", "10 - 20", "10..20", "10 до 20"
+        const rangeMatch = cleanRef.match(/(-?\d+\.?\d*)\s*(?:-|–|—|до|\.\.)\s*(-?\d+\.?\d*)/);
+        if (rangeMatch) {
+            const min = parseFloat(rangeMatch[1]);
+            const max = parseFloat(rangeMatch[2]);
+            if (v < min) return 'var(--yellow)'; // Низький
+            if (v > max) return 'var(--red)';    // Високий
+            return 'var(--green)';               // Норма
+        }
+        
+        // 2. Формат "Менше ніж": "< 5", "до 5"
+        const lessMatch = cleanRef.match(/(?:<|до|менше)\s*(-?\d+\.?\d*)/);
+        if (lessMatch) {
+            const max = parseFloat(lessMatch[1]);
+            if (v <= max) return 'var(--green)';
+            return 'var(--red)';
+        }
+
+        // 3. Формат "Більше ніж": "> 5", "від 5"
+        const greaterMatch = cleanRef.match(/(?:>|від|більше)\s*(-?\d+\.?\d*)/);
+        if (greaterMatch) {
+            const min = parseFloat(greaterMatch[1]);
+            if (v >= min) return 'var(--green)';
+            return 'var(--yellow)';
+        }
+
+        return '#fff'; // Дефолт, якщо регулярка не спрацювала
     },
     
    renderPharm(c) {
