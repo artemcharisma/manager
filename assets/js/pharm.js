@@ -1649,6 +1649,9 @@ return `
         
         if (this.state.editing) {
             html += `<button class="btn-new-section" style="margin-top:20px; border-color:var(--primary); color:var(--primary);" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:[{n:'Показник', v:'', ref:''}], note:''}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
+            
+            // НОВА КНОПКА ДЛЯ ШАБЛОНІВ
+            html += `<button class="btn-ghost" style="margin-top:10px; border: 1px dashed var(--blue); color: var(--blue); border-radius: 12px; font-size: 0.8rem;" onclick="App.injectLabTemplates()">💉 ЗАВАНТАЖИТИ ШАБЛОНИ ЗАК ТА ГОРМОНІВ</button>`;
         }
         
         c.innerHTML = html;
@@ -1703,6 +1706,46 @@ return `
         this.data.analysis[phaseIdx].checks.splice(checkIdx, 1);
         this.save();
         this.renderView();
+    },
+    injectLabTemplates() {
+        this.pushHistory();
+        
+        // Перевіряємо, чи немає вже таких шаблонів, щоб не дублювати
+        const hasCBC = this.data.analysis.some(a => a.title.includes("ЗАК + РЕОЛОГІЯ"));
+        if (hasCBC) {
+            alert("Шаблони вже завантажені!");
+            return;
+        }
+
+        this.data.analysis.unshift(
+            { 
+                title: "ПАНЕЛЬ: ЗАК + РЕОЛОГІЯ", 
+                timing: "Шаблон", 
+                checks: [
+                    { n: "Гематокрит (HCT)", v: "", ref: "39 - 49" },
+                    { n: "Гемоглобін (HGB)", v: "", ref: "130 - 170" },
+                    { n: "Еритроцити (RBC)", v: "", ref: "4.0 - 5.0" },
+                    { n: "Тромбоцити (PLT)", v: "", ref: "150 - 390" },
+                    { n: "Лейкоцити (WBC)", v: "", ref: "4.0 - 9.0" }
+                ],
+                note: "Інші показники (MCV, MCH, формула) в межах норми."
+            },
+            { 
+                title: "ПАНЕЛЬ: ГОРМОНИ", 
+                timing: "Шаблон", 
+                checks: [
+                    { n: "Естрадіол (E2)", v: "", ref: "40 - 161" },
+                    { n: "Пролактин", v: "", ref: "86 - 324" },
+                    { n: "Тестостерон заг.", v: "", ref: "8.6 - 29" },
+                    { n: "АЛТ (ALT)", v: "", ref: "до 41" },
+                    { n: "АСТ (AST)", v: "", ref: "до 40" }
+                ],
+                note: ""
+            }
+        );
+        this.save();
+        this.renderView();
+        if (window.Haptics) window.Haptics.success();
     },
     // СКАСТУВАННЯ ІСТОРІЇ: Шукає всі унікальні аналізи з інших етапів
     getAvailableLabMarkers(currentPhaseIdx) {
