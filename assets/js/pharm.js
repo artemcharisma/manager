@@ -2191,9 +2191,9 @@ return `
     },
 
         smartSave() {
-        let report = `═════════════════════════════════════════\n`;
+        let report = `════════════════════════════════════════\n`;
         report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
-        report += `═════════════════════════════════════════\n\n`;
+        report += `════════════════════════════════════════\n\n`;
         
         const stats = this.calc(this.state.week);
         const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
@@ -2260,16 +2260,16 @@ return `
         
         if (vitalsReport !== "") {
             report += `\n⚖️ АНТРОПОМЕТРІЯ ТА ЖИТТЄВІ ПОКАЗНИКИ:\n`;
-            report += `───────────────────────────────────────\n`;
+            report += `──────────────────────────────────────\n`;
             report += vitalsReport;
         }
         if(this.data.notes[this.state.week]) {
             report += `\n📝 НОТАТКИ:\n`;
-            report += `───────────────────────────────────────\n`;
+            report += `──────────────────────────────────────\n`;
             report += this.data.notes[this.state.week] + `\n`;
         }
         
-        report += `\n═════════════════════════════════════════\n`;
+        report += `\n════════════════════════════════════════\n`;
         
         // 1. Спроба скопіювати текст у фоні (якщо браузер заборонить, це не зламає скачування)
         try {
