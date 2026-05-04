@@ -1541,23 +1541,25 @@ return `
             <div class="med-card" style="overflow:visible; padding: 15px;">
                 <div style="position:absolute; left: -20px; top: 22px; width: 12px; height: 12px; background: #000; border: 3px solid var(--primary); border-radius: 50%; box-shadow: 0 0 10px rgba(212,175,55,0.6);"></div>
                 
-                <div class="med-header" style="border-bottom: 1px dashed #333; padding: 0 0 10px 0; background: transparent;">
+                <div class="med-header" style="border-bottom: 1px dashed #333; padding: 0 0 12px 0; background: transparent; align-items:center;">
                     <div style="flex-grow:1">
                         <div class="med-title" contenteditable="${this.state.editing}" 
-                            onblur="App.data.analysis[${i}].title=this.innerText; App.save()" style="color:var(--primary); font-size:1rem;">${block.title}</div>
+                            onblur="App.data.analysis[${i}].title=this.innerText; App.save()" style="color:var(--primary); font-size:1rem; outline:none;">${block.title}</div>
                         <div class="med-timing" contenteditable="${this.state.editing}" 
-                            onblur="App.data.analysis[${i}].timing=this.innerText; App.save()" style="color:#aaa; margin-top:2px;">${block.timing}</div>
+                            onblur="App.data.analysis[${i}].timing=this.innerText; App.save()" style="color:#aaa; margin-top:2px; outline:none;">${block.timing}</div>
                     </div>
-                    ${this.state.editing ? `<div style="cursor:pointer; color:#ef4444; padding:5px; background:rgba(239,68,68,0.1); border-radius:6px; font-weight:bold;" onclick="App.pushHistory(); App.data.analysis.splice(${i},1); App.save(); App.renderView()">✕</div>` : ''}
+                    ${this.state.editing ? `
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <div style="cursor:pointer; color:var(--primary); padding:6px 10px; background:rgba(212,175,55,0.1); border-radius:6px; font-weight:800; font-size:0.8rem; transition:0.2s;" onclick="App.copyAnalysisStage(${i})">📋 КОПІЯ БЛОКУ</div>
+                        <div style="cursor:pointer; color:#ef4444; padding:6px 10px; background:rgba(239,68,68,0.1); border-radius:6px; font-weight:800; font-size:0.8rem; transition:0.2s;" onclick="App.delAnalysisStage(${i})">✕</div>
+                    </div>` : ''}
                 </div>
                 
                 <div class="med-list" style="padding-top:10px;">
                     ${block.checks.map((chk, j) => {
                         const chkName = typeof chk === 'string' ? chk : (chk.n || '');
                         const chkVal = typeof chk === 'string' ? '' : (chk.v || '');
-                        const chkRef = typeof chk === 'string' ? '' : (chk.ref || ''); // Референсні значення
-                        
-                        // ВПЕРЕДЖУЮЧИЙ АНАЛІЗ КОЛЬОРУ
+                        const chkRef = typeof chk === 'string' ? '' : (chk.ref || '');
                         const valColor = App.getAnalysisColor(chkVal, chkRef);
                         
                         return `
@@ -1570,27 +1572,47 @@ return `
                                           style="font-weight:600; color:#ccc; outline:none; white-space:normal; line-height:1.2;">
                                           ${chkName}
                                     </span>
-                                    <input type="text" value="${chkRef}" placeholder="Рефи (напр. 8-29 nmol/l)" 
+                                    <input type="text" value="${chkRef}" placeholder="Рефи (напр. 8-29)" 
                                            onblur="App.updateAnalysisRef(${i}, ${j}, this.value)"
                                            style="background: transparent; border: none; color: #777; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; width: 100%; outline: none; margin-top: 4px; padding: 0;">
                                 </div>
                             </div>
                             
                             <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-                                <input type="text" value="${chkVal}" placeholder="Рез-т..." 
+                                <input type="text" id="analysis-val-${i}-${j}" value="${chkVal}" placeholder="Рез-т..." 
                                        style="background: #000; border: 1px solid #333; color: ${valColor}; font-weight: 800; padding: 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; width: 85px; text-align: right; outline: none; transition: 0.2s;"
                                        onfocus="this.style.borderColor='var(--primary)'; this.style.color='#fff';" 
-                                       onblur="this.style.borderColor='#333'; App.updateAnalysisVal(${i}, ${j}, this.value)">
-                                ${this.state.editing ? `<span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="App.delAnalysisCheck(${i}, ${j})">✕</span>` : ''}
+                                       onblur="this.style.borderColor='#333'; this.style.color=App.getAnalysisColor(this.value, '${chkRef}'); App.updateAnalysisVal(${i}, ${j}, this.value)">
+                                ${this.state.editing ? `<span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px; font-size:1.1rem;" onclick="App.delAnalysisCheck(${i}, ${j})">✕</span>` : ''}
                             </div>
                         </div>
                         `;
                     }).join('')}
-                </div>
+                </div>`;
+
+            // === СМАРТ-БАНК ПОПЕРЕДНІХ АНАЛІЗІВ ===
+            if (this.state.editing) {
+                const availableMarkers = this.getAvailableLabMarkers(i);
                 
-                ${this.state.editing ? `<button class="btn-ghost" style="margin-top:10px; border-top:1px dashed #333; border-radius:8px;" onclick="App.addAnalysisCheck(${i})">+ Додати маркер</button>` : ''}
-                
-                <!-- БЛОК ДЛЯ УЗД ТА ВИСНОВКІВ -->
+                if (availableMarkers.length > 0) {
+                    html += `
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.05);">
+                        <div style="font-size: 0.65rem; color: #666; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px;">ШВИДКО ДОДАТИ З ІСТОРІЇ:</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            ${availableMarkers.map(m => `
+                                <div class="tag-chip" style="padding: 6px 10px; font-weight: 600; font-size: 0.75rem; background: rgba(255,255,255,0.03);" 
+                                     onclick="App.addSpecificAnalysisCheck(${i}, '${m.n.replace(/'/g, "\\'")}', '${m.ref.replace(/'/g, "\\'")}')">
+                                    + ${m.n}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                }
+                html += `<button class="btn-ghost" style="margin-top:10px; border-radius:8px; border:1px dashed #333;" onclick="App.addAnalysisCheck(${i})">+ Створити пустий маркер</button>`;
+            }
+            // =====================================
+
+            html += `
                 <div style="margin-top: 15px; border-top: 1px dashed #333; padding-top: 15px;">
                     <div style="font-size: 0.7rem; color: #888; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px;">📋 ВИСНОВКИ ЛІКАРЯ / УЗД / ЕКГ</div>
                     <textarea placeholder="Результати УЗД органів черевної порожнини, Ехо-КГ, ЕКГ, нотатки..."
@@ -1659,6 +1681,44 @@ return `
         this.data.analysis[phaseIdx].checks.splice(checkIdx, 1);
         this.save();
         this.renderView();
+    },
+    // СКАСТУВАННЯ ІСТОРІЇ: Шукає всі унікальні аналізи з інших етапів
+    getAvailableLabMarkers(currentPhaseIdx) {
+        const currentChecks = this.data.analysis[currentPhaseIdx].checks.map(c => 
+            typeof c === 'string' ? c.toLowerCase().trim() : (c.n || '').toLowerCase().trim()
+        );
+        const bank = new Map();
+        
+        this.data.analysis.forEach((block, i) => {
+            if (i === currentPhaseIdx) return; // Пропускаємо поточний етап
+            block.checks.forEach(c => {
+                const name = typeof c === 'string' ? c : (c.n || '');
+                const ref = typeof c === 'string' ? '' : (c.ref || '');
+                const cleanName = name.toLowerCase().trim();
+                
+                // Додаємо в банк тільки якщо його ще немає в поточному етапі
+                if (cleanName && !currentChecks.includes(cleanName)) {
+                    bank.set(cleanName, { n: name, ref: ref });
+                }
+            });
+        });
+        return Array.from(bank.values());
+    },
+
+    // ШВИДКЕ ДОДАВАННЯ: Вставляє збережений маркер в один клік
+    addSpecificAnalysisCheck(phaseIdx, name, ref) {
+        this.pushHistory();
+        const checks = this.data.analysis[phaseIdx].checks;
+        
+        // Якщо там висить єдиний дефолтний пустий рядок — прибираємо його для краси
+        if (checks.length === 1 && checks[0].n === 'Показник' && checks[0].v === '') {
+            checks.splice(0, 1);
+        }
+        
+        checks.push({ n: name, v: '', ref: ref });
+        this.save();
+        this.renderView();
+        if (window.Haptics) window.Haptics.light();
     },
     getAnalysisColor(val, ref) {
         if (!val || val.trim() === '') return '#555'; // Якщо пусто
