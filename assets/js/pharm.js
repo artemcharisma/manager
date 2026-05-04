@@ -97,74 +97,34 @@ const DefaultData = {
     startDate: new Date().toISOString().split('T')[0],
     privacyEnabled: false,
     privacyPassword: '2255',
+    
+    // Чистий старт: 1 фаза, 1 тиждень
     phases: [
-        { id: 1, title: "Start", weeks: [1,2] },
-        { id: 2, title: "Mass", weeks: [3,4,5,6,7,8,9,10] },
-        { id: 3, title: "Bridge", weeks: [11,12,13,14] },
-        { id: 4, title: "Peak Mass", weeks: [15,16,17,18,19,20,21,22] },
-        { id: 5, title: "Prep", weeks: [23,24,25,26] },
-        { id: 6, title: "Cut", weeks: [27,28,29,30] },
-        { id: 7, title: "Defi", weeks: [31,32,33,34,35,36] },
-        { id: 8, title: "Final", weeks: [37,38] }
+        { id: 1, title: "PHASE 1", weeks: [1] }
     ],
-    schedule: (function(){
-        let s = {}; 
-        for(let i=1; i<=38; i++) s[i] = [[],[],[],[],[],[],[]];
-        const add = (w,d,n,v,c,m) => s[w][d].push({name:n, dose:v, color:c, meta:m});
-        for(let w=1; w<=38; w++) {
-            let pid = 1;
-            if(w>2) pid=2; if(w>10) pid=3; if(w>14) pid=4; if(w>22) pid=5; 
-            if(w>26) pid=6; if(w>30) pid=7; if(w>36) pid=8;
-            
-            if([1,2,4,8].includes(pid)) {
-                let t = pid===4?"250mg":(pid===8?"100mg":"200mg");
-                let p = pid===1?"67mg":(pid===4?"166mg":"133mg");
-                add(w,0,"Test E",t,"c-blue","Base"); 
-                add(w,3,"Test E",t,"c-blue","Base");
-                add(w,0,"Primo",p,"c-green","Anabolic"); 
-                add(w,2,"Primo",p,"c-green","Anabolic"); 
-                add(w,4,"Primo",p,"c-green","Anabolic");
-            }
-            if([3,5].includes(pid)) { 
-                add(w,0,"Test E","150mg","c-blue","Cruise");
-                for(let d=0;d<7;d++) add(w,d,"HGH","2 IU","c-purple","AM Fasted"); 
-            }
-            if(pid===6) { 
-                add(w,0,"Test E","175mg","c-blue","Base");
-                add(w,3,"Test E","175mg","c-blue","Base"); 
-                let clen = (20+((w-27)*20))+"mcg"; 
-                for(let d=0;d<7;d++) { 
-                    add(w,d,"HGH","3 IU","c-purple","AM"); 
-                    add(w,d,"Clen",clen,"c-yellow","Pre-Cardio");
-                }
-            }
-            if(pid===7) { 
-                add(w,0,"Test E","150mg","c-blue","Base");
-                add(w,3,"Test E","150mg","c-blue","Base"); 
-                for(let d=0;d<7;d++) add(w,d,"HGH","3 IU","c-purple","AM"); 
-                for(let d=0;d<7;d++) { 
-                    let absDay = ((w-31)*7)+d;
-                    if(absDay % 2 === 0) add(w,d,"Tren A","50mg","c-red","Deep IM"); 
-                }
-            }
-        }
-        return s;
-    })(),
+    
+    // Повністю пуста матриця на 7 днів для першого тижня
+    schedule: {
+        "1": [[],[],[],[],[],[],[]]
+    },
+    
     vitals: {},
     bodyMap: { last: null, history: [] },
+    
+    // Залишаємо базовий каркас для чекапу (як нагадування), але без зайвої води
     analysis: [
-        { title: "ЕТАП 1: ТОЧКА ВХОДУ", timing: "Тиждень 0", checks: ["ЗАК + Гематокрит", "Біохімія", "Ліпідограма", "Тестостерон", "Ехо-КГ (Серце)"] },
-        { title: "ЕТАП 2: КОНТРОЛЬ", timing: "Тиждень 8-10", checks: ["ЗАК", "Ліпідограма", "Естрадіол + Пролактин"] },
-        { title: "ЕТАП 3: ЕКВАТОР", timing: "Тиждень 18-20", checks: ["ЗАК + Реологія", "Печінкові проби", "Ліпідограма розш.", "HbA1c"] },
-        { title: "ЕТАП 4: ПЕРЕД СУШКОЮ", timing: "Тиждень 28", checks: ["ЕКГ/Ехо-КГ", "ТТГ, Т3, Т4", "Електроліти", "Нирки"] },
-        { title: "ЕТАП 5: ФІНАЛ", timing: "Тиждень 38+", checks: ["Повний чекап", "ЛГ, ФСГ", "Тестостерон"] }
+        { title: "ЕТАП 1: ТОЧКА ВХОДУ", timing: "Перед курсом", checks: ["ЗАК + Гематокрит", "Біохімія розширена", "Ліпідограма", "Естрадіол + Пролактин", "Тестостерон заг/вільн", "Ехо-КГ"] },
+        { title: "ЕТАП 2: КОНТРОЛЬ", timing: "Тиждень 4-6", checks: ["ЗАК", "Ліпідограма", "Печінкові проби", "Естрадіол + Пролактин"] }
     ],
+    
+    // Зберігаємо розумне сортування аптечки, але очищаємо самі препарати
     pharmacy: [
-        { id: "heart", title: "❤️ СЕРЦЕ & ТИСК", style: "heart", items: [{n: "Nebivolol", d: "5mg", i: "Ранок."}, {n: "Telmisartan", d: "40mg", i: "Ранок."}, {n: "Omega-3", d: "4g", i: "З їжею."}, {n: "Ubiquinol", d: "100mg", i: "Ранок."}] },
-        { id: "liver", title: "🧪 ПЕЧІНКА & НИРКИ", style: "liver", items: [{n: "TUDCA", d: "500mg", i: "Перед сном."}, {n: "NAC", d: "1200mg", i: "Ранок."}, {n: "Astragalus", d: "2g", i: "Ранок/Вечір."}] },
-        { id: "sleep", title: "💤 ЦНС & СОН", style: "sleep", items: [{n: "Magnesium", d: "400mg", i: "Вечір."}, {n: "P-5-P (B6)", d: "50mg", i: "Вечір."}, {n: "GABA", d: "2g", i: "Перед сном."}] },
-        { id: "sos", title: "⚠️ ЕКСТРЕНІ", style: "sos", items: [{n: "Cabergoline", d: "0.25mg", i: "При вис. Пролактині."}, {n: "Anastrozole", d: "0.5mg", i: "При вис. Естрадіолі."}, {n: "Captopril", d: "25mg", i: "При тиску > 160."}] }
+        { id: "heart", title: "❤️ СЕРЦЕ & ТИСК", style: "heart", items: [] },
+        { id: "liver", title: "🧪 ПЕЧІНКА & НИРКИ", style: "liver", items: [] },
+        { id: "sleep", title: "💤 ЦНС & СОН", style: "sleep", items: [] },
+        { id: "sos", title: "⚠️ ЕКСТРЕНІ", style: "sos", items: [] }
     ],
+    
     notes: {}
 };
 
