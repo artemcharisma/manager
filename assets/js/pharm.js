@@ -1022,18 +1022,17 @@ const App = {
 
     async changeStartDate() {
         if(document.body.classList.contains('privacy-mode')) return; 
-        
-        // Якщо календар щойно закрився (спрацював onblur), ігноруємо паразитичний клік
         if (this.calendarLocked) return;
 
         const inp = document.getElementById('hiddenDateInp');
         if (inp) {
-            // КРИТИЧНО: Примусово ставимо фокус, щоб при закритті гарантовано спрацьовував onblur
-            inp.focus(); 
             try { 
+                // ФІКС: Спочатку викликаємо пікер, а потім м'яко ставимо фокус
                 inp.showPicker(); 
+                setTimeout(() => inp.focus(), 10);
             } catch(e) { 
                 inp.click(); 
+                inp.focus();
             }
         }
     },
@@ -1906,11 +1905,11 @@ return `
     
     updatePill(w,d,i,k,v) { 
         this.pushHistory(); 
-        this.data.schedule[w][d][i][k]=v; 
+        // ФІКС: Жорстко вирізаємо всі переноси рядків і зайві пробіли
+        this.data.schedule[w][d][i][k] = v.replace(/\n/g, '').trim(); 
         this.save(); 
         this.updateStatsUI();
     },
-
     updateStatsUI() {
          const container = document.getElementById('stats-container');
          if(container) container.innerHTML = this.getStatsHtml(this.state.week, false);
@@ -1988,7 +1987,11 @@ return `
         if (!this.dayBuffer) return;
         if(await Modal.confirm("Вставити скопійований день сюди?<br><br><small style='color:#ef4444;'>Увага: це перезапише поточні препарати в цьому дні!</small>", "ВСТАВКА ДНЯ", "gold")) { 
             this.pushHistory(); 
-            this.data.schedule[w][d] = JSON.parse(JSON.stringify(this.dayBuffer)); 
+            // ФІКС: Очищаємо статус виконання для всіх препаратів у скопійованому дні
+            const clonedDay = JSON.parse(JSON.stringify(this.dayBuffer));
+            clonedDay.forEach(pill => delete pill.done);
+            
+            this.data.schedule[w][d] = clonedDay; 
             this.save(); 
             this.renderView(); 
         } 
@@ -2020,16 +2023,24 @@ return `
         }
 
         this.pushHistory();
-        this.data.schedule[w][d].push({ ...this.pillBuffer });
+        // ФІКС: Знімаємо відмітку "зроблено"
+        const newPill = { ...this.pillBuffer };
+        delete newPill.done;
+        
+        this.data.schedule[w][d].push(newPill);
         this.save();
         this.renderView();
     },
 
-        async pastePillToWeek(w) {
+    async pastePillToWeek(w) {
         if (!this.pillBuffer) return;
         if (!(await Modal.confirm(`🗓 Вставити препарат "${this.pillBuffer.name}" на КОЖЕН ДЕНЬ цього тижня?`, "МАСОВА ВСТАВКА", "gold"))) return;
         
         this.pushHistory();
+        
+        // ФІКС: Знімаємо відмітку
+        const newPill = { ...this.pillBuffer };
+        delete newPill.done;
         
         for (let d = 0; d < 7; d++) {
             const targetDay = this.data.schedule[w][d];
@@ -2037,7 +2048,7 @@ return `
                 p.name.trim().toLowerCase() === this.pillBuffer.name.trim().toLowerCase()
             );
             if (!isDuplicate) {
-                this.data.schedule[w][d].push({ ...this.pillBuffer });
+                this.data.schedule[w][d].push({ ...newPill }); // Використовуємо очищений об'єкт
             }
         }
         
@@ -2051,18 +2062,20 @@ return `
         setTimeout(() => toast.remove(), 2500);
     },
 
-        
     async duplicatePillToPhase(w, d, pillIdx) {
         if(!(await Modal.confirm("Дублювати цей препарат до кінця фази?", "КОПІЮВАННЯ", "gold"))) return;
         this.pushHistory();
-        const sourcePill = this.data.schedule[w][d][pillIdx];
+        
+        // ФІКС: Знімаємо відмітку з джерела
+        const sourcePill = { ...this.data.schedule[w][d][pillIdx] };
+        delete sourcePill.done;
+        
         const phase = this.data.phases.find(p => p.weeks.includes(w));
         if(!phase) return;
         
         let addedCount = 0;
         phase.weeks.forEach(weekNum => {
             if (weekNum > w) {
-                // Перевіряємо, чи немає вже такого ж препарату у цьому ж дні майбутнього тижня
                 const isDuplicate = this.data.schedule[weekNum][d].some(p => 
                     p.name.trim().toLowerCase() === sourcePill.name.trim().toLowerCase()
                 );
@@ -2204,9 +2217,13 @@ return `
         
         const phase = this.data.phases.find(p => p.weeks.includes(startWeek));
         if (!phase) return;
+        
         phase.weeks.forEach(w => {
             if (w >= startWeek && this.data.schedule[w] && this.data.schedule[w][dayIndex]) {
-                this.data.schedule[w][dayIndex] = this.data.schedule[w][dayIndex].filter(p => p.name !== name);
+                // ФІКС: Порівняння з ігноруванням регістру та пробілів
+                this.data.schedule[w][dayIndex] = this.data.schedule[w][dayIndex].filter(p => 
+                    p.name.trim().toLowerCase() !== name.trim().toLowerCase()
+                );
             }
         });
         this.save();
@@ -2457,16 +2474,20 @@ return `
         const lastWeek = phase.weeks[phase.weeks.length - 1]; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
         
+        // ФІКС: Глибоке копіювання останнього тижня
         const copyOfLastWeek = JSON.parse(JSON.stringify(this.data.schedule[lastWeek]));
         
-        // Зсуваємо розклад і нотатки ВПЕРЕД
+        // ФІКС: Очищаємо всі галочки "done" для нового тижня, щоб не було привидів минулих ін'єкцій!
+        copyOfLastWeek.forEach(day => day.forEach(p => delete p.done));
+        
+        // Зсуваємо розклад і нотатки ВПЕРЕД з розривом посилань
         for(let w = maxW; w > lastWeek; w--) { 
-            this.data.schedule[w+1] = this.data.schedule[w]; 
+            this.data.schedule[w+1] = JSON.parse(JSON.stringify(this.data.schedule[w])); 
             this.data.notes[w+1] = this.data.notes[w]; 
         } 
         
         this.data.schedule[lastWeek + 1] = copyOfLastWeek;
-        this.data.notes[lastWeek + 1] = ""; // Пуста нотатка для нового тижня
+        this.data.notes[lastWeek + 1] = ""; 
         
         await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
         phase.weeks.push(lastWeek + 1); 
@@ -2480,21 +2501,19 @@ return `
         this.renderNav(); 
         this.renderView(); 
     },
-    
+
     async prependPhaseWeek(pId) {
         this.pushHistory();
         const pIdx = this.data.phases.findIndex(p => p.id === pId);
         if (pIdx !== 0) {
-            await Modal.alert("Додавати минулі тижні можна тільки до першої фази.", "ПОМИЛКА", "red");
-            return;
+            return await Modal.alert("Додавати минулі тижні можна тільки до першої фази.", "ПОМИЛКА", "red");
         }
-        
         const phase = this.data.phases[0];
-        
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
-        // Зсуваємо розклад і нотатки ВПЕРЕД
+        
+        // ФІКС: Глибоке копіювання при зсуві ВПЕРЕД
         for(let w = maxW; w >= 1; w--) {
-            this.data.schedule[w+1] = this.data.schedule[w];
+            this.data.schedule[w+1] = JSON.parse(JSON.stringify(this.data.schedule[w]));
             this.data.notes[w+1] = this.data.notes[w];
         }
         
@@ -2503,10 +2522,7 @@ return `
         
         await PhotoDB.shiftWeeks(1, 1);
         
-        this.data.phases.forEach(p => {
-            p.weeks = p.weeks.map(w => w + 1);
-        });
-        
+        this.data.phases.forEach(p => p.weeks = p.weeks.map(w => w + 1));
         phase.weeks.unshift(1);
         
         const d = new Date(this.data.startDate);
@@ -2518,7 +2534,6 @@ return `
         this.renderNav(); 
         this.renderView();
     },
-
     async removePhaseWeek(pId) { 
         const pIdx = this.data.phases.findIndex(p => p.id === pId); 
         const phase = this.data.phases[pIdx]; 
@@ -2527,10 +2542,12 @@ return `
         this.pushHistory(); 
         
         const lastWeek = phase.weeks[phase.weeks.length - 1]; 
+        
+        // ФІКС: Рахуємо максимальний тиждень ДО видалення даних!
+        const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
+        
         delete this.data.schedule[lastWeek]; 
         phase.weeks.pop(); 
-        
-        const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
         
         // Зсуваємо розклад і нотатки НАЗАД
         for(let w = lastWeek; w < maxW; w++) { 
@@ -2538,6 +2555,7 @@ return `
             this.data.notes[w] = this.data.notes[w+1]; 
         } 
         
+        // Тепер безпечно видаляємо хвіст
         delete this.data.schedule[maxW]; 
         delete this.data.notes[maxW];
         
@@ -2559,7 +2577,12 @@ return `
         const startW = lastP ? lastP.weeks[lastP.weeks.length-1] + 1 : 1; 
         const newId = (lastP ? lastP.id : 0) + 1; 
         this.data.phases.push({ id: newId, title: "New", weeks: [startW, startW+1, startW+2, startW+3] }); 
-        for(let i=0; i<4; i++) this.data.schedule[startW+i] = [[],[],[],[],[],[],[]]; 
+        
+        for(let i=0; i<4; i++) {
+            this.data.schedule[startW+i] = [[],[],[],[],[],[],[]]; 
+            this.data.notes[startW+i] = ""; // ФІКС: Ініціалізуємо нотатку
+        }
+        
         this.save(); 
         this.renderNav(); 
     },
@@ -2573,9 +2596,9 @@ return `
         const start = p.weeks[0]; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
         
-        // Зсуваємо розклад і нотатки НАЗАД
+        // ФІКС: Глибоке копіювання при зсуві НАЗАД
         for(let w = start; w <= maxW - len; w++) { 
-            this.data.schedule[w] = this.data.schedule[w+len]; 
+            this.data.schedule[w] = JSON.parse(JSON.stringify(this.data.schedule[w+len])); 
             this.data.notes[w] = this.data.notes[w+len]; 
         } 
         for(let i=0; i<len; i++) {
@@ -2666,7 +2689,6 @@ return `
 
     async insertPhase(index) {
         this.pushHistory();
-        
         let startWeek = 1;
         if (index > 0) {
             const prevPhase = this.data.phases[index - 1];
@@ -2676,9 +2698,9 @@ return `
         const duration = 4; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number), 0);
 
-        // Зсуваємо розклад і нотатки ВПЕРЕД на 4 тижні
+        // ФІКС: Глибоке копіювання при зсуві
         for (let w = maxW; w >= startWeek; w--) {
-            this.data.schedule[w + duration] = this.data.schedule[w];
+            this.data.schedule[w + duration] = JSON.parse(JSON.stringify(this.data.schedule[w]));
             this.data.notes[w + duration] = this.data.notes[w];
             delete this.data.schedule[w];
             delete this.data.notes[w];
