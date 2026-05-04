@@ -2191,9 +2191,9 @@ return `
     },
 
         smartSave() {
-        let report = `══════════════════════════════════════\n`;
+        let report = `═════════════════════════════════════════\n`;
         report += `GOLD PROTOCOL - ТИЖДЕНЬ ${this.state.week}\n`;
-        report += `══════════════════════════════════════\n\n`;
+        report += `═════════════════════════════════════════\n\n`;
         
         const stats = this.calc(this.state.week);
         const sortedStats = Object.entries(stats).sort((a,b) => b[1].v - a[1].v);
@@ -2203,7 +2203,7 @@ return `
         
         if(sortedStats.length > 0) {
             report += `📊 ПРЕПАРАТИ:\n`;
-            report += `────────────────────────────────────\n`;
+            report += `──────────────────────────────────────\n`;
             sortedStats.forEach(([k, v]) => {
                 report += `${v.rawName.padEnd(15)} : ${v.v.toFixed(1)} ${v.u}\n`;
             });
@@ -2212,7 +2212,7 @@ return `
         
         const dayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
         report += `📅 ПО ДНЯХ:\n`;
-        report += `────────────────────────────────────\n`;
+        report += `──────────────────────────────────────\n`;
         
         for(let i=0; i<7; i++) {
             const pills = this.data.schedule[this.state.week]?.[i] || [];
@@ -2234,7 +2234,7 @@ return `
         
         if (meas && (meas.chest || meas.waist || meas.arm || meas.leg || meas.calf)) {
             report += `\n📏 ЗАМІРИ (см):\n`;
-            report += `────────────────────────────────────\n`;
+            report += `───────────────────────────────────────\n`;
             let mArr = [];
             if(meas.chest) mArr.push(`Груди: ${meas.chest}`);
             if(meas.waist) mArr.push(`Талія: ${meas.waist}`);
@@ -2260,16 +2260,16 @@ return `
         
         if (vitalsReport !== "") {
             report += `\n⚖️ АНТРОПОМЕТРІЯ ТА ЖИТТЄВІ ПОКАЗНИКИ:\n`;
-            report += `────────────────────────────────────\n`;
+            report += `───────────────────────────────────────\n`;
             report += vitalsReport;
         }
         if(this.data.notes[this.state.week]) {
             report += `\n📝 НОТАТКИ:\n`;
-            report += `────────────────────────────────────\n`;
+            report += `───────────────────────────────────────\n`;
             report += this.data.notes[this.state.week] + `\n`;
         }
         
-        report += `\n══════════════════════════════════════\n`;
+        report += `\n═════════════════════════════════════════\n`;
         
         // 1. Спроба скопіювати текст у фоні (якщо браузер заборонить, це не зламає скачування)
         try {
