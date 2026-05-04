@@ -2228,7 +2228,10 @@ return `
                 });
             }
         }
-        const meas = this.data.measurements ? this.data.measurements[this.state.week] : null;
+        // Витягуємо заміри з нової глобальної бази (прив'язка до понеділка поточного тижня)
+        const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, 0));
+        const meas = typeof GlobalVitals !== 'undefined' ? GlobalVitals.get(mondayDateStr) : {};
+        
         if (meas && (meas.chest || meas.waist || meas.arm || meas.leg || meas.calf)) {
             report += `\n📏 ЗАМІРИ (см):\n`;
             report += `────────────────────────────────────\n`;
@@ -2239,6 +2242,26 @@ return `
             if(meas.leg)   mArr.push(`Стегно: ${meas.leg}`);
             if(meas.calf)  mArr.push(`Гомілка: ${meas.calf}`);
             report += mArr.join(' | ') + `\n`;
+        }
+        
+        // БОНУС: Виведення динаміки ваги, тиску та пульсу по днях тижня
+        let vitalsReport = "";
+        for(let i=0; i<7; i++) {
+            const dateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, i));
+            const v = GlobalVitals.get(dateStr);
+            if (v && (v.w || v.bp || v.hr)) {
+                let parts = [];
+                if (v.w) parts.push(`Вага: ${v.w}кг`);
+                if (v.bp) parts.push(`АТ: ${v.bp}`);
+                if (v.hr) parts.push(`ЧСС: ${v.hr}`);
+                vitalsReport += `  ${dayNames[i]}: ${parts.join(' | ')}\n`;
+            }
+        }
+        
+        if (vitalsReport !== "") {
+            report += `\n⚖️ АНТРОПОМЕТРІЯ ТА ЖИТТЄВІ ПОКАЗНИКИ:\n`;
+            report += `────────────────────────────────────\n`;
+            report += vitalsReport;
         }
         if(this.data.notes[this.state.week]) {
             report += `\n📝 НОТАТКИ:\n`;
