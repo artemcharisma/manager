@@ -1552,29 +1552,81 @@ return `
                 </div>
                 
                 <div class="med-list" style="padding-top:10px;">
-                    ${block.checks.map((chk, j) => `
-                        <div class="check-row" style="border-bottom:none; padding: 6px 0; display: flex; align-items: center; gap: 8px;">
-                            <span class="check-icon" style="color:var(--blue); font-size:1.2rem; text-shadow:none; margin: 0;">🔬</span>
-                            <div style="flex: 1; display: flex; flex-direction: column;">
+                    ${block.checks.map((chk, j) => {
+                        // ФІКС МІГРАЦІЇ: підтримка і старих рядків, і нових об'єктів результатів
+                        const chkName = typeof chk === 'string' ? chk : (chk.n || '');
+                        const chkVal = typeof chk === 'string' ? '' : (chk.v || '');
+                        
+                        return `
+                        <div class="check-row" style="border-bottom: 1px solid rgba(255,255,255,0.02); padding: 8px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                                <span class="check-icon" style="color:var(--blue); font-size:1.2rem; text-shadow:none; margin:0; flex-shrink:0;">🔬</span>
                                 <span class="check-name" contenteditable="${this.state.editing}" 
-                                    onblur="App.data.analysis[${i}].checks[${j}]=this.innerText; App.save()">${chk}</span>
+                                      onblur="App.updateAnalysisName(${i}, ${j}, this.innerText)"
+                                      style="font-weight:600; color:#ccc; outline:none; white-space:normal; line-height:1.2; display:block;">
+                                      ${chkName}
+                                </span>
                             </div>
-                            ${this.state.editing ? `<span style="color:#ef4444; cursor:pointer; margin-left:10px; font-weight:bold; align-self: center;" onclick="App.pushHistory(); App.data.analysis[${i}].checks.splice(${j},1); App.save(); App.renderView()">✕</span>` : ''}
+                            
+                            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                                <input type="text" value="${chkVal}" placeholder="Результат..." 
+                                       onblur="App.updateAnalysisVal(${i}, ${j}, this.value)"
+                                       style="background: #000; border: 1px dashed #444; color: var(--green); font-weight: 800; padding: 6px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; width: 100px; text-align: right; outline: none; transition: 0.2s;"
+                                       onfocus="this.style.borderColor='var(--primary)'; this.style.color='#fff';" 
+                                       onblur="this.style.borderColor='#444'; this.style.color='var(--green)'; App.updateAnalysisVal(${i}, ${j}, this.value)">
+                                ${this.state.editing ? `<span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="App.delAnalysisCheck(${i}, ${j})">✕</span>` : ''}
+                            </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
                 
-                ${this.state.editing ? `<button class="btn-ghost" style="margin-top:10px; border-top:1px dashed #333; border-radius:8px;" onclick="App.pushHistory(); App.data.analysis[${i}].checks.push('Новий показник'); App.save(); App.renderView()">+ Додати маркер</button>` : ''}
+                ${this.state.editing ? `<button class="btn-ghost" style="margin-top:10px; border-top:1px dashed #333; border-radius:8px;" onclick="App.addAnalysisCheck(${i})">+ Додати маркер</button>` : ''}
             </div>`;
         });
 
         html += `</div>`;
         
         if (this.state.editing) {
-            html += `<button class="btn-new-section" style="margin-top:20px; border-color:var(--primary); color:var(--primary);" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:['Показник']}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
+            html += `<button class="btn-new-section" style="margin-top:20px; border-color:var(--primary); color:var(--primary);" onclick="App.pushHistory(); App.data.analysis.push({title:'НОВИЙ ЕТАП', timing:'Тиждень ?', checks:[{n:'Показник', v:''}]}); App.save(); App.renderView()">+ СТВОРИТИ ЕТАП КОНТРОЛЮ</button>`;
         }
         
         c.innerHTML = html;
+    },
+    updateAnalysisName(phaseIdx, checkIdx, newName) {
+        this.pushHistory();
+        let chk = this.data.analysis[phaseIdx].checks[checkIdx];
+        if (typeof chk === 'string') {
+            this.data.analysis[phaseIdx].checks[checkIdx] = { n: newName, v: "" };
+        } else {
+            chk.n = newName;
+        }
+        this.save();
+    },
+
+    updateAnalysisVal(phaseIdx, checkIdx, newVal) {
+        // Ми не пушимо історію на кожне введення результату, щоб не забивати Undo-буфер дрібницями
+        let chk = this.data.analysis[phaseIdx].checks[checkIdx];
+        if (typeof chk === 'string') {
+            this.data.analysis[phaseIdx].checks[checkIdx] = { n: chk, v: newVal };
+        } else {
+            chk.v = newVal;
+        }
+        this.save();
+    },
+
+    addAnalysisCheck(phaseIdx) {
+        this.pushHistory();
+        this.data.analysis[phaseIdx].checks.push({ n: 'Новий показник', v: '' });
+        this.save();
+        this.renderView();
+    },
+
+    delAnalysisCheck(phaseIdx, checkIdx) {
+        this.pushHistory();
+        this.data.analysis[phaseIdx].checks.splice(checkIdx, 1);
+        this.save();
+        this.renderView();
     },
     
    renderPharm(c) {
