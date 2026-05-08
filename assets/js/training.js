@@ -2065,11 +2065,15 @@ const App = {
             _global_vitals_backup: typeof GlobalVitals !== 'undefined' ? GlobalVitals.exportAll() : {} 
         };
         
-        // Використовуємо кастомну логіку для скачування, замість this.state.export, щоб додати GlobalVitals
+        // Генеруємо правильне ім'я файлу (напр. training_w3_2026-05-08.json)
+        const currentW = this.getCurrentWeekNum();
+        const dateStr = new Date().toISOString().split('T')[0];
+        const filename = `training_w${currentW}_${dateStr}.json`;
+        
         const a = document.createElement('a');
         a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
-        a.download = "training_protocol.json"; 
-        document.body.appendChild(a); // Потрібно для iOS
+        a.download = filename; 
+        document.body.appendChild(a); 
         a.click();
         setTimeout(() => document.body.removeChild(a), 150);
     },
