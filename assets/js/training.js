@@ -57,6 +57,7 @@ const Templates = {
 };
 
 const InitialData = {
+    startDate: new Date().toISOString().split('T')[0],
     weeks: [],
     guideMode: 'mass',
     currentProgram: 'balanced', 
@@ -75,6 +76,30 @@ const App = {
     timerState: { interval: null, left: 0, default: 90, el: null, endTime: null, currentExKey: null },
     historyIndex: {}, 
 
+    getMondayOfStartWeek() {
+        const d = new Date(this.data.startDate);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    },
+
+    getCurrentWeekNum() {
+        if (!this.data.startDate) return 1;
+        const now = new Date();
+        const start = this.getMondayOfStartWeek();
+        const diffTime = now.getTime() - start.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const w = Math.floor(diffDays / 7) + 1;
+        return w > 0 ? w : 1;
+    },
+
+    changeStartDate(val) {
+        if (!val) return;
+        this.pushHistory();
+        this.data.startDate = val;
+        this.save();
+        this.render();
+    },
     buildIndex() {
         this.historyIndex = {};
         if (!this.data || !this.data.weeks) return;
@@ -119,6 +144,7 @@ const App = {
 
     async init() {
         this.data = await this.state.init();
+        if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
 
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
         if(!this.data.guidelines) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
@@ -492,9 +518,14 @@ const App = {
 
         const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
 
+        const currentRealWeek = this.getCurrentWeekNum(); // Отримуємо реальний поточний тиждень
+
         nav.innerHTML = filteredWeeks.map((w) => {
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
-            return `<div class="week-btn ${w.type} ${specialClass}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
+            // Якщо це поточний тиждень, підсвічуємо його зеленим
+            const isCurrentStyle = w.num === currentRealWeek ? 'box-shadow: 0 0 10px var(--success); border-color: var(--success);' : '';
+            
+            return `<div class="week-btn ${w.type} ${specialClass}" style="${isCurrentStyle}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
                 <span>${w.num}</span>
                 <small>${w.type}</small>
             </div>`;
@@ -645,7 +676,10 @@ const App = {
                                 progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Вставити дані">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
                             }
 
+                            // === НОВА ЛОГІКА ПЛЕЙСХОЛДЕРІВ ===
                             let placeholderW = "";
+                            let placeholderR = "";
+
                             if (sType === 'BO' && sIdx > 0 && !s.w) {
                                 const prevSet = ex.sets[sIdx - 1];
                                 if (prevSet && prevSet.t === 'TS' && prevSet.w) {
@@ -655,6 +689,15 @@ const App = {
                                     }
                                 }
                             }
+                            
+                            // Якщо це порожній підхід у майбутньому - беремо дані з історії
+                            if (!placeholderW && !s.w && ghostW) {
+                                placeholderW = ghostW;
+                            }
+                            if (!s.r && ghostR) {
+                                placeholderR = ghostR;
+                            }
+                            // ==========================================
 
                             return `
                             <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
@@ -664,13 +707,13 @@ const App = {
                                 <div class="set-row ${typeClass}">
                                     <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx}, event)">${typeLabel}</div>
                                     <div class="set-part">
-                                        <input type="text" inputmode="text" class="set-input w-val ${placeholderW ? 'ghost-active' : ''}" value="${s.w||''}" placeholder="${placeholderW}" 
+                                        <input type="text" inputmode="text" class="set-input w-val ${!s.w && placeholderW ? 'ghost-active' : ''}" value="${s.w||''}" placeholder="${placeholderW}" 
                                                onkeydown="if(event.key===' '){ event.preventDefault(); this.closest('.set-row').querySelector('.r-val').focus(); }" 
                                                onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'w',this.value, this)">
                                         <span class="set-unit">кг</span>
                                     </div>
                                     <div class="set-part">
-                                        <input type="number" inputmode="decimal" class="set-input r-val" value="${s.r||''}" 
+                                        <input type="number" inputmode="decimal" class="set-input r-val ${!s.r && placeholderR ? 'ghost-active' : ''}" value="${s.r||''}" placeholder="${placeholderR}" 
                                                onblur="App.updateSet(${realWIdx},${dIdx},${eIdx},${sIdx},'r',this.value, this)">
                                         <span class="set-unit">x</span>
                                     </div>
