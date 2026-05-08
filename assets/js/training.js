@@ -544,12 +544,11 @@ const App = {
 
         nav.innerHTML = filteredWeeks.map((w) => {
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
-            // Якщо це поточний тиждень, підсвічуємо його зеленим
             const isCurrentStyle = w.num === currentRealWeek ? 'box-shadow: 0 0 10px var(--success); border-color: var(--success);' : '';
             
             return `<div class="week-btn ${w.type} ${specialClass}" style="${isCurrentStyle}" onclick="document.getElementById('week-${w.id}').scrollIntoView({behavior:'smooth'})">
                 <span>${w.num}</span>
-                <small>${w.type}</small>
+                <small>${w.label || w.type}</small>
             </div>`;
         }).join('') + `
         <div class="week-btn" onclick="App.addWeek('mass')" style="border:1px dashed #444; opacity:0.5; font-size:0.7rem">+ MASS</div>
@@ -794,9 +793,13 @@ const App = {
                     ? `<input type="number" inputmode="numeric" value="${week.num}" style="width:40px; background:transparent; border:1px dashed #666; border-radius:4px; color:var(--${week.type}); font-size:1.1rem; text-align:center; padding:0; font-weight:800; font-family:'JetBrains Mono';" onblur="App.updateWeekNum(${week.id}, this.value)" onclick="event.stopPropagation()">`
                     : week.num;
 
+                const weekLabelHtml = isEd 
+                    ? `<span contenteditable="true" style="font-size:0.8rem; color:var(--${week.type}); border-bottom:1px dashed #666; cursor:text;" onblur="App.updateWeekLabel(${week.id}, this.innerText)" onclick="event.stopPropagation()">// ${week.label || week.type.toUpperCase()}</span>`
+                    : `<span style="font-size:0.8rem; color:var(--${week.type});">// ${week.label || week.type.toUpperCase()}</span>`;
+
                 return `<div id="week-${week.id}" class="${theme}">
                     <div style="padding:10px 0; display:flex; justify-content:space-between; align-items:center">
-                        <div><h3 style="margin:0; color:#fff; display:flex; align-items:center; gap:8px;">ТИЖДЕНЬ ${weekNumHtml} <span style="font-size:0.8rem; color:var(--${week.type})">// ${week.type.toUpperCase()}</span></h3></div>
+                        <div><h3 style="margin:0; color:#fff; display:flex; align-items:center; gap:8px;">ТИЖДЕНЬ ${weekNumHtml} ${weekLabelHtml}</h3></div>
                         <span class="edit-ui" style="color:var(--danger); cursor:pointer" onclick="App.delWeek(${week.id})">Видалити</span>
                     </div>
                     <div class="days-list">${daysHtml}</div>
@@ -1250,6 +1253,15 @@ const App = {
                 this.save();
                 this.render();
             }
+        }
+    },
+    updateWeekLabel(id, val) {
+        const text = val.replace('//', '').trim().toUpperCase();
+        const w = this.data.weeks.find(x => x.id === id);
+        if (w && w.label !== text) {
+            this.pushHistory();
+            w.label = text;
+            this.save();
         }
     },
 
@@ -1905,30 +1917,33 @@ const App = {
             return;
         }
 
-        // 1. Визначаємо актуальний номер тижня за датою
-        const currentWNum = this.getCurrentWeekNum();
+        // Беремо тижні тільки для поточної програми (Збалансована/Руки)
+        const progWeeks = allWeeks.filter(w => w.prog === this.data.currentProgram);
+        
+        if (progWeeks.length === 0) {
+            document.getElementById('statsWeekNav').innerHTML = '';
+            document.getElementById('statsContent').innerHTML = '<div style="text-align:center;color:#666;padding:40px;">Немає даних у цій програмі</div>'; 
+            return;
+        }
 
-        // 2. Якщо ми вперше зайшли в статистику (індекс не встановлено)
-        if (this.currentStatsIdx === undefined) {
-            // Шукаємо в базі тиждень, який збігається з актуальним номером і поточною програмою
-            const activeWeek = allWeeks.find(w => w.num === currentWNum && w.prog === this.data.currentProgram);
-
+        // Логіка фокусування
+        if (forceIndex !== null) {
+            // Клікнули вручну на кнопку тижня
+            this.currentStatsIdx = forceIndex;
+        } else {
+            // Просто відкрили вкладку "Статистика" -> шукаємо актуальний тиждень
+            const currentWNum = this.getCurrentWeekNum();
+            const activeWeek = progWeeks.find(w => w.num === currentWNum);
+            
             if (activeWeek) {
                 this.currentStatsIdx = activeWeek.realIndex;
             } else {
-                // Якщо актуального тижня в базі ще немає (напр. ти його не створив), 
-                // беремо останній існуючий тиждень поточної програми
-                const progWeeks = allWeeks.filter(w => w.prog === this.data.currentProgram);
-                this.currentStatsIdx = progWeeks.length > 0 
-                    ? progWeeks[progWeeks.length - 1].realIndex 
-                    : allWeeks[allWeeks.length - 1].realIndex;
+                // Якщо ще не створено - показуємо останній існуючий
+                this.currentStatsIdx = progWeeks[progWeeks.length - 1].realIndex;
             }
         }
-        if (forceIndex !== null) {
-            this.currentStatsIdx = forceIndex;
-        }
 
-        const navHtml = allWeeks.map(w => {
+        const navHtml = progWeeks.map(w => {
             const isActive = w.realIndex === this.currentStatsIdx;
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
             return `
@@ -1937,7 +1952,7 @@ const App = {
                  style="min-width: 70px; padding: 8px 5px; flex: 0 0 auto;"
                  onclick="App.renderStats(${w.realIndex})">
                 <span style="font-size:0.85rem; font-weight:800;">W ${w.num}</span>
-                <small style="font-size:0.55rem; opacity:0.6; text-transform:uppercase;">${w.type}</small>
+                <small style="font-size:0.55rem; opacity:0.6; text-transform:uppercase;">${w.label || w.type}</small>
             </div>`;
         }).join('');
         
