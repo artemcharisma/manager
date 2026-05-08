@@ -375,14 +375,37 @@
                 const tr = await Utils.load('training_protocol', null);
                 const el = document.getElementById('data-train');
                 if (tr && tr.weeks && tr.weeks.length > 0) {
-                    const lastWeek = tr.weeks[tr.weeks.length - 1]; 
+                    // Визначаємо поточний тиждень за датою (так само як у самому додатку Тренувань)
+                    let currentTrainWeek = 1;
+                    if (tr.startDate) {
+                        const startDate = new Date(tr.startDate); 
+                        const now = new Date();
+                        const day = startDate.getDay(); 
+                        const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                        const startMonday = new Date(startDate.setDate(diff)); 
+                        startMonday.setHours(0,0,0,0);
+                        const diffTime = now.getTime() - startMonday.getTime();
+                        currentTrainWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                        if (currentTrainWeek < 1) currentTrainWeek = 1;
+                    }
+                    
+                    // Шукаємо актуальний тиждень у збереженій базі
+                    let activeWeek = tr.weeks.find(w => w.num === currentTrainWeek && w.prog === tr.currentProgram);
+                    
+                    // Якщо актуального ще немає, показуємо останній існуючий
+                    if (!activeWeek) {
+                        const progWeeks = tr.weeks.filter(w => w.prog === tr.currentProgram);
+                        activeWeek = progWeeks.length > 0 ? progWeeks[progWeeks.length - 1] : tr.weeks[tr.weeks.length - 1];
+                    }
+
                     const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
-                    const typeName = lastWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
-                    if(el) el.innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${lastWeek.num})</span></div>`;
+                    const typeName = activeWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
+                    
+                    if(el) el.innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${activeWeek.num})</span></div>`;
                 } else if (el) {
                     el.innerHTML = `<span class="data-lbl">НЕМАЄ ДАНИХ</span>`;
                 }
-            } catch(e){}
+            } catch(e){ console.error(e); }
 
             // 4. Харчування
             try {
