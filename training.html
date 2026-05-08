@@ -41,10 +41,19 @@
         <div class="header-top">
             <div class="brand" id="brandBlock">
                 <div class="brand-icon">⚖️</div>
-                <div>
-                    <h1>TRAINING</h1>
-                    <span>PROTOCOL</span>
-                </div>
+                <div style="display: flex; align-items: center; position: relative;">
+    <div>
+        <h1 style="margin:0; font-size:1.2rem; font-weight:800; color:var(--theme); letter-spacing:-0.5px;">TRAINING</h1>
+        <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; display:block; margin-top:5px;">PROTOCOL</span>
+    </div>
+    
+    <span class="date-picker-wrapper" title="Змінити дату старту програми" style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-left: 10px; width: 28px; height: 28px; cursor: pointer;" onclick="document.getElementById('hiddenStartDateInp').showPicker();">
+        <span style="font-size:1.2rem; pointer-events:none;">📅</span>
+        <input type="date" id="hiddenStartDateInp" 
+            style="position:absolute; opacity:0; width:1px; height:1px; border:none; padding:0; z-index:-1;"
+            onchange="App.changeStartDate(this.value)">
+    </span>
+</div>
             </div>
 
             <div class="controls">
