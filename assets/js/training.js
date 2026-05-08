@@ -794,7 +794,7 @@ const App = {
                     : week.num;
 
                 const weekLabelHtml = isEd 
-                    ? `<span contenteditable="true" style="font-size:0.8rem; color:var(--${week.type}); border-bottom:1px dashed #666; cursor:text;" onblur="App.updateWeekLabel(${week.id}, this.innerText)" onclick="event.stopPropagation()">// ${week.label || week.type.toUpperCase()}</span>`
+                    ? `<span contenteditable="true" style="font-size:0.8rem; color:var(--${week.type}); border-bottom:1px dashed #666; cursor:text !important;" onblur="App.updateWeekLabel(${week.id}, this.innerText)" onclick="event.stopPropagation()">// ${week.label || week.type.toUpperCase()}</span>`
                     : `<span style="font-size:0.8rem; color:var(--${week.type});">// ${week.label || week.type.toUpperCase()}</span>`;
 
                 return `<div id="week-${week.id}" class="${theme}">
