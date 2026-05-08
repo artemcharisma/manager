@@ -377,13 +377,16 @@ const App = {
         const history = this.historyIndex[name];
         if (!history) return null;
 
+        // Шукаємо найсвіжіший запис (йдемо з кінця історії)
         for (let i = history.length - 1; i >= 0; i--) {
             const entry = history[i];
-            if (entry.prog !== prog) continue;
             
-            if (entry.wNum < currentWNum || (entry.wNum === currentWNum && entry.dIdx < currentDIdx)) {
-                if (entry.hasData) return entry.sets;
+            // Якщо це та сама програма, то не беремо поточне чи майбутнє тренування
+            if (entry.prog === prog) {
+                if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
             }
+            
+            if (entry.hasData) return entry.sets;
         }
         return null;
     },
@@ -397,15 +400,16 @@ const App = {
         let maxRM = 0;
         for (let i = 0; i < history.length; i++) {
             const entry = history[i];
-            if (entry.prog !== prog) continue;
             
-            if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
+            // Запобіжник для поточної програми (не враховуємо майбутні, ще не виконані тренування)
+            if (entry.prog === prog) {
+                if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
+            }
             
             if (entry.maxRM > maxRM) maxRM = entry.maxRM;
         }
         return Math.round(maxRM);
     },
-
     cycleSetType(w, d, e, s, event) { // Додано event
         const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
         let msg = ""; let color = ""; let newLabel = s + 1; let newClass = "";
@@ -1901,8 +1905,24 @@ const App = {
             return;
         }
 
+        // 1. Визначаємо актуальний номер тижня за датою
+        const currentWNum = this.getCurrentWeekNum();
+
+        // 2. Якщо ми вперше зайшли в статистику (індекс не встановлено)
         if (this.currentStatsIdx === undefined) {
-            this.currentStatsIdx = allWeeks[allWeeks.length - 1].realIndex;
+            // Шукаємо в базі тиждень, який збігається з актуальним номером і поточною програмою
+            const activeWeek = allWeeks.find(w => w.num === currentWNum && w.prog === this.data.currentProgram);
+
+            if (activeWeek) {
+                this.currentStatsIdx = activeWeek.realIndex;
+            } else {
+                // Якщо актуального тижня в базі ще немає (напр. ти його не створив), 
+                // беремо останній існуючий тиждень поточної програми
+                const progWeeks = allWeeks.filter(w => w.prog === this.data.currentProgram);
+                this.currentStatsIdx = progWeeks.length > 0 
+                    ? progWeeks[progWeeks.length - 1].realIndex 
+                    : allWeeks[allWeeks.length - 1].realIndex;
+            }
         }
         if (forceIndex !== null) {
             this.currentStatsIdx = forceIndex;
