@@ -92,6 +92,24 @@ const App = {
         const w = Math.floor(diffDays / 7) + 1;
         return w > 0 ? w : 1;
     },
+    getRealDateObj(weekNum, dayIndex) {
+        if (!this.data.startDate) return new Date();
+        const monday = this.getMondayOfStartWeek();
+        monday.setDate(monday.getDate() + ((weekNum - 1) * 7) + dayIndex);
+        return monday;
+    },
+
+    getRealDate(weekNum, dayIndex) {
+        return this.getRealDateObj(weekNum, dayIndex).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
+    },
+
+    isToday(weekNum, dayIndex) {
+        const d = this.getRealDateObj(weekNum, dayIndex);
+        d.setHours(0,0,0,0);
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        return d.getTime() === now.getTime();
+    },
 
     changeStartDate(val) {
         if (!val) return;
@@ -545,6 +563,9 @@ const App = {
                 const daysHtml = week.days.map((day, dIdx) => {
                     const uid = week.id + '-' + dIdx;
                     const isOpen = this.data.opened && this.data.opened[uid];
+                    const realDate = this.getRealDate(week.num, dIdx);
+                    const isToday = this.isToday(week.num, dIdx);
+                    const todayBorder = isToday ? 'border-color: var(--theme); box-shadow: 0 0 15px rgba(212,175,55,0.15);' : '';
 
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
@@ -746,11 +767,11 @@ const App = {
                     const dayGroup = isEd ? `<span class="day-group" contenteditable="true" onblur="App.updateDay(${realWIdx},${dIdx},'group',this.innerText)" onclick="event.stopPropagation()">${day.group}</span>` : `<span class="day-group">${day.group}</span>`;
 
                     return `
-                    <div class="day-card ${isOpen ? '' : 'collapsed'}">
+                    <div class="day-card ${isOpen ? '' : 'collapsed'}" style="${todayBorder}">
                         <div class="day-header" onclick="App.toggleDay('${uid}', this)">
                             <div style="display:flex; align-items:center">
                                 <span class="day-chevron">▼</span>
-                                <span class="day-title">${day.day}</span>
+                                <span class="day-title">${day.day} <span style="font-size:0.7rem; color:var(--theme); font-family:'JetBrains Mono'; margin-left:6px; background:rgba(212,175,55,0.1); padding:2px 6px; border-radius:4px; border: 1px solid rgba(212,175,55,0.2);">${realDate}</span></span>
                             </div>
                             ${dayGroup}
                         </div>
