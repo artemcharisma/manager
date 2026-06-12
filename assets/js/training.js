@@ -195,6 +195,9 @@ const App = {
                 font-weight: 700; 
                 text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
             }
+            /* Апаратне прискорення для зняття навантаження з процесора */
+            .day-card { content-visibility: auto; contain-intrinsic-size: 150px; }
+            .exercise { transform: translateZ(0); }
         `;
         document.head.appendChild(extraStyles);
 
@@ -597,8 +600,18 @@ const App = {
                 
                 const daysHtml = week.days.map((day, dIdx) => {
                     const uid = week.id + '-' + dIdx;
-                    const isOpen = this.data.opened && this.data.opened[uid];
-                    const realDate = this.getRealDate(week.num, dIdx);
+let isOpen = false;
+if (this.data.opened && this.data.opened.hasOwnProperty(uid)) {
+    isOpen = this.data.opened[uid]; // Якщо ви вручну відкрили/закрили
+} else {
+    // Розумна автоматика: відкриті тільки сьогодні і майбутні дні
+    const dDate = this.getRealDateObj(week.num, dIdx);
+    dDate.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    isOpen = dDate.getTime() >= today.getTime();
+}
+const realDate = this.getRealDate(week.num, dIdx);
                     const isToday = this.isToday(week.num, dIdx);
                     const todayBorder = isToday ? 'border-color: var(--theme); box-shadow: 0 0 15px rgba(212,175,55,0.15);' : '';
 
@@ -1311,9 +1324,13 @@ const App = {
     },
 
     async addWeek(type, init=false) {
-        if (!init) this.pushHistory(); 
-        
-        const prog = this.data.currentProgram || 'balanced';
+        if (this._isAddingWeek) return; // Запобіжник
+        this._isAddingWeek = true;
+
+        try {
+            if (!init) this.pushHistory(); 
+            
+            const prog = this.data.currentProgram || 'balanced';
         let newData;
         
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
@@ -1350,8 +1367,11 @@ const App = {
         this.data.weeks.sort((a, b) => a.num - b.num);
         this.updateBank();
         this.buildIndex(); 
-        this.save(); 
-        this.render();
+            this.save(); 
+            this.render();
+        } finally {
+            setTimeout(() => { this._isAddingWeek = false; }, 500);
+        }
     },
 
     async copyWeekFromOther() {
@@ -1436,7 +1456,22 @@ const App = {
         this.pushHistory();
         const def = type === 'cardio' ? { n: "Ходьба", g: "Кардіо", m: "cardio", sets: [{}] } : { n: "", g: "Інше", m: "wr", sets: [{},{},{}] };
         this.data.weeks[w].days[d].exercises.push(def);
-        this.save(); this.render();
+        this.save(); 
+        this.render();
+        
+        // Плавний скрол до щойно доданої вправи
+        setTimeout(() => {
+            const weekId = this.data.weeks[w].id;
+            const weekEl = document.getElementById(`week-${weekId}`);
+            if (weekEl) {
+                const days = weekEl.querySelectorAll('.day-card');
+                if (days[d]) {
+                    const exercises = days[d].querySelectorAll('.exercise');
+                    const lastEx = exercises[exercises.length - 1];
+                    if (lastEx) lastEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }, 150);
     },
     
     async delEx(w, d, e) {
