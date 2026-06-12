@@ -287,20 +287,22 @@ const App = {
         const activeWeek = progWeeks.find(w => w.num === currentRealWeek);
         
         if (activeWeek) {
+            // Збільшений таймаут до 300мс. Мобільним браузерам треба більше часу на рендер Flex-контейнерів
             setTimeout(() => {
-                // 1. Горизонтальний скрол навігації (там де "ТИЖДЕНЬ 1", "ТИЖДЕНЬ 2")
+                // 1. Горизонтальний скрол навігації (верхня панель)
                 const nav = document.getElementById('weekNav');
                 if (nav) {
-                    const navBtn = Array.from(nav.children).find(el => el.style.borderColor.includes('var(--success)'));
+                    // Надійно знаходимо елемент за його порядковим індексом у масиві, без прив'язки до CSS
+                    const activeIndex = progWeeks.indexOf(activeWeek);
+                    const navBtn = nav.children[activeIndex];
+                    
                     if (navBtn) {
-                        nav.scrollTo({
-                            left: navBtn.offsetLeft - nav.clientWidth / 2 + navBtn.clientWidth / 2,
-                            behavior: 'auto'
-                        });
+                        // Нативний і найстабільніший метод для мобільних
+                        navBtn.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
                     }
                 }
 
-                // 2. Вертикальний скрол сторінки до блоку з розкладом
+                // 2. Вертикальний скрол сторінки до самого розкладу
                 if (document.getElementById('viewSchedule').style.display !== 'none') {
                     const weekBlock = document.getElementById(`week-${activeWeek.id}`);
                     if (weekBlock) {
@@ -308,10 +310,9 @@ const App = {
                         window.scrollTo({ top: y, behavior: 'auto' });
                     }
                 }
-            }, 150);
+            }, 300);
         }
     },
-
     openExList(w, d, e) {
         const inp = document.getElementById(`ex-${w}-${d}-${e}`);
         if(inp) this.filterExList(inp.value, w, d, e);
@@ -1640,6 +1641,7 @@ const App = {
         
         if(v === 'stats') this.renderStats();
         if(v === 'guide') this.renderGuide();
+        if(v === 'schedule') this.scrollToCurrentWeek();
     },
 
     updateGlobalRule(m, v) { 
