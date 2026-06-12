@@ -242,6 +242,7 @@ const App = {
         this.save();
         this.initTimer();
         this.initDesktopScroll(); 
+        this.scrollToCurrentWeek();
     },
 
     initDesktopScroll() {
@@ -279,6 +280,36 @@ const App = {
                 slider.scrollLeft = scrollLeft - walk;
             });
         });
+    },
+    scrollToCurrentWeek() {
+        const currentRealWeek = this.getCurrentWeekNum();
+        const progWeeks = this.data.weeks.filter(w => w.prog === this.data.currentProgram);
+        const activeWeek = progWeeks.find(w => w.num === currentRealWeek);
+        
+        if (activeWeek) {
+            setTimeout(() => {
+                // 1. Горизонтальний скрол навігації (там де "ТИЖДЕНЬ 1", "ТИЖДЕНЬ 2")
+                const nav = document.getElementById('weekNav');
+                if (nav) {
+                    const navBtn = Array.from(nav.children).find(el => el.style.borderColor.includes('var(--success)'));
+                    if (navBtn) {
+                        nav.scrollTo({
+                            left: navBtn.offsetLeft - nav.clientWidth / 2 + navBtn.clientWidth / 2,
+                            behavior: 'auto'
+                        });
+                    }
+                }
+
+                // 2. Вертикальний скрол сторінки до блоку з розкладом
+                if (document.getElementById('viewSchedule').style.display !== 'none') {
+                    const weekBlock = document.getElementById(`week-${activeWeek.id}`);
+                    if (weekBlock) {
+                        const y = weekBlock.getBoundingClientRect().top + window.scrollY - 90;
+                        window.scrollTo({ top: y, behavior: 'auto' });
+                    }
+                }
+            }, 150);
+        }
     },
 
     openExList(w, d, e) {
@@ -624,7 +655,7 @@ const App = {
                         let settingHtml = '';
                         
                         if (isEd) {
-                            settingHtml = `<input type="text" class="modal-input" style="padding:4px 8px; font-size:0.65rem; margin-top:4px; border:1px dashed #333; background:rgba(0,0,0,0.5); width:100%;" placeholder="Налаштування (Спинка 4, Валик 2)..." value="${currentSetting}" onblur="App.updateSetting('${exKeyName.replace(/'/g, "\\'")}', this.value)">`;
+                            settingHtml = `<input type="text" class="modal-input" style="padding:4px 8px; font-size:0.65rem; margin-top:4px; border:1px dashed #333; background:rgba(0,0,0,0.5); width:100%;" placeholder="Налаштування (Спинка 4, Валик 2)..." value="${currentSetting}" onblur="App.updateSettingByPath(${realWIdx}, ${dIdx}, ${eIdx}, this.value)">`;
                         } else if (currentSetting) {
                             settingHtml = `<div style="font-size:0.6rem; color:#8b5cf6; margin-top:4px; font-family:'JetBrains Mono'; font-weight:700;">⚙️ ${currentSetting}</div>`;
                         }
@@ -636,7 +667,7 @@ const App = {
                                 <input class="ex-name-input" id="ex-${realWIdx}-${dIdx}-${eIdx}" autocomplete="off" value="${ex.n}" 
                                        onfocus="App.openExList(${realWIdx}, ${dIdx}, ${eIdx})" 
                                        oninput="App.filterExList(this.value, ${realWIdx}, ${dIdx}, ${eIdx})" 
-                                       onblur="setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n',document.getElementById('ex-${realWIdx}-${dIdx}-${eIdx}').value), 200)">
+                                       onblur="const val = this.value; setTimeout(() => App.updateEx(${realWIdx},${dIdx},${eIdx},'n', val), 200)">
                                 ${settingHtml}
                                 <div id="list-${realWIdx}-${dIdx}-${eIdx}" class="custom-dropdown" style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#1a1a1a; border:1px solid #444; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.9);"></div>
                             </div>`;
@@ -863,6 +894,7 @@ const App = {
         this.setTheme(prog);
         this.save();
         this.render();
+        this.scrollToCurrentWeek();
     },
 
     setTheme(prog) {
@@ -1429,6 +1461,12 @@ const App = {
             this.save();
         }
     },
+    updateSettingByPath(w, d, e, val) {
+        const exName = this.data.weeks[w].days[d].exercises[e].n;
+        if (!exName) return; 
+        const key = exName.trim().toLowerCase();
+        this.updateSetting(key, val);
+    },
 
     updateEx(w, d, e, field, val) {
         if(this.data.weeks[w].days[d].exercises[e][field] !== val) {
@@ -1449,11 +1487,20 @@ const App = {
     },
 
     changeSets(w, d, e, delta) {
-        this.pushHistory();
-        const ex = this.data.weeks[w].days[d].exercises[e];
-        if(delta > 0) ex.sets.push({});
-        else if(ex.sets.length > 1) ex.sets.pop();
-        this.save(); this.render();
+        // Примусово знімаємо фокус з активного поля, щоб зберегти всі його дані
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
+        
+        // Чекаємо 150мс, поки відпрацюють всі збереження (onblur), і тільки потім рендеримо
+        setTimeout(() => {
+            this.pushHistory();
+            const ex = this.data.weeks[w].days[d].exercises[e];
+            if(delta > 0) ex.sets.push({});
+            else if(ex.sets.length > 1) ex.sets.pop();
+            this.save(); 
+            this.render();
+        }, 150);
     },
 
     updateSet(w, d, e, s, f, val, inputEl) {
