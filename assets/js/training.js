@@ -446,6 +446,7 @@ const App = {
         return Math.round(maxRM);
     },
     cycleSetType(w, d, e, s, event) { // Додано event
+        this.pushHistory();
         const setObj = this.data.weeks[w].days[d].exercises[e].sets[s];
         let msg = ""; let color = ""; let newLabel = s + 1; let newClass = "";
 
@@ -810,7 +811,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 }
                             }
                         }
-                        const currentNoteHtml = `<input type="text" class="ex-note-input" placeholder="Нотатка наст. тижня (напр. +2.5кг, важко)..." value="${ex.note || ''}" onblur="App.updateEx(${realWIdx},${dIdx},${eIdx},'note',this.value)">`;
+                        const currentNoteHtml = `<input type="text" class="ex-note-input" placeholder="План на наступну сесію..." value="${ex.note || ''}" onblur="App.updateEx(${realWIdx},${dIdx},${eIdx},'note',this.value)">`;
 
                         return `<div class="exercise ${isLinked ? 'superset-link' : ''} ${isChild ? 'superset-child' : ''}">
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
@@ -1265,6 +1266,7 @@ const realDate = this.getRealDate(week.num, dIdx);
         if (val !== null && val !== "") {
             const newTime = parseInt(val);
             if (!isNaN(newTime) && newTime > 0) {
+            this.pushHistory();
                 this.data.weeks[w].days[d].exercises[e].t = newTime;
                 this.save();
                 
@@ -1607,6 +1609,7 @@ const realDate = this.getRealDate(week.num, dIdx);
         }
 
         if(setObj[f] !== finalVal) {
+            this.pushHistory();
             setObj[f] = finalVal;
             
             // Миттєво перекидаємо активну підсвітку на наступний порожній підхід у всьому дні
