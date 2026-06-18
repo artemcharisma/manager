@@ -195,8 +195,8 @@ const App = {
                 font-weight: 700; 
                 text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
             }
-            /* Апаратне прискорення для зняття навантаження з процесора */
-            .day-card { content-visibility: auto; contain-intrinsic-size: 150px; }
+            /* Фікс дьоргання екрану на iOS/Android */
+            body { overscroll-behavior-y: none; }
             .exercise { transform: translateZ(0); }
         `;
         document.head.appendChild(extraStyles);
@@ -467,13 +467,16 @@ const App = {
         
         this.save();
         
-        // ФІКС МЕРЕХТІННЯ: Оновлюємо DOM точково
+        // ФІКС МЕРЕХТІННЯ: Оновлюємо DOM точково, зберігаючи статус is-done
         if (event && event.target) {
             const numEl = event.target;
             const rowEl = numEl.closest('.set-row');
             numEl.innerText = newLabel;
             numEl.className = `set-num ${newClass}`;
-            if (rowEl) rowEl.className = `set-row ${newClass}`;
+            if (rowEl) {
+                const hasIsDone = rowEl.classList.contains('is-done');
+                rowEl.className = `set-row ${newClass} ${hasIsDone ? 'is-done' : ''}`;
+            }
         } else {
             this.render(); // Запасний план
         }
@@ -1555,33 +1558,71 @@ const realDate = this.getRealDate(week.num, dIdx);
 
     updateSet(w, d, e, s, f, val, inputEl) {
         let finalVal = val;
-
-        if (f === 'w' && typeof val === 'string' && (val.includes('%') || val.toLowerCase().includes('p'))) {
-            const percent = parseFloat(val);
-            if (!isNaN(percent) && percent > 0) {
-                const exName = this.data.weeks[w].days[d].exercises[e].n;
-                const wNum = this.data.weeks[w].num;
-                const e1RM = this.getEstimated1RM(exName, wNum, d, this.data.currentProgram);
-                
-                if (e1RM > 0) {
-                    const calcWeight = e1RM * (percent / 100);
-                    finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
-                    if (inputEl) inputEl.value = finalVal;
-                    this.showToast(`🎯 1RM: ${e1RM}кг. ${percent}% = ${finalVal}кг`, 'var(--success)');
-                } else {
-                    this.showToast(`⚠️ Немає історії для розрахунку`, 'var(--danger)');
-                    finalVal = ""; 
-                    if (inputEl) inputEl.value = "";
-                }
-            }
-        }
-
         const exObj = this.data.weeks[w].days[d].exercises[e];
         const setObj = exObj.sets[s];
+
+        if (f === 'w' && typeof val === 'string' && val.includes('%')) {
+            const percentStr = val.replace('%', '').replace('p', '').trim();
+            const percentVal = parseFloat(percentStr);
+
+            if (!isNaN(percentVal)) {
+                let calcWeight = 0;
+
+                // Сценарій 1: Від'ємний відсоток для Back-off (наприклад: -20%)
+                if (val.trim().startsWith('-') && s > 0) {
+                    const prevSet = exObj.sets[s - 1];
+                    const prevW = parseFloat(prevSet.w);
+                    if (!isNaN(prevW) && prevW > 0) {
+                        calcWeight = prevW * (1 + (percentVal / 100)); // Додаємо від'ємне число
+                        finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
+                        this.showToast(`📉 BO: ${prevW}кг ${percentVal}% = ${finalVal}кг`, '#3b82f6');
+                    } else {
+                        this.showToast(`⚠️ Немає ваги у попередньому підході`, 'var(--danger)');
+                        finalVal = ""; 
+                    }
+                } 
+                // Сценарій 2: Звичайний відсоток для розминки/бази (наприклад: 50%)
+                else if (percentVal > 0) {
+                    const exName = exObj.n;
+                    const wNum = this.data.weeks[w].num;
+                    let referenceWeight = this.getEstimated1RM(exName, wNum, d, this.data.currentProgram);
+                    
+                    // Якщо історії 1RM ще нема, беремо найбільшу вагу, яку ви вже ввели у поточних підходах
+                    if (referenceWeight === 0) {
+                        let maxCurrentW = 0;
+                        exObj.sets.forEach(st => {
+                            const stW = parseFloat(st.w);
+                            if (!isNaN(stW) && stW > maxCurrentW) maxCurrentW = stW;
+                        });
+                        referenceWeight = maxCurrentW;
+                    }
+
+                    if (referenceWeight > 0) {
+                        calcWeight = referenceWeight * (percentVal / 100);
+                        finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
+                        this.showToast(`🎯 База: ${referenceWeight}кг. ${percentVal}% = ${finalVal}кг`, 'var(--success)');
+                    } else {
+                        this.showToast(`⚠️ Немає історії для розрахунку`, 'var(--danger)');
+                        finalVal = ""; 
+                    }
+                }
+
+                if (inputEl) inputEl.value = finalVal;
+            }
+        }
 
         if(setObj[f] !== finalVal) {
             setObj[f] = finalVal;
             
+            // Миттєво підсвічуємо/знімаємо зелений статус (is-done) без перемальовування всього дня
+            if (inputEl) {
+                const rowEl = inputEl.closest('.set-row');
+                if (rowEl) {
+                    if (setObj.w && setObj.r) rowEl.classList.add('is-done');
+                    else rowEl.classList.remove('is-done');
+                }
+            }
+
             if (setObj.t !== 'WU') {
                 const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
                 if (ghostSets && ghostSets[s]) {
@@ -1607,7 +1648,6 @@ const realDate = this.getRealDate(week.num, dIdx);
             this.save(); 
         }
     },
-
     setGuideMode(m) { this.data.guideMode = m; this.save(); this.renderGuide(); },
     
     updateTarget(group, val) { 
