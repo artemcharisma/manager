@@ -467,18 +467,18 @@ const App = {
         
         this.save();
         
-        // ФІКС МЕРЕХТІННЯ: Оновлюємо DOM точково, зберігаючи статус is-done
+        // ФІКС МЕРЕХТІННЯ: Оновлюємо DOM точково, зберігаючи активну підсвітку
         if (event && event.target) {
             const numEl = event.target;
             const rowEl = numEl.closest('.set-row');
             numEl.innerText = newLabel;
             numEl.className = `set-num ${newClass}`;
             if (rowEl) {
-                const hasIsDone = rowEl.classList.contains('is-done');
-                rowEl.className = `set-row ${newClass} ${hasIsDone ? 'is-done' : ''}`;
+                const hasGlow = rowEl.classList.contains('active-set-glow');
+                rowEl.className = `set-row ${newClass} ${hasGlow ? 'active-set-glow' : ''}`;
             }
         } else {
-            this.render(); // Запасний план
+            this.render();
         }
         this.showToast(msg, color);
     },
@@ -717,6 +717,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                         }
 
                         const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
+                        let firstEmptySetFound = false; // Маркер для пошуку наступного невиконаного підходу
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
@@ -733,7 +734,13 @@ const realDate = this.getRealDate(week.num, dIdx);
                             else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
-                            let isDoneClass = (s.w && s.r) ? 'is-done' : '';
+                            let glowClass = '';
+                            if (isToday && (!s.w || !s.r)) {
+                                if (!firstEmptySetFound) {
+                                    glowClass = 'active-set-glow';
+                                    firstEmptySetFound = true;
+                                }
+                            }
 
                             let progressHtml = '&nbsp;';
                             if (ghostW && ghostR && sType !== 'WU') {
@@ -777,7 +784,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px; width:100%; white-space:nowrap;">
                                     ${progressHtml}
                                 </div>
-                                <div class="set-row ${typeClass} ${isDoneClass}">
+                                <div class="set-row ${typeClass} ${glowClass}">
                                     <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx}, event)">${typeLabel}</div>
                                     <div class="set-part">
                                         <input type="text" inputmode="text" class="set-input w-val ${!s.w && placeholderW ? 'ghost-active' : ''}" value="${s.w||''}" placeholder="${placeholderW}" 
@@ -1566,47 +1573,54 @@ const realDate = this.getRealDate(week.num, dIdx);
             const percentVal = parseFloat(percentStr);
 
             if (!isNaN(percentVal)) {
-                let calcWeight = 0;
+                const exName = exObj.n;
+                const wNum = this.data.weeks[w].num;
+                
+                let refW = 0;
+                let refSource = "";
 
-                // Сценарій 1: Від'ємний відсоток для Back-off (наприклад: -20%)
-                if (val.trim().startsWith('-') && s > 0) {
-                    const prevSet = exObj.sets[s - 1];
-                    const prevW = parseFloat(prevSet.w);
-                    if (!isNaN(prevW) && prevW > 0) {
-                        calcWeight = prevW * (1 + (percentVal / 100)); // Додаємо від'ємне число
-                        finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
-                        this.showToast(`📉 BO: ${prevW}кг ${percentVal}% = ${finalVal}кг`, '#3b82f6');
-                    } else {
-                        this.showToast(`⚠️ Немає ваги у попередньому підході`, 'var(--danger)');
-                        finalVal = ""; 
-                    }
-                } 
-                // Сценарій 2: Звичайний відсоток для розминки/бази (наприклад: 50%)
-                else if (percentVal > 0) {
-                    const exName = exObj.n;
-                    const wNum = this.data.weeks[w].num;
-                    let referenceWeight = this.getEstimated1RM(exName, wNum, d, this.data.currentProgram);
-                    
-                    // Якщо історії 1RM ще нема, беремо найбільшу вагу, яку ви вже ввели у поточних підходах
-                    if (referenceWeight === 0) {
-                        let maxCurrentW = 0;
-                        exObj.sets.forEach(st => {
-                            const stW = parseFloat(st.w);
-                            if (!isNaN(stW) && stW > maxCurrentW) maxCurrentW = stW;
-                        });
-                        referenceWeight = maxCurrentW;
-                    }
-
-                    if (referenceWeight > 0) {
-                        calcWeight = referenceWeight * (percentVal / 100);
-                        finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
-                        this.showToast(`🎯 База: ${referenceWeight}кг. ${percentVal}% = ${finalVal}кг`, 'var(--success)');
-                    } else {
-                        this.showToast(`⚠️ Немає історії для розрахунку`, 'var(--danger)');
-                        finalVal = ""; 
+                // 1. Шукаємо TS (Топ-сет)
+                const tsSet = exObj.sets.find(st => st.t === 'TS' && parseFloat(st.w) > 0);
+                if (tsSet) {
+                    refW = parseFloat(tsSet.w);
+                    refSource = "Топ-сету";
+                } else {
+                    // 2. Якщо немає TS, беремо перший робочий підхід
+                    const firstWorkSet = exObj.sets.find(st => st.t !== 'WU' && parseFloat(st.w) > 0);
+                    if (firstWorkSet) {
+                        refW = parseFloat(firstWorkSet.w);
+                        refSource = "Першого робочого";
                     }
                 }
 
+                // 3. Fallback: Якщо це взагалі перший ввід, беремо 1RM або максимум поточних підходів
+                if (refW === 0) {
+                    refW = this.getEstimated1RM(exName, wNum, d, this.data.currentProgram);
+                    if (refW === 0) {
+                        let maxW = 0;
+                        exObj.sets.forEach(st => {
+                            let wVal = parseFloat(st.w);
+                            if (!isNaN(wVal) && wVal > maxW) maxW = wVal;
+                        });
+                        refW = maxW;
+                        refSource = "Поточного максимуму";
+                    } else {
+                        refSource = "1RM (Історія)";
+                    }
+                }
+
+                if (refW > 0) {
+                    let isRelative = val.trim().startsWith('-') || val.trim().startsWith('+');
+                    let calcWeight = isRelative ? refW * (1 + (percentVal / 100)) : refW * (percentVal / 100);
+                    finalVal = (Math.round(calcWeight / 2.5) * 2.5).toString();
+                    
+                    let sign = isRelative && percentVal > 0 ? '+' : '';
+                    this.showToast(`🎯 Від ${refSource} (${refW}кг): ${sign}${percentVal}% = ${finalVal}кг`, 'var(--theme)');
+                } else {
+                    this.showToast(`⚠️ Немає бази для розрахунку відсотків`, 'var(--danger)');
+                    finalVal = ""; 
+                }
+                
                 if (inputEl) inputEl.value = finalVal;
             }
         }
@@ -1614,12 +1628,23 @@ const realDate = this.getRealDate(week.num, dIdx);
         if(setObj[f] !== finalVal) {
             setObj[f] = finalVal;
             
-            // Миттєво підсвічуємо/знімаємо зелений статус (is-done) без перемальовування всього дня
-            if (inputEl) {
-                const rowEl = inputEl.closest('.set-row');
-                if (rowEl) {
-                    if (setObj.w && setObj.r) rowEl.classList.add('is-done');
-                    else rowEl.classList.remove('is-done');
+            // Миттєво перекидаємо активну підсвітку на наступний порожній підхід
+            if (inputEl && this.isToday(this.data.weeks[w].num, d)) {
+                const exContainer = inputEl.closest('.exercise');
+                if (exContainer) {
+                    const allRows = exContainer.querySelectorAll('.set-row');
+                    let glowApplied = false;
+                    allRows.forEach(row => {
+                        row.classList.remove('active-set-glow');
+                        if (!glowApplied) {
+                            const wInp = row.querySelector('.w-val');
+                            const rInp = row.querySelector('.r-val');
+                            if (wInp && rInp && (!wInp.value || !rInp.value)) {
+                                row.classList.add('active-set-glow');
+                                glowApplied = true;
+                            }
+                        }
+                    });
                 }
             }
 
