@@ -1355,42 +1355,35 @@ const realDate = this.getRealDate(week.num, dIdx);
             if (!init) this.pushHistory(); 
             
             const prog = this.data.currentProgram || 'balanced';
-        let newData;
-        
-        const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
-        const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
-        const newWeekNum = maxNum + 1; 
+            let newData;
+            
+            const currentProgWeeks = this.data.weeks.filter(w => w.prog === prog);
+            const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
+            const newWeekNum = maxNum + 1; 
 
-        const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
-        
-        if(lastWeek && !init) {
-            const hardCopy = await Modal.confirm(
-                "Скопіювати минулий тиждень <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (для прогресії).<br>Скасувати — тільки структура.</span>", 
-                "РЕЖИМ КОПІЮВАННЯ", 
-                "var(--theme)"
-            );
-
-            newData = JSON.parse(JSON.stringify(lastWeek.days));
-            newData.forEach(d => {
-                d.exercises.forEach(ex => { 
-                    ex.sets.forEach(s => { 
-                        if (!hardCopy) {
+            const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
+            
+            if(lastWeek && !init) {
+                // БІЛЬШЕ НІЯКИХ МОДАЛОК! Завжди чиста структура для роботи фантомів
+                newData = JSON.parse(JSON.stringify(lastWeek.days));
+                newData.forEach(d => {
+                    d.exercises.forEach(ex => { 
+                        ex.sets.forEach(s => { 
                             s.w = ""; 
                             s.r = ""; 
-                        }
-                        s.d = ""; 
-                    }); 
+                            s.d = ""; 
+                        }); 
+                    });
                 });
-            });
-        } else {
-            newData = JSON.parse(JSON.stringify(Templates[prog][type]));
-        }
-        
-        const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
-        this.data.weeks.push(w);
-        this.data.weeks.sort((a, b) => a.num - b.num);
-        this.updateBank();
-        this.buildIndex(); 
+            } else {
+                newData = JSON.parse(JSON.stringify(Templates[prog][type]));
+            }
+            
+            const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
+            this.data.weeks.push(w);
+            this.data.weeks.sort((a, b) => a.num - b.num);
+            this.updateBank();
+            this.buildIndex(); 
             this.save(); 
             this.render();
         } finally {
@@ -1410,7 +1403,6 @@ const realDate = this.getRealDate(week.num, dIdx);
             return;
         }
 
-        // ФІКС ВІЗУАЛУ: Жорсткий Flex + Monospace для ідеальної лінії
         let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height: 250px; overflow-y: auto;">`;
         sourceWeeks.forEach((w, idx) => {
             menuHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;">
@@ -1427,28 +1419,17 @@ const realDate = this.getRealDate(week.num, dIdx);
         if (isNaN(selectedIdx) || selectedIdx < 0 || selectedIdx >= sourceWeeks.length) return;
 
         const weekToCopy = sourceWeeks[selectedIdx];
-        
-        const hardCopy = await Modal.confirm(
-            "Скопіювати <b>разом з вагами і повторами</b>?<br><br><span style='font-size:0.8rem; color:#888'>ОК — повна копія (з цифрами).<br>Скасувати — тільки структура (як чистий шаблон).</span>", 
-            "РЕЖИМ КОПІЮВАННЯ", 
-            "var(--theme)"
-        );
-
         this.pushHistory();
 
-        // ФІКС ДНІВ: Беремо каркас днів із ЦІЛЬОВОГО шаблону, щоб "Тренування 1" залишалося "Тренуванням 1"
         let targetTemplate = Templates[targetP][weekToCopy.type];
         let newData = JSON.parse(JSON.stringify(targetTemplate)); 
         
         newData.forEach((targetDay, dIdx) => {
             if (weekToCopy.days[dIdx]) {
-                // Вставляємо тільки самі вправи у правильні дні
                 targetDay.exercises = JSON.parse(JSON.stringify(weekToCopy.days[dIdx].exercises));
-                if (!hardCopy) {
-                    targetDay.exercises.forEach(ex => { 
-                        ex.sets.forEach(s => { s.w = ""; s.r = ""; s.d = ""; }); 
-                    });
-                }
+                targetDay.exercises.forEach(ex => { 
+                    ex.sets.forEach(s => { s.w = ""; s.r = ""; s.d = ""; }); 
+                });
             }
         });
 
