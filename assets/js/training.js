@@ -478,7 +478,7 @@ const App = {
                 rowEl.className = `set-row ${newClass} ${hasGlow ? 'active-set-glow' : ''}`;
             }
         } else {
-            this.render();
+            this.render(); // Запасний план
         }
         this.showToast(msg, color);
     },
@@ -1609,11 +1609,11 @@ const realDate = this.getRealDate(week.num, dIdx);
         if(setObj[f] !== finalVal) {
             setObj[f] = finalVal;
             
-            // Миттєво перекидаємо активну підсвітку на наступний порожній підхід
+            // Миттєво перекидаємо активну підсвітку на наступний порожній підхід у всьому дні
             if (inputEl && this.isToday(this.data.weeks[w].num, d)) {
-                const exContainer = inputEl.closest('.exercise');
-                if (exContainer) {
-                    const allRows = exContainer.querySelectorAll('.set-row');
+                const dayContainer = inputEl.closest('.day-card');
+                if (dayContainer) {
+                    const allRows = dayContainer.querySelectorAll('.set-row');
                     let glowApplied = false;
                     allRows.forEach(row => {
                         row.classList.remove('active-set-glow');
