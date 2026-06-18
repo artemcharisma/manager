@@ -730,6 +730,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                             else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
+                            let isDoneClass = (s.w && s.r) ? 'is-done' : '';
 
                             let progressHtml = '&nbsp;';
                             if (ghostW && ghostR && sType !== 'WU') {
@@ -773,7 +774,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px; width:100%; white-space:nowrap;">
                                     ${progressHtml}
                                 </div>
-                                <div class="set-row ${typeClass}">
+                                <div class="set-row ${typeClass} ${isDoneClass}">
                                     <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx}, event)">${typeLabel}</div>
                                     <div class="set-part">
                                         <input type="text" inputmode="text" class="set-input w-val ${!s.w && placeholderW ? 'ghost-active' : ''}" value="${s.w||''}" placeholder="${placeholderW}" 
@@ -789,6 +790,17 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 </div>
                             </div>`;
                         }).join('');
+                        let prevNoteHtml = '';
+                        if (exKeyName) {
+                            const prevWeek = this.data.weeks.find(w_ => w_.prog === week.prog && w_.num === week.num - 1);
+                            if (prevWeek && prevWeek.days[dIdx] && prevWeek.days[dIdx].exercises) {
+                                const prevEx = prevWeek.days[dIdx].exercises.find(px => px.n && px.n.trim().toLowerCase() === exKeyName);
+                                if (prevEx && prevEx.note) {
+                                    prevNoteHtml = `<div style="font-size:0.65rem; color:var(--success); margin-top:8px; font-family:'JetBrains Mono'; background:rgba(16,185,129,0.1); padding:8px 10px; border-radius:6px; border:1px dashed rgba(16,185,129,0.3);">💡 W${week.num - 1}: ${prevEx.note}</div>`;
+                                }
+                            }
+                        }
+                        const currentNoteHtml = `<input type="text" class="ex-note-input" placeholder="Нотатка наст. тижня (напр. +2.5кг, важко)..." value="${ex.note || ''}" onblur="App.updateEx(${realWIdx},${dIdx},${eIdx},'note',this.value)">`;
 
                         return `<div class="exercise ${isLinked ? 'superset-link' : ''} ${isChild ? 'superset-child' : ''}">
                             ${isEd ? `<div class="ex-del" onclick="App.delEx(${realWIdx},${dIdx},${eIdx})">✕</div>` : ''}
@@ -809,6 +821,8 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 </div>
                             </div>
                             <div class="sets-wrapper">${setsHtml}</div>
+                            ${prevNoteHtml}
+                            ${currentNoteHtml}
                         </div>`;
                         }).join('');
 
