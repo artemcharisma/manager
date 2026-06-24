@@ -639,6 +639,8 @@ if (this.data.opened && this.data.opened.hasOwnProperty(uid)) {
 const realDate = this.getRealDate(week.num, dIdx);
                     const isToday = this.isToday(week.num, dIdx);
                     const todayBorder = isToday ? 'border-color: var(--theme); box-shadow: 0 0 15px rgba(212,175,55,0.15);' : '';
+                    
+                    let firstEmptySetFound = false; // Винесли сюди, щоб світився лише ОДИН підхід на весь день!
 
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
@@ -739,7 +741,6 @@ const realDate = this.getRealDate(week.num, dIdx);
                         }
 
                         const ghostSets = App.getGhostData(ex.n, week.num, dIdx, prog);
-                        let firstEmptySetFound = false; // Маркер для пошуку наступного невиконаного підходу
 
                         const setsHtml = ex.sets.map((s, sIdx) => {
                             if (m === 't') {
@@ -757,7 +758,8 @@ const realDate = this.getRealDate(week.num, dIdx);
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
                             let glowClass = '';
-                            if (isToday && (!s.w || !s.r)) {
+                            // Змінили isToday на isOpen: тепер маркер працює у всіх розгорнутих днях
+                            if (isOpen && (!s.w || !s.r)) {
                                 if (!firstEmptySetFound) {
                                     glowClass = 'active-set-glow';
                                     firstEmptySetFound = true;
@@ -1638,8 +1640,8 @@ const realDate = this.getRealDate(week.num, dIdx);
                 navigator.vibrate(40);
             }
             
-            // Миттєво перекидаємо активну підсвітку на наступний порожній підхід у всьому дні
-            if (inputEl && this.isToday(this.data.weeks[w].num, d)) {
+            // Миттєво перекидаємо активну підсвітку на наступний порожній підхід у всьому дні (навіть якщо тренування перенесене)
+            if (inputEl) {
                 const dayContainer = inputEl.closest('.day-card');
                 if (dayContainer) {
                     const allRows = dayContainer.querySelectorAll('.set-row');
