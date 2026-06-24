@@ -246,6 +246,23 @@ const App = {
         this.initTimer();
         this.initDesktopScroll(); 
         this.scrollToCurrentWeek();
+        
+        // 3. Глобальний обробник: Авто-фокус екрану та авто-виділення
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                // Центруємо елемент на екрані через 300мс (даємо час виїхати клавіатурі)
+                setTimeout(() => {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+                
+                // Миттєво виділяємо текст ТІЛЬКИ у полях ваги/повторень
+                if (e.target.classList.contains('set-input') || e.target.classList.contains('c-input')) {
+                    setTimeout(() => {
+                        try { e.target.select(); } catch(err) {}
+                    }, 50); // 50мс таймаут для iOS Safari, щоб не губився фокус
+                }
+            }
+        });
     },
 
     initDesktopScroll() {
@@ -481,6 +498,10 @@ const App = {
         } else {
             this.render(); // Запасний план
         }
+        
+        // Тактильний відгук (Тумблер)
+        if (navigator.vibrate) navigator.vibrate(40);
+        
         this.showToast(msg, color);
     },
     showToast(msg, color="var(--success)") {
@@ -1611,6 +1632,11 @@ const realDate = this.getRealDate(week.num, dIdx);
         if(setObj[f] !== finalVal) {
             this.pushHistory();
             setObj[f] = finalVal;
+            
+            // Тактильний відгук (Вібрація), якщо підхід повністю заповнено
+            if (setObj.w && setObj.r && navigator.vibrate) {
+                navigator.vibrate(40);
+            }
             
             // Миттєво перекидаємо активну підсвітку на наступний порожній підхід у всьому дні
             if (inputEl && this.isToday(this.data.weeks[w].num, d)) {
