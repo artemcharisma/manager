@@ -1393,6 +1393,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                 newData = JSON.parse(JSON.stringify(lastWeek.days));
                 newData.forEach(d => {
                     d.exercises.forEach(ex => { 
+                        ex.note = "";
                         ex.sets.forEach(s => { 
                             s.w = ""; 
                             s.r = ""; 
@@ -1453,6 +1454,7 @@ const realDate = this.getRealDate(week.num, dIdx);
             if (weekToCopy.days[dIdx]) {
                 targetDay.exercises = JSON.parse(JSON.stringify(weekToCopy.days[dIdx].exercises));
                 targetDay.exercises.forEach(ex => { 
+                    ex.note = "";
                     ex.sets.forEach(s => { s.w = ""; s.r = ""; s.d = ""; }); 
                 });
             }
