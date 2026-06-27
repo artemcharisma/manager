@@ -758,8 +758,8 @@ const realDate = this.getRealDate(week.num, dIdx);
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
                             let glowClass = '';
-                            // Змінили isToday на isOpen: тепер маркер працює у всіх розгорнутих днях
-                            if (isOpen && (!s.w || !s.r)) {
+                            // Ігноруємо WU (розминку)! Маркер шукає тільки робочі підходи
+                            if (sType !== 'WU' && (!s.w || !s.r)) {
                                 if (!firstEmptySetFound) {
                                     glowClass = 'active-set-glow';
                                     firstEmptySetFound = true;
@@ -1651,9 +1651,11 @@ const realDate = this.getRealDate(week.num, dIdx);
                     allRows.forEach(row => {
                         row.classList.remove('active-set-glow');
                         if (!glowApplied) {
+                            const isWU = row.classList.contains('type-WU'); // Перевіряємо, чи це розминка
                             const wInp = row.querySelector('.w-val');
                             const rInp = row.querySelector('.r-val');
-                            if (wInp && rInp && (!wInp.value || !rInp.value)) {
+                            // Ігноруємо WU. Світимо тільки порожні РОБОЧІ підходи
+                            if (!isWU && wInp && rInp && (!wInp.value || !rInp.value)) {
                                 row.classList.add('active-set-glow');
                                 glowApplied = true;
                             }
