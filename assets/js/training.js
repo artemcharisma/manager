@@ -2394,3 +2394,49 @@ window.addEventListener('beforeunload', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => App.init());
+
+// --- ТИМЧАСОВИЙ СКРИПТ МІГРАЦІЇ ДАНИХ ---
+setTimeout(() => {
+    if (!App.data || !App.data.weeks) return;
+
+    let modified = false;
+    
+    // 1. Створюємо блок для Масонабору, якщо його ще немає
+    let massBlock = App.data.blocks.find(b => b.name === 'МАСОНАБІР');
+    if (!massBlock) {
+        massBlock = {
+            id: 'mass_block_' + Date.now(),
+            name: 'МАСОНАБІР',
+            // Виставляємо дату старту на 5 тижнів тому (щоб поточний був 6-м)
+            startDate: new Date(Date.now() - (5 * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
+        };
+        App.data.blocks.push(massBlock);
+        if (!App.data.guidelines[massBlock.id]) App.data.guidelines[massBlock.id] = { mass: [], cut: [] };
+        modified = true;
+    }
+
+    // 2. Переносимо тижні з 13 по 18
+    App.data.weeks.forEach(w => {
+        if (w.prog === 'balanced' && w.num >= 13) {
+            w.prog = massBlock.id; // Прив'язуємо до нового макроциклу
+            w.num = w.num - 12;    // 13->1, 14->2, ..., 18->6
+            modified = true;
+        }
+    });
+
+    // 3. Перейменовуємо старий блок
+    let cutBlock = App.data.blocks.find(b => b.id === 'balanced');
+    if (cutBlock && cutBlock.name !== 'СУШКА (АРХІВ)') {
+        cutBlock.name = 'СУШКА (АРХІВ)';
+        modified = true;
+    }
+
+    // 4. Зберігаємо і рендеримо
+    if (modified) {
+        App.data.currentBlockId = massBlock.id;
+        App.save();
+        App.render();
+        alert('Дані успішно розділено на 2 макроцикли! Тепер тижні йдуть правильно. Видали цей скрипт з коду.');
+    }
+}, 1500);
+// --- КІНЕЦЬ ТИМЧАСОВОГО СКРИПТУ ---
