@@ -375,10 +375,18 @@
                 const tr = await Utils.load('training_protocol', null);
                 const el = document.getElementById('data-train');
                 if (tr && tr.weeks && tr.weeks.length > 0) {
-                    // Визначаємо поточний тиждень за датою (так само як у самому додатку Тренувань)
+                    
+                    // Адаптація під нові Макроцикли (Blocks)
+                    const activeBlockId = tr.currentBlockId || tr.currentProgram || 'balanced';
+                    const blocks = tr.blocks || [];
+                    const activeBlock = blocks.find(b => b.id === activeBlockId);
+                    
+                    // Беремо дату конкретного макроциклу (або глобальну, якщо ще не мігрували)
+                    const sDate = activeBlock ? activeBlock.startDate : tr.startDate;
+
                     let currentTrainWeek = 1;
-                    if (tr.startDate) {
-                        const startDate = new Date(tr.startDate); 
+                    if (sDate) {
+                        const startDate = new Date(sDate); 
                         const now = new Date();
                         const day = startDate.getDay(); 
                         const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
@@ -389,19 +397,19 @@
                         if (currentTrainWeek < 1) currentTrainWeek = 1;
                     }
                     
-                    // Шукаємо актуальний тиждень у збереженій базі
-                    let activeWeek = tr.weeks.find(w => w.num === currentTrainWeek && w.prog === tr.currentProgram);
+                    // Шукаємо актуальний тиждень у збереженій базі поточного блоку
+                    let activeWeek = tr.weeks.find(w => w.num === currentTrainWeek && w.prog === activeBlockId);
                     
-                    // Якщо актуального ще немає, показуємо останній існуючий
                     if (!activeWeek) {
-                        const progWeeks = tr.weeks.filter(w => w.prog === tr.currentProgram);
+                        const progWeeks = tr.weeks.filter(w => w.prog === activeBlockId);
                         activeWeek = progWeeks.length > 0 ? progWeeks[progWeeks.length - 1] : tr.weeks[tr.weeks.length - 1];
                     }
 
-                    const progName = tr.currentProgram === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА';
+                    // Назва макроциклу замість жорстких "Збалансована/Руки"
+                    const progName = activeBlock ? activeBlock.name : (activeBlockId === 'arms' ? 'РУКИ' : 'ЗБАЛАНСОВАНА');
                     const typeName = activeWeek.type === 'mass' ? 'МАСА' : 'СУШКА';
                     
-                    if(el) el.innerHTML = `<div class="data-row"><span class="data-lbl">ПЛАН:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${activeWeek.num})</span></div>`;
+                    if(el) el.innerHTML = `<div class="data-row"><span class="data-lbl">БЛОК:</span> <span class="data-hl" style="color:var(--blue)">${progName}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${typeName} (W${activeWeek.num})</span></div>`;
                 } else if (el) {
                     el.innerHTML = `<span class="data-lbl">НЕМАЄ ДАНИХ</span>`;
                 }
