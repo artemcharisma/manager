@@ -329,20 +329,40 @@
             try {
                 const ph = await Utils.load('gold_protocol', null);
                 const el = document.getElementById('data-pharm');
-                if (ph && ph.schedule && ph.startDate) {
-                    const startDate = new Date(ph.startDate); const now = new Date();
-                    const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                    const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
-                    const diffTime = now.getTime() - startMonday.getTime();
-                    let currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
-                    const maxW = Math.max(...Object.keys(ph.schedule).map(Number));
-                    if (currentWeek < 1) currentWeek = 1; if (currentWeek > maxW) currentWeek = maxW;
-                    let phaseTitle = "Курс";
-                    if (ph.phases) {
-                        const currentPhase = ph.phases.find(p => p.weeks.includes(currentWeek));
-                        if (currentPhase) phaseTitle = currentPhase.title;
+                if (ph && (ph.blocks || ph.schedule)) {
+                    // Адаптація під макроцикли (Blocks)
+                    const activeBlockId = ph.currentBlockId || null;
+                    const blocks = ph.blocks || [];
+                    const activeBlock = blocks.find(b => b.id === activeBlockId) || ph;
+
+                    const sDate = activeBlock.startDate || ph.startDate;
+                    const phases = activeBlock.phases || ph.phases || [];
+                    
+                    let currentWeek = 1;
+                    if (sDate) {
+                        const startDate = new Date(sDate); const now = new Date();
+                        const day = startDate.getDay(); const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                        const startMonday = new Date(startDate.setDate(diff)); startMonday.setHours(0,0,0,0);
+                        const diffTime = now.getTime() - startMonday.getTime();
+                        currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                        if (currentWeek < 1) currentWeek = 1;
                     }
-                    if(el) el.innerHTML = `<div class="data-row"><span class="data-lbl">ФАЗА:</span> <span class="data-hl" style="color:var(--gold)">${phaseTitle.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ТИЖДЕНЬ:</span> <span class="data-hl">${currentWeek}</span></div>`;
+                    
+                    // Шукаємо максимальний тиждень саме по активних фазах, ігноруючи порожні хвости
+                    let activeWeeks = [];
+                    phases.forEach(p => { if (p.weeks) activeWeeks.push(...p.weeks); });
+                    const maxW = activeWeeks.length > 0 ? Math.max(...activeWeeks) : 1;
+                    
+                    if (currentWeek > maxW) currentWeek = maxW;
+                    
+                    let phaseTitle = "Курс";
+                    const currentPhase = phases.find(p => p.weeks && p.weeks.includes(currentWeek));
+                    if (currentPhase) phaseTitle = currentPhase.title;
+
+                    // Назва макроциклу (Блоку)
+                    const blockName = activeBlock.name || "ФАРМАКОЛОГІЯ";
+
+                    if(el) el.innerHTML = `<div class="data-row"><span class="data-lbl">БЛОК:</span> <span class="data-hl" style="color:var(--gold)">${blockName.toUpperCase()}</span></div><div class="data-row"><span class="data-lbl">ЕТАП:</span> <span class="data-hl">${phaseTitle.toUpperCase()} (W${currentWeek})</span></div>`;
                 } else if (el) {
                     el.innerHTML = `<span class="data-lbl">НЕМАЄ ДАНИХ</span>`;
                 }
