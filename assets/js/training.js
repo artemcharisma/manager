@@ -631,6 +631,24 @@ const App = {
 
         const progSel = document.querySelector('.program-selector');
         if (progSel) {
+            // Динамічний фікс для мобільних екранів: перетворюємо жорстку сітку на свайп-панель
+            progSel.style.display = 'flex';
+            progSel.style.flexWrap = 'nowrap';
+            progSel.style.overflowX = 'auto';
+            progSel.style.gap = '8px';
+            progSel.style.WebkitOverflowScrolling = 'touch'; // Плавний скрол на iOS
+            
+            // Ін'єкція стилів для правильного відображення кнопок та приховування системного скролбару
+            if (!document.getElementById('prog-scroll-fix')) {
+                const s = document.createElement('style');
+                s.id = 'prog-scroll-fix';
+                s.innerHTML = `
+                    .program-selector::-webkit-scrollbar { display: none; } 
+                    .program-selector .prog-opt { flex: 0 0 auto !important; white-space: nowrap !important; }
+                `;
+                document.head.appendChild(s);
+            }
+
             progSel.innerHTML = this.data.blocks.map(b => `
                 <div class="prog-opt ${currentBlockId === b.id ? 'active' : ''}" 
                      onclick="App.setProgram('${b.id}')" 
@@ -638,7 +656,7 @@ const App = {
                     ${currentBlockId === b.id ? '🎯' : '📁'} ${b.name}
                 </div>
             `).join('') + `
-            <div class="prog-opt" onclick="App.addBlock()" style="background: transparent; border: 1px dashed #444; color: #888;">
+            <div class="prog-opt" onclick="App.addBlock()" style="background: rgba(255,255,255,0.03); border: 1px dashed #555; color: #888;">
                 + НОВИЙ
             </div>`;
         }
