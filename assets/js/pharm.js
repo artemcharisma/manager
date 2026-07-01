@@ -840,14 +840,41 @@ const App = {
         if(!this.data.phases) this.data.phases = JSON.parse(JSON.stringify(DefaultData.phases));
         if(!this.data.schedule) this.data.schedule = JSON.parse(JSON.stringify(DefaultData.schedule));
         if(!this.data.measurements) this.data.measurements = {};
+
+        // --- МІГРАЦІЯ НА МАКРОЦИКЛИ ---
+        if (!this.data.blocks) {
+            this.data.blocks = [{
+                id: 'block_' + Date.now(),
+                name: 'СУШКА (АРХІВ)',
+                startDate: this.data.startDate,
+                phases: this.data.phases,
+                schedule: this.data.schedule,
+                notes: this.data.notes || {}
+            }];
+            this.data.currentBlockId = this.data.blocks[0].id;
+        }
+        // --------------------------------
     },
 
-    // ДОДАНО
     saveTimer: null,
+
+    // НОВЕ: Синхронізація активного макроциклу перед збереженням
+    syncBlock() {
+        if (this.data && this.data.blocks && this.data.currentBlockId) {
+            let cur = this.data.blocks.find(b => b.id === this.data.currentBlockId);
+            if (cur) {
+                cur.startDate = this.data.startDate;
+                cur.phases = this.data.phases;
+                cur.schedule = this.data.schedule;
+                cur.notes = this.data.notes;
+            }
+        }
+    },
 
     save() { 
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => {
+            this.syncBlock(); // Зберігаємо поточний екран у пам'ять блоку
             this.stateManager.save(this.data); 
             this.saveTimer = null;
         }, 800);
@@ -855,6 +882,7 @@ const App = {
 
     // ДОДАНО: Екстрений запис
     forceSave() {
+        this.syncBlock();
         this.stateManager.save(this.data); 
     },
 
@@ -1130,6 +1158,23 @@ const App = {
         const oldWeekBar = document.querySelector('.week-bar');
         if (oldWeekBar) weekScrollPos = oldWeekBar.scrollLeft;
 
+        // Скролл-панель макроциклів
+        const blocksHtml = `
+        <div class="program-selector" style="display:flex; flex-wrap:nowrap; overflow-x:auto; gap:8px; margin-bottom: 15px; padding: 0 15px 5px 15px; -webkit-overflow-scrolling:touch;">
+            <style>.program-selector::-webkit-scrollbar { display: none; }</style>
+            ${this.data.blocks.map(b => `
+                <div class="prog-opt ${this.data.currentBlockId === b.id ? 'active' : ''}" 
+                     style="flex: 0 0 auto; white-space: nowrap; cursor:pointer; padding:8px 16px; border-radius:12px; font-weight:bold; font-size:0.85rem; transition:0.2s; ${this.data.currentBlockId === b.id ? 'background: rgba(212,175,55,0.15); border: 1px solid var(--primary); color: var(--primary);' : 'background: rgba(255,255,255,0.03); border: 1px solid #333; color: #888;'}"
+                     onclick="App.setBlock('${b.id}')" 
+                     ondblclick="App.renameBlock('${b.id}'); event.stopPropagation();">
+                    ${this.data.currentBlockId === b.id ? '🎯' : '📁'} ${b.name}
+                </div>
+            `).join('')}
+            <div class="prog-opt" onclick="App.addBlock()" style="flex: 0 0 auto; white-space: nowrap; cursor:pointer; padding:8px 16px; border-radius:12px; font-weight:bold; font-size:0.85rem; background: transparent; border: 1px dashed #555; color: #888;">
+                + НОВИЙ
+            </div>
+        </div>`;
+
         const ph = this.data.phases.find(x => x.id === this.state.phaseId);
         const wHtml = ph ? ph.weeks.map(w => `<div class="week-btn ${w === this.state.week ? 'active' : ''} ${this.photoKeys.has(w) ? 'has-data' : ''}" onclick="App.setWeek(${w})">${w}</div>`).join('') : '';
         const pasteToWeekHtml = (this.state.editing && this.pillBuffer) ? `
@@ -1242,6 +1287,7 @@ return `
         const statsHtml = this.getStatsHtml(this.state.week);
 
         const finalHtml = `
+            ${blocksHtml}
             <div class="stats-grid" id="stats-container">${statsHtml}</div>
             <div class="week-bar">${wHtml}</div>
             ${pasteToWeekHtml}
@@ -2635,6 +2681,70 @@ return `
             this.renderView(); 
         } 
     },
+    // --- НОВА ЛОГІКА МАКРОЦИКЛІВ ---
+    setBlock(id) {
+        if (this.data.currentBlockId === id) return;
+        this.syncBlock(); // Зберігаємо поточний стан
+        
+        const next = this.data.blocks.find(b => b.id === id);
+        if (next) {
+            this.data.currentBlockId = id;
+            this.data.startDate = next.startDate;
+            this.data.phases = next.phases;
+            this.data.schedule = next.schedule;
+            this.data.notes = next.notes || {};
+            
+            // Перераховуємо поточний тиждень відносно нової дати старту
+            const now = new Date();
+            const start = this.getMondayOfStartWeek();
+            const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+            let currentWeek = Math.floor(diffDays / 7) + 1; 
+            
+            const maxW = Math.max(...Object.keys(this.data.schedule).map(Number));
+            if (currentWeek < 1) currentWeek = 1;
+            if (currentWeek > maxW) currentWeek = maxW;
+            
+            this.state.week = currentWeek; 
+            const currentPhase = this.data.phases.find(p => p.weeks.includes(currentWeek));
+            if (currentPhase) this.state.phaseId = currentPhase.id;
+            else this.state.phaseId = this.data.phases[0]?.id || 1;
+            
+            this.save();
+            this.renderNav();
+            this.renderView();
+        }
+    },
+
+    async addBlock() {
+        const name = await Modal.prompt("Назва нового макроциклу:", "НОВИЙ", "");
+        if (name && name.trim() !== "") {
+            this.syncBlock();
+            const newId = 'block_' + Date.now();
+            
+            this.data.blocks.push({
+                id: newId,
+                name: name.trim().toUpperCase(),
+                startDate: new Date().toISOString().split('T')[0],
+                phases: [{ id: 1, title: "PHASE 1", weeks: [1] }],
+                schedule: { "1": [[],[],[],[],[],[],[]] },
+                notes: { "1": "" }
+            });
+            this.setBlock(newId);
+        }
+    },
+
+    async renameBlock(id) {
+        const block = this.data.blocks.find(b => b.id === id);
+        if (!block) return;
+        const val = await Modal.prompt("Нова назва:", "ПЕРЕЙМЕНУВАННЯ", block.name);
+        if (val !== null && val.trim() !== "") {
+            this.pushHistory();
+            block.name = val.trim().toUpperCase();
+            this.save();
+            this.renderView();
+        }
+    },
+    // --------------------------------
 
     setWeek(w) { 
         this.state.week = w; 
@@ -3024,3 +3134,52 @@ window.addEventListener('beforeunload', () => {
     }
 });
 document.addEventListener('DOMContentLoaded', () => App.init());
+
+// --- ТИМЧАСОВИЙ СКРИПТ МІГРАЦІЇ PHARM ---
+setTimeout(() => {
+    if (!App.data || !App.data.blocks) return;
+    
+    let massBlock = App.data.blocks.find(b => b.name === 'МАСОНАБІР');
+    if (!massBlock) {
+        // Зберігаємо те, що відкрито зараз
+        App.syncBlock();
+        
+        let oldBlock = App.data.blocks.find(b => b.id === App.data.currentBlockId);
+        oldBlock.name = 'СУШКА (АРХІВ)';
+        
+        // Створюємо новий блок
+        massBlock = {
+            id: 'mass_block_' + Date.now(),
+            name: 'МАСОНАБІР',
+            startDate: new Date(Date.now() - (5 * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+            phases: [{ id: 1, title: "PHASE 1", weeks: [] }],
+            schedule: {},
+            notes: {}
+        };
+        
+        // Міграція тижнів 13-18
+        const splitWeek = 13;
+        let newWeekNum = 1;
+        
+        for (let w = splitWeek; w <= 18; w++) {
+            if (oldBlock.schedule[w]) {
+                massBlock.schedule[newWeekNum] = JSON.parse(JSON.stringify(oldBlock.schedule[w]));
+                massBlock.notes[newWeekNum] = oldBlock.notes[w] || "";
+                massBlock.phases[0].weeks.push(newWeekNum);
+                
+                delete oldBlock.schedule[w];
+                delete oldBlock.notes[w];
+                newWeekNum++;
+            }
+        }
+        
+        // Очищаємо фази старого блоку
+        oldBlock.phases.forEach(p => { p.weeks = p.weeks.filter(w => w < splitWeek); });
+        oldBlock.phases = oldBlock.phases.filter(p => p.weeks.length > 0);
+        
+        App.data.blocks.push(massBlock);
+        App.setBlock(massBlock.id);
+        
+        alert('Фармакологію успішно розділено на 2 макроцикли! Видали цей скрипт.');
+    }
+}, 1500);
