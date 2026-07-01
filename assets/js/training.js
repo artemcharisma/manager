@@ -83,18 +83,33 @@ const App = {
         return new Date(d.setDate(diff));
     },
 
-    getCurrentWeekNum() {
-        if (!this.data.startDate) return 1;
+    // НОВЕ: Отримання поточного блоку (макроциклу)
+    getCurrentBlock() {
+        if (!this.data.blocks) return { startDate: this.data.startDate };
+        return this.data.blocks.find(b => b.id === (this.data.currentBlockId || this.data.currentProgram)) || this.data.blocks[0] || { startDate: this.data.startDate };
+    },
+
+    getMondayOfStartWeek(blockId = null) {
+        const block = blockId ? (this.data.blocks?.find(b => b.id === blockId) || this.getCurrentBlock()) : this.getCurrentBlock();
+        const d = new Date(block.startDate || this.data.startDate || new Date().toISOString().split('T')[0]);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    },
+
+    getCurrentWeekNum(blockId = null) {
+        const block = blockId ? (this.data.blocks?.find(b => b.id === blockId) || this.getCurrentBlock()) : this.getCurrentBlock();
+        if (!block.startDate) return 1;
         const now = new Date();
-        const start = this.getMondayOfStartWeek();
+        const start = this.getMondayOfStartWeek(block.id);
         const diffTime = now.getTime() - start.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         const w = Math.floor(diffDays / 7) + 1;
         return w > 0 ? w : 1;
     },
-    getRealDateObj(weekNum, dayIndex) {
-        if (!this.data.startDate) return new Date();
-        const monday = this.getMondayOfStartWeek();
+    
+    getRealDateObj(weekNum, dayIndex, blockId = null) {
+        const monday = this.getMondayOfStartWeek(blockId);
         monday.setDate(monday.getDate() + ((weekNum - 1) * 7) + dayIndex);
         return monday;
     },
@@ -114,9 +129,16 @@ const App = {
     changeStartDate(val) {
         if (!val) return;
         this.pushHistory();
-        this.data.startDate = val;
+        const block = this.getCurrentBlock();
+        if (block.id) {
+            block.startDate = val;
+        } else {
+            this.data.startDate = val; // Резерв для старих даних
+        }
         this.save();
         this.render();
+        const dateInput = document.querySelector('input[type="date"]');
+        if(dateInput) dateInput.value = val;
     },
     buildIndex() {
         this.historyIndex = {};
@@ -163,6 +185,32 @@ const App = {
     async init() {
         this.data = await this.state.init();
         if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
+
+        // --- МІГРАЦІЯ НА МАКРОЦИКЛИ (BLOCKS) ---
+        if (!this.data.blocks) {
+            this.data.blocks = [];
+            const hasBalanced = this.data.weeks?.some(w => w.prog === 'balanced');
+            const hasArms = this.data.weeks?.some(w => w.prog === 'arms');
+
+            if (hasBalanced || (!hasBalanced && !hasArms)) {
+                this.data.blocks.push({
+                    id: 'balanced',
+                    name: this.data.customNames?.balanced || 'Сушка (Архів)',
+                    startDate: this.data.startDate
+                });
+            }
+            if (hasArms) {
+                this.data.blocks.push({
+                    id: 'arms',
+                    name: this.data.customNames?.arms || 'Масонабір (Поточний)',
+                    startDate: this.data.startDate 
+                });
+            }
+        }
+        if (!this.data.currentBlockId) {
+            this.data.currentBlockId = this.data.currentProgram || (this.data.blocks[0] ? this.data.blocks[0].id : 'balanced');
+        }
+        // ----------------------------------------
 
         if(!this.data.targets) this.data.targets = JSON.parse(JSON.stringify(InitialData.targets));
         if(!this.data.guidelines) this.data.guidelines = JSON.parse(JSON.stringify(InitialData.guidelines));
@@ -577,30 +625,34 @@ const App = {
         const c = document.getElementById('scheduleList');
         const nav = document.getElementById('weekNav');
         const isEd = document.body.classList.contains('editing');
-        const prog = this.data.currentProgram;
-
-        const nameBal = this.data.customNames ? this.data.customNames.balanced : "ЗБАЛАНСОВАНА";
-        const nameArms = this.data.customNames ? this.data.customNames.arms : "РУКИ";
+        const currentBlockId = this.data.currentBlockId || this.data.currentProgram;
+        const currentBlock = this.getCurrentBlock();
+        const prog = currentBlockId; // Для сумісності з нижнім кодом
 
         const progSel = document.querySelector('.program-selector');
         if (progSel) {
-            progSel.innerHTML = `
-                <div class="prog-opt ${prog === 'balanced' ? 'active' : ''}" 
-                     onclick="App.setProgram('balanced')" 
-                     ondblclick="App.renameProgram('balanced'); event.stopPropagation();">
-                    ⚖️ ${nameBal}
+            progSel.innerHTML = this.data.blocks.map(b => `
+                <div class="prog-opt ${currentBlockId === b.id ? 'active' : ''}" 
+                     onclick="App.setProgram('${b.id}')" 
+                     ondblclick="App.renameProgram('${b.id}'); event.stopPropagation();">
+                    ${currentBlockId === b.id ? '🎯' : '📁'} ${b.name}
                 </div>
-                <div class="prog-opt ${prog === 'arms' ? 'active' : ''}" 
-                     onclick="App.setProgram('arms')" 
-                     ondblclick="App.renameProgram('arms'); event.stopPropagation();">
-                    💪 ${nameArms}
-                </div>
-            `;
+            `).join('') + `
+            <div class="prog-opt" onclick="App.addBlock()" style="background: transparent; border: 1px dashed #444; color: #888;">
+                + НОВИЙ
+            </div>`;
         }
 
-        const filteredWeeks = this.data.weeks.filter(w => w.prog === prog);
+        // Оновлюємо дату старту в інпуті вгорі сторінки
+        const dateInput = document.querySelector('input[type="date"]');
+        if (dateInput) {
+            dateInput.value = currentBlock.startDate || this.data.startDate;
+            dateInput.onchange = (e) => App.changeStartDate(e.target.value);
+        }
 
-        const currentRealWeek = this.getCurrentWeekNum(); // Отримуємо реальний поточний тиждень
+        const filteredWeeks = this.data.weeks.filter(w => w.prog === currentBlockId);
+
+        const currentRealWeek = this.getCurrentWeekNum(currentBlockId); // Відлік від дати ЦЬОГО блоку
 
         nav.innerHTML = filteredWeeks.map((w) => {
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
@@ -951,16 +1003,17 @@ const realDate = this.getRealDate(week.num, dIdx);
         if(fab) fab.classList.add('visible');
     },
 
-    setProgram(prog) {
-        this.data.currentProgram = prog;
-        this.setTheme(prog);
+    setProgram(blockId) {
+        this.data.currentBlockId = blockId;
+        this.data.currentProgram = blockId; // Для зворотної сумісності з історією
+        this.setTheme(blockId);
         this.save();
         this.render();
         this.scrollToCurrentWeek();
     },
 
     setTheme(prog) {
-        document.body.className = `prog-${prog}`;
+        document.body.className = `prog-balanced`; // Залишаємо базову тему для стабільності стилів
     },
     
     getRealIndex(weekObj) {
@@ -1360,15 +1413,36 @@ const realDate = this.getRealDate(week.num, dIdx);
         }
     },
 
-    async renameProgram(key) {
-        const currentName = this.data.customNames[key] || (key === 'balanced' ? "ЗБАЛАНСОВАНА" : "РУКИ");
-        const val = await Modal.prompt("Введіть нову назву для цієї вкладки:", "ПЕРЕЙМЕНУВАННЯ", currentName);
+    async renameProgram(blockId) {
+        const block = this.data.blocks.find(b => b.id === blockId);
+        if (!block) return;
         
+        const val = await Modal.prompt("Введіть нову назву для цього макроциклу:", "ПЕРЕЙМЕНУВАННЯ", block.name);
         if (val !== null && val.trim() !== "") {
             this.pushHistory();
-            this.data.customNames[key] = val.trim().toUpperCase();
+            block.name = val.trim().toUpperCase();
+            if (this.data.customNames) this.data.customNames[blockId] = block.name;
             this.save();
             this.render();
+        }
+    },
+
+    async addBlock() {
+        const name = await Modal.prompt("Назва нового макроциклу (напр. 'Масонабір 2026'):", "НОВИЙ МАКРОЦИКЛ", "");
+        if (name && name.trim() !== "") {
+            this.pushHistory();
+            const newId = 'block_' + Date.now();
+            this.data.blocks.push({
+                id: newId,
+                name: name.trim().toUpperCase(),
+                startDate: new Date().toISOString().split('T')[0] // Стартує сьогодні
+            });
+            
+            // Створюємо порожній довідник для цього блоку
+            if (!this.data.guidelines[newId]) {
+                this.data.guidelines[newId] = { mass: [], cut: [] };
+            }
+            this.setProgram(newId);
         }
     },
 
@@ -1402,7 +1476,8 @@ const realDate = this.getRealDate(week.num, dIdx);
                     });
                 });
             } else {
-                newData = JSON.parse(JSON.stringify(Templates[prog][type]));
+                const templateSource = Templates[prog] ? Templates[prog][type] : Templates['balanced'][type];
+newData = JSON.parse(JSON.stringify(templateSource));
             }
             
             const w = { id: Date.now(), type, prog, num: newWeekNum, days: newData };
