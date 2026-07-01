@@ -3135,51 +3135,48 @@ window.addEventListener('beforeunload', () => {
 });
 document.addEventListener('DOMContentLoaded', () => App.init());
 
-// --- ТИМЧАСОВИЙ СКРИПТ МІГРАЦІЇ PHARM ---
+// --- ТИМЧАСОВИЙ СКРИПТ ОЧИЩЕННЯ ПРИВИДІВ ---
 setTimeout(() => {
     if (!App.data || !App.data.blocks) return;
     
-    let massBlock = App.data.blocks.find(b => b.name === 'МАСОНАБІР');
-    if (!massBlock) {
-        // Зберігаємо те, що відкрито зараз
-        App.syncBlock();
-        
-        let oldBlock = App.data.blocks.find(b => b.id === App.data.currentBlockId);
-        oldBlock.name = 'СУШКА (АРХІВ)';
-        
-        // Створюємо новий блок
-        massBlock = {
-            id: 'mass_block_' + Date.now(),
-            name: 'МАСОНАБІР',
-            startDate: new Date(Date.now() - (5 * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-            phases: [{ id: 1, title: "PHASE 1", weeks: [] }],
-            schedule: {},
-            notes: {}
-        };
-        
-        // Міграція тижнів 13-18
-        const splitWeek = 13;
-        let newWeekNum = 1;
-        
-        for (let w = splitWeek; w <= 18; w++) {
-            if (oldBlock.schedule[w]) {
-                massBlock.schedule[newWeekNum] = JSON.parse(JSON.stringify(oldBlock.schedule[w]));
-                massBlock.notes[newWeekNum] = oldBlock.notes[w] || "";
-                massBlock.phases[0].weeks.push(newWeekNum);
-                
-                delete oldBlock.schedule[w];
-                delete oldBlock.notes[w];
-                newWeekNum++;
+    let modified = false;
+    
+    // Синхронізуємо поточний стан перед перевіркою
+    if (typeof App.syncBlock === 'function') App.syncBlock();
+    
+    App.data.blocks.forEach(block => {
+        if (block.phases && block.schedule) {
+            const activeWeeks = new Set();
+            block.phases.forEach(p => p.weeks.forEach(w => activeWeeks.add(Number(w))));
+            
+            Object.keys(block.schedule).forEach(w => {
+                if (!activeWeeks.has(Number(w))) {
+                    delete block.schedule[w];
+                    modified = true;
+                }
+            });
+            
+            if (block.notes) {
+                Object.keys(block.notes).forEach(w => {
+                    if (!activeWeeks.has(Number(w))) {
+                        delete block.notes[w];
+                        modified = true;
+                    }
+                });
             }
         }
-        
-        // Очищаємо фази старого блоку
-        oldBlock.phases.forEach(p => { p.weeks = p.weeks.filter(w => w < splitWeek); });
-        oldBlock.phases = oldBlock.phases.filter(p => p.weeks.length > 0);
-        
-        App.data.blocks.push(massBlock);
-        App.setBlock(massBlock.id);
-        
-        alert('Фармакологію успішно розділено на 2 макроцикли! Видали цей скрипт.');
+    });
+    
+    if (modified) {
+        // Оновлюємо активні змінні
+        const curBlock = App.data.blocks.find(b => b.id === App.data.currentBlockId);
+        if (curBlock) {
+            App.data.schedule = curBlock.schedule;
+            App.data.notes = curBlock.notes;
+        }
+        App.save();
+        App.renderView();
+        alert('Базу очищено від порожніх тижнів (хвостів)! Тепер максимум розраховується правильно.');
     }
 }, 1500);
+// --- КІНЕЦЬ ТИМЧАСОВОГО СКРИПТУ ---
