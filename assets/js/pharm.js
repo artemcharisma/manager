@@ -605,10 +605,16 @@ const App = {
         document.getElementById('pillMeta').value = '';
         
         const freqSelect = document.getElementById('pillFreq');
-        if (freqSelect) freqSelect.value = 'once';
+        if (freqSelect) {
+            freqSelect.value = 'once';
+            // ВБИВАЄМО E3D З ІНТЕРФЕЙСУ НАЗАВЖДИ
+            const e3dOpt = freqSelect.querySelector('option[value="e3d"]');
+            if (e3dOpt) e3dOpt.remove();
+        }
         
         document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
-        document.querySelector('.color-opt').classList.add('selected'); 
+        const firstColor = document.querySelector('.color-opt');
+        if(firstColor) firstColor.classList.add('selected'); 
         
         this.closeCustomDropdown(); 
         this.updateSuggestions();
@@ -2064,9 +2070,9 @@ return `
             });
         } 
         else {
-            let step = 1; 
+            let step = 1; // За замовчуванням "Кожен день" (якщо є 'ed')
             if (freq === 'eod') step = 2; 
-            if (freq === 'e3d') step = 3; 
+            // Рядок з E3D повністю ЗНИЩЕНО
             
             const lastW = Math.max(...phase.weeks);
             let curW = startW;
@@ -2848,45 +2854,10 @@ return `
         const lastWeek = phase.weeks[phase.weeks.length - 1]; 
         const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
         
-        // ФІКС: Глибоке копіювання останнього тижня
-        const copyOfLastWeek = JSON.parse(JSON.stringify(this.data.schedule[lastWeek]));
-        
-        // ФІКС: Очищаємо всі галочки "done" для нового тижня, щоб не було привидів минулих ін'єкцій!
-        copyOfLastWeek.forEach(day => day.forEach(p => delete p.done));
-        
-        // Зсуваємо розклад і нотатки ВПЕРЕД з розривом посилань
-        for(let w = maxW; w > lastWeek; w--) { 
-            this.data.schedule[w+1] = JSON.parse(JSON.stringify(this.data.schedule[w])); 
-            this.data.notes[w+1] = this.data.notes[w]; 
-        } 
-        
-        this.data.schedule[lastWeek + 1] = copyOfLastWeek;
-        this.data.notes[lastWeek + 1] = ""; 
-        
-        await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
-        phase.weeks.push(lastWeek + 1); 
-        
-        for(let i = pIdx + 1; i < this.data.phases.length; i++) {
-            this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + 1);
-        }
-        
-        this.save(); 
-        this.refreshPhotos(); 
-        this.renderNav(); 
-        this.renderView(); 
-    },
-async addPhaseWeek(pId) { 
-        this.pushHistory(); 
-        const pIdx = this.data.phases.findIndex(p => p.id === pId); 
-        const phase = this.data.phases[pIdx]; 
-        const lastWeek = phase.weeks[phase.weeks.length - 1]; 
-        const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
-        
-        // --- НОВА РОЗУМНА ЛОГІКА ПРОДОВЖЕННЯ ТИЖНЯ (АВТО-КРОК) ---
         const newWeekSchedule = [[],[],[],[],[],[],[]];
         const activePills = {}; 
 
-        // 1. Знаходимо всі унікальні препарати з останнього тижня
+        // Знаходимо всі унікальні препарати з останнього тижня
         if (this.data.schedule[lastWeek]) {
             for (let d = 0; d < 7; d++) {
                 this.data.schedule[lastWeek][d].forEach(p => {
@@ -2896,57 +2867,57 @@ async addPhaseWeek(pId) {
             }
         }
 
-        // 2. Шукаємо інтервал (крок) для кожного препарату, скануючи історію
         Object.keys(activePills).forEach(key => {
             const basePill = { ...activePills[key] };
-            delete basePill.done; // Знімаємо галочку "випито"
+            delete basePill.done; 
 
-            let occurrences = [];
-            const weeksToScan = phase.weeks.slice(-3); // Шукаємо патерн у межах останніх 3 тижнів
-            
-            for (let i = weeksToScan.length - 1; i >= 0; i--) {
-                let w = weeksToScan[i];
-                for (let d = 6; d >= 0; d--) {
-                    if (this.data.schedule[w] && this.data.schedule[w][d]) {
-                        const found = this.data.schedule[w][d].find(p => p.name.trim().toLowerCase() === key);
-                        if (found) {
-                            occurrences.push({ w, d, absDay: w * 7 + d });
-                            if (occurrences.length >= 2) break; // Нам потрібні лише 2 останні прийоми, щоб вирахувати крок
+            // Скануємо історію за останні 2 тижні для точного визначення патерну
+            let historyDays = [];
+            for (let w = lastWeek - 1; w <= lastWeek; w++) {
+                if (w > 0 && this.data.schedule[w]) {
+                    for (let d = 0; d < 7; d++) {
+                        if (this.data.schedule[w][d].find(p => p.name.trim().toLowerCase() === key)) {
+                            historyDays.push(w * 7 + d);
                         }
                     }
                 }
-                if (occurrences.length >= 2) break;
             }
-
-            if (occurrences.length === 0) return;
 
             const newWeekNum = lastWeek + 1;
 
-            if (occurrences.length === 1) {
-                // Якщо препарат був лише 1 раз, копіюємо в той самий день
-                newWeekSchedule[occurrences[0].d].push(basePill);
-            } else {
-                // Вираховуємо інтервал між двома останніми прийомами
-                const step = occurrences[0].absDay - occurrences[1].absDay;
-                
-                if (step > 0 && step <= 7) {
-                    // Математично проєктуємо прийом у новий тиждень (ідеально для EOD, E3D)
-                    let nextAbs = occurrences[0].absDay + step;
-                    while (nextAbs < newWeekNum * 7 + 7) {
-                        if (nextAbs >= newWeekNum * 7) {
-                            const targetDay = nextAbs - (newWeekNum * 7);
-                            newWeekSchedule[targetDay].push({ ...basePill });
-                        }
-                        nextAbs += step;
+            // ДЕТЕКТОР СТРОГОГО EOD (мінімум 2 прийоми, і всі інтервали рівно 2 дні)
+            let isStrictEOD = false;
+            if (historyDays.length >= 2) {
+                isStrictEOD = true;
+                for (let i = 1; i < historyDays.length; i++) {
+                    if (historyDays[i] - historyDays[i-1] !== 2) {
+                        isStrictEOD = false;
+                        break;
                     }
-                } else {
-                    // Якщо крок занадто великий або хаотичний, просто залишаємо в той самий день
-                    newWeekSchedule[occurrences[0].d].push(basePill);
+                }
+            }
+
+            if (isStrictEOD) {
+                // Це EOD - математично продовжуємо зсув
+                let nextAbs = historyDays[historyDays.length - 1] + 2;
+                while (nextAbs < newWeekNum * 7 + 7) {
+                    if (nextAbs >= newWeekNum * 7) {
+                        const targetDay = nextAbs - (newWeekNum * 7);
+                        newWeekSchedule[targetDay].push({ ...basePill });
+                    }
+                    nextAbs += 2;
+                }
+            } else {
+                // ДЛЯ ВСІХ ІНШИХ (Пн/Чт та інше) - КОПІЮЄМО ТОЧНО ЯК БУЛО БЕЗ ЗСУВУ
+                for (let d = 0; d < 7; d++) {
+                    if (this.data.schedule[lastWeek][d] && this.data.schedule[lastWeek][d].find(p => p.name.trim().toLowerCase() === key)) {
+                        newWeekSchedule[d].push({ ...basePill });
+                    }
                 }
             }
         });
 
-        // Зсуваємо розклад і нотатки ВПЕРЕД
+        // Зсув розкладу вперед
         for(let w = maxW; w > lastWeek; w--) { 
             this.data.schedule[w+1] = JSON.parse(JSON.stringify(this.data.schedule[w])); 
             this.data.notes[w+1] = this.data.notes[w]; 
@@ -2954,7 +2925,6 @@ async addPhaseWeek(pId) {
         
         this.data.schedule[lastWeek + 1] = newWeekSchedule;
         this.data.notes[lastWeek + 1] = ""; 
-        // --------------------------------------------------------
         
         await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
         phase.weeks.push(lastWeek + 1); 
