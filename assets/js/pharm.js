@@ -260,10 +260,6 @@ const App = {
         document.getElementById('fileInput').click();
     },
 
-    // =========================================================================
-    // --- УНІВЕРСАЛЬНИЙ ФОТО-ХАБ ---
-    // =========================================================================
-    
     viewerState: { isCompare: false, leftWeek: null, rightWeek: null, singleIdx: 0, photosSingle: [], photosLeft: [], photosRight: [] },
 
     async openPhotoModal(week, idx) {
@@ -271,7 +267,7 @@ const App = {
         let modal = document.getElementById('customPhotoModal');
         if(!modal) return;
 
-        // Динамічний апгрейд UI для Спліт-режиму (без втручання в HTML-файл)
+        // Динамічний апгрейд UI для Спліт-режиму (додано стрілки ❮ та ❯)
         if (!modal.dataset.upgraded) {
             modal.innerHTML = `
                 <div style="position:absolute; top:20px; right:20px; z-index:1000; display:flex; gap:12px; align-items:center;">
@@ -279,12 +275,18 @@ const App = {
                     <div class="sys-close" onclick="App.closePhotoModal()" style="background:rgba(0,0,0,0.6); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; border:1px solid rgba(255,255,255,0.2); cursor:pointer; font-size:1.2rem; backdrop-filter:blur(5px);">✕</div>
                 </div>
                 
+                <!-- ОДИНОЧНИЙ РЕЖИМ -->
                 <div id="photoViewSingle" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
                     <div id="photoWeekSelectorSingle" style="position:absolute; top:25px; left:25px; z-index:100;"></div>
-                    <!-- Залишаємо старий ID для сумісності з зум-жестами -->
+                    
+                    <div id="photoNavLeft" onclick="App.navViewerPose(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:100; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8);">❮</div>
+                    
                     <img id="customPhotoImg" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">
+                    
+                    <div id="photoNavRight" onclick="App.navViewerPose(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:100; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8);">❯</div>
                 </div>
 
+                <!-- РЕЖИМ ПОРІВНЯННЯ -->
                 <div id="photoViewCompare" style="width:100%; height:100%; display:none; flex-direction:row; align-items:center; justify-content:center; gap:2px; background:#000;">
                     <div style="flex:1; height:100%; position:relative; border-right:2px solid #222; display:flex; flex-direction:column; justify-content:center;">
                         <div id="photoWeekSelectorLeft" style="position:absolute; top:25px; left:50%; transform:translateX(-50%); z-index:100; background:rgba(0,0,0,0.7); border:1px solid #444; border-radius:12px; padding:2px 10px;"></div>
@@ -304,15 +306,19 @@ const App = {
         this.viewerState.isCompare = false;
         this.viewerState.leftWeek = Number(week);
         
-        // Знаходимо найперший тиждень для правого екрану порівняння за замовчуванням
+        // Знаходимо найперший тиждень для правого екрану порівняння
         const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
         this.viewerState.rightWeek = keys.length > 0 ? keys[0] : Number(week);
         this.viewerState.singleIdx = Number(idx);
 
-        // Активуємо жести тільки для одиночного режиму
         const img = document.getElementById('customPhotoImg');
         this.state.photoModalScale = 1;
         this.state.photoModalTranslate = { x: 0, y: 0 };
+        this.state.photoModalIsZooming = false;
+        this.state.photoModalIsPanning = false;
+        img.style.touchAction = 'none';
+
+        // Ініціалізуємо жести тільки для одиночного режиму
         this.initPhotoGestures(modal, img);
 
         modal.classList.add('active');
@@ -325,7 +331,7 @@ const App = {
         if (this.viewerState.isCompare) {
             btn.style.background = 'var(--gold)';
             btn.style.color = '#000';
-            // В режимі порівняння скидаємо зум
+            // Скидаємо зум при переході в порівняння
             this.state.photoModalScale = 1;
             this.state.photoModalTranslate = { x: 0, y: 0 };
             this.updatePhotoTransform();
@@ -357,7 +363,18 @@ const App = {
             if (this.viewerState.singleIdx >= this.viewerState.photosSingle.length) {
                 this.viewerState.singleIdx = Math.max(0, this.viewerState.photosSingle.length - 1);
             }
-            document.getElementById('customPhotoImg').src = this.viewerState.photosSingle.length > 0 ? this.viewerState.photosSingle[this.viewerState.singleIdx].data : '';
+            
+            const img = document.getElementById('customPhotoImg');
+            if (this.viewerState.photosSingle.length > 0) {
+                img.src = this.viewerState.photosSingle[this.viewerState.singleIdx].data;
+            } else {
+                img.src = '';
+            }
+            
+            img.onload = () => {
+                this.calculatePhotoBoundary(img);
+                this.updatePhotoTransform();
+            };
         }
         
         this.updateViewerUI();
@@ -365,25 +382,46 @@ const App = {
 
     updateViewerUI() {
         const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
+        
+        // Оновлюємо стрілки (тільки в одиночному режимі)
+        if (!this.viewerState.isCompare) {
+            const leftBtn = document.getElementById('photoNavLeft');
+            const rightBtn = document.getElementById('photoNavRight');
+            if (leftBtn) leftBtn.style.display = this.viewerState.singleIdx > 0 ? 'block' : 'none';
+            if (rightBtn) rightBtn.style.display = this.viewerState.singleIdx < this.viewerState.photosSingle.length - 1 ? 'block' : 'none';
+        }
+
         if (keys.length === 0) return;
 
         const buildSelect = (currentVal, onChangeAction) => `
             <select style="background: transparent; color: var(--gold); border: none; font-size: 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer; text-align: center; text-transform: uppercase;" onchange="${onChangeAction}" ontouchstart="event.stopPropagation()">
                 ${keys.map(k => `<option value="${k}" style="color: #000; background: #fff;" ${k === currentVal ? 'selected' : ''}>W${k}</option>`).join('')}
             </select>
-            <div style="position: absolute; right: 0; top:50%; transform:translateY(-50%); pointer-events: none; font-size: 0.6rem; color: var(--gold);">▼</div>
+            <div style="position: absolute; right: -10px; top:50%; transform:translateY(-50%); pointer-events: none; font-size: 0.6rem; color: var(--gold);">▼</div>
         `;
 
         if (this.viewerState.isCompare) {
             document.getElementById('photoWeekSelectorLeft').innerHTML = buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "left")');
             document.getElementById('photoWeekSelectorRight').innerHTML = buildSelect(this.viewerState.rightWeek, 'App.changeViewerWeek(parseInt(this.value), "right")');
         } else {
-            document.getElementById('photoWeekSelectorSingle').innerHTML = `
-                <div style="position:relative; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:12px; padding:6px 20px 6px 15px; display:inline-block; backdrop-filter:blur(5px);">
-                    ${buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "single")')}
-                </div>
-            `;
+            const selectorSingle = document.getElementById('photoWeekSelectorSingle');
+            if(selectorSingle) {
+                selectorSingle.innerHTML = `
+                    <div style="position:relative; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:12px; padding:6px 20px 6px 15px; display:inline-block; backdrop-filter:blur(5px);">
+                        ${buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "single")')}
+                    </div>
+                `;
+            }
         }
+    },
+
+    navViewerPose(dir) {
+        if (this.viewerState.isCompare) return;
+        this.viewerState.singleIdx += dir;
+        this.state.photoModalScale = 1;
+        this.state.photoModalTranslate = { x: 0, y: 0 };
+        this.updatePhotoTransform();
+        this.loadViewerData();
     },
 
     changeViewerWeek(newWeek, target) {
