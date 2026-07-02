@@ -2134,8 +2134,8 @@ newData = JSON.parse(JSON.stringify(templateSource));
             this.showToast(`ℹ️ Усі вправи з розкладу вже є у довіднику`, '#3b82f6');
         }
     },
-    async copyGuideFromOther(targetP, targetM) {
-        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333;">`;
+        async copyGuideFromOther(targetP, targetM) {
+        let menuHtml = `<div style="text-align:left; font-size:0.85rem; color:#aaa; line-height:1.6; background:#000; padding:10px; border-radius:8px; border:1px solid #333; max-height:250px; overflow-y:auto;">`;
         
         const options = [];
         let idx = 1;
@@ -2145,8 +2145,10 @@ newData = JSON.parse(JSON.stringify(templateSource));
             Object.keys(this.data.guidelines[progKey]).forEach(modeKey => {
                 if (progKey === targetP && modeKey === targetM) return; // Пропускаємо поточний, щоб не скопіювати сам в себе
                 
-                const progName = this.data.customNames[progKey] || (progKey === 'balanced' ? "ЗБАЛАНСОВАНА" : "РУКИ");
-                const modeName = modeKey.toUpperCase();
+                // ФІКС ДЛЯ МАКРОЦИКЛІВ: Правильно визначаємо імена блоків
+                const block = this.data.blocks ? this.data.blocks.find(b => b.id === progKey) : null;
+                const progName = block ? block.name : (this.data.customNames?.[progKey] || progKey);
+                const modeName = modeKey.toUpperCase() === 'MASS' ? 'МАСА' : 'СУШКА';
                 
                 options.push({ p: progKey, m: modeKey });
                 menuHtml += `<div style="display:flex; align-items:flex-start; margin-bottom:8px;">
@@ -2174,8 +2176,18 @@ newData = JSON.parse(JSON.stringify(templateSource));
         
         this.pushHistory();
         const sourceList = this.data.guidelines[source.p][source.m] || [];
-        // Робимо глибоку копію, щоб уникнути посилань на один і той же масив
+        
+        // Робимо глибоку копію довідника
         this.data.guidelines[targetP][targetM] = JSON.parse(JSON.stringify(sourceList));
+        
+        // Також копіюємо "Глобальні правила" макроциклу, якщо вони були
+        if (this.data.globalRules) {
+            const sourceRule = this.data.globalRules[`${source.p}_${source.m}`];
+            if (sourceRule) {
+                this.data.globalRules[`${targetP}_${targetM}`] = sourceRule;
+            }
+        }
+        
         this.save();
         
         // Очищаємо пошук після імпорту
@@ -2183,8 +2195,9 @@ newData = JSON.parse(JSON.stringify(templateSource));
         if (searchBox) searchBox.value = '';
         
         this.renderGuide();
-        this.showToast(`✅ Базу "${source.p.toUpperCase()} ${source.m.toUpperCase()}" успішно імпортовано!`, "var(--success)");
+        this.showToast(`✅ Базу успішно імпортовано!`, "var(--success)");
     },
+
     renderStats(forceIndex = null) {
         const allWeeks = this.data.weeks.map((w, idx) => ({ ...w, realIndex: idx }));
 
