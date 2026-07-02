@@ -318,10 +318,11 @@ const App = {
         this.state.photoModalIsPanning = false;
         img.style.touchAction = 'none';
 
+        modal.classList.add('active');
+
         // Ініціалізуємо жести тільки для одиночного режиму
         this.initPhotoGestures(modal, img);
 
-        modal.classList.add('active');
         await this.loadViewerData();
     },
 
