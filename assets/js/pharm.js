@@ -8,46 +8,62 @@ const PhotoDB = {
                 r();
                 return;
             }
-            
             const req = indexedDB.open("GoldProtocolDB", 1);
-            
             req.onupgradeneeded = (e) => { 
                 const db = e.target.result;
                 if(!db.objectStoreNames.contains("photos")) 
                     db.createObjectStore("photos", { keyPath: "id", autoIncrement: true }); 
             };
-            
             req.onsuccess = (e) => { this.db = e.target.result; r(); };
-            
-            req.onerror = (e) => { 
-                console.error("IndexedDB error:", e.target.error); 
-                r(); 
-            };
-            
-            req.onblocked = () => {
-                alert("Будь ласка, закрийте інші вкладки з цією програмою для оновлення бази даних.");
-            }
+            req.onerror = (e) => { console.error("IndexedDB error:", e.target.error); r(); };
+            req.onblocked = () => { alert("Будь ласка, закрийте інші вкладки з цією програмою."); }
         });
     },
-    add(week, file) {
-        return new Promise((r) => {
-            if(!this.db) { r(); return; }
-            const reader = new FileReader();
-            reader.onload = () => { 
-                this.db.transaction(["photos"], "readwrite").objectStore("photos").add({ week: week, data: reader.result });
-                r(); 
+    // АВТОМІГРАЦІЯ СТАРИХ ФОТО ПІД МАКРОЦИКЛИ
+    async migrateToBlocks(appData) {
+        return new Promise((resolve) => {
+            if (!this.db || !appData || !appData.blocks) return resolve();
+            const tx = this.db.transaction(["photos"], "readwrite");
+            const store = tx.objectStore("photos");
+            const req = store.openCursor();
+            const updates = [];
+            req.onsuccess = (e) => {
+                const c = e.target.result;
+                if (c) {
+                    let val = c.value;
+                    if (!val.blockId) {
+                        if (val.week >= 13) {
+                            const massBlock = appData.blocks.find(b => b.name === 'МАСОНАБІР');
+                            val.blockId = massBlock ? massBlock.id : appData.currentBlockId;
+                            val.week = val.week - 12; 
+                        } else {
+                            const cutBlock = appData.blocks.find(b => b.name === 'СУШКА (АРХІВ)') || appData.blocks[0];
+                            val.blockId = cutBlock ? cutBlock.id : appData.currentBlockId;
+                        }
+                        updates.push(val);
+                    }
+                    c.continue();
+                } else {
+                    if (updates.length > 0) {
+                        const putTx = this.db.transaction(["photos"], "readwrite");
+                        const putStore = putTx.objectStore("photos");
+                        updates.forEach(u => putStore.put(u));
+                        putTx.oncomplete = () => resolve();
+                    } else {
+                        resolve();
+                    }
+                }
             };
-            reader.readAsDataURL(file);
         });
     },
-    get(week) {
+    get(blockId, week) {
         return new Promise((r) => {
             if(!this.db) { r([]); return; }
             const res = [];
             this.db.transaction(["photos"], "readonly").objectStore("photos").openCursor().onsuccess = (e) => {
                 const c = e.target.result;
                 if(c) { 
-                    if(c.value.week === week) res.push({...c.value, id:c.key}); 
+                    if(c.value.blockId === blockId && c.value.week === week) res.push({...c.value, id:c.key}); 
                     c.continue(); 
                 } else r(res);
             };
@@ -59,7 +75,7 @@ const PhotoDB = {
             this.db.transaction(["photos"], "readwrite").objectStore("photos").delete(id).onsuccess = () => r(); 
         });
     },
-    shiftWeeks(fromWeek, offset) {
+    shiftWeeks(blockId, fromWeek, offset) {
         return new Promise(async (resolve) => {
             if(!this.db) { resolve(); return; }
             const tx = this.db.transaction(["photos"], "readwrite");
@@ -69,25 +85,28 @@ const PhotoDB = {
             req.onsuccess = (e) => {
                 const c = e.target.result;
                 if(c) { 
-                    if(c.value.week >= fromWeek) updates.push({ oldKey: c.key, val: c.value }); 
+                    if(c.value.blockId === blockId && c.value.week >= fromWeek) updates.push({ oldKey: c.key, val: c.value }); 
                     c.continue(); 
                 } else {
                     updates.forEach(u => { 
                         store.delete(u.oldKey); 
-                        if(u.val.week + offset > 0) store.add({ week: u.val.week + offset, data: u.val.data }); 
+                        if(u.val.week + offset > 0) store.add({ blockId: blockId, week: u.val.week + offset, data: u.val.data }); 
                     });
                     resolve();
                 }
             };
         });
     },
-    keys() {
+    keys(blockId) {
         return new Promise((r) => {
             if(!this.db) { r(new Set()); return; }
             const k = new Set();
             this.db.transaction(["photos"], "readonly").objectStore("photos").openCursor().onsuccess = (e) => {
                 const c = e.target.result;
-                if(c) { k.add(c.value.week); c.continue(); } else r(k);
+                if(c) { 
+                    if(c.value.blockId === blockId) k.add(c.value.week); 
+                    c.continue(); 
+                } else r(k);
             };
         });
     }
@@ -245,94 +264,139 @@ const App = {
     // --- УНІВЕРСАЛЬНИЙ ФОТО-ХАБ ---
     // =========================================================================
     
-    viewerState: { week: null, idx: 0, photos: [] },
+    viewerState: { isCompare: false, leftWeek: null, rightWeek: null, singleIdx: 0, photosSingle: [], photosLeft: [], photosRight: [] },
 
     async openPhotoModal(week, idx) {
         this.lockScroll();
-        
         let modal = document.getElementById('customPhotoModal');
-        let img = document.getElementById('customPhotoImg');
-        if(!modal || !img) return;
+        if(!modal) return;
 
+        // Динамічний апгрейд UI для Спліт-режиму (без втручання в HTML-файл)
+        if (!modal.dataset.upgraded) {
+            modal.innerHTML = `
+                <div style="position:absolute; top:20px; right:20px; z-index:1000; display:flex; gap:12px; align-items:center;">
+                    <button id="btnToggleCompare" style="background:rgba(212,175,55,0.15); border:1px solid var(--gold); color:var(--gold); padding:8px 16px; border-radius:12px; font-weight:800; font-family:'JetBrains Mono'; cursor:pointer; backdrop-filter:blur(5px); box-shadow:0 4px 15px rgba(0,0,0,0.5); transition:0.2s;" onclick="App.toggleCompareMode()">⚖️ ПОРІВНЯТИ</button>
+                    <div class="sys-close" onclick="App.closePhotoModal()" style="background:rgba(0,0,0,0.6); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; border:1px solid rgba(255,255,255,0.2); cursor:pointer; font-size:1.2rem; backdrop-filter:blur(5px);">✕</div>
+                </div>
+                
+                <div id="photoViewSingle" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+                    <div id="photoWeekSelectorSingle" style="position:absolute; top:25px; left:25px; z-index:100;"></div>
+                    <!-- Залишаємо старий ID для сумісності з зум-жестами -->
+                    <img id="customPhotoImg" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">
+                </div>
+
+                <div id="photoViewCompare" style="width:100%; height:100%; display:none; flex-direction:row; align-items:center; justify-content:center; gap:2px; background:#000;">
+                    <div style="flex:1; height:100%; position:relative; border-right:2px solid #222; display:flex; flex-direction:column; justify-content:center;">
+                        <div id="photoWeekSelectorLeft" style="position:absolute; top:25px; left:50%; transform:translateX(-50%); z-index:100; background:rgba(0,0,0,0.7); border:1px solid #444; border-radius:12px; padding:2px 10px;"></div>
+                        <img id="customPhotoImgLeft" style="width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                    <div style="flex:1; height:100%; position:relative; display:flex; flex-direction:column; justify-content:center;">
+                        <div id="photoWeekSelectorRight" style="position:absolute; top:25px; left:50%; transform:translateX(-50%); z-index:100; background:rgba(0,0,0,0.7); border:1px solid #444; border-radius:12px; padding:2px 10px;"></div>
+                        <img id="customPhotoImgRight" style="width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                </div>
+            `;
+            modal.dataset.upgraded = "true";
+            modal.style.background = "rgba(5,5,7,0.98)";
+            modal.style.backdropFilter = "blur(15px)";
+        }
+
+        this.viewerState.isCompare = false;
+        this.viewerState.leftWeek = Number(week);
+        
+        // Знаходимо найперший тиждень для правого екрану порівняння за замовчуванням
+        const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
+        this.viewerState.rightWeek = keys.length > 0 ? keys[0] : Number(week);
+        this.viewerState.singleIdx = Number(idx);
+
+        // Активуємо жести тільки для одиночного режиму
+        const img = document.getElementById('customPhotoImg');
         this.state.photoModalScale = 1;
         this.state.photoModalTranslate = { x: 0, y: 0 };
-        this.state.photoModalIsZooming = false;
-        this.state.photoModalIsPanning = false;
-
-        img.style.touchAction = 'none';
-        modal.classList.add('active');
-
         this.initPhotoGestures(modal, img);
-        
-        this.viewerState.week = Number(week);
-        this.viewerState.idx = Number(idx);
-        
+
+        modal.classList.add('active');
         await this.loadViewerData();
     },
 
-    async loadViewerData() {
-        const img = document.getElementById('customPhotoImg');
-        this.viewerState.photos = await PhotoDB.get(this.viewerState.week);
-        
-        if (this.viewerState.idx >= this.viewerState.photos.length) {
-            this.viewerState.idx = Math.max(0, this.viewerState.photos.length - 1);
-        }
-        
-        if (this.viewerState.photos.length > 0) {
-            img.src = this.viewerState.photos[this.viewerState.idx].data;
-        } else {
-            img.src = '';
-        }
-        
-        img.onload = () => {
-            this.calculatePhotoBoundary(img);
+    toggleCompareMode() {
+        this.viewerState.isCompare = !this.viewerState.isCompare;
+        const btn = document.getElementById('btnToggleCompare');
+        if (this.viewerState.isCompare) {
+            btn.style.background = 'var(--gold)';
+            btn.style.color = '#000';
+            // В режимі порівняння скидаємо зум
+            this.state.photoModalScale = 1;
+            this.state.photoModalTranslate = { x: 0, y: 0 };
             this.updatePhotoTransform();
-        };
+        } else {
+            btn.style.background = 'rgba(212,175,55,0.15)';
+            btn.style.color = 'var(--gold)';
+        }
+        this.loadViewerData();
+    },
 
+    async loadViewerData() {
+        const viewSingle = document.getElementById('photoViewSingle');
+        const viewCompare = document.getElementById('photoViewCompare');
+        
+        if (this.viewerState.isCompare) {
+            viewSingle.style.display = 'none';
+            viewCompare.style.display = 'flex';
+            
+            this.viewerState.photosLeft = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
+            this.viewerState.photosRight = await PhotoDB.get(this.data.currentBlockId, this.viewerState.rightWeek);
+            
+            document.getElementById('customPhotoImgLeft').src = this.viewerState.photosLeft.length > 0 ? this.viewerState.photosLeft[0].data : '';
+            document.getElementById('customPhotoImgRight').src = this.viewerState.photosRight.length > 0 ? this.viewerState.photosRight[0].data : '';
+        } else {
+            viewSingle.style.display = 'flex';
+            viewCompare.style.display = 'none';
+            
+            this.viewerState.photosSingle = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
+            if (this.viewerState.singleIdx >= this.viewerState.photosSingle.length) {
+                this.viewerState.singleIdx = Math.max(0, this.viewerState.photosSingle.length - 1);
+            }
+            document.getElementById('customPhotoImg').src = this.viewerState.photosSingle.length > 0 ? this.viewerState.photosSingle[this.viewerState.singleIdx].data : '';
+        }
+        
         this.updateViewerUI();
     },
 
     updateViewerUI() {
-        const leftBtn = document.getElementById('photoNavLeft');
-        const rightBtn = document.getElementById('photoNavRight');
-        const bar = document.getElementById('photoWeekSelector');
+        const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
+        if (keys.length === 0) return;
 
-        if (leftBtn) leftBtn.style.display = this.viewerState.idx > 0 ? 'flex' : 'none';
-        if (rightBtn) rightBtn.style.display = this.viewerState.idx < this.viewerState.photos.length - 1 ? 'flex' : 'none';
+        const buildSelect = (currentVal, onChangeAction) => `
+            <select style="background: transparent; color: var(--gold); border: none; font-size: 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer; text-align: center; text-transform: uppercase;" onchange="${onChangeAction}" ontouchstart="event.stopPropagation()">
+                ${keys.map(k => `<option value="${k}" style="color: #000; background: #fff;" ${k === currentVal ? 'selected' : ''}>W${k}</option>`).join('')}
+            </select>
+            <div style="position: absolute; right: 0; top:50%; transform:translateY(-50%); pointer-events: none; font-size: 0.6rem; color: var(--gold);">▼</div>
+        `;
 
-        if (bar) {
-            const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
-            
-            if (keys.length > 0) {
-                // Замінюємо горизонтальний скрол на зручний селект
-                bar.innerHTML = `
-                    <div style="position: relative; display: flex; align-items: center;">
-                        <select style="background: transparent; color: var(--primary); border: none; font-size: 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; outline: none; appearance: none; -webkit-appearance: none; padding: 4px 30px 4px 20px; cursor: pointer; width: 100%; text-align: center;" onchange="App.changeViewerWeek(parseInt(this.value))" ontouchstart="event.stopPropagation()">
-                            ${keys.map(k => `<option value="${k}" style="color: #000; background: #fff;" ${k === this.viewerState.week ? 'selected' : ''}>W${k}</option>`).join('')}
-                        </select>
-                        <div style="position: absolute; right: 12px; pointer-events: none; font-size: 0.7rem; color: var(--primary);">▼</div>
-                    </div>
-                `;
-                bar.style.display = 'block';
-            } else {
-                bar.style.display = 'none';
-            }
+        if (this.viewerState.isCompare) {
+            document.getElementById('photoWeekSelectorLeft').innerHTML = buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "left")');
+            document.getElementById('photoWeekSelectorRight').innerHTML = buildSelect(this.viewerState.rightWeek, 'App.changeViewerWeek(parseInt(this.value), "right")');
+        } else {
+            document.getElementById('photoWeekSelectorSingle').innerHTML = `
+                <div style="position:relative; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:12px; padding:6px 20px 6px 15px; display:inline-block; backdrop-filter:blur(5px);">
+                    ${buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "single")')}
+                </div>
+            `;
         }
     },
-    navViewerPose(dir) {
-        this.viewerState.idx += dir;
-        this.state.photoModalScale = 1;
-        this.state.photoModalTranslate = { x: 0, y: 0 };
-        this.updatePhotoTransform();
-        this.loadViewerData();
-    },
 
-    changeViewerWeek(newWeek) {
-        if (this.viewerState.week === newWeek) return;
-        this.viewerState.week = newWeek;
-        this.state.photoModalScale = 1;
-        this.state.photoModalTranslate = { x: 0, y: 0 };
-        this.updatePhotoTransform();
+    changeViewerWeek(newWeek, target) {
+        if (target === 'left' || target === 'single') this.viewerState.leftWeek = newWeek;
+        if (target === 'right') this.viewerState.rightWeek = newWeek;
+        
+        if (target === 'single') {
+            this.viewerState.singleIdx = 0; 
+            this.state.photoModalScale = 1;
+            this.state.photoModalTranslate = { x: 0, y: 0 };
+            this.updatePhotoTransform();
+        }
+        
         this.loadViewerData();
     },
 
@@ -683,6 +747,7 @@ const App = {
         await this.load(); 
     
         this.migrateVitals();
+        await PhotoDB.migrateToBlocks(this.data);
         await this.refreshPhotos();
         this.initCustomDropdown();
         
@@ -1285,7 +1350,7 @@ return `
         }
         grid += '</div>';
 
-        const photos = await PhotoDB.get(this.state.week);
+        const photos = await PhotoDB.get(this.data.currentBlockId, this.state.week);
         const pHtml = photos.map((p, idx) => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${idx})"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
 
         const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, 0));
@@ -2926,7 +2991,7 @@ return `
         this.data.schedule[lastWeek + 1] = newWeekSchedule;
         this.data.notes[lastWeek + 1] = ""; 
         
-        await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
+        await PhotoDB.shiftWeeks(this.data.currentBlockId, lastWeek + 1, 1);
         phase.weeks.push(lastWeek + 1); 
         
         for(let i = pIdx + 1; i < this.data.phases.length; i++) {
@@ -2956,7 +3021,7 @@ return `
         this.data.schedule[1] = [[],[],[],[],[],[],[]];
         this.data.notes[1] = "";
         
-        await PhotoDB.shiftWeeks(1, 1);
+        await PhotoDB.shiftWeeks(this.data.currentBlockId, 1, 1);
         
         this.data.phases.forEach(p => p.weeks = p.weeks.map(w => w + 1));
         phase.weeks.unshift(1);
@@ -2999,7 +3064,7 @@ return `
              this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w - 1); 
         }
         
-        await PhotoDB.shiftWeeks(lastWeek + 1, -1);
+        await PhotoDB.shiftWeeks(this.data.currentBlockId, lastWeek + 1, -1);
         
         this.save(); 
         this.refreshPhotos(); 
@@ -3053,7 +3118,7 @@ return `
     },
     
     async refreshPhotos() { 
-        this.photoKeys = await PhotoDB.keys(); 
+        this.photoKeys = await PhotoDB.keys(this.data.currentBlockId);
     },
 
     async uploadPhoto(inp) { 
@@ -3073,7 +3138,7 @@ return `
                     await new Promise((resolve, reject) => {
                         const tx = PhotoDB.db.transaction(["photos"], "readwrite");
                         const store = tx.objectStore("photos");
-                        const req = store.add({ week: this.state.week, data: compressedBase64 });
+                        const req = store.add({ blockId: this.data.currentBlockId, week: this.state.week, data: compressedBase64 });
                         req.onsuccess = () => resolve();
                         req.onerror = () => reject();
                     });
@@ -3147,8 +3212,7 @@ return `
             this.data.notes[startWeek + i] = "";
         }
 
-        await PhotoDB.shiftWeeks(startWeek, duration);
-
+        await PhotoDB.shiftWeeks(this.data.currentBlockId, startWeek, duration);
         for (let i = index; i < this.data.phases.length; i++) {
             this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + duration);
         }
