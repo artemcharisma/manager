@@ -2399,6 +2399,7 @@ return `
         const safeName = name.replace(/'/g, "\\'");
         
         // Генеруємо опції
+        // Генеруємо опції
         menuEl.innerHTML = `
             <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.copyPill(${w},${d},${i})">
                 <span style="width:20px; text-align:center; font-size:1.1rem;">📋</span> <span>Копіювати</span>
@@ -2407,10 +2408,13 @@ return `
                 <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--blue);">📑</span> <span>На усю фазу</span>
             </div>
             <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.deletePillFromWeek('${safeName}', ${w})">
-                <span style="width:20px; text-align:center; font-size:1.1rem; color:#f59e0b;">🗓️</span> <span>Видалити з тижня</span>
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:#f59e0b;">🗓️</span> <span>З усього тижня</span>
+            </div>
+            <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.deletePillFutureInWeek('${safeName}', ${w}, ${d})">
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:#f43f5e;">⏳</span> <span>До кінця тижня</span>
             </div>
             <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.deletePillFutureInPhase('${safeName}', ${w}, ${d})">
-                <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">🌍</span> <span>Видалити до кінця фази</span>
+                <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">🌍</span> <span>До кінця фази</span>
             </div>
             <div class="kebab-menu-item" onclick="event.stopPropagation(); App.closeGlobalMenu(); App.delPillItem(${w},${d},${i})">
                 <span style="width:20px; text-align:center; font-size:1.1rem; color:var(--red);">✕</span> <span style="color:var(--red); font-weight:bold;">Видалити запис</span>
@@ -2489,6 +2493,28 @@ return `
         });
         this.save();
         this.renderView();
+    },
+    async deletePillFutureInWeek(name, w, startDayIndex) {
+        const dayNames = ["Понеділка", "Вівторка", "Середи", "Четверга", "П'ятниці", "Суботи", "Неділі"];
+        if(!(await Modal.confirm(`⚠️ ВИДАЛИТИ "${name}" починаючи з ${dayNames[startDayIndex]} і до кінця цього тижня?`, "ЧАСТКОВЕ ОЧИЩЕННЯ", "red"))) return;
+        
+        this.pushHistory();
+        // Видаляємо починаючи з вибраного дня і до кінця масиву тижня
+        for (let d = startDayIndex; d < 7; d++) {
+            if (this.data.schedule[w] && this.data.schedule[w][d]) {
+                this.data.schedule[w][d] = this.data.schedule[w][d].filter(p => p.name.trim().toLowerCase() !== name.trim().toLowerCase());
+            }
+        }
+        
+        this.state.openMenu = null;
+        this.save();
+        this.renderView();
+        
+        const toast = document.createElement('div');
+        toast.innerText = "🗑 Очищено до кінця тижня!";
+        toast.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--red); color:#fff; padding:10px 20px; border-radius:20px; z-index:9999; font-weight:bold;";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
     },
 
         smartSave() {
@@ -2849,7 +2875,99 @@ return `
         this.renderNav(); 
         this.renderView(); 
     },
+async addPhaseWeek(pId) { 
+        this.pushHistory(); 
+        const pIdx = this.data.phases.findIndex(p => p.id === pId); 
+        const phase = this.data.phases[pIdx]; 
+        const lastWeek = phase.weeks[phase.weeks.length - 1]; 
+        const maxW = Math.max(...Object.keys(this.data.schedule).map(Number)); 
+        
+        // --- НОВА РОЗУМНА ЛОГІКА ПРОДОВЖЕННЯ ТИЖНЯ (АВТО-КРОК) ---
+        const newWeekSchedule = [[],[],[],[],[],[],[]];
+        const activePills = {}; 
 
+        // 1. Знаходимо всі унікальні препарати з останнього тижня
+        if (this.data.schedule[lastWeek]) {
+            for (let d = 0; d < 7; d++) {
+                this.data.schedule[lastWeek][d].forEach(p => {
+                    const key = p.name.trim().toLowerCase();
+                    if (!activePills[key]) activePills[key] = p;
+                });
+            }
+        }
+
+        // 2. Шукаємо інтервал (крок) для кожного препарату, скануючи історію
+        Object.keys(activePills).forEach(key => {
+            const basePill = { ...activePills[key] };
+            delete basePill.done; // Знімаємо галочку "випито"
+
+            let occurrences = [];
+            const weeksToScan = phase.weeks.slice(-3); // Шукаємо патерн у межах останніх 3 тижнів
+            
+            for (let i = weeksToScan.length - 1; i >= 0; i--) {
+                let w = weeksToScan[i];
+                for (let d = 6; d >= 0; d--) {
+                    if (this.data.schedule[w] && this.data.schedule[w][d]) {
+                        const found = this.data.schedule[w][d].find(p => p.name.trim().toLowerCase() === key);
+                        if (found) {
+                            occurrences.push({ w, d, absDay: w * 7 + d });
+                            if (occurrences.length >= 2) break; // Нам потрібні лише 2 останні прийоми, щоб вирахувати крок
+                        }
+                    }
+                }
+                if (occurrences.length >= 2) break;
+            }
+
+            if (occurrences.length === 0) return;
+
+            const newWeekNum = lastWeek + 1;
+
+            if (occurrences.length === 1) {
+                // Якщо препарат був лише 1 раз, копіюємо в той самий день
+                newWeekSchedule[occurrences[0].d].push(basePill);
+            } else {
+                // Вираховуємо інтервал між двома останніми прийомами
+                const step = occurrences[0].absDay - occurrences[1].absDay;
+                
+                if (step > 0 && step <= 7) {
+                    // Математично проєктуємо прийом у новий тиждень (ідеально для EOD, E3D)
+                    let nextAbs = occurrences[0].absDay + step;
+                    while (nextAbs < newWeekNum * 7 + 7) {
+                        if (nextAbs >= newWeekNum * 7) {
+                            const targetDay = nextAbs - (newWeekNum * 7);
+                            newWeekSchedule[targetDay].push({ ...basePill });
+                        }
+                        nextAbs += step;
+                    }
+                } else {
+                    // Якщо крок занадто великий або хаотичний, просто залишаємо в той самий день
+                    newWeekSchedule[occurrences[0].d].push(basePill);
+                }
+            }
+        });
+
+        // Зсуваємо розклад і нотатки ВПЕРЕД
+        for(let w = maxW; w > lastWeek; w--) { 
+            this.data.schedule[w+1] = JSON.parse(JSON.stringify(this.data.schedule[w])); 
+            this.data.notes[w+1] = this.data.notes[w]; 
+        } 
+        
+        this.data.schedule[lastWeek + 1] = newWeekSchedule;
+        this.data.notes[lastWeek + 1] = ""; 
+        // --------------------------------------------------------
+        
+        await PhotoDB.shiftWeeks(lastWeek + 1, 1); 
+        phase.weeks.push(lastWeek + 1); 
+        
+        for(let i = pIdx + 1; i < this.data.phases.length; i++) {
+            this.data.phases[i].weeks = this.data.phases[i].weeks.map(w => w + 1);
+        }
+        
+        this.save(); 
+        this.refreshPhotos(); 
+        this.renderNav(); 
+        this.renderView(); 
+    },
     async prependPhaseWeek(pId) {
         this.pushHistory();
         const pIdx = this.data.phases.findIndex(p => p.id === pId);
