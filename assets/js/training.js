@@ -144,10 +144,18 @@ const App = {
         this.historyIndex = {};
         if (!this.data || !this.data.weeks) return;
         
-        const sortedWeeks = [...this.data.weeks].sort((a, b) => a.num - b.num);
+        // ФІКС: Сортуємо всі тижні з усіх блоків у строгому хронологічному порядку (за реальними датами)
+        const sortedWeeks = [...this.data.weeks].sort((a, b) => {
+            const dateA = this.getRealDateObj(a.num, 0, a.prog).getTime();
+            const dateB = this.getRealDateObj(b.num, 0, b.prog).getTime();
+            return dateA - dateB;
+        });
 
         sortedWeeks.forEach(week => {
             week.days.forEach((day, dIdx) => {
+                // Визначаємо точний фізичний час виконання тренування
+                const dayTime = this.getRealDateObj(week.num, dIdx, week.prog).getTime();
+                
                 day.exercises.forEach(ex => {
                     if (!ex.n) return;
                     const name = ex.n.trim().toLowerCase();
@@ -173,6 +181,7 @@ const App = {
                         wNum: week.num,
                         prog: week.prog,
                         dIdx: dIdx,
+                        timestamp: dayTime, // ЗБЕРІГАЄМО ФІЗИЧНИЙ ЧАС
                         sets: ex.sets,
                         maxRM: sessionMax1RM,
                         hasData: hasValidSets
@@ -181,7 +190,6 @@ const App = {
             });
         });
     },
-
     async init() {
         this.data = await this.state.init();
         if(!this.data.startDate) this.data.startDate = new Date().toISOString().split('T')[0];
@@ -477,14 +485,14 @@ const App = {
         const history = this.historyIndex[name];
         if (!history) return null;
 
-        // Шукаємо найсвіжіший запис (йдемо з кінця історії)
+        const currentTime = this.getRealDateObj(currentWNum, currentDIdx, prog).getTime();
+
+        // Шукаємо найсвіжіший запис (з кінця історії)
         for (let i = history.length - 1; i >= 0; i--) {
             const entry = history[i];
             
-            // Якщо це та сама програма, то не беремо поточне чи майбутнє тренування
-            if (entry.prog === prog) {
-                if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
-            }
+            // Відкидаємо поточний і майбутні дні (незалежно від того, в якому вони блоці)
+            if (entry.timestamp >= currentTime) continue;
             
             if (entry.hasData) return entry.sets;
         }
@@ -497,15 +505,13 @@ const App = {
         const history = this.historyIndex[name];
         if (!history) return 0;
 
+        const currentTime = this.getRealDateObj(currentWNum, currentDIdx, prog).getTime();
         let maxRM = 0;
+        
         for (let i = 0; i < history.length; i++) {
             const entry = history[i];
             
-            // Запобіжник для поточної програми (не враховуємо майбутні, ще не виконані тренування)
-            if (entry.prog === prog) {
-                if (entry.wNum > currentWNum || (entry.wNum === currentWNum && entry.dIdx >= currentDIdx)) continue;
-            }
-            
+            if (entry.timestamp >= currentTime) continue;
             if (entry.maxRM > maxRM) maxRM = entry.maxRM;
         }
         return Math.round(maxRM);
