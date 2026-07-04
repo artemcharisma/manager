@@ -842,19 +842,23 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 }
                             }
 
-                            let progressHtml = '&nbsp;';
-                            if (ghostW && ghostR && sType !== 'WU') {
-                                let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
-                                let curW = parseFloat(s.w) || 0;
-                                let curR = parseFloat(s.r) || 0;
-                                let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
-                                
-                                let icon = '<span style="color:#555">➖</span>';
-                                if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
-                                else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
-
+                                                        let progressHtml = '&nbsp;';
+                            if (ghostW && ghostR) { // Прибрали блокування для WU
+                                let icon = '';
+                                // Розрахунок 1RM та іконки прогресу робимо ТІЛЬКИ для робочих підходів
+                                if (sType !== 'WU') {
+                                    let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
+                                    let curW = parseFloat(s.w) || 0;
+                                    let curR = parseFloat(s.r) || 0;
+                                    let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
+                                    
+                                    icon = '<span style="color:#555">➖</span>';
+                                    if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
+                                    else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
+                                }
                                 progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Вставити дані">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
                             }
+
 
                             // === НОВА ЛОГІКА ПЛЕЙСХОЛДЕРІВ ===
                             let placeholderW = "";
@@ -1486,16 +1490,18 @@ const realDate = this.getRealDate(week.num, dIdx);
 
             const lastWeek = [...this.data.weeks].reverse().find(w => w.type === type && w.prog === prog);
             
-            if(lastWeek && !init) {
-                // БІЛЬШЕ НІЯКИХ МОДАЛОК! Завжди чиста структура для роботи фантомів
+                        if(lastWeek && !init) {
                 newData = JSON.parse(JSON.stringify(lastWeek.days));
                 newData.forEach(d => {
                     d.exercises.forEach(ex => { 
                         ex.note = "";
                         ex.sets.forEach(s => { 
-                            s.w = ""; 
-                            s.r = ""; 
-                            s.d = ""; 
+                            // ФІКС: Якщо це РОЗМИНКА (WU) - залишаємо цифри. Стираємо тільки робочі!
+                            if (s.t !== 'WU') {
+                                s.w = ""; 
+                                s.r = ""; 
+                                s.d = ""; 
+                            }
                         }); 
                     });
                 });
@@ -1763,25 +1769,26 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 }
             }
 
-            if (setObj.t !== 'WU') {
-                const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
-                if (ghostSets && ghostSets[s]) {
-                    let ghostW = ghostSets[s].w;
-                    let ghostR = ghostSets[s].r;
-                    if (ghostW && ghostR) {
+                        const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
+            if (ghostSets && ghostSets[s]) {
+                let ghostW = ghostSets[s].w;
+                let ghostR = ghostSets[s].r;
+                if (ghostW && ghostR) {
+                    let icon = '';
+                    if (setObj.t !== 'WU') {
                         let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
                         let curW = parseFloat(setObj.w) || 0;
                         let curR = parseFloat(setObj.r) || 0;
                         let cur1RM = (curW > 0 && curR > 0) ? curW * (1 + curR / 30) : 0;
                         
-                        let icon = '<span style="color:#555">➖</span>';
+                        icon = '<span style="color:#555">➖</span>';
                         if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
                         else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
+                    }
 
-                        const hudEl = document.getElementById(`hud-${w}-${d}-${e}-${s}`);
-                        if (hudEl) {
-                            hudEl.innerHTML = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${w},${d},${e},${s}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
-                        }
+                    const hudEl = document.getElementById(`hud-${w}-${d}-${e}-${s}`);
+                    if (hudEl) {
+                        hudEl.innerHTML = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${w},${d},${e},${s}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
                     }
                 }
             }
