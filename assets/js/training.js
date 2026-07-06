@@ -833,6 +833,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                             else if (sType === 'TS') { typeLabel = 'TS'; typeClass = 'type-TS'; }
                             else if (sType === 'BO') { typeLabel = 'BO'; typeClass = 'type-BO'; }
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
+                            
                             let glowClass = '';
                             // Ігноруємо WU (розминку)! Маркер шукає тільки робочі підходи
                             if (sType !== 'WU' && (!s.w || !s.r)) {
@@ -877,78 +878,6 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 placeholderW = ghostW;
                             }
                             if (!placeholderR && !s.r && ghostR) {
-                                placeholderR = ghostR;
-                            }
-                            // ==========================================
-
-                            // 1. Авто-розрахунок для BO (Back-off)
-                            if (sType === 'BO' && sIdx > 0 && !s.w) {
-                                const prevSet = ex.sets[sIdx - 1];
-                                if (prevSet && prevSet.t === 'TS' && prevSet.w) {
-                                    const tsWeight = parseFloat(prevSet.w);
-                                    if (!isNaN(tsWeight) && tsWeight > 0) {
-                                        placeholderW = Math.round((tsWeight * 0.8) / 2.5) * 2.5; 
-                                    }
-                                }
-                            }
-                            
-                            // 2. СМАРТ-РОЗРАХУНОК ДЛЯ РОЗМИНКИ (WU) НА БАЗІ ДОВІДНИКА
-                            if (sType === 'WU' && guideInfo && guideInfo.w) {
-                                // Парсимо рядок типу "30%x15, 50%x8" або просто "40%, 60%"
-                                const parts = guideInfo.w.split(',');
-                                let wuTargets = [];
-                                parts.forEach(p => {
-                                    const pctMatch = p.match(/(\d+)%/);
-                                    const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
-                                    if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
-                                });
-                                
-                                // Визначаємо порядковий номер розминки
-                                let wuIndex = 0;
-                                for (let i = 0; i < sIdx; i++) {
-                                    if (ex.sets[i].t === 'WU') wuIndex++;
-                                }
-
-                                if (wuTargets[wuIndex]) {
-                                    let targetWeight = 0;
-                                    const tsSet = ex.sets.find(st => st.t === 'TS');
-                                    if (tsSet && tsSet.w) {
-                                        targetWeight = parseFloat(tsSet.w);
-                                    } else if (ghostSets) {
-                                        const ghostTS = ghostSets.find(st => st.t === 'TS');
-                                        if (ghostTS && ghostTS.w) targetWeight = parseFloat(ghostTS.w);
-                                    }
-                                    
-                                    if (targetWeight > 0) {
-                                        placeholderW = Math.round((targetWeight * (wuTargets[wuIndex].pct / 100)) / 2.5) * 2.5;
-                                    }
-                                    if (wuTargets[wuIndex].reps) {
-                                        placeholderR = wuTargets[wuIndex].reps;
-                                    }
-                                }
-                            }
-
-                            // 3. Якщо це порожній робочий підхід - беремо дані з історії
-                            if (!placeholderW && !s.w && ghostW && sType !== 'WU') {
-                                placeholderW = ghostW;
-                            }
-                            if (!placeholderR && !s.r && ghostR && sType !== 'WU') {
-                                placeholderR = ghostR;
-                            }
-                            // ==========================================
-                                if (prevSet && prevSet.t === 'TS' && prevSet.w) {
-                                    const tsWeight = parseFloat(prevSet.w);
-                                    if (!isNaN(tsWeight) && tsWeight > 0) {
-                                        placeholderW = Math.round((tsWeight * 0.8) / 2.5) * 2.5; 
-                                    }
-                                }
-                            }
-                            
-                            // Якщо це порожній підхід у майбутньому - беремо дані з історії
-                            if (!placeholderW && !s.w && ghostW) {
-                                placeholderW = ghostW;
-                            }
-                            if (!s.r && ghostR) {
                                 placeholderR = ghostR;
                             }
                             // ==========================================
@@ -1845,13 +1774,6 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 }
             }
 
-            const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
-            if (ghostSets && ghostSets[s]) {
-                let ghostW = ghostSets[s].w;
-                let ghostR = ghostSets[s].r;
-                if (ghostW && ghostR) {
-                    let icon = '';
-                    // ФІКС: Зняли загальне блокування для WU
             const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
             if (ghostSets && ghostSets[s]) {
                 let ghostW = ghostSets[s].w;
