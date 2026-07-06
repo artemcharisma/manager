@@ -76,6 +76,24 @@ const App = {
     timerState: { interval: null, left: 0, default: 90, el: null, endTime: null, currentExKey: null },
     historyIndex: {}, 
 
+    // НОВЕ: Калькулятор млинців на одну сторону
+    calcPlates(totalWeight, barWeight) {
+        const net = totalWeight - barWeight;
+        if (net <= 0) return "Гриф";
+        let side = net / 2;
+        const plates = [25, 20, 15, 10, 5, 2.5, 1.25];
+        let res = [];
+        for (let p of plates) {
+            while (side >= p) { 
+                res.push(p); 
+                side = Math.round((side - p) * 100) / 100; // Фікс похибки дробів
+            }
+        }
+        if (side > 0) res.push(side);
+        return res.join(' + ');
+    },
+    
+
     getMondayOfStartWeek() {
         const d = new Date(this.data.startDate);
         const day = d.getDay();
@@ -782,12 +800,20 @@ const realDate = this.getRealDate(week.num, dIdx);
                         }
 
                         const currentSetting = (exKeyName && this.data.settings && this.data.settings[exKeyName]) ? this.data.settings[exKeyName] : "";
-                        let settingHtml = '';
+                        const barKey = exKeyName ? exKeyName + '_bar' : '';
+                        const currentBar = barKey && this.data.settings && this.data.settings[barKey] ? this.data.settings[barKey] : "";
                         
+                        let settingHtml = '';
                         if (isEd) {
-                            settingHtml = `<input type="text" class="modal-input" style="padding:4px 8px; font-size:0.65rem; margin-top:4px; border:1px dashed #333; background:rgba(0,0,0,0.5); width:100%;" placeholder="Налаштування (Спинка 4, Валик 2)..." value="${currentSetting}" onblur="App.updateSettingByPath(${realWIdx}, ${dIdx}, ${eIdx}, this.value)">`;
-                        } else if (currentSetting) {
-                            settingHtml = `<div style="font-size:0.6rem; color:#8b5cf6; margin-top:4px; font-family:'JetBrains Mono'; font-weight:700;">⚙️ ${currentSetting}</div>`;
+                            settingHtml = `
+                            <div style="display:flex; gap:5px; margin-top:4px;">
+                                <input type="text" class="modal-input" style="flex:1; padding:4px 8px; font-size:0.65rem; border:1px dashed #333; background:rgba(0,0,0,0.5);" placeholder="Налаштування (Спинка 4)..." value="${currentSetting}" onblur="App.updateSettingByPath(${realWIdx}, ${dIdx}, ${eIdx}, this.value)">
+                                <input type="number" inputmode="decimal" class="modal-input" style="width:70px; padding:4px 8px; font-size:0.65rem; border:1px dashed #3b82f6; background:rgba(59,130,246,0.1); color:#3b82f6;" placeholder="Гриф кг" value="${currentBar}" onblur="App.updateSetting('${barKey}', this.value)">
+                            </div>`;
+                        } else if (currentSetting || currentBar) {
+                            let barBadge = currentBar ? `<span style="margin-left:6px; color:#3b82f6; background:rgba(59,130,246,0.1); padding:2px 6px; border-radius:4px; border:1px solid rgba(59,130,246,0.3);">🏋️ ${currentBar}кг</span>` : "";
+                            let setTxt = currentSetting ? `⚙️ ${currentSetting}` : "";
+                            settingHtml = `<div style="font-size:0.6rem; color:#8b5cf6; margin-top:4px; font-family:'JetBrains Mono'; font-weight:700; display:flex; align-items:center;">${setTxt} ${barBadge}</div>`;
                         }
 
                         let exNameHtml = '';
@@ -848,7 +874,6 @@ const realDate = this.getRealDate(week.num, dIdx);
                             else if (sType === 'DS') { typeLabel = 'DS'; typeClass = 'type-DS'; }
                             
                             let glowClass = '';
-                            // Ігноруємо WU (розминку)! Маркер шукає тільки робочі підходи
                             if (sType !== 'WU' && (!s.w || !s.r)) {
                                 if (!firstEmptySetFound) {
                                     glowClass = 'active-set-glow';
@@ -857,7 +882,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                             }
 
                             let progressHtml = '&nbsp;';
-                            if (ghostW || ghostR) { // ФІКС: Зняли блокування для WU і дозволили неповні привиди
+                            if (ghostW || ghostR) { 
                                 let icon = '';
                                 if (sType !== 'WU' && ghostW && ghostR) {
                                     let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
@@ -872,7 +897,6 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Вставити дані">⏮ ${ghostW||'-'}x${ghostR||'-'} ${icon}</span>`;
                             }
 
-                            // === НОВА ЛОГІКА ПЛЕЙСХОЛДЕРІВ ===
                             let placeholderW = "";
                             let placeholderR = "";
 
@@ -886,19 +910,34 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 }
                             }
                             
-                            // ФІКС: Зняли блокування sType !== 'WU'
                             if (!placeholderW && !s.w && ghostW) {
                                 placeholderW = ghostW;
                             }
                             if (!placeholderR && !s.r && ghostR) {
                                 placeholderR = ghostR;
                             }
+
+                            let displayW = parseFloat(s.w || placeholderW) || 0;
+                            let platesHtml = '';
+                            if (currentBar && displayW > parseFloat(currentBar)) {
+                                platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${App.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
+                            }
+
                             // ==========================================
+
+                            let displayW = parseFloat(s.w || placeholderW) || 0;
+                            let platesHtml = '';
+                            if (currentBar && displayW > parseFloat(currentBar)) {
+                                platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${App.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
+                            }
 
                             return `
                             <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
-                                <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="font-size:0.55rem; text-align:right; padding-right:4px; font-family:'JetBrains Mono'; height:12px; letter-spacing:0.5px; width:100%; white-space:nowrap;">
-                                    ${progressHtml}
+                                <div style="font-size:0.55rem; font-family:'JetBrains Mono'; min-height:14px; letter-spacing:0.5px; width:100%; display:flex; justify-content:space-between; align-items:flex-end; padding:0 4px; margin-bottom:2px;">
+                                    <div id="plates-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="flex:1; text-align:left;">${platesHtml}</div>
+                                    <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="flex:1; text-align:right; white-space:nowrap;">
+                                        ${progressHtml}
+                                    </div>
                                 </div>
                                 <div class="set-row ${typeClass} ${glowClass}">
                                     <div class="set-num ${typeClass}" title="Клікніть, щоб змінити тип" onclick="App.cycleSetType(${realWIdx},${dIdx},${eIdx},${sIdx}, event)">${typeLabel}</div>
@@ -1511,7 +1550,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                         ex.sets.forEach(s => { 
                             s.w = ""; 
                             s.d = ""; 
-                            // Якщо це НЕ розминка (тобто TS, BO, DS або звичайний робочий) - стираємо повторення!
+                            // ФІКС: Стираємо повторення для ВСІХ робочих підходів (TS, BO, DS, звичайний). Залишаємо тільки для WU!
                             if (s.t !== 'WU') {
                                 s.r = ""; 
                             }
@@ -1576,11 +1615,11 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     ex.sets.forEach(s => { 
                         s.w = ""; 
                         s.d = ""; 
-                        // Очищаємо повторення для всіх підходів, окрім розминки
+                        // ФІКС: Стираємо повторення для ВСІХ робочих підходів
                         if (s.t !== 'WU') {
                             s.r = ""; 
                         }
-                    }); 
+                    });
                 });
             }
         });
@@ -1711,13 +1750,11 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 let refW = 0;
                 let refSource = "";
 
-                // 1. Шукаємо TS (Топ-сет)
                 const tsSet = exObj.sets.find(st => st.t === 'TS' && parseFloat(st.w) > 0);
                 if (tsSet) {
                     refW = parseFloat(tsSet.w);
                     refSource = "Топ-сету";
                 } else {
-                    // 2. Якщо немає TS, беремо перший робочий підхід
                     const firstWorkSet = exObj.sets.find(st => st.t !== 'WU' && parseFloat(st.w) > 0);
                     if (firstWorkSet) {
                         refW = parseFloat(firstWorkSet.w);
@@ -1725,7 +1762,6 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     }
                 }
 
-                // 3. Fallback: Якщо це взагалі перший ввід, беремо 1RM або максимум поточних підходів
                 if (refW === 0) {
                     refW = this.getEstimated1RM(exName, wNum, d, this.data.currentProgram);
                     if (refW === 0) {
@@ -1761,12 +1797,10 @@ newData = JSON.parse(JSON.stringify(templateSource));
             this.pushHistory();
             setObj[f] = finalVal;
             
-            // Тактильний відгук (Вібрація), якщо підхід повністю заповнено
             if (setObj.w && setObj.r && navigator.vibrate) {
                 navigator.vibrate(40);
             }
             
-            // Миттєво перекидаємо активну підсвітку на наступний порожній підхід у всьому дні (навіть якщо тренування перенесене)
             if (inputEl) {
                 const dayContainer = inputEl.closest('.day-card');
                 if (dayContainer) {
@@ -1775,10 +1809,9 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     allRows.forEach(row => {
                         row.classList.remove('active-set-glow');
                         if (!glowApplied) {
-                            const isWU = row.classList.contains('type-WU'); // Перевіряємо, чи це розминка
+                            const isWU = row.classList.contains('type-WU'); 
                             const wInp = row.querySelector('.w-val');
                             const rInp = row.querySelector('.r-val');
-                            // Ігноруємо WU. Світимо тільки порожні РОБОЧІ підходи
                             if (!isWU && wInp && rInp && (!wInp.value || !rInp.value)) {
                                 row.classList.add('active-set-glow');
                                 glowApplied = true;
@@ -1787,6 +1820,23 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     });
                 }
             }
+
+            // --- НОВЕ: ДИНАМІЧНИЙ ПЕРЕРАХУНОК МЛИНЦІВ ДЛЯ ПОТОЧНОГО ПІДХОДУ ---
+            if (f === 'w') {
+                const exNameStr = exObj.n.trim().toLowerCase();
+                const currentBar = this.data.settings[`${exNameStr}_bar`];
+                const platesEl = document.getElementById(`plates-${w}-${d}-${e}-${s}`);
+                
+                if (platesEl && currentBar) {
+                    const displayW = parseFloat(finalVal) || 0;
+                    if (displayW > parseFloat(currentBar)) {
+                        platesEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${this.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
+                    } else {
+                        platesEl.innerHTML = '';
+                    }
+                }
+            }
+            // ------------------------------------------------------------------
 
             const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
             if (ghostSets && ghostSets[s]) {
@@ -1808,6 +1858,46 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     const hudEl = document.getElementById(`hud-${w}-${d}-${e}-${s}`);
                     if (hudEl) {
                         hudEl.innerHTML = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${w},${d},${e},${s}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW||'-'}x${ghostR||'-'} ${icon}</span>`;
+                    }
+                }
+            }
+
+            // АВТО-ОНОВЛЕННЯ РОЗМИНКИ: Оновлюємо і ваги, і млинці
+            if (setObj.t === 'TS' && f === 'w' && inputEl) {
+                const exNode = inputEl.closest('.exercise');
+                if (exNode) {
+                    const wuRows = exNode.querySelectorAll('.set-row.type-WU');
+                    const tsWeight = parseFloat(finalVal) || 0;
+                    if (tsWeight > 0) {
+                        const exNameStr = exObj.n.trim().toLowerCase();
+                        const guideInfo = this.data.guidelines[this.data.currentProgram]?.[this.data.weeks[w].type]?.find(g => g.n && g.n.trim().toLowerCase() === exNameStr);
+                        if (guideInfo && guideInfo.w) {
+                            const parts = guideInfo.w.split(',');
+                            let wuTargets = [];
+                            parts.forEach(p => {
+                                const pctMatch = p.match(/(\d+)%/);
+                                const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
+                                if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
+                            });
+                            
+                            const currentBar = this.data.settings[`${exNameStr}_bar`];
+                            
+                            wuRows.forEach((row, idx) => {
+                                if (wuTargets[idx]) {
+                                    const calcW = Math.round((tsWeight * (wuTargets[idx].pct / 100)) / 2.5) * 2.5;
+                                    const wInp = row.querySelector('.w-val');
+                                    const rInp = row.querySelector('.r-val');
+                                    if (wInp && !exObj.sets[idx].w) wInp.placeholder = calcW;
+                                    if (rInp && !exObj.sets[idx].r && wuTargets[idx].reps) rInp.placeholder = wuTargets[idx].reps;
+                                    
+                                    // Оновлюємо млинці для розминки
+                                    const pEl = document.getElementById(`plates-${w}-${d}-${e}-${idx}`);
+                                    if (pEl && currentBar && calcW > parseFloat(currentBar)) {
+                                        pEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${this.calcPlates(calcW, parseFloat(currentBar))} ]</span>`;
+                                    }
+                                }
+                            });
+                        }
                     }
                 }
             }
