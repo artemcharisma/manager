@@ -1552,8 +1552,8 @@ const realDate = this.getRealDate(week.num, dIdx);
                         ex.note = "";
                         ex.sets.forEach(s => { 
                             s.w = ""; 
-                            s.r = ""; 
                             s.d = ""; 
+                            // s.r не очищаємо, кількість повторень переноситься на новий тиждень
                         }); 
                     });
                 });
@@ -1612,11 +1612,14 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 targetDay.exercises = JSON.parse(JSON.stringify(weekToCopy.days[dIdx].exercises));
                 targetDay.exercises.forEach(ex => { 
                     ex.note = "";
-                    ex.sets.forEach(s => { s.w = ""; s.r = ""; s.d = ""; }); 
+                    ex.sets.forEach(s => { 
+                        s.w = ""; 
+                        s.d = ""; 
+                        // s.r не очищаємо
+                    }); 
                 });
             }
         });
-
         const currentProgWeeks = this.data.weeks.filter(w => w.prog === targetP);
         const maxNum = currentProgWeeks.length > 0 ? Math.max(...currentProgWeeks.map(w => w.num)) : 0;
         const newWeekNum = maxNum + 1; 
