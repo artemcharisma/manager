@@ -486,17 +486,30 @@ const App = {
         if (!history) return null;
 
         const currentTime = this.getRealDateObj(currentWNum, currentDIdx, prog).getTime();
+        
+        let compositeSets = [];
 
-        // Шукаємо найсвіжіший запис (з кінця історії)
+        // Йдемо з кінця історії. Збираємо найсвіжіші дані, але якщо якісь підходи були порожніми (пропустив ввід) - тягнемо їх з минулих тижнів.
         for (let i = history.length - 1; i >= 0; i--) {
             const entry = history[i];
             
-            // Відкидаємо поточний і майбутні дні (незалежно від того, в якому вони блоці)
             if (entry.timestamp >= currentTime) continue;
             
-            if (entry.hasData) return entry.sets;
+            if (entry.hasData) {
+                if (compositeSets.length === 0) {
+                    compositeSets = JSON.parse(JSON.stringify(entry.sets));
+                } else {
+                    compositeSets.forEach((s, idx) => {
+                        if (entry.sets[idx]) {
+                            // Якщо в найсвіжішому записі вага або повтори були порожні - дозаповнюємо їх зі старих!
+                            if (!s.w && entry.sets[idx].w) s.w = entry.sets[idx].w;
+                            if (!s.r && entry.sets[idx].r) s.r = entry.sets[idx].r;
+                        }
+                    });
+                }
+            }
         }
-        return null;
+        return compositeSets.length > 0 ? compositeSets : null;
     },
 
     getEstimated1RM(exerciseName, currentWNum, currentDIdx, prog) {
@@ -1496,13 +1509,13 @@ const realDate = this.getRealDate(week.num, dIdx);
                     d.exercises.forEach(ex => { 
                         ex.note = "";
                         ex.sets.forEach(s => { 
-                        s.w = ""; 
-                        s.d = ""; 
-                        // Стираємо повторення ТІЛЬКИ для робочих підходів (TS, BO, DS)
-                        if (s.t === 'TS' || s.t === 'BO' || s.t === 'DS') {
-                            s.r = ""; 
-                        }
-                    });
+                            s.w = ""; 
+                            s.d = ""; 
+                            // Якщо це НЕ розминка (тобто TS, BO, DS або звичайний робочий) - стираємо повторення!
+                            if (s.t !== 'WU') {
+                                s.r = ""; 
+                            }
+                        });
                     });
                 });
             } else {
@@ -1563,7 +1576,8 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     ex.sets.forEach(s => { 
                         s.w = ""; 
                         s.d = ""; 
-                        if (s.t === 'TS' || s.t === 'BO' || s.t === 'DS') {
+                        // Очищаємо повторення для всіх підходів, окрім розминки
+                        if (s.t !== 'WU') {
                             s.r = ""; 
                         }
                     }); 
