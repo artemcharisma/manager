@@ -81,7 +81,7 @@ const App = {
         const net = totalWeight - barWeight;
         if (net <= 0) return "Гриф";
         let side = net / 2;
-        const plates = [25, 20, 15, 10, 5, 2.5, 1.25];
+        const plates = [20, 15, 10, 5, 2.5, 1.25];
         let res = [];
         for (let p of plates) {
             while (side >= p) { 
