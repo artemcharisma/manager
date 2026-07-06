@@ -1797,36 +1797,6 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     }
                 }
             }
-            // АВТО-ОНОВЛЕННЯ РОЗМИНКИ: Якщо змінили вагу TS, одразу перемальовуємо плейсхолдери
-            if (setObj.t === 'TS' && f === 'w' && inputEl) {
-                const exNode = inputEl.closest('.exercise');
-                if (exNode) {
-                    const wuRows = exNode.querySelectorAll('.set-row.type-WU');
-                    const tsWeight = parseFloat(finalVal) || 0;
-                    if (tsWeight > 0) {
-                        const exName = exObj.n.trim().toLowerCase();
-                        const guideInfo = this.data.guidelines[this.data.currentProgram]?.[this.data.weeks[w].type]?.find(g => g.n && g.n.trim().toLowerCase() === exName);
-                        if (guideInfo && guideInfo.w) {
-                            const parts = guideInfo.w.split(',');
-                            let wuTargets = [];
-                            parts.forEach(p => {
-                                const pctMatch = p.match(/(\d+)%/);
-                                const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
-                                if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
-                            });
-                            wuRows.forEach((row, idx) => {
-                                if (wuTargets[idx]) {
-                                    const calcW = Math.round((tsWeight * (wuTargets[idx].pct / 100)) / 2.5) * 2.5;
-                                    const wInp = row.querySelector('.w-val');
-                                    const rInp = row.querySelector('.r-val');
-                                    if (wInp && !exObj.sets[idx].w) wInp.placeholder = calcW;
-                                    if (rInp && !exObj.sets[idx].r && wuTargets[idx].reps) rInp.placeholder = wuTargets[idx].reps;
-                                }
-                            });
-                        }
-                    }
-                }
-            }
             
             this.save(); 
         }
