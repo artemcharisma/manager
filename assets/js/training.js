@@ -265,9 +265,9 @@ const App = {
                 to { opacity: 1; transform: translateY(0); }
             }
             .ghost-active::placeholder { 
-                color: rgba(212, 175, 55, 0.6) !important; 
-                font-weight: 700; 
-                text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+                color: rgba(255, 255, 255, 0.25) !important; 
+                font-weight: 500; 
+                text-shadow: none;
             }
             /* Фікс дьоргання екрану на iOS/Android */
             body { overscroll-behavior-y: none; }
@@ -664,18 +664,16 @@ const App = {
         const isEd = document.body.classList.contains('editing');
         const currentBlockId = this.data.currentBlockId || this.data.currentProgram;
         const currentBlock = this.getCurrentBlock();
-        const prog = currentBlockId; // Для сумісності з нижнім кодом
+        const prog = currentBlockId; 
 
         const progSel = document.querySelector('.program-selector');
         if (progSel) {
-            // Динамічний фікс для мобільних екранів: перетворюємо жорстку сітку на свайп-панель
             progSel.style.display = 'flex';
             progSel.style.flexWrap = 'nowrap';
             progSel.style.overflowX = 'auto';
             progSel.style.gap = '8px';
-            progSel.style.WebkitOverflowScrolling = 'touch'; // Плавний скрол на iOS
+            progSel.style.WebkitOverflowScrolling = 'touch'; 
             
-            // Ін'єкція стилів для правильного відображення кнопок та приховування системного скролбару
             if (!document.getElementById('prog-scroll-fix')) {
                 const s = document.createElement('style');
                 s.id = 'prog-scroll-fix';
@@ -698,7 +696,6 @@ const App = {
             </div>`;
         }
 
-        // Оновлюємо дату старту в інпуті вгорі сторінки
         const dateInput = document.querySelector('input[type="date"]');
         if (dateInput) {
             dateInput.value = currentBlock.startDate || this.data.startDate;
@@ -706,8 +703,7 @@ const App = {
         }
 
         const filteredWeeks = this.data.weeks.filter(w => w.prog === currentBlockId);
-
-        const currentRealWeek = this.getCurrentWeekNum(currentBlockId); // Відлік від дати ЦЬОГО блоку
+        const currentRealWeek = this.getCurrentWeekNum(currentBlockId); 
 
         nav.innerHTML = filteredWeeks.map((w) => {
             const specialClass = w.prog === 'arms' ? 'is-arms' : '';
@@ -732,22 +728,21 @@ const App = {
                 
                 const daysHtml = week.days.map((day, dIdx) => {
                     const uid = week.id + '-' + dIdx;
-let isOpen = false;
-if (this.data.opened && this.data.opened.hasOwnProperty(uid)) {
-    isOpen = this.data.opened[uid]; // Якщо ви вручну відкрили/закрили
-} else {
-    // Розумна автоматика: відкриті тільки сьогодні і майбутні дні
-    const dDate = this.getRealDateObj(week.num, dIdx);
-    dDate.setHours(0,0,0,0);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    isOpen = dDate.getTime() >= today.getTime();
-}
-const realDate = this.getRealDate(week.num, dIdx);
+                    let isOpen = false;
+                    if (this.data.opened && this.data.opened.hasOwnProperty(uid)) {
+                        isOpen = this.data.opened[uid]; 
+                    } else {
+                        const dDate = this.getRealDateObj(week.num, dIdx);
+                        dDate.setHours(0,0,0,0);
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        isOpen = dDate.getTime() >= today.getTime();
+                    }
+                    const realDate = this.getRealDate(week.num, dIdx);
                     const isToday = this.isToday(week.num, dIdx);
                     const todayBorder = isToday ? 'border-color: var(--theme); box-shadow: 0 0 15px rgba(212,175,55,0.15);' : '';
                     
-                    let firstEmptySetFound = false; // Винесли сюди, щоб світився лише ОДИН підхід на весь день!
+                    let firstEmptySetFound = false; 
 
                     const exsHtml = day.exercises.map((ex, eIdx) => {
                         const m = ex.m || 'wr';
@@ -780,7 +775,6 @@ const realDate = this.getRealDate(week.num, dIdx);
                             if (guideInfo && !isEd) {
                                 let weightHint = "";
                                 const e1RM = this.getEstimated1RM(exKeyName, week.num, dIdx, prog);
-                                // ФІКС: Шукаємо відсоток ТІЛЬКИ на початку рядка (напр. "70%"). Ігноруємо "TS + BO (-20%)".
                                 if (e1RM > 0 && guideInfo.p) {
                                     const match = guideInfo.p.match(/^\s*(\d{2,3})\s*%/); 
                                     if (match) {
@@ -923,14 +917,6 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${App.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
                             }
 
-                            // ==========================================
-
-                            let displayW = parseFloat(s.w || placeholderW) || 0;
-                            let platesHtml = '';
-                            if (currentBar && displayW > parseFloat(currentBar)) {
-                                platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${App.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
-                            }
-
                             return `
                             <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
                                 <div style="font-size:0.55rem; font-family:'JetBrains Mono'; min-height:14px; letter-spacing:0.5px; width:100%; display:flex; justify-content:space-between; align-items:flex-end; padding:0 4px; margin-bottom:2px;">
@@ -955,6 +941,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                                 </div>
                             </div>`;
                         }).join('');
+                        
                         let prevNoteHtml = '';
                         if (exKeyName) {
                             const prevWeek = this.data.weeks.find(w_ => w_.prog === week.prog && w_.num === week.num - 1);
@@ -1821,7 +1808,7 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 }
             }
 
-            // --- НОВЕ: ДИНАМІЧНИЙ ПЕРЕРАХУНОК МЛИНЦІВ ДЛЯ ПОТОЧНОГО ПІДХОДУ ---
+            // --- ДИНАМІЧНИЙ ПЕРЕРАХУНОК МЛИНЦІВ ДЛЯ ПОТОЧНОГО ПІДХОДУ ---
             if (f === 'w') {
                 const exNameStr = exObj.n.trim().toLowerCase();
                 const currentBar = this.data.settings[`${exNameStr}_bar`];
@@ -1836,7 +1823,6 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     }
                 }
             }
-            // ------------------------------------------------------------------
 
             const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
             if (ghostSets && ghostSets[s]) {
@@ -1862,46 +1848,6 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 }
             }
 
-            // АВТО-ОНОВЛЕННЯ РОЗМИНКИ: Оновлюємо і ваги, і млинці
-            if (setObj.t === 'TS' && f === 'w' && inputEl) {
-                const exNode = inputEl.closest('.exercise');
-                if (exNode) {
-                    const wuRows = exNode.querySelectorAll('.set-row.type-WU');
-                    const tsWeight = parseFloat(finalVal) || 0;
-                    if (tsWeight > 0) {
-                        const exNameStr = exObj.n.trim().toLowerCase();
-                        const guideInfo = this.data.guidelines[this.data.currentProgram]?.[this.data.weeks[w].type]?.find(g => g.n && g.n.trim().toLowerCase() === exNameStr);
-                        if (guideInfo && guideInfo.w) {
-                            const parts = guideInfo.w.split(',');
-                            let wuTargets = [];
-                            parts.forEach(p => {
-                                const pctMatch = p.match(/(\d+)%/);
-                                const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
-                                if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
-                            });
-                            
-                            const currentBar = this.data.settings[`${exNameStr}_bar`];
-                            
-                            wuRows.forEach((row, idx) => {
-                                if (wuTargets[idx]) {
-                                    const calcW = Math.round((tsWeight * (wuTargets[idx].pct / 100)) / 2.5) * 2.5;
-                                    const wInp = row.querySelector('.w-val');
-                                    const rInp = row.querySelector('.r-val');
-                                    if (wInp && !exObj.sets[idx].w) wInp.placeholder = calcW;
-                                    if (rInp && !exObj.sets[idx].r && wuTargets[idx].reps) rInp.placeholder = wuTargets[idx].reps;
-                                    
-                                    // Оновлюємо млинці для розминки
-                                    const pEl = document.getElementById(`plates-${w}-${d}-${e}-${idx}`);
-                                    if (pEl && currentBar && calcW > parseFloat(currentBar)) {
-                                        pEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${this.calcPlates(calcW, parseFloat(currentBar))} ]</span>`;
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-            
             this.save(); 
         }
     },
