@@ -618,13 +618,13 @@ const App = {
     },
 
     copyGhostToSet(w, d, e, s, gw, gr) {
-        if (!gw || !gr) return;
+        if (!gw && !gr) return; 
         this.pushHistory();
-        this.data.weeks[w].days[d].exercises[e].sets[s].w = gw.toString();
-        this.data.weeks[w].days[d].exercises[e].sets[s].r = gr.toString();
+        if (gw && gw !== 'undefined') this.data.weeks[w].days[d].exercises[e].sets[s].w = gw.toString();
+        if (gr && gr !== 'undefined') this.data.weeks[w].days[d].exercises[e].sets[s].r = gr.toString();
         this.save();
         this.render();
-        this.showToast(`✅ Вставлено: ${gw}кг × ${gr}`, "var(--success)");
+        this.showToast(`✅ Вставлено: ${gw||'-'}кг × ${gr||'-'}`, "var(--success)");
     },
 
     render() {
@@ -843,10 +843,9 @@ const realDate = this.getRealDate(week.num, dIdx);
                             }
 
                             let progressHtml = '&nbsp;';
-                            if (ghostW && ghostR) { // Прибрали блокування для WU
+                            if (ghostW || ghostR) { // ФІКС: Зняли блокування для WU і дозволили неповні привиди
                                 let icon = '';
-                                // Розрахунок 1RM та іконки прогресу робимо ТІЛЬКИ для робочих підходів
-                                if (sType !== 'WU') {
+                                if (sType !== 'WU' && ghostW && ghostR) {
                                     let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
                                     let curW = parseFloat(s.w) || 0;
                                     let curR = parseFloat(s.r) || 0;
@@ -856,7 +855,7 @@ const realDate = this.getRealDate(week.num, dIdx);
                                     if (cur1RM > prev1RM) icon = '<span style="color:var(--success); text-shadow: 0 0 5px var(--success);">🔥</span>';
                                     else if (cur1RM > 0 && cur1RM < prev1RM) icon = '<span style="color:var(--danger)">🔻</span>';
                                 }
-                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Вставити дані">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
+                                progressHtml = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${realWIdx},${dIdx},${eIdx},${sIdx}, '${ghostW}', '${ghostR}')" title="Вставити дані">⏮ ${ghostW||'-'}x${ghostR||'-'} ${icon}</span>`;
                             }
 
                             // === НОВА ЛОГІКА ПЛЕЙСХОЛДЕРІВ ===
@@ -864,9 +863,23 @@ const realDate = this.getRealDate(week.num, dIdx);
                             let placeholderR = "";
 
                             if (sType === 'BO' && sIdx > 0 && !s.w) {
-                                const prevSet = ex.sets[sIdx - 1];// === НОВА ЛОГІКА ПЛЕЙСХОЛДЕРІВ ===
-                            let placeholderW = "";
-                            let placeholderR = "";
+                                const prevSet = ex.sets[sIdx - 1];
+                                if (prevSet && prevSet.t === 'TS' && prevSet.w) {
+                                    const tsWeight = parseFloat(prevSet.w);
+                                    if (!isNaN(tsWeight) && tsWeight > 0) {
+                                        placeholderW = Math.round((tsWeight * 0.8) / 2.5) * 2.5; 
+                                    }
+                                }
+                            }
+                            
+                            // ФІКС: Зняли блокування sType !== 'WU'
+                            if (!placeholderW && !s.w && ghostW) {
+                                placeholderW = ghostW;
+                            }
+                            if (!placeholderR && !s.r && ghostR) {
+                                placeholderR = ghostR;
+                            }
+                            // ==========================================
 
                             // 1. Авто-розрахунок для BO (Back-off)
                             if (sType === 'BO' && sIdx > 0 && !s.w) {
@@ -1838,7 +1851,14 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 let ghostR = ghostSets[s].r;
                 if (ghostW && ghostR) {
                     let icon = '';
-                    if (setObj.t !== 'WU') {
+                    // ФІКС: Зняли загальне блокування для WU
+            const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
+            if (ghostSets && ghostSets[s]) {
+                let ghostW = ghostSets[s].w;
+                let ghostR = ghostSets[s].r;
+                if (ghostW || ghostR) { 
+                    let icon = '';
+                    if (setObj.t !== 'WU' && ghostW && ghostR) {
                         let prev1RM = parseFloat(ghostW) * (1 + parseFloat(ghostR) / 30);
                         let curW = parseFloat(setObj.w) || 0;
                         let curR = parseFloat(setObj.r) || 0;
@@ -1851,11 +1871,10 @@ newData = JSON.parse(JSON.stringify(templateSource));
 
                     const hudEl = document.getElementById(`hud-${w}-${d}-${e}-${s}`);
                     if (hudEl) {
-                        hudEl.innerHTML = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${w},${d},${e},${s}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW}x${ghostR} ${icon}</span>`;
+                        hudEl.innerHTML = `<span style="color:#777; font-weight:600; cursor:pointer; padding:2px;" onclick="App.copyGhostToSet(${w},${d},${e},${s}, '${ghostW}', '${ghostR}')" title="Клікніть, щоб вставити ці цифри">⏮ ${ghostW||'-'}x${ghostR||'-'} ${icon}</span>`;
                     }
                 }
             }
-
             // АВТО-ОНОВЛЕННЯ РОЗМИНКИ: Якщо змінили вагу TS, одразу перемальовуємо плейсхолдери
             if (setObj.t === 'TS' && f === 'w' && inputEl) {
                 const exNode = inputEl.closest('.exercise');
