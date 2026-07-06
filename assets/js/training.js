@@ -861,7 +861,65 @@ const realDate = this.getRealDate(week.num, dIdx);
                             let placeholderR = "";
 
                             if (sType === 'BO' && sIdx > 0 && !s.w) {
+                                const prevSet = ex.sets[sIdx - 1];// === НОВА ЛОГІКА ПЛЕЙСХОЛДЕРІВ ===
+                            let placeholderW = "";
+                            let placeholderR = "";
+
+                            // 1. Авто-розрахунок для BO (Back-off)
+                            if (sType === 'BO' && sIdx > 0 && !s.w) {
                                 const prevSet = ex.sets[sIdx - 1];
+                                if (prevSet && prevSet.t === 'TS' && prevSet.w) {
+                                    const tsWeight = parseFloat(prevSet.w);
+                                    if (!isNaN(tsWeight) && tsWeight > 0) {
+                                        placeholderW = Math.round((tsWeight * 0.8) / 2.5) * 2.5; 
+                                    }
+                                }
+                            }
+                            
+                            // 2. СМАРТ-РОЗРАХУНОК ДЛЯ РОЗМИНКИ (WU) НА БАЗІ ДОВІДНИКА
+                            if (sType === 'WU' && guideInfo && guideInfo.w) {
+                                // Парсимо рядок типу "30%x15, 50%x8" або просто "40%, 60%"
+                                const parts = guideInfo.w.split(',');
+                                let wuTargets = [];
+                                parts.forEach(p => {
+                                    const pctMatch = p.match(/(\d+)%/);
+                                    const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
+                                    if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
+                                });
+                                
+                                // Визначаємо порядковий номер розминки
+                                let wuIndex = 0;
+                                for (let i = 0; i < sIdx; i++) {
+                                    if (ex.sets[i].t === 'WU') wuIndex++;
+                                }
+
+                                if (wuTargets[wuIndex]) {
+                                    let targetWeight = 0;
+                                    const tsSet = ex.sets.find(st => st.t === 'TS');
+                                    if (tsSet && tsSet.w) {
+                                        targetWeight = parseFloat(tsSet.w);
+                                    } else if (ghostSets) {
+                                        const ghostTS = ghostSets.find(st => st.t === 'TS');
+                                        if (ghostTS && ghostTS.w) targetWeight = parseFloat(ghostTS.w);
+                                    }
+                                    
+                                    if (targetWeight > 0) {
+                                        placeholderW = Math.round((targetWeight * (wuTargets[wuIndex].pct / 100)) / 2.5) * 2.5;
+                                    }
+                                    if (wuTargets[wuIndex].reps) {
+                                        placeholderR = wuTargets[wuIndex].reps;
+                                    }
+                                }
+                            }
+
+                            // 3. Якщо це порожній робочий підхід - беремо дані з історії
+                            if (!placeholderW && !s.w && ghostW && sType !== 'WU') {
+                                placeholderW = ghostW;
+                            }
+                            if (!placeholderR && !s.r && ghostR && sType !== 'WU') {
+                                placeholderR = ghostR;
+                            }
+                            // ==========================================
                                 if (prevSet && prevSet.t === 'TS' && prevSet.w) {
                                     const tsWeight = parseFloat(prevSet.w);
                                     if (!isNaN(tsWeight) && tsWeight > 0) {
@@ -1785,6 +1843,38 @@ newData = JSON.parse(JSON.stringify(templateSource));
                     }
                 }
             }
+
+            // АВТО-ОНОВЛЕННЯ РОЗМИНКИ: Якщо змінили вагу TS, одразу перемальовуємо плейсхолдери
+            if (setObj.t === 'TS' && f === 'w' && inputEl) {
+                const exNode = inputEl.closest('.exercise');
+                if (exNode) {
+                    const wuRows = exNode.querySelectorAll('.set-row.type-WU');
+                    const tsWeight = parseFloat(finalVal) || 0;
+                    if (tsWeight > 0) {
+                        const exName = exObj.n.trim().toLowerCase();
+                        const guideInfo = this.data.guidelines[this.data.currentProgram]?.[this.data.weeks[w].type]?.find(g => g.n && g.n.trim().toLowerCase() === exName);
+                        if (guideInfo && guideInfo.w) {
+                            const parts = guideInfo.w.split(',');
+                            let wuTargets = [];
+                            parts.forEach(p => {
+                                const pctMatch = p.match(/(\d+)%/);
+                                const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
+                                if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
+                            });
+                            wuRows.forEach((row, idx) => {
+                                if (wuTargets[idx]) {
+                                    const calcW = Math.round((tsWeight * (wuTargets[idx].pct / 100)) / 2.5) * 2.5;
+                                    const wInp = row.querySelector('.w-val');
+                                    const rInp = row.querySelector('.r-val');
+                                    if (wInp && !exObj.sets[idx].w) wInp.placeholder = calcW;
+                                    if (rInp && !exObj.sets[idx].r && wuTargets[idx].reps) rInp.placeholder = wuTargets[idx].reps;
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            
             this.save(); 
         }
     },
