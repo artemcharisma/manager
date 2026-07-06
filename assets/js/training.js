@@ -90,7 +90,7 @@ const App = {
             }
         }
         if (side > 0) res.push(side);
-        return res.join(' + ');
+        return res.join('+'); // ФІКС: прибрали пробіли
     },
     
 
@@ -914,14 +914,15 @@ const App = {
                             let displayW = parseFloat(s.w || placeholderW) || 0;
                             let platesHtml = '';
                             if (currentBar && displayW > parseFloat(currentBar)) {
-                                platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${App.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
+                                // ФІКС: додали white-space: nowrap і прибрали зайві пробіли біля дужок
+                                platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${App.calcPlates(displayW, parseFloat(currentBar))}]</span>`;
                             }
 
                             return `
                             <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
-                                <div style="font-size:0.55rem; font-family:'JetBrains Mono'; min-height:14px; letter-spacing:0.5px; width:100%; display:flex; justify-content:space-between; align-items:flex-end; padding:0 4px; margin-bottom:2px;">
-                                    <div id="plates-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="flex:1; text-align:left;">${platesHtml}</div>
-                                    <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="flex:1; text-align:right; white-space:nowrap;">
+                                <div style="font-size:0.55rem; font-family:'JetBrains Mono'; min-height:14px; letter-spacing:0.5px; width:100%; display:flex; justify-content:space-between; align-items:center; padding:0 4px; margin-bottom:2px;">
+                                    <div id="plates-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="flex:1; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:4px;">${platesHtml}</div>
+                                    <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="text-align:right; white-space:nowrap; flex-shrink:0;">
                                         ${progressHtml}
                                     </div>
                                 </div>
@@ -1808,7 +1809,7 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 }
             }
 
-            // --- ДИНАМІЧНИЙ ПЕРЕРАХУНОК МЛИНЦІВ ДЛЯ ПОТОЧНОГО ПІДХОДУ ---
+            // --- НОВЕ: ДИНАМІЧНИЙ ПЕРЕРАХУНОК МЛИНЦІВ ДЛЯ ПОТОЧНОГО ПІДХОДУ ---
             if (f === 'w') {
                 const exNameStr = exObj.n.trim().toLowerCase();
                 const currentBar = this.data.settings[`${exNameStr}_bar`];
@@ -1817,12 +1818,14 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 if (platesEl && currentBar) {
                     const displayW = parseFloat(finalVal) || 0;
                     if (displayW > parseFloat(currentBar)) {
-                        platesEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2);">[ ${this.calcPlates(displayW, parseFloat(currentBar))} ]</span>`;
+                        // ФІКС: прибрали пробіли біля дужок, додали white-space:nowrap
+                        platesEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${this.calcPlates(displayW, parseFloat(currentBar))}]</span>`;
                     } else {
                         platesEl.innerHTML = '';
                     }
                 }
             }
+            // ------------------------------------------------------------------
 
             const ghostSets = this.getGhostData(exObj.n, this.data.weeks[w].num, d, this.data.currentProgram);
             if (ghostSets && ghostSets[s]) {
@@ -1848,6 +1851,47 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 }
             }
 
+            // АВТО-ОНОВЛЕННЯ РОЗМИНКИ: Якщо змінили вагу TS, одразу перемальовуємо плейсхолдери
+            if (setObj.t === 'TS' && f === 'w' && inputEl) {
+                const exNode = inputEl.closest('.exercise');
+                if (exNode) {
+                    const wuRows = exNode.querySelectorAll('.set-row.type-WU');
+                    const tsWeight = parseFloat(finalVal) || 0;
+                    if (tsWeight > 0) {
+                        const exNameStr = exObj.n.trim().toLowerCase();
+                        const guideInfo = this.data.guidelines[this.data.currentProgram]?.[this.data.weeks[w].type]?.find(g => g.n && g.n.trim().toLowerCase() === exNameStr);
+                        if (guideInfo && guideInfo.w) {
+                            const parts = guideInfo.w.split(',');
+                            let wuTargets = [];
+                            parts.forEach(p => {
+                                const pctMatch = p.match(/(\d+)%/);
+                                const repMatch = p.match(/[xхXХ]\s*(\d+)/i);
+                                if (pctMatch) wuTargets.push({ pct: parseInt(pctMatch[1]), reps: repMatch ? parseInt(repMatch[1]) : null });
+                            });
+                            
+                            const currentBar = this.data.settings[`${exNameStr}_bar`];
+                            
+                            wuRows.forEach((row, idx) => {
+                                if (wuTargets[idx]) {
+                                    const calcW = Math.round((tsWeight * (wuTargets[idx].pct / 100)) / 2.5) * 2.5;
+                                    const wInp = row.querySelector('.w-val');
+                                    const rInp = row.querySelector('.r-val');
+                                    if (wInp && !exObj.sets[idx].w) wInp.placeholder = calcW;
+                                    if (rInp && !exObj.sets[idx].r && wuTargets[idx].reps) rInp.placeholder = wuTargets[idx].reps;
+                                    
+                                    // Оновлюємо млинці для розминки
+                                    const pEl = document.getElementById(`plates-${w}-${d}-${e}-${idx}`);
+                                    if (pEl && currentBar && calcW > parseFloat(currentBar)) {
+                                        // ФІКС: прибрали пробіли біля дужок, додали white-space:nowrap
+                                        pEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${this.calcPlates(calcW, parseFloat(currentBar))}]</span>`;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            
             this.save(); 
         }
     },
