@@ -1882,8 +1882,9 @@ newData = JSON.parse(JSON.stringify(templateSource));
                                     // Оновлюємо млинці для розминки
                                     const pEl = document.getElementById(`plates-${w}-${d}-${e}-${idx}`);
                                     if (pEl && currentBar && calcW > parseFloat(currentBar)) {
-                                        // ФІКС: прибрали пробіли біля дужок, додали white-space:nowrap
                                         pEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${this.calcPlates(calcW, parseFloat(currentBar))}]</span>`;
+                                    } else if (pEl) {
+                                        pEl.innerHTML = ''; // Очищаємо, якщо вага стала меншою за гриф
                                     }
                                 }
                             });
