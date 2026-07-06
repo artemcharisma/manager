@@ -914,15 +914,15 @@ const App = {
                             let displayW = parseFloat(s.w || placeholderW) || 0;
                             let platesHtml = '';
                             if (currentBar && displayW > parseFloat(currentBar)) {
-                                // ФІКС: додали white-space: nowrap і прибрали зайві пробіли біля дужок
-                                platesHtml = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${App.calcPlates(displayW, parseFloat(currentBar))}]</span>`;
+                                // ФІКС: Більш щільний шрифт, без дужок, без рамок
+                                platesHtml = `<span style="color:#3b82f6; font-size:0.6rem; font-weight:800; background:rgba(59,130,246,0.15); padding:1px 4px; border-radius:4px; white-space:nowrap; letter-spacing:-0.5px; box-shadow: 0 0 4px rgba(59,130,246,0.2);">${App.calcPlates(displayW, parseFloat(currentBar))}</span>`;
                             }
 
                             return `
                             <div style="display:flex; flex-direction:column; gap:2px; position:relative;">
-                                <div style="font-size:0.55rem; font-family:'JetBrains Mono'; min-height:14px; letter-spacing:0.5px; width:100%; display:flex; justify-content:space-between; align-items:center; padding:0 4px; margin-bottom:2px;">
-                                    <div id="plates-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="flex:1; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:4px;">${platesHtml}</div>
-                                    <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="text-align:right; white-space:nowrap; flex-shrink:0;">
+                                <div style="font-size:0.55rem; font-family:'JetBrains Mono'; min-height:14px; width:100%; display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2px; position:relative; z-index:5;">
+                                    <div id="plates-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="text-align:left; white-space:nowrap; flex-shrink:0;">${platesHtml}</div>
+                                    <div id="hud-${realWIdx}-${dIdx}-${eIdx}-${sIdx}" style="text-align:right; white-space:nowrap; flex-shrink:0; margin-left:auto;">
                                         ${progressHtml}
                                     </div>
                                 </div>
@@ -1818,8 +1818,7 @@ newData = JSON.parse(JSON.stringify(templateSource));
                 if (platesEl && currentBar) {
                     const displayW = parseFloat(finalVal) || 0;
                     if (displayW > parseFloat(currentBar)) {
-                        // ФІКС: прибрали пробіли біля дужок, додали white-space:nowrap
-                        platesEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${this.calcPlates(displayW, parseFloat(currentBar))}]</span>`;
+                        platesEl.innerHTML = `<span style="color:#3b82f6; font-size:0.6rem; font-weight:800; background:rgba(59,130,246,0.15); padding:1px 4px; border-radius:4px; white-space:nowrap; letter-spacing:-0.5px; box-shadow: 0 0 4px rgba(59,130,246,0.2);">${this.calcPlates(displayW, parseFloat(currentBar))}</span>`;
                     } else {
                         platesEl.innerHTML = '';
                     }
@@ -1882,9 +1881,9 @@ newData = JSON.parse(JSON.stringify(templateSource));
                                     // Оновлюємо млинці для розминки
                                     const pEl = document.getElementById(`plates-${w}-${d}-${e}-${idx}`);
                                     if (pEl && currentBar && calcW > parseFloat(currentBar)) {
-                                        pEl.innerHTML = `<span style="color:#3b82f6; font-size:0.5rem; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px; border:1px solid rgba(59,130,246,0.2); white-space:nowrap;">[${this.calcPlates(calcW, parseFloat(currentBar))}]</span>`;
+                                        pEl.innerHTML = `<span style="color:#3b82f6; font-size:0.6rem; font-weight:800; background:rgba(59,130,246,0.15); padding:1px 4px; border-radius:4px; white-space:nowrap; letter-spacing:-0.5px; box-shadow: 0 0 4px rgba(59,130,246,0.2);">${this.calcPlates(calcW, parseFloat(currentBar))}</span>`;
                                     } else if (pEl) {
-                                        pEl.innerHTML = ''; // Очищаємо, якщо вага стала меншою за гриф
+                                        pEl.innerHTML = ''; // Очищаємо, якщо вага розминки менша за гриф
                                     }
                                 }
                             });
