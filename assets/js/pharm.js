@@ -109,9 +109,28 @@ const PhotoDB = {
                 } else r(k);
             };
         });
-    }
-};
+    }, 
 
+    getAvailableOptions() {
+        return new Promise((r) => {
+            if(!this.db) { r([]); return; }
+            const options = [];
+            this.db.transaction(["photos"], "readonly").objectStore("photos").openCursor().onsuccess = (e) => {
+                const c = e.target.result;
+                if(c) { 
+                    // Збираємо унікальні комбінації Блок + Тиждень
+                    if (!options.some(o => o.blockId === c.value.blockId && o.week === c.value.week)) {
+                        options.push({ blockId: c.value.blockId, week: c.value.week });
+                    }
+                    c.continue(); 
+                } else {
+                    options.sort((a,b) => a.week - b.week); // Сортуємо по тижнях
+                    r(options);
+                }
+            };
+        });
+    }
+}; 
 const DefaultData = {
     startDate: new Date().toISOString().split('T')[0],
     privacyEnabled: false,
@@ -260,7 +279,7 @@ const App = {
         document.getElementById('fileInput').click();
     },
 
-    viewerState: { isCompare: false, leftWeek: null, rightWeek: null, singleIdx: 0, photosSingle: [], photosLeft: [], photosRight: [] },
+    viewerState: { isCompare: false, leftBlockId: null, leftWeek: null, rightBlockId: null, rightWeek: null, singleIdx: 0, photosSingle: [], photosLeft: [], photosRight: [], availableOptions: [] },
 
     async openPhotoModal(week, idx) {
         this.lockScroll();
@@ -877,19 +896,12 @@ const App = {
     attachDragScroll(selector) {
         const sliders = document.querySelectorAll(selector);
         sliders.forEach(slider => {
-            // Запобіжник від дублювання подій при рендері
             if (slider.dataset.scrollAttached === 'true') return; 
             slider.dataset.scrollAttached = 'true';
             
-            // Прокрутка звичайним коліщатком миші
-            slider.addEventListener('wheel', (e) => {
-                if (e.deltaY !== 0) {
-                    e.preventDefault();
-                    slider.scrollLeft += e.deltaY;
-                }
-            });
+            // Нативний горизонтальний скрол (тачпадом або shift+коліщатко) залишаємо браузеру
+            slider.addEventListener('wheel', () => {}, { passive: true });
 
-            // Імітація свайпу на ПК (Drag-to-scroll)
             let isDown = false;
             let startX;
             let scrollLeft;
@@ -902,17 +914,17 @@ const App = {
             });
             slider.addEventListener('mouseleave', () => {
                 isDown = false;
-                slider.style.cursor = 'pointer'; 
+                slider.style.cursor = ''; 
             });
             slider.addEventListener('mouseup', () => {
                 isDown = false;
-                slider.style.cursor = 'pointer';
+                slider.style.cursor = '';
             });
             slider.addEventListener('mousemove', (e) => {
                 if (!isDown) return;
                 e.preventDefault();
                 const x = e.pageX - slider.offsetLeft;
-                const walk = (x - startX) * 1.5; // Швидкість свайпу
+                const walk = (x - startX) * 1.5;
                 slider.scrollLeft = scrollLeft - walk;
             });
         });
