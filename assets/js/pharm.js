@@ -287,7 +287,11 @@ const App = {
                 </div>
 
                 <!-- РЕЖИМ ПОРІВНЯННЯ -->
-                <div id="photoViewCompare" style="width:100%; height:100%; display:none; flex-direction:row; align-items:center; justify-content:center; gap:2px; background:#000;">
+                <div id="photoViewCompare" style="width:100%; height:100%; display:none; flex-direction:row; align-items:center; justify-content:center; gap:2px; background:#000; position:relative;">
+                    
+                    <div id="compareNavLeft" onclick="App.navViewerPose(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:1000; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8); background: rgba(0,0,0,0.3); border-radius: 8px;">❮</div>
+                    <div id="compareNavRight" onclick="App.navViewerPose(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:1000; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8); background: rgba(0,0,0,0.3); border-radius: 8px;">❯</div>
+
                     <div style="flex:1; height:100%; position:relative; border-right:2px solid #222; display:flex; flex-direction:column; justify-content:center;">
                         <div id="photoWeekSelectorLeft" style="position:absolute; top:25px; left:50%; transform:translateX(-50%); z-index:100; background:rgba(0,0,0,0.7); border:1px solid #444; border-radius:12px; padding:2px 10px;"></div>
                         <img id="customPhotoImgLeft" style="width:100%; max-height:100%; object-fit:contain;">
@@ -347,30 +351,42 @@ const App = {
         const viewSingle = document.getElementById('photoViewSingle');
         const viewCompare = document.getElementById('photoViewCompare');
         
+        // Нормалізація старих фотографій
+        const normalizeSlots = (arr) => {
+            arr.forEach((p, i) => { if (p.slot === undefined) p.slot = i; });
+            return arr;
+        };
+        
         if (this.viewerState.isCompare) {
             viewSingle.style.display = 'none';
             viewCompare.style.display = 'flex';
             
-            this.viewerState.photosLeft = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
-            this.viewerState.photosRight = await PhotoDB.get(this.data.currentBlockId, this.viewerState.rightWeek);
+            let rawLeft = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
+            let rawRight = await PhotoDB.get(this.data.currentBlockId, this.viewerState.rightWeek);
             
-            document.getElementById('customPhotoImgLeft').src = this.viewerState.photosLeft.length > 0 ? this.viewerState.photosLeft[0].data : '';
-            document.getElementById('customPhotoImgRight').src = this.viewerState.photosRight.length > 0 ? this.viewerState.photosRight[0].data : '';
+            this.viewerState.photosLeft = normalizeSlots(rawLeft);
+            this.viewerState.photosRight = normalizeSlots(rawRight);
+            
+            const idx = this.viewerState.singleIdx; // Це тепер Слот (0, 1 або 2)
+            
+            const pLeft = this.viewerState.photosLeft.find(p => p.slot === idx);
+            const pRight = this.viewerState.photosRight.find(p => p.slot === idx);
+            
+            document.getElementById('customPhotoImgLeft').src = pLeft ? pLeft.data : '';
+            document.getElementById('customPhotoImgRight').src = pRight ? pRight.data : '';
+                
         } else {
             viewSingle.style.display = 'flex';
             viewCompare.style.display = 'none';
             
-            this.viewerState.photosSingle = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
-            if (this.viewerState.singleIdx >= this.viewerState.photosSingle.length) {
-                this.viewerState.singleIdx = Math.max(0, this.viewerState.photosSingle.length - 1);
-            }
+            let rawSingle = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
+            this.viewerState.photosSingle = normalizeSlots(rawSingle);
+            
+            const idx = this.viewerState.singleIdx;
+            const pSingle = this.viewerState.photosSingle.find(p => p.slot === idx);
             
             const img = document.getElementById('customPhotoImg');
-            if (this.viewerState.photosSingle.length > 0) {
-                img.src = this.viewerState.photosSingle[this.viewerState.singleIdx].data;
-            } else {
-                img.src = '';
-            }
+            img.src = pSingle ? pSingle.data : '';
             
             img.onload = () => {
                 this.calculatePhotoBoundary(img);
@@ -380,7 +396,6 @@ const App = {
         
         this.updateViewerUI();
     },
-
     updateViewerUI() {
         const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
         
@@ -417,14 +432,20 @@ const App = {
     },
 
     navViewerPose(dir) {
-        if (this.viewerState.isCompare) return;
+        // Ми завжди маємо 3 жорсткі ракурси (0, 1, 2)
+        const maxPhotos = 3; 
+
         this.viewerState.singleIdx += dir;
+        
+        // Зациклення
+        if (this.viewerState.singleIdx >= maxPhotos) this.viewerState.singleIdx = 0;
+        if (this.viewerState.singleIdx < 0) this.viewerState.singleIdx = maxPhotos - 1;
+
         this.state.photoModalScale = 1;
         this.state.photoModalTranslate = { x: 0, y: 0 };
         this.updatePhotoTransform();
         this.loadViewerData();
     },
-
     changeViewerWeek(newWeek, target) {
         if (target === 'left' || target === 'single') this.viewerState.leftWeek = newWeek;
         if (target === 'right') this.viewerState.rightWeek = newWeek;
@@ -1390,8 +1411,41 @@ return `
         grid += '</div>';
 
         const photos = await PhotoDB.get(this.data.currentBlockId, this.state.week);
-        const pHtml = photos.map((p, idx) => `<div class="photo-card"><img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${idx})"><div class="photo-del" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div></div>`).join('');
+        // Адаптуємо старі фото під слоти
+        photos.forEach((p, i) => { if (p.slot === undefined) p.slot = i; });
 
+        const slotNames = ["ФРОНТ", "ПРОФІЛЬ", "СПИНА"];
+        let pHtml = '<div class="photo-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;">';
+        
+        for (let s = 0; s < 3; s++) {
+            const p = photos.find(x => x.slot === s);
+            if (p) {
+                // Слот ЗАЙНЯТИЙ: показуємо фото і хрестик видалення (якщо редагуємо)
+                pHtml += `
+                <div class="photo-card" style="border-color: var(--primary);">
+                    <div style="position:absolute; top:0; left:0; right:0; background:rgba(0,0,0,0.7); color:var(--primary); font-size:0.65rem; font-weight:900; text-align:center; padding:5px 0; z-index:10;">${slotNames[s]}</div>
+                    <img src="${p.data}" onclick="App.openPhotoModal(${this.state.week}, ${s})" style="padding-top: 20px; background: #000;">
+                    ${this.state.editing ? `<div class="photo-del" style="top:25px;" onclick="event.stopPropagation(); App.deletePhoto(${p.id})">✕</div>` : ''}
+                </div>`;
+            } else {
+                // Слот ПУСТИЙ
+                if (this.state.editing) {
+                    pHtml += `
+                    <label class="photo-card" style="display:flex; align-items:center; justify-content:center; border: 1px dashed #555; background: rgba(255,255,255,0.03); flex-direction:column; cursor:pointer;">
+                        <span style="font-size:1.8rem; color:#666; margin-bottom:5px;">+</span>
+                        <span style="font-size:0.75rem; color:#888; font-weight:800;">${slotNames[s]}</span>
+                        <input type="file" accept="image/*" style="display:none" onchange="App.uploadPhoto(this, ${s})">
+                    </label>`;
+                } else {
+                    pHtml += `
+                    <div class="photo-card" style="display:flex; align-items:center; justify-content:center; border: 1px solid #222; background: transparent; flex-direction:column; opacity:0.5;">
+                        <span style="font-size:0.75rem; color:#444; font-weight:800;">${slotNames[s]}</span>
+                        <span style="font-size:0.6rem; color:#333; margin-top:4px;">НЕМАЄ ФОТО</span>
+                    </div>`;
+                }
+            }
+        }
+        pHtml += '</div>';
         const mondayDateStr = GlobalVitals.formatDate(this.getRealDateObj(this.state.week, 0));
         const meas = GlobalVitals.get(mondayDateStr);
         const statsHtml = this.getStatsHtml(this.state.week);
@@ -1420,9 +1474,11 @@ return `
             </div>
 
             <div class="photo-area">
-                <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0">📸 ФОТО W${this.state.week}</h3>
-                <div class="photo-grid">${pHtml}</div>
-                <label class="btn-upload edit-ui" style="margin-top:10px;display:block">+ Завантажити фото<input type="file" id="photoInput" accept="image/*" multiple onchange="App.uploadPhoto(this)"></label>
+                <h3 style="color:#fff;font-size:1rem;margin:0 0 10px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <span>📸 ФОТО W${this.state.week}</span>
+                    <span style="font-size:0.75rem; color:#666; font-weight:normal;">3 ракурси</span>
+                </h3>
+                ${pHtml}
             </div>`;
 
        // Відкладаємо важку операцію зміни DOM на наступний доступний кадр
@@ -3160,42 +3216,48 @@ return `
         this.photoKeys = await PhotoDB.keys(this.data.currentBlockId);
     },
 
-    async uploadPhoto(inp) { 
+    async uploadPhoto(inp, slot) { 
         this.pushHistory(); 
         
-        // Змінюємо текст кнопки, щоб показати процес (UI зворотній зв'язок)
-        const btn = document.querySelector('.btn-upload');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Обробка...';
-        btn.style.pointerEvents = 'none';
+        const file = inp.files[0];
+        if (!file) return;
+
+        // Візуальний відгук під час завантаження
+        const labelEl = inp.parentElement;
+        const oldContent = labelEl.innerHTML;
+        labelEl.innerHTML = '<span style="font-size:0.8rem; color:var(--primary); font-weight:bold;">⏳...</span>';
+        labelEl.style.pointerEvents = 'none';
 
         try {
-            for(let f of inp.files) {
-                // Компресія зменшена до 1200px (для мобілок ідеально, економить 60% пам'яті)
-                const compressedBase64 = await compressImage(f, 1200, 0.8); 
-                if(PhotoDB.db) {
-                    await new Promise((resolve, reject) => {
-                        const tx = PhotoDB.db.transaction(["photos"], "readwrite");
-                        const store = tx.objectStore("photos");
-                        const req = store.add({ blockId: this.data.currentBlockId, week: this.state.week, data: compressedBase64 });
-                        req.onsuccess = () => resolve();
-                        req.onerror = () => reject();
-                    });
-                }
+            // Перевіряємо, чи є вже фото в цьому слоті, і видаляємо старе
+            const existingPhotos = await PhotoDB.get(this.data.currentBlockId, this.state.week);
+            existingPhotos.forEach((p, i) => { if (p.slot === undefined) p.slot = i; });
+            const existingInSlot = existingPhotos.find(p => p.slot === slot);
+            
+            if (existingInSlot) {
+                await PhotoDB.del(existingInSlot.id);
+            }
+
+            // Компресія
+            const compressedBase64 = await compressImage(file, 1200, 0.8); 
+            if(PhotoDB.db) {
+                await new Promise((resolve, reject) => {
+                    const tx = PhotoDB.db.transaction(["photos"], "readwrite");
+                    const store = tx.objectStore("photos");
+                    const req = store.add({ blockId: this.data.currentBlockId, week: this.state.week, slot: slot, data: compressedBase64 });
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject();
+                });
             }
         } catch(e) {
             console.error("Помилка завантаження фото", e);
             if(window.Modal) Modal.alert("Помилка при збереженні фото.", "УВАГА", "red");
         } finally {
-            // Відновлюємо UI
-            btn.innerHTML = originalText;
-            btn.style.pointerEvents = 'auto';
-            inp.value = ''; // ОЧИЩЕННЯ ІНПУТУ: дозволяє завантажити те саме фото двічі (інакше onchange не спрацює)
+            inp.value = ''; 
             await this.refreshPhotos(); 
             this.renderView(); 
         }
     },
-
 
     async deletePhoto(id) { 
         if(await Modal.confirm("Видалити це фото?", "ВИДАЛЕННЯ", "red")) { 
