@@ -88,18 +88,18 @@
         .course-progress { width: 100%; height: 6px; background: #222; border-radius: 3px; margin: 0 0 25px 0; position: relative; }
         .prog-bar { height: 100%; background: linear-gradient(90deg, var(--primary), #fcd34d); transition: width 0.5s ease; }
         .prog-text { position: absolute; top: 8px; right: 0; font-size: 0.7rem; color: #666; font-family: 'JetBrains Mono'; }
-/* --- PRO-Скрол для Фаз --- */
+        /* --- PRO-Скрол для Фаз --- */
         .phase-scroll { 
             display: flex; 
-            flex-wrap: nowrap; /* КРИТИЧНО: Не даємо падати на новий рядок */
+            flex-wrap: nowrap;
             gap: 12px; 
             overflow-x: auto; 
             padding: 10px 5px 20px 5px; 
             margin-bottom: 15px; 
             align-items: center; 
-            scrollbar-width: none; /* Ховає скрол у Firefox */
-            -webkit-overflow-scrolling: touch; /* Плавність на iOS */
-            cursor: pointer; /* Курсор для мишки */
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            /* ВИДАЛЕНО cursor: pointer; */
         }
         .phase-scroll::-webkit-scrollbar { display: none; } /* Ховає скрол Chrome/Safari */
         
@@ -120,7 +120,7 @@
             overflow-x: auto; 
             scrollbar-width: none; /* Ховає скрол у Firefox */
             -webkit-overflow-scrolling: touch; /* Плавність на iOS */
-            cursor: pointer; /* Курсор для мишки */
+            /* ВИДАЛЕНО cursor: pointer; */
         }
         .week-bar::-webkit-scrollbar { display: none; } /* Ховає скрол Chrome/Safari */
         .week-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; color: #52525b; font-weight: 700; font-size: 0.85rem; transition: 0.2s; flex-shrink: 0; }
@@ -187,8 +187,8 @@
         .ctrl-btn { font-size: 0.7rem; background: #222; padding: 2px 8px; border-radius: 4px; cursor: pointer; color: #ccc; border: none; }
 
         body:not(.editing) [contenteditable], body:not(.editing) [contenteditable="true"], body:not(.editing) .pharm-stock, body:not(.editing) .check-name, body:not(.editing) .med-name, body:not(.editing) .med-desc, body:not(.editing) .check-row { -webkit-touch-callout: none !important; -webkit-user-select: none !important; user-select: none !important; pointer-events: none !important; cursor: default !important; }
-        body:not(.editing) .phase-scroll, body:not(.editing) .phase-btn, body:not(.editing) .phase-btn span, body:not(.editing) .phase-btn small { pointer-events: auto !important; cursor: pointer !important; -webkit-user-select: none !important; user-select: none !important; }
-        body:not(.editing) .phase-btn { -webkit-touch-callout: none !important; -webkit-user-select: none !important; user-select: none !important; cursor: pointer !important; }
+        body:not(.editing) .phase-scroll, body:not(.editing) .phase-btn, body:not(.editing) .phase-btn span, body:not(.editing) .phase-btn small { pointer-events: auto !important; -webkit-user-select: none !important; user-select: none !important; }
+        body:not(.editing) .phase-btn { -webkit-touch-callout: none !important; -webkit-user-select: none !important; user-select: none !important; }
 
         #undoFloat { position: fixed; bottom: 160px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: rgba(28,28,30,0.9); border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; z-index: 900; opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.5); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; backdrop-filter: blur(5px); }
         #undoFloat.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
