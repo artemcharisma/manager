@@ -286,31 +286,23 @@ const App = {
         let modal = document.getElementById('customPhotoModal');
         if(!modal) return;
 
-        // Динамічний апгрейд UI для Спліт-режиму (додано стрілки ❮ та ❯)
         if (!modal.dataset.upgraded) {
             modal.innerHTML = `
                 <div style="position:absolute; top:20px; right:20px; z-index:1000; display:flex; gap:12px; align-items:center;">
-                    <button id="btnToggleCompare" style="background:rgba(212,175,55,0.15); border:1px solid var(--gold); color:var(--gold); padding:8px 16px; border-radius:12px; font-weight:800; font-family:'JetBrains Mono'; cursor:pointer; backdrop-filter:blur(5px); box-shadow:0 4px 15px rgba(0,0,0,0.5); transition:0.2s;" onclick="App.toggleCompareMode()">⚖️ ПОРІВНЯТИ</button>
+                    <button id="btnToggleCompare" style="background:rgba(212,175,55,0.15); border:1px solid var(--primary); color:var(--primary); padding:8px 16px; border-radius:12px; font-weight:800; font-family:'JetBrains Mono'; cursor:pointer; backdrop-filter:blur(5px); box-shadow:0 4px 15px rgba(0,0,0,0.5); transition:0.2s;" onclick="App.toggleCompareMode()">⚖️ ПОРІВНЯТИ</button>
                     <div class="sys-close" onclick="App.closePhotoModal()" style="background:rgba(0,0,0,0.6); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; border:1px solid rgba(255,255,255,0.2); cursor:pointer; font-size:1.2rem; backdrop-filter:blur(5px);">✕</div>
                 </div>
                 
-                <!-- ОДИНОЧНИЙ РЕЖИМ -->
                 <div id="photoViewSingle" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
                     <div id="photoWeekSelectorSingle" style="position:absolute; top:25px; left:25px; z-index:100;"></div>
-                    
                     <div id="photoNavLeft" onclick="App.navViewerPose(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:100; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8);">❮</div>
-                    
                     <img id="customPhotoImg" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">
-                    
                     <div id="photoNavRight" onclick="App.navViewerPose(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:100; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8);">❯</div>
                 </div>
 
-                <!-- РЕЖИМ ПОРІВНЯННЯ -->
                 <div id="photoViewCompare" style="width:100%; height:100%; display:none; flex-direction:row; align-items:center; justify-content:center; gap:2px; background:#000; position:relative;">
-                    
                     <div id="compareNavLeft" onclick="App.navViewerPose(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:1000; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8); background: rgba(0,0,0,0.3); border-radius: 8px;">❮</div>
                     <div id="compareNavRight" onclick="App.navViewerPose(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; z-index:1000; cursor:pointer; padding:20px; text-shadow:0 2px 10px rgba(0,0,0,0.8); background: rgba(0,0,0,0.3); border-radius: 8px;">❯</div>
-
                     <div style="flex:1; height:100%; position:relative; border-right:2px solid #222; display:flex; flex-direction:column; justify-content:center;">
                         <div id="photoWeekSelectorLeft" style="position:absolute; top:25px; left:50%; transform:translateX(-50%); z-index:100; background:rgba(0,0,0,0.7); border:1px solid #444; border-radius:12px; padding:2px 10px;"></div>
                         <img id="customPhotoImgLeft" style="width:100%; max-height:100%; object-fit:contain;">
@@ -327,12 +319,25 @@ const App = {
         }
 
         this.viewerState.isCompare = false;
+        this.viewerState.leftBlockId = this.data.currentBlockId;
         this.viewerState.leftWeek = Number(week);
-        
-        // Знаходимо найперший тиждень для правого екрану порівняння
-        const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
-        this.viewerState.rightWeek = keys.length > 0 ? keys[0] : Number(week);
         this.viewerState.singleIdx = Number(idx);
+
+        // Отримуємо всі можливі комбінації блоків і тижнів з бази
+        this.viewerState.availableOptions = await PhotoDB.getAvailableOptions();
+        if (this.viewerState.availableOptions.length === 0) {
+            this.viewerState.availableOptions = [{ blockId: this.data.currentBlockId, week: Number(week) }];
+        }
+
+        // Для правого вікна шукаємо перший тиждень поточного блоку
+        const currentBlockOpts = this.viewerState.availableOptions.filter(o => o.blockId === this.data.currentBlockId);
+        if (currentBlockOpts.length > 0) {
+            this.viewerState.rightBlockId = this.data.currentBlockId;
+            this.viewerState.rightWeek = currentBlockOpts[0].week;
+        } else {
+            this.viewerState.rightBlockId = this.data.currentBlockId;
+            this.viewerState.rightWeek = Number(week);
+        }
 
         const img = document.getElementById('customPhotoImg');
         this.state.photoModalScale = 1;
@@ -342,8 +347,6 @@ const App = {
         img.style.touchAction = 'none';
 
         modal.classList.add('active');
-
-        // Ініціалізуємо жести тільки для одиночного режиму
         this.initPhotoGestures(modal, img);
 
         await this.loadViewerData();
@@ -370,7 +373,6 @@ const App = {
         const viewSingle = document.getElementById('photoViewSingle');
         const viewCompare = document.getElementById('photoViewCompare');
         
-        // Нормалізація старих фотографій
         const normalizeSlots = (arr) => {
             arr.forEach((p, i) => { if (p.slot === undefined) p.slot = i; });
             return arr;
@@ -380,13 +382,13 @@ const App = {
             viewSingle.style.display = 'none';
             viewCompare.style.display = 'flex';
             
-            let rawLeft = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
-            let rawRight = await PhotoDB.get(this.data.currentBlockId, this.viewerState.rightWeek);
+            let rawLeft = await PhotoDB.get(this.viewerState.leftBlockId, this.viewerState.leftWeek);
+            let rawRight = await PhotoDB.get(this.viewerState.rightBlockId, this.viewerState.rightWeek);
             
             this.viewerState.photosLeft = normalizeSlots(rawLeft);
             this.viewerState.photosRight = normalizeSlots(rawRight);
             
-            const idx = this.viewerState.singleIdx; // Це тепер Слот (0, 1 або 2)
+            const idx = this.viewerState.singleIdx; 
             
             const pLeft = this.viewerState.photosLeft.find(p => p.slot === idx);
             const pRight = this.viewerState.photosRight.find(p => p.slot === idx);
@@ -398,7 +400,7 @@ const App = {
             viewSingle.style.display = 'flex';
             viewCompare.style.display = 'none';
             
-            let rawSingle = await PhotoDB.get(this.data.currentBlockId, this.viewerState.leftWeek);
+            let rawSingle = await PhotoDB.get(this.viewerState.leftBlockId, this.viewerState.leftWeek);
             this.viewerState.photosSingle = normalizeSlots(rawSingle);
             
             const idx = this.viewerState.singleIdx;
@@ -415,41 +417,63 @@ const App = {
         
         this.updateViewerUI();
     },
+
     updateViewerUI() {
-        const keys = Array.from(this.photoKeys).sort((a,b) => a - b);
-        
-        // Оновлюємо стрілки (тільки в одиночному режимі)
+        const opts = this.viewerState.availableOptions;
+        if (!opts || opts.length === 0) return;
+
         if (!this.viewerState.isCompare) {
             const leftBtn = document.getElementById('photoNavLeft');
             const rightBtn = document.getElementById('photoNavRight');
-            if (leftBtn) leftBtn.style.display = this.viewerState.singleIdx > 0 ? 'block' : 'none';
-            if (rightBtn) rightBtn.style.display = this.viewerState.singleIdx < this.viewerState.photosSingle.length - 1 ? 'block' : 'none';
+            if (leftBtn) leftBtn.style.display = 'block'; 
+            if (rightBtn) rightBtn.style.display = 'block';
         }
 
-        if (keys.length === 0) return;
+        // Групуємо тижні по назвах макроциклів
+        const grouped = {};
+        opts.forEach(o => {
+            const b = this.data.blocks.find(x => x.id === o.blockId);
+            const bName = b ? b.name : 'АРХІВ';
+            if (!grouped[bName]) grouped[bName] = [];
+            grouped[bName].push(o);
+        });
 
-        const buildSelect = (currentVal, onChangeAction) => `
-            <select style="background: transparent; color: var(--gold); border: none; font-size: 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer; text-align: center; text-transform: uppercase;" onchange="${onChangeAction}" ontouchstart="event.stopPropagation()">
-                ${keys.map(k => `<option value="${k}" style="color: #000; background: #fff;" ${k === currentVal ? 'selected' : ''}>W${k}</option>`).join('')}
+        const buildSelect = (currentBlockId, currentWeek, target) => {
+            let optionsHtml = '';
+            for (const [bName, items] of Object.entries(grouped)) {
+                optionsHtml += `<optgroup label="${bName}" style="background:#111; color:#aaa;">`;
+                items.forEach(item => {
+                    const isSelected = (item.blockId === currentBlockId && item.week === currentWeek) ? 'selected' : '';
+                    const val = `${item.blockId}|${item.week}`;
+                    optionsHtml += `<option value="${val}" style="color: #000; background: #fff;" ${isSelected}>Тиждень ${item.week}</option>`;
+                });
+                optionsHtml += `</optgroup>`;
+            }
+
+            return `
+            <select style="background: transparent; color: var(--primary); border: none; font-size: 0.85rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer; text-align: center; text-transform: uppercase; max-width: 150px; text-overflow: ellipsis; white-space: nowrap;" onchange="App.changeViewerWeek(this.value, '${target}')" ontouchstart="event.stopPropagation()">
+                ${optionsHtml}
             </select>
-            <div style="position: absolute; right: -10px; top:50%; transform:translateY(-50%); pointer-events: none; font-size: 0.6rem; color: var(--gold);">▼</div>
-        `;
+            <div style="position: absolute; right: 5px; top:50%; transform:translateY(-50%); pointer-events: none; font-size: 0.6rem; color: var(--primary);">▼</div>
+            `;
+        };
 
         if (this.viewerState.isCompare) {
-            document.getElementById('photoWeekSelectorLeft').innerHTML = buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "left")');
-            document.getElementById('photoWeekSelectorRight').innerHTML = buildSelect(this.viewerState.rightWeek, 'App.changeViewerWeek(parseInt(this.value), "right")');
+            const leftEl = document.getElementById('photoWeekSelectorLeft');
+            const rightEl = document.getElementById('photoWeekSelectorRight');
+            if(leftEl) leftEl.innerHTML = buildSelect(this.viewerState.leftBlockId, this.viewerState.leftWeek, 'left');
+            if(rightEl) rightEl.innerHTML = buildSelect(this.viewerState.rightBlockId, this.viewerState.rightWeek, 'right');
         } else {
             const selectorSingle = document.getElementById('photoWeekSelectorSingle');
             if(selectorSingle) {
                 selectorSingle.innerHTML = `
-                    <div style="position:relative; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:12px; padding:6px 20px 6px 15px; display:inline-block; backdrop-filter:blur(5px);">
-                        ${buildSelect(this.viewerState.leftWeek, 'App.changeViewerWeek(parseInt(this.value), "single")')}
+                    <div style="position:relative; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:12px; padding:6px 20px 6px 10px; display:inline-block; backdrop-filter:blur(5px);">
+                        ${buildSelect(this.viewerState.leftBlockId, this.viewerState.leftWeek, 'single')}
                     </div>
                 `;
             }
         }
     },
-
     navViewerPose(dir) {
         // Ми завжди маємо 3 жорсткі ракурси (0, 1, 2)
         const maxPhotos = 3; 
@@ -465,12 +489,20 @@ const App = {
         this.updatePhotoTransform();
         this.loadViewerData();
     },
-    changeViewerWeek(newWeek, target) {
-        if (target === 'left' || target === 'single') this.viewerState.leftWeek = newWeek;
-        if (target === 'right') this.viewerState.rightWeek = newWeek;
+    changeViewerWeek(val, target) {
+        const [blockId, weekStr] = val.split('|');
+        const newWeek = parseInt(weekStr);
+
+        if (target === 'left' || target === 'single') {
+            this.viewerState.leftBlockId = blockId;
+            this.viewerState.leftWeek = newWeek;
+        }
+        if (target === 'right') {
+            this.viewerState.rightBlockId = blockId;
+            this.viewerState.rightWeek = newWeek;
+        }
         
         if (target === 'single') {
-            this.viewerState.singleIdx = 0; 
             this.state.photoModalScale = 1;
             this.state.photoModalTranslate = { x: 0, y: 0 };
             this.updatePhotoTransform();
